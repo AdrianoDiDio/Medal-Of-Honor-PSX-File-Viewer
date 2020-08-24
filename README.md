@@ -28,15 +28,11 @@ Right after the header the information about the corresponding TSP file is found
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| char  | 64 bytes  | Directory Name |
-| long long  | 8 bytes  | Number of Entry |  
-
-| Type  | Size | Description |
-| ----  | ---- | ----------- |
 | char | 128 bytes  | TSP File Name |
 | int  | 4 bytes  | Total Number of TSP Files |
 | int  | 4 bytes  | Number of TSP Files that needs to be rendered at start |
 | int  | 4 bytes  | Number of the first TSP File that needs to be rendered |  
+
 The other TSP are loaded in real time when hitting specific triggers contained into the level that unloads the previous one that were loaded in memory.
 
 ## TSP Files
