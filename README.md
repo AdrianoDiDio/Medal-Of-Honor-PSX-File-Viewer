@@ -11,10 +11,14 @@
 ## Build
   To build it you just need to go into the folder and type:
   > make
-  This will generate the executable.
+  
+  This will generate the executable in the current folder.
 ## Usage
-  > ./MOHLevelViewer <Root Medal of Honor Folder> MissionNumber LevelNumber
-  E.G Assuming Medal Of Honor is extracted at /home/adriano/mohtest and you want to see Mission 1 Level 1:
+  > ./MOHLevelViewer `<Root Medal of Honor Folder>` `<MissionNumber>` `<LevelNumber>`
+  
+  Example:
+  Assuming Medal Of Honor is extracted at /home/adriano/mohtest and you want to see Mission 1 Level 1:
+  
   > ./MOHLevelViewer /home/adriano/mohtest 1 1
 ## BSD Files
 ## TSP Files
