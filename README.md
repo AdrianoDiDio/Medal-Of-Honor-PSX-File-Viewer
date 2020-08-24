@@ -25,9 +25,10 @@ Each BSD files can be seen as a container for multiple file types (Levels,Weapon
 It starts with a 2048 bytes header that can be ignored and probably contains a list of CD sectors that were required by the PSX in order to correctly read the file.  
 
 Right after the header the information about the corresponding TSP file is found if it is a level file.  
+
 | Type  | Size | Description |
-| ------------- | ------------- | ------------- |
-| char  | 128 bytes  | TSP File Name |
+| ----  | ---- | ----- |
+| char | 128 bytes  | TSP File Name |
 | int  | 4 bytes  | Total Number of TSP Files |
 | int  | 4 bytes  | Number of TSP Files that needs to be rendered at start |
 | int  | 4 bytes  | Number of the first TSP File that needs to be rendered |  
