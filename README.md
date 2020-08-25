@@ -121,7 +121,7 @@ This is used by each face in order to simulate lights.
 | unsigned byte | 1 byte  | Blue |
 | unsigned byte | 1 byte  | Pad |
 
-### Face:
+### Faces:
 ##### UV Coordinates(UV):
 Used for texture coordinates.
 
@@ -130,7 +130,7 @@ Used for texture coordinates.
 | unsigned char | 1 byte  | u coordinate |
 | unsigned char | 1 byte  | v coordinate |
 
-##### Face:
+##### Face Data:
 
 Each face is made by 3 vertices that forms a triangle.
 
