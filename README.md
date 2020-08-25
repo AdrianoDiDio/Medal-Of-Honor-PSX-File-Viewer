@@ -3,7 +3,7 @@
    * [TSB](#tsb)
 * [TSP Files](#tsp-files)
    * [BSP Nodes](#bsp-nodes)
-   * [Faces:](#faces)
+   * [Faces](#faces)
 * [BSD Files](#bsd-files)
    * [File Format](#file-format)
    * [Build](#build)
