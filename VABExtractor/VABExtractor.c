@@ -2,21 +2,21 @@
 ===========================================================================
     Copyright (C) 2018-2020 Adriano Di Dio.
     
-    VABWalker is free software: you can redistribute it and/or modify
+    VABExtractor is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    VABWalker is distributed in the hope that it will be useful,
+    VABExtractor is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with VABWalker.  If not, see <http://www.gnu.org/licenses/>.
+    along with VABExtractor.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */ 
-#include "VABWalker.h"
+#include "VABExtractor.h"
 
 const double ADPCMFilter[5][2] =
 {
@@ -730,7 +730,7 @@ int main(int argc,char **argv)
 //     char FileName[256];
     
     if( argc != 5 ) {
-        DPrintf("%s <Input.vab> <IsTaf> <Output Directory> <IsVag>.\n",argv[0]);
+        printf("%s <Input.vab> <IsTaf> <Output Directory> <IsVag>.\n",argv[0]);
         return -1;
     }
 
@@ -738,7 +738,7 @@ int main(int argc,char **argv)
     InFile = fopen(argv[1],"rb");
     
     if( !InFile ) {
-        DPrintf("Error opening vab file %s...\n",argv[1]);
+        printf("Error opening vab file %s...\n",argv[1]);
         return -1;
     }
     

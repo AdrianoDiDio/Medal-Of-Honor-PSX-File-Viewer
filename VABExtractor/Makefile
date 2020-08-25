@@ -1,18 +1,18 @@
 CC= gcc
 CFLAGS=-Wall
 
-Obj = VABWalker.o
+Obj = VABExtractor.o
 
 LDFLAGS = -lsndfile
 
-all: VABWalker.o
+all: VABExtractor
 
 debug: CFLAGS +=-D_DEBUG -g
-debug: VABWalker
+debug: VABExtractor
 
-VABWalker: $(Obj)
+VABExtractor: $(Obj)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 .PHONY: clean
 clean:
-	rm -f $(Obj) VABWalker
+	rm -f $(Obj) VABExtractor
