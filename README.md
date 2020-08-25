@@ -3,7 +3,7 @@
    * [TSB](#tsb)
 * [TSP Files](#tsp-files)
    * [BSP Nodes](#bsp-nodes)
-   * [Faces:](#faces)
+   * [Faces](#faces)
 * [BSD Files](#bsd-files)
    * [File Format](#file-format)
    * [Build](#build)
@@ -16,6 +16,11 @@
    * [File Format](#file-format-2)
    * [Usage](#usage-2)
 
+## Introduction
+This project contains a set of tools that can be used to view Medal Of Honor for PSX Level files and images.
+It was tested under Linux but it should also run on any other platform since it uses SDL2.
+At the moment I've been able to extract and render all the images and level data except for Enemies and Animation.
+Game Files are not available into this repository and you need a copy of the game in order to use it.
 
 ## Common Formats
 ### TSB
@@ -62,7 +67,7 @@ All TSP files starts with an header which contains the following data:
 | int  | 4 bytes  | Unknown Data Offset |
 | int  | 4 bytes  | Collision Data Offset |
 
-**Note that all the offset starts from the beginning of the file.**  
+**Note that all the offset starts from the beginning of the file.**
 Thanks to this format we can read each chunk separetely by moving the file position to the wanted offset.
 ### BSP Nodes
 The game uses a BSP tree probably for collision detection.
@@ -79,14 +84,14 @@ Each BSP node contains the following data:
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| [Vector3](#vector3) | 6 bytes  | Min |
-| [Vector3](#vector3) | 6 bytes  | Max |
+| [Vector3](#Vector3) | 6 bytes  | Min |
+| [Vector3](#Vector3) | 6 bytes  | Max |
 
 #### BSP Node:
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| [BBox](#bounding-box) | 12 bytes  | Bounding Box |
+| [BBox](#Bounding-Box) | 12 bytes  | Bounding Box |
 | int  | 4 bytes  | Number of Faces |
 | int  | 4 bytes  | Unknown |
 | int  | 4 bytes  | Unknown |
@@ -116,7 +121,7 @@ This is used by each face in order to simulate lights.
 | unsigned byte | 1 byte  | Blue |
 | unsigned byte | 1 byte  | Pad |
 
-### Face:
+### Faces:
 ##### UV Coordinates(UV):
 Used for texture coordinates.
 
@@ -125,7 +130,7 @@ Used for texture coordinates.
 | unsigned char | 1 byte  | u coordinate |
 | unsigned char | 1 byte  | v coordinate |
 
-##### Face:
+##### Face Data:
 
 Each face is made by 3 vertices that forms a triangle.
 
@@ -166,7 +171,9 @@ Right after the header the information about the corresponding TSP file is found
 The other TSP are loaded in real time when hitting specific triggers contained into the level that unloads the previous one that were loaded in memory.
 
 ### Build
+> cd into the directory and type make
 ### Usage
+> ./MOHLevelViewer <MOH Game Directory> MissionNumber LevelNumber
 ## RSC Files
 ### File Format
 RSC are simple not compressed archive files that contains different files type.
@@ -177,8 +184,6 @@ Each RSC files starts with an header containing the following data:
 | ---- | ---- | ----------- |
 | char  | 64 bytes  | Directory Name |
 | long long  | 8 bytes  | Number of Entry |
-
-Where each entry is:
 
 ##### RSC Entry
 
@@ -197,6 +202,15 @@ Compile:
 
 This command will extract the content of <File.rsc> creating all the required directories as declared in the RSC file.
 ## TAF Files
+TAF files contains images and sounds for each level.
+Inside each level folder there are two TAF files which have the following format:
+>MissionNumber_LevelNumber0.TAF
+>MissionNumber_LevelNumber1.TAF
+
+Only one is used at any time and represents the used language:
+0 for Deutsche(Default) while 1 is American(Can be activated in the Password menu).
+
+File has not an header but it is just a collection of tim files and vab files.
 ## TIM Files
 TIM is a file format used for storing all the images in the game.
 ### File Format
