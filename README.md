@@ -79,14 +79,14 @@ Each BSP node contains the following data:
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| [Vector3](#Vector3) | 6 bytes  | Min |
-| [Vector3](#Vector3) | 6 bytes  | Max |
+| [Vector3](#vector3) | 6 bytes  | Min |
+| [Vector3](#vector3) | 6 bytes  | Max |
 
 #### BSP Node:
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| [BBox](#Bounding-Box) | 12 bytes  | Bounding Box |
+| [BBox](#bounding-box) | 12 bytes  | Bounding Box |
 | int  | 4 bytes  | Number of Faces |
 | int  | 4 bytes  | Unknown |
 | int  | 4 bytes  | Unknown |
