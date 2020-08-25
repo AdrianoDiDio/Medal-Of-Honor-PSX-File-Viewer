@@ -114,7 +114,7 @@ Each face is made by 3 vertices that forms a triangle.
 | UV | 2 byte  | UV0 Texture coordinate for vertex 0  |
 | short | 2 byte  | Unknown  |
 | UV | 2 byte  | UV1 Texture coordinate for vertex 1  |
-| short | 2 byte  | TSB that contains info about the used texture (#TSB for more information)|
+| short | 2 byte  | TSB that contains info about the used texture [TSB](#TSB) for more information)|
 | UV | 2 byte  | UV2 Texture coordinate for vertex 2  |
 
 
