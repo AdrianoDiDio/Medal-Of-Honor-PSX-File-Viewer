@@ -19,16 +19,16 @@
 
 ## Common Formats
 ### TSB
-It contains information about the texture.
+It contains information about the texture.  
 It is a 16 bit number that has the following information:
-Assuming we have 12299 as TSB number it can be seen in binary as:
-0011000000001011
-Starting from the left to right:
-First 7 bits can be discarded leaving:
+Assuming we have 12299 as TSB number it can be seen in binary as:  
+0011000000001011  
+Starting from the left to right:  
+First 7 bits can be discarded leaving:  
 000001011
-00 => First 2 bits represents the TPF or Color Mode (00 4 bit,01 8 bit,10 15 bit).
-00 => Semi-Transparency rate.
-01011 => Last 5 bits represent the VRam page number (11 in this specific case).
+00 => First 2 bits represents the TPF or Color Mode (00 4 bit,01 8 bit,10 15 bit).  
+00 => Semi-Transparency rate.  
+01011 => Last 5 bits represent the VRam page number (11 in this specific case).  
 
 
 
