@@ -19,16 +19,22 @@
 
 ## Common Formats
 ### TSB
-It contains information about the texture.  
+It contains information about the texture.
 It is a 16 bit number that has the following information:
-Assuming we have 12299 as TSB number it can be seen in binary as:  
-0011000000001011  
-Starting from the left to right:  
-First 7 bits can be discarded leaving:  
-000001011
-00 => First 2 bits represents the TPF or Color Mode (00 4 bit,01 8 bit,10 15 bit).  
-00 => Semi-Transparency rate.  
-01011 => Last 5 bits represent the VRam page number (11 in this specific case).  
+Assuming we have 12299 as TSB number it can be seen in binary as:
+0011000000001011
+Starting from the left to right:
+First 7 bits can be discarded leaving:
+>000001011
+
+First 2 bits represents the TPF or Color Mode (00 4 bit,01 8 bit,10 15 bit):
+>00
+
+Next 2 bits represents the Semi-Transparency rate.
+> 00
+
+Finally last 5 bits represent the VRam page number (11 in this specific case).
+> 01011
 
 
 
@@ -56,7 +62,7 @@ All TSP files starts with an header which contains the following data:
 | int  | 4 bytes  | Unknown Data Offset |
 | int  | 4 bytes  | Collision Data Offset |
 
-**Note that all the offset starts from the beginning of the file.**
+**Note that all the offset starts from the beginning of the file.**  
 Thanks to this format we can read each chunk separetely by moving the file position to the wanted offset.
 ### BSP Nodes
 The game uses a BSP tree probably for collision detection.
@@ -69,18 +75,18 @@ Each BSP node contains the following data:
 | short  | 2 bytes | y coordinate |
 | short  | 2 bytes | z coordinate |
 
-#### BBox(Bounding Box):
+#### Bounding Box:
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| Vector3 | 6 bytes  | Min |
-| Vector3 | 6 bytes  | Max |
+| [Vector3](#Vector3) | 6 bytes  | Min |
+| [Vector3](#Vector3) | 6 bytes  | Max |
 
 #### BSP Node:
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| BBox | 12 bytes  | Bounding Box |
+| [BBox](#Bounding-Box) | 12 bytes  | Bounding Box |
 | int  | 4 bytes  | Number of Faces |
 | int  | 4 bytes  | Unknown |
 | int  | 4 bytes  | Unknown |
@@ -93,7 +99,24 @@ Each child can have an offset equals to -1 in which case it means that it is **N
 
 **Note that the child offset starts from the node declaration as seen in the header.**
 E.G: BSD Node offset is 64, Child1 Offset is 24 then the child node will be at **64+24**.
-### Faces:
+
+### Vertex:
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| [Vector3](#Vector3) | 6 byte  | Vertex coordinate |
+| short | 2 byte  | Pad |
+
+### Color:
+This is used by each face in order to simulate lights.
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| unsigned byte | 1 byte  | Red |
+| unsigned byte | 1 byte  | Green |
+| unsigned byte | 1 byte  | Blue |
+| unsigned byte | 1 byte  | Pad |
+
+### Face:
 ##### UV Coordinates(UV):
 Used for texture coordinates.
 
@@ -108,14 +131,16 @@ Each face is made by 3 vertices that forms a triangle.
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| unsigned short | 2 byte  | V0 First vertex index in array |
-| unsigned short | 2 byte  | V1 Second vertex index in array |
-| unsigned short | 2 byte  | V2 Third vertex index in array |
-| UV | 2 byte  | UV0 Texture coordinate for vertex 0  |
+| unsigned short | 2 byte  | V0 First vertex and color index in array |
+| unsigned short | 2 byte  | V1 Second vertex and color index in array |
+| unsigned short | 2 byte  | V2 Third vertex and color index in array |
+| [UV](#UV-Coordinates) | 2 byte  | UV0 Texture coordinate for vertex 0  |
 | short | 2 byte  | Unknown  |
-| UV | 2 byte  | UV1 Texture coordinate for vertex 1  |
-| short | 2 byte  | TSB that contains info about the used texture [TSB](#TSB) for more information)|
-| UV | 2 byte  | UV2 Texture coordinate for vertex 2  |
+| [UV](#UV-Coordinates) | 2 byte  | UV1 Texture coordinate for vertex 1  |
+| short | 2 byte  | TSB that contains info about the used texture ( read [TSB](#TSB) for more information)|
+| [UV](#UV-Coordinates) | 2 byte  | UV2 Texture coordinate for vertex 2  |
+
+
 
 
 ## BSD Files
