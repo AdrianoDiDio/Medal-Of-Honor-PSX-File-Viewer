@@ -1,27 +1,26 @@
 * [Medal Of Honor PSX File Viewer](#medal-of-honor-psx-file-viewer)
-   * [Introduction](#introduction)
-   * [Common Formats](#common-formats)
-      * [TSB](#tsb)
-   * [TSP Files](#tsp-files)
-      * [BSP Nodes](#bsp-nodes)
-      * [Vertex:](#vertex)
-      * [Color:](#color)
-      * [Faces:](#faces)
-   * [BSD Files](#bsd-files)
-      * [File Format](#file-format)
-      * [Build](#build)
-      * [Usage](#usage)
-   * [RSC Files](#rsc-files)
-      * [File Format](#file-format-1)
-      * [Usage](#usage-1)
-         * [Build](#build-1)
-         * [Run](#run)
-   * [TAF Files](#taf-files)
-   * [TIM Files](#tim-files)
-      * [File Format](#file-format-2)
-      * [Usage](#usage-2)
-         * [Build](#build-2)
-         * [Run](#run-1)
+* [Introduction](#introduction)
+* [Common Formats](#common-formats)
+   * [TSB](#tsb)
+* [TSP Files](#tsp-files)
+   * [BSP Nodes](#bsp-nodes)
+   * [Vertex:](#vertex)
+   * [Color:](#color)
+   * [Faces:](#faces)
+* [BSD Files](#bsd-files)
+   * [File Format](#file-format)
+   * [Node Table](#node-table)
+   * [Node](#node)
+   * [Build](#build)
+   * [Usage](#usage)
+* [RSC Files](#rsc-files)
+   * [File Format](#file-format-1)
+   * [Usage](#usage-1)
+* [TAF Files](#taf-files)
+* [TIM Files](#tim-files)
+   * [File Format](#file-format-2)
+   * [Usage](#usage-2)
+
 
 
 ## Introduction
@@ -207,7 +206,7 @@ This block is found at position 1340 (excluding the header) or 3388 (including t
 
 #### RenderObject Block
 After the entry block we find the number of RenderObject stored as an int (4 bytes).
-A RenderObject, as the name implies , are all the objects that can be seen inside the level like Windows,Doors,Enemies,Weapons,Boxes,MG42s, etc...  
+A RenderObject, as the name implies , are all the objects that can be seen inside the level like Windows,Doors,Enemies,Weapons,Boxes,MG42s, etc...
 Each RenderObject has a fixed size of 256 bytes containing several fields that depending by the type of the RenderObject can be NULL or contains an offset to the data stored inside the BSD file.
 
 | Type | Size | Description |
@@ -254,7 +253,59 @@ By trial and error I've discovered the following RenderObject Types:
 | 6005 | Unknown |
 | 6008 | Explosive Charges |
 
+### Node Table
+This section of the BSD files contains the list of all the nodes along with their offset contained inside the level.
+The position can be found thanks to the [Entry Table](#entry-table-block) and contains the following data:
 
+#### Node Table Data
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| int  | 4 bytes  | Number of Nodes |
+| int  | 4 bytes | Table Size |
+| char | 8 bytes | Unknown |
+
+After this header we find the table entry containing the position for all the nodes inside the BSD file:
+
+#### Node Table Entry
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| int  | 4 bytes  | Unknown |
+| int  | 4 bytes | Node Offset |
+
+**Note that the Node offset refers to the position after the table entry list.**
+
+### Node
+After having loaded the table and all the table entries, we find the actual node data (First node position should be the same as the first offset inside the node table entry list).
+Each Node represents either a phisical object (referencing a RenderObject ID) or logical such as spawn point which are not rendered.
+Each node has the following structure:
+unsigned int Id;
+int Size;
+int u2;
+int Type;
+BSDPosition_t Position;
+BSDPosition_t Rotation;
+#### Node Position
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| short  | 2 bytes  | x position |
+| short  | 2 bytes | y position |
+| short  | 2 bytes | z position |
+| short  | 2 bytes | Pad |
+
+#### Node Data
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| unsigned int  | 4 bytes  | ID |
+| int  | 4 bytes | Size |
+| int  | 4 bytes | Unknown |
+| int  | 4 bytes | Type |
+| [NodePosition](#node-position)  | 4 bytes | Position |
+| [NodePosition](#node-position)  | 4 bytes | Rotation |
+
+**Note that Rotation is stored in fixed math format where 4096 is 360 degrees**
 ### Build
 > cd into the directory and type make
 ### Usage
