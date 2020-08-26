@@ -207,7 +207,7 @@ This block is found at position 1340 (excluding the header) or 3388 (including t
 
 #### RenderObject Block
 After the entry block we find the number of RenderObject stored as an int (4 bytes).
-A RenderObject, as the name implies , are all the objects that can be seen inside the level like Windows,Doors,Enemies,Weapons,Boxes,MG42s, etc...
+A RenderObject, as the name implies , are all the objects that can be seen inside the level like Windows,Doors,Enemies,Weapons,Boxes,MG42s, etc...  
 Each RenderObject has a fixed size of 256 bytes containing several fields that depending by the type of the RenderObject can be NULL or contains an offset to the data stored inside the BSD file.
 
 | Type | Size | Description |
