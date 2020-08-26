@@ -146,11 +146,11 @@ Each face is made by 3 vertices that forms a triangle.
 | unsigned short | 2 byte  | V0 First vertex and color index in array |
 | unsigned short | 2 byte  | V1 Second vertex and color index in array |
 | unsigned short | 2 byte  | V2 Third vertex and color index in array |
-| [UV](#UV-Coordinates) | 2 byte  | UV0 Texture coordinate for vertex 0  |
+| [UV](#uv-coordinates(uv)) | 2 byte  | UV0 Texture coordinate for vertex 0  |
 | short | 2 byte  | Unknown  |
-| [UV](#UV-Coordinates) | 2 byte  | UV1 Texture coordinate for vertex 1  |
+| [UV](#uv-coordinates(uv)) | 2 byte  | UV1 Texture coordinate for vertex 1  |
 | short | 2 byte  | TSB that contains info about the used texture ( read [TSB](#TSB) for more information)|
-| [UV](#UV-Coordinates) | 2 byte  | UV2 Texture coordinate for vertex 2  |
+| [UV](#uv-coordinates(uv)) | 2 byte  | UV2 Texture coordinate for vertex 2  |
 
 
 
@@ -253,6 +253,39 @@ By trial and error I've discovered the following RenderObject Types:
 | 6005 | Unknown |
 | 6008 | Explosive Charges |
 
+If the Face Data Offset is not zero then the RenderObject can be rendered using the following face structure:
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| [UV](#uv-coordinates(uv))  | 2 bytes  | UV Coordinates of Vertex 0 |
+| short  | 2 bytes  | [TSB](#TSB) Info |
+| [UV](#uv-coordinates(uv))  | 2 bytes  | UV Coordinates of Vertex 1 |
+| short  | 2 bytes  | Texture Info |
+| [UV](#uv-coordinates(uv))  | 2 bytes  | UV Coordinates of Vertex 2 |
+| unsigned int  | 4 bytes  | Vertex Data |
+
+Texture info contains all the information about the used texture for the current face and can be extracted in this way:
+##### Color Mode:
+> (TexInfo & 0xC0) >> 7
+
+For the result value read about [TSB](#TSB) since it uses the same format.
+##### Texture Page:
+> TexInfo & 0x3f
+
+For the result value read about [TSB](#TSB) since it uses the same format.
+
+##### Vertex Data
+Vertex Data contains the information about the indices used to create the triangle that represent the current face and It has the following format:
+
+###### Vertex 0
+> VertexData & 0xFF
+
+###### Vertex 1
+> (VertexData & 0x3fc00) >> 10
+
+###### Vertex 2
+> (VertexData & 0xFF00000) >> 20
+
 ### Node Table
 This section of the BSD files contains the list of all the nodes along with their offset contained inside the level.
 The position can be found thanks to the [Entry Table](#entry-table-block) and contains the following data:
@@ -290,6 +323,7 @@ Each node has the following structure:
 | short  | 2 bytes | Pad |
 
 #### Node Data
+
 | Type | Size | Description |
 | ---- | ---- | ----------- |
 | unsigned int  | 4 bytes  | ID |
@@ -300,6 +334,23 @@ Each node has the following structure:
 | [NodePosition](#node-position)  | 4 bytes | Rotation |
 
 **Note that Rotation is stored in fixed math format where 4096 is 360 degrees**
+
+##### Node Type
+
+Node Type is used to understand what kind of data the node represents and at which offset it is found.
+
+| Type | Data Offset |
+| ---- | ---- |
+| 2,4,6  | 96 bytes |
+| 3  | 116 bytes |
+| 0 | 0 bytes (no Data) |
+
+All the offset starts from the node position in file.
+**Note that If the Node has ID equals to 1292341027 and the type is 0 then It represents a TSP load node which contains information about the next TSP file that needs to be loaded and the information is found at 48 bytes.**
+
+In all other cases the offset represents the information about the attached RenderObject that this node represents and can be read as a series of integers.
+
+
 ### Build
 > cd MOHLevelViewer && make
 ### Usage
