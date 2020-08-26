@@ -1,4 +1,5 @@
-* [Medal Of Honor PSX File Viewer](#medal-of-honor-psx-file-viewer)
+# Medal Of Honor PSX File Viewer
+
 * [Introduction](#introduction)
 * [Common Formats](#common-formats)
    * [TSB](#tsb)
