@@ -4,24 +4,54 @@
    * [TSB](#tsb)
 * [TSP Files](#tsp-files)
    * [BSP Nodes](#bsp-nodes)
-   * [Vertex](#vertex)
-   * [Color](#color)
-   * [Faces](#faces)
+      * [Vector3:](#vector3)
+      * [Bounding Box:](#bounding-box)
+      * [BSP Node:](#bsp-node)
+   * [Vertex:](#vertex)
+   * [Color:](#color)
+   * [Faces:](#faces)
+         * [UV Coordinates(UV):](#uv-coordinatesuv)
+         * [Face Data:](#face-data)
 * [BSD Files](#bsd-files)
    * [File Format](#file-format)
+      * [TSP Info Block](#tsp-info-block)
+      * [Entry Table Block](#entry-table-block)
+      * [RenderObject Block](#renderobject-block)
+         * [Color Mode:](#color-mode)
+         * [Texture Page:](#texture-page)
+         * [Vertex Data](#vertex-data)
+            * [Vertex 0](#vertex-0)
+            * [Vertex 1](#vertex-1)
+            * [Vertex 2](#vertex-2)
    * [Node Table](#node-table)
+      * [Node Table Data](#node-table-data)
+      * [Node Table Entry](#node-table-entry)
    * [Node](#node)
+      * [Node Position](#node-position)
+      * [Node Data](#node-data)
+         * [Node Type](#node-type)
    * [Build](#build)
    * [Usage](#usage)
 * [RSC Files](#rsc-files)
    * [File Format](#file-format-1)
+         * [RSC Header](#rsc-header)
+         * [RSC Entry](#rsc-entry)
    * [Usage](#usage-1)
+      * [Build](#build-1)
+      * [Run](#run)
 * [TAF Files](#taf-files)
 * [TIM Files](#tim-files)
    * [File Format](#file-format-2)
+         * [TIM Header:](#tim-header)
+         * [TIM CLUT Color:](#tim-clut-color)
+         * [TIM Content:](#tim-content)
    * [Usage](#usage-2)
-
-
+      * [Build](#build-2)
+      * [Run](#run-1)
+* [VAB Extractor](#vab-extractor)
+   * [Usage](#usage-3)
+      * [Build](#build-3)
+      * [Run](#run-2)
 
 ## Introduction
 This project contains a set of tools that can be used to view Medal Of Honor for PSX Level files and images.
@@ -434,9 +464,24 @@ TIM is a file format used for storing all the images in the game.
 ### Usage
 #### Build
 Compile:
-  > gcc -o TIMWalker TimWalker.c
+  > gcc -o TIMExtractor TIMExtractor.c
 #### Run
-  > ./TIMWalker `<File.tim>`
+  > ./TIMExtractor `<File.tim>`
 
 This command will read the content of <File.tim>, convert it to png and save it in the current folder.
 If the file contains more than one TIM then it creates a folder with the same name as <File> (without the extension) that contains all the converted images that were found in the file.
+
+## VAB Extractor
+
+This utility can be used to extract music contained in *.vb files as well as TAF files.
+At the moment the only requirements is that the taf file must have the tim section removed otherwise it won't work.
+
+### Usage
+#### Build
+Compile:
+  > gcc -o VABExtractor VABExtractor.c
+#### Run
+  > ./VABExtractor `<File.vab> <IsTaf> <Output Directory> <IsVag>`
+
+This command will read the content of <File.vab>, convert it to wav and save it in the output directory.
+If it is a TAF file it convert all the files that are found inside otherwise if IsVag is set to 1 will convert only one file to wav.
