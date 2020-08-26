@@ -279,7 +279,7 @@ After this header we find the table entry containing the position for all the no
 ### Node
 After having loaded the table and all the table entries, we find the actual node data (First node position should be the same as the first offset inside the node table entry list).
 Each Node represents either a phisical object (referencing a RenderObject ID) or logical such as spawn point which are not rendered.
-Each node has the following structure:  
+Each node has the following structure:
 #### Node Position
 
 | Type | Size | Description |
@@ -301,7 +301,7 @@ Each node has the following structure:
 
 **Note that Rotation is stored in fixed math format where 4096 is 360 degrees**
 ### Build
-> cd into the directory and type make
+> cd MOHLevelViewer && make
 ### Usage
 > ./MOHLevelViewer <MOH Game Directory> MissionNumber LevelNumber
 ## RSC Files
