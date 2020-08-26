@@ -279,13 +279,7 @@ After this header we find the table entry containing the position for all the no
 ### Node
 After having loaded the table and all the table entries, we find the actual node data (First node position should be the same as the first offset inside the node table entry list).
 Each Node represents either a phisical object (referencing a RenderObject ID) or logical such as spawn point which are not rendered.
-Each node has the following structure:
-unsigned int Id;
-int Size;
-int u2;
-int Type;
-BSDPosition_t Position;
-BSDPosition_t Rotation;
+Each node has the following structure:  
 #### Node Position
 
 | Type | Size | Description |
