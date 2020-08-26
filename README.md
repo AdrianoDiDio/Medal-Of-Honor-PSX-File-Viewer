@@ -5,21 +5,21 @@
   * [TSB](#tsb)
 - [TSP Files](#tsp-files)
   * [BSP Nodes](#bsp-nodes)
-    + [Vector3:](#vector3-)
-    + [Bounding Box:](#bounding-box-)
-    + [BSP Node:](#bsp-node-)
-  * [Vertex:](#vertex-)
-  * [Color:](#color-)
-  * [Faces:](#faces-)
-      - [UV Coordinates(UV):](#uv-coordinates-uv--)
-      - [Face Data:](#face-data-)
+    + [Vector3](#vector3)
+    + [Bounding Box](#bounding-box)
+    + [BSP Node](#bsp-node)
+  * [Vertex](#vertex)
+  * [Color](#color)
+  * [Faces](#faces)
+      - [UV Coordinates(UV)](#uv-coordinates-uv-)
+      - [Face Data](#face-data)
 - [BSD Files](#bsd-files)
   * [File Format](#file-format)
     + [TSP Info Block](#tsp-info-block)
     + [Entry Table Block](#entry-table-block)
     + [RenderObject Block](#renderobject-block)
-      - [Color Mode:](#color-mode-)
-      - [Texture Page:](#texture-page-)
+      - [Color Mode](#color-mode)
+      - [Texture Page](#texture-page)
       - [Vertex Data](#vertex-data)
         * [Vertex 0](#vertex-0)
         * [Vertex 1](#vertex-1)
@@ -43,9 +43,9 @@
 - [TAF Files](#taf-files)
 - [TIM Files](#tim-files)
   * [File Format](#file-format-2)
-      - [TIM Header:](#tim-header-)
-      - [TIM CLUT Color:](#tim-clut-color-)
-      - [TIM Content:](#tim-content-)
+      - [TIM Header](#tim-header)
+      - [TIM CLUT Color](#tim-clut-color)
+      - [TIM Content](#tim-content)
   * [Usage](#usage-2)
     + [Build](#build-2)
     + [Run](#run-1)
@@ -110,7 +110,7 @@ Thanks to this format we can read each chunk separetely by moving the file posit
 ### BSP Nodes
 The game uses a BSP tree probably for collision detection.
 Each BSP node contains the following data:
-#### Vector3:
+#### Vector3
 
 | Type | Size | Description |
 | ---- | ---- | ---- |
@@ -118,14 +118,14 @@ Each BSP node contains the following data:
 | short  | 2 bytes | y coordinate |
 | short  | 2 bytes | z coordinate |
 
-#### Bounding Box:
+#### Bounding Box
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
 | [Vector3](#Vector3) | 6 bytes  | Min |
 | [Vector3](#Vector3) | 6 bytes  | Max |
 
-#### BSP Node:
+#### BSP Node
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -143,14 +143,14 @@ Each child can have an offset equals to -1 in which case it means that it is **N
 **Note that the child offset starts from the node declaration as seen in the header.**
 E.G: BSD Node offset is 64, Child1 Offset is 24 then the child node will be at **64+24**.
 
-### Vertex:
+### Vertex
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
 | [Vector3](#Vector3) | 6 byte  | Vertex coordinate |
 | short | 2 byte  | Pad |
 
-### Color:
+### Color
 This is used by each face in order to simulate lights.
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -159,8 +159,8 @@ This is used by each face in order to simulate lights.
 | unsigned byte | 1 byte  | Blue |
 | unsigned byte | 1 byte  | Pad |
 
-### Faces:
-##### UV Coordinates(UV):
+### Faces
+##### UV Coordinates(UV)
 Used for texture coordinates.
 
 | Type | Size | Description |
@@ -168,7 +168,7 @@ Used for texture coordinates.
 | unsigned char | 1 byte  | u coordinate |
 | unsigned char | 1 byte  | v coordinate |
 
-##### Face Data:
+##### Face Data
 
 Each face is made by 3 vertices that forms a triangle.
 
@@ -296,11 +296,11 @@ If the Face Data Offset is not zero then the RenderObject can be rendered using 
 | unsigned int  | 4 bytes  | Vertex Data |
 
 Texture info contains all the information about the used texture for the current face and can be extracted in this way:
-##### Color Mode:
+##### Color Mode
 > (TexInfo & 0xC0) >> 7
 
 For the result value read about [TSB](#TSB) since it uses the same format.
-##### Texture Page:
+##### Texture Page
 > TexInfo & 0x3f
 
 For the result value read about [TSB](#TSB) since it uses the same format.
@@ -427,7 +427,7 @@ File has not an header but it is just a collection of tim files and vab files.
 TIM is a file format used for storing all the images in the game.
 ### File Format
 
-##### TIM Header:
+##### TIM Header
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -439,7 +439,7 @@ TIM is a file format used for storing all the images in the game.
 | unsigned short  | 2 bytes |  Number of CLUT Colors |
 | unsigned short  | 2 bytes |  Number of CLUTs |
 
-##### TIM CLUT Color:
+##### TIM CLUT Color
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -449,7 +449,7 @@ TIM is a file format used for storing all the images in the game.
 | unsigned char  | 1 bytes  | STP (Used for transparency) |
 
 
-##### TIM Content:
+##### TIM Content
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
