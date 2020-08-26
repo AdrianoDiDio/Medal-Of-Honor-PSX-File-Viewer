@@ -1,20 +1,28 @@
-# Medal Of Honor PSX File Viewer
-* [Common Formats](#common-formats)
-   * [TSB](#tsb)
-* [TSP Files](#tsp-files)
-   * [BSP Nodes](#bsp-nodes)
-   * [Faces](#faces)
-* [BSD Files](#bsd-files)
-   * [File Format](#file-format)
-   * [Build](#build)
-   * [Usage](#usage)
-* [RSC Files](#rsc-files)
-   * [File Format](#file-format-1)
-   * [Usage](#usage-1)
-* [TAF Files](#taf-files)
-* [TIM Files](#tim-files)
-   * [File Format](#file-format-2)
-   * [Usage](#usage-2)
+* [Medal Of Honor PSX File Viewer](#medal-of-honor-psx-file-viewer)
+   * [Introduction](#introduction)
+   * [Common Formats](#common-formats)
+      * [TSB](#tsb)
+   * [TSP Files](#tsp-files)
+      * [BSP Nodes](#bsp-nodes)
+      * [Vertex:](#vertex)
+      * [Color:](#color)
+      * [Faces:](#faces)
+   * [BSD Files](#bsd-files)
+      * [File Format](#file-format)
+      * [Build](#build)
+      * [Usage](#usage)
+   * [RSC Files](#rsc-files)
+      * [File Format](#file-format-1)
+      * [Usage](#usage-1)
+         * [Build](#build-1)
+         * [Run](#run)
+   * [TAF Files](#taf-files)
+   * [TIM Files](#tim-files)
+      * [File Format](#file-format-2)
+      * [Usage](#usage-2)
+         * [Build](#build-2)
+         * [Run](#run-1)
+
 
 ## Introduction
 This project contains a set of tools that can be used to view Medal Of Honor for PSX Level files and images.
@@ -169,6 +177,83 @@ Right after the header the information about the corresponding TSP file is found
 | int  | 4 bytes  | Number of the first TSP File that needs to be rendered |
 
 The other TSP are loaded in real time when hitting specific triggers contained into the level that unloads the previous one that were loaded in memory.
+
+#### Entry Table Block
+This block is found at position 1340 (excluding the header) or 3388 (including the header) contains information about the position of some elements that are contained inside the file along with the number of elements and has a fixed size of 104.
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| int  | 4 bytes  | Node offset |
+| int  | 4 bytes  | Unknown Offset0 |
+| int  | 4 bytes  | Unknown Offset1 |
+| int  | 4 bytes  | Number of elements at Offset1 |
+| int  | 4 bytes  | Unknown Offset2 |
+| int  | 4 bytes  | Number of elements at Offset2 |
+| int  | 4 bytes  | Unknown Offset3 |
+| int  | 4 bytes  | Number of elements at Offset3 |
+| int  | 4 bytes  | Unknown Offset4 |
+| int  | 4 bytes  | Number of elements at Offset4 |
+| int  | 4 bytes  | Unknown Offset5 |
+| int  | 4 bytes  | Number of elements at Offset5 |
+| int  | 4 bytes  | Unknown Offset6 |
+| int  | 4 bytes  | Number of elements at Offset6 |
+| int  | 4 bytes  | Unknown Offset7 |
+| int  | 4 bytes  | Number of elements at Offset7 |
+| int  | 4 bytes  | Unknown Offset8 |
+| int  | 4 bytes  | Number of elements at Offset8 |
+| int  | 4 bytes  | Unknown Offset9 |
+| int  | 4 bytes  | Number of elements at Offset9 |
+| char | 24 bytes | More unknown offsets |
+
+#### RenderObject Block
+After the entry block we find the number of RenderObject stored as an int (4 bytes).
+A RenderObject, as the name implies , are all the objects that can be seen inside the level like Windows,Doors,Enemies,Weapons,Boxes,MG42s, etc...
+Each RenderObject has a fixed size of 256 bytes containing several fields that depending by the type of the RenderObject can be NULL or contains an offset to the data stored inside the BSD file.
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| unsigned int  | 4 bytes  | ID |
+| int  | 4 bytes  | Unknown Offset (Valid if != 0)|
+| int  | 4 bytes  | Animation Data Offset (Valid if != -1) |
+| int  | 4 bytes  | Unknown Offset (Valid if != 0)|
+| char  | 20 bytes  | Unknown Data |
+| int  | 4 bytes  | Unknown Offset (Valid if != 0)|
+| char  | 4 bytes  | Unknown Data |
+| int  | 4 bytes  | Face Data Offset |
+| int  | 4 bytes  | Unknown Data Offset |
+| int  | 4 bytes  | Unknown Data Offset |
+| int  | 4 bytes  | Face Table Offset (Valid if != -1) (Used for animated objects)  |
+| char  | 72 bytes  | Unknown Data |
+| int  | 4 bytes  | Vertex Table Offset (Valid if != -1) (Used for animated objects)  |
+| int  | 4 bytes  | Vertex Data Offset |
+| unsigned short | 2 bytes | Number of Vertex Data |
+| char  | 2 bytes  | Unknown Data |
+| int  | 4 bytes  | Unknown Data Offset |
+| char  | 8 bytes  | Unknown Data |
+| int  | 4 bytes  | Root Bone Offset (Valid if != -1) (Used for animated objects) |
+| char  | 20 bytes  | Unknown Data |
+| int  | 4 bytes  | Unknown Data Offset |
+| char  | 8 bytes  | Unknown Data |
+| int  | 4 bytes  | Unknown Data Offset |
+| int  | 4 bytes  | Unknown Data Offset (Probably an offset to a Matrix stored in the file that represent the model rotation) |
+| char  | 52 bytes  | Unknown Data |
+| int  | 4 bytes  | Type |
+
+By trial and error I've discovered the following RenderObject Types:
+
+| Type  | Description |
+| ---- | ----------- |
+| 0 | All the objects that can be carried such as Combat Helmet,Grenades etc... |
+| 5122 | Enemies |
+| 6000 | All the object that can be picked up such as Field Surgeon Kit, Medical Pack,Canteen and also Barrels,Boxes etc... |
+| 6001 | AirPlane as seen at the start of Mission 1 Level 1 |
+| 6002 | MG42 |
+| 6006 | Doors |
+| 5125 | Unknown|
+| 6007 | Destructible Windows |
+| 6005 | Unknown |
+| 6008 | Explosive Charges |
+
 
 ### Build
 > cd into the directory and type make
