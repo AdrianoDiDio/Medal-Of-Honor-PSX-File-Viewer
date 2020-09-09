@@ -33,6 +33,7 @@
       - [Node Type](#node-type)
   * [Build](#build)
   * [Usage](#usage)
+    + [Controls](#controls)
 - [RSC Files](#rsc-files)
   * [File Format](#file-format-1)
       - [RSC Header](#rsc-header)
@@ -386,6 +387,22 @@ In all other cases the offset represents the information about the attached Rend
 > cd MOHLevelViewer && make
 ### Usage
 > ./MOHLevelViewer <MOH Game Directory> MissionNumber LevelNumber
+
+#### Controls
+
+| Key | Description |
+| ---- | ---- |
+| Esc  | Press to close the program |
+| c  | Press to show/hide the collision data |
+| b  | Press to show/hide the BSP tree nodes bounding boxes |
+| i  | Press to show/hide the BSD Render Objects Showcase (Draws all the loaded RenderObjects) |
+| l  | Press to show/hide the Level |
+| n  | Press to show/hide the BSD Nodes as points |
+| p  | Press to show/hide the BSD Render Objects |
+| r  | Press to show/hide the BSD Render Objects as points |
+| q  | Press to toggle between wireframe and Normal mode |
+| w,a,s,d | Press to move the camera anywhere on the loaded level|
+
 ## RSC Files
 ### File Format
 RSC are simple not compressed archive files that contains different files type.
