@@ -53,15 +53,15 @@ void BSD2PDraw(Level_t *Level)
     int MVPMatrixID;
     
     Shader = Shader_Cache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
-    aglUseProgram(Shader->ProgramID);
+    glUseProgram(Shader->ProgramID);
 
-    MVPMatrixID = aglGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-    aglUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-    aglBindVertexArray(Level->BSDTwoP->NodeVao->VaoID[0]);
-    aglPointSize(10.f);
-    aglDrawArrays(GL_POINTS, 0, Level->BSDTwoP->NodeData.Header.NumNodes);
-    aglBindVertexArray(0);
-    aglUseProgram(0);
+    MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+    glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+    glBindVertexArray(Level->BSDTwoP->NodeVao->VaoID[0]);
+    glPointSize(10.f);
+    glDrawArrays(GL_POINTS, 0, Level->BSDTwoP->NodeData.Header.NumNodes);
+    glBindVertexArray(0);
+    glUseProgram(0);
 }
 void BSD2PReadEntryTableChunk(BSD2P_t *BSD,FILE *InFile)
 {

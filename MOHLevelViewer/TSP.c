@@ -107,15 +107,15 @@ void DrawTSP(TSP_t *TSP)
     int MVPMatrixID;
     
     Shader = Shader_Cache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
-    aglUseProgram(Shader->ProgramID);
+    glUseProgram(Shader->ProgramID);
 
-    MVPMatrixID = aglGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-    aglUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+    MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+    glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
     
     if( Level->Settings.WireFrame ) {
-       aglPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
-       aglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
     for( Iterator = TSP->VaoList; Iterator; Iterator = Iterator->Next ) {
@@ -124,37 +124,37 @@ void DrawTSP(TSP_t *TSP)
 #if 0
         //DO THIS ONLY IF ABE IS ENABLED...
         int Trans = (Iterator->TSB & 0x30) >> 4;
-        aglEnable(GL_BLEND);
+        glEnable(GL_BLEND);
         if( Trans == 0 ) {
-            aglBlendEquation(GL_FUNC_ADD);
-            aglBlendColor(1.0, 1.0, 1.0, 0.5);
-            aglBlendFunc(GL_CONSTANT_ALPHA, GL_CONSTANT_ALPHA);
+            glBlendEquation(GL_FUNC_ADD);
+            glBlendColor(1.0, 1.0, 1.0, 0.5);
+            glBlendFunc(GL_CONSTANT_ALPHA, GL_CONSTANT_ALPHA);
         } else if( Trans == 1 ) {
-            aglBlendEquation(GL_FUNC_ADD);
-            aglBlendFunc(GL_ONE, GL_ONE);
+            glBlendEquation(GL_FUNC_ADD);
+            glBlendFunc(GL_ONE, GL_ONE);
         } else if( Trans == 2 ) {
-            aglBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
-            aglBlendFunc(GL_ONE, GL_ONE);
+            glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
+            glBlendFunc(GL_ONE, GL_ONE);
         } else if ( Trans == 3 ) {
-            aglBlendEquation(GL_FUNC_ADD);
-            aglBlendColor(1.0, 1.0, 1.0, 0.25);
-            aglBlendFunc(GL_CONSTANT_ALPHA, GL_ONE);
+            glBlendEquation(GL_FUNC_ADD);
+            glBlendColor(1.0, 1.0, 1.0, 0.25);
+            glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE);
         } else {
-            aglDisable(GL_BLEND);
+            glDisable(GL_BLEND);
         }
 #endif
         
         if( (Iterator->TSB & 0xC0) >> 7 == 1) {
-            aglBindTexture(GL_TEXTURE_2D, Level->VRam->Page8Bit[VRamPage].TextureID);
+            glBindTexture(GL_TEXTURE_2D, Level->VRam->Page8Bit[VRamPage].TextureID);
         } else {
-            aglBindTexture(GL_TEXTURE_2D, Level->VRam->Page4Bit[VRamPage].TextureID);
+            glBindTexture(GL_TEXTURE_2D, Level->VRam->Page4Bit[VRamPage].TextureID);
         }
-        aglBindVertexArray(Iterator->VaoID[0]);
-        aglDrawArrays(GL_TRIANGLES, 0, 3);
-        aglBindVertexArray(0);
-        aglBindTexture(GL_TEXTURE_2D,0);
+        glBindVertexArray(Iterator->VaoID[0]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(0);
+        glBindTexture(GL_TEXTURE_2D,0);
     }
-    aglUseProgram(0);
+    glUseProgram(0);
 #endif
 
 /*
@@ -187,31 +187,31 @@ void TSPPrintColor(TSPColor_t Color)
 void DrawTSPBox(TSPBBox_t Box)
 {
 #if 0
-    aglBegin(GL_LINE_LOOP);
-    aglVertex3s(Box.Min.x, Box.Min.y, Box.Min.z);
-    aglVertex3s(Box.Min.x, Box.Min.y, Box.Max.z);
-    aglVertex3s(Box.Max.x, Box.Min.y, Box.Max.z);
-    aglVertex3s(Box.Max.x, Box.Min.y, Box.Min.z);
-    aglEnd();
+    glBegin(GL_LINE_LOOP);
+    glVertex3s(Box.Min.x, Box.Min.y, Box.Min.z);
+    glVertex3s(Box.Min.x, Box.Min.y, Box.Max.z);
+    glVertex3s(Box.Max.x, Box.Min.y, Box.Max.z);
+    glVertex3s(Box.Max.x, Box.Min.y, Box.Min.z);
+    glEnd();
     
-    aglBegin(GL_LINE_LOOP);
-    aglVertex3s(Box.Min.x, Box.Max.y, Box.Min.z);
-    aglVertex3s(Box.Min.x, Box.Max.y, Box.Max.z);
-    aglVertex3s(Box.Max.x, Box.Max.y, Box.Max.z);
-    aglVertex3s(Box.Max.x, Box.Max.y, Box.Min.z);
-    aglEnd();
+    glBegin(GL_LINE_LOOP);
+    glVertex3s(Box.Min.x, Box.Max.y, Box.Min.z);
+    glVertex3s(Box.Min.x, Box.Max.y, Box.Max.z);
+    glVertex3s(Box.Max.x, Box.Max.y, Box.Max.z);
+    glVertex3s(Box.Max.x, Box.Max.y, Box.Min.z);
+    glEnd();
     
-    aglBegin(GL_LINES);
-    aglVertex3s(Box.Min.x, Box.Min.y, Box.Min.z);
-    aglVertex3s(Box.Min.x, Box.Max.y, Box.Min.z);
-    aglVertex3s(Box.Min.x, Box.Min.y, Box.Max.z);
-    aglVertex3s(Box.Min.x, Box.Max.y, Box.Max.z);
+    glBegin(GL_LINES);
+    glVertex3s(Box.Min.x, Box.Min.y, Box.Min.z);
+    glVertex3s(Box.Min.x, Box.Max.y, Box.Min.z);
+    glVertex3s(Box.Min.x, Box.Min.y, Box.Max.z);
+    glVertex3s(Box.Min.x, Box.Max.y, Box.Max.z);
 
-    aglVertex3s(Box.Max.x, Box.Min.y, Box.Min.z);
-    aglVertex3s(Box.Max.x, Box.Max.y, Box.Min.z);
-    aglVertex3s(Box.Max.x, Box.Min.y, Box.Max.z);
-    aglVertex3s(Box.Max.x, Box.Max.y, Box.Max.z);
-    aglEnd();
+    glVertex3s(Box.Max.x, Box.Min.y, Box.Min.z);
+    glVertex3s(Box.Max.x, Box.Max.y, Box.Min.z);
+    glVertex3s(Box.Max.x, Box.Min.y, Box.Max.z);
+    glVertex3s(Box.Max.x, Box.Max.y, Box.Max.z);
+    glEnd();
 #endif
 }
 
@@ -252,14 +252,14 @@ void DrawTSPList(Level_t *Level)
     float Height = 256.f;
     int i;
     int j;
-    aglEnable(GL_TEXTURE_2D);
-    aglDepthMask(GL_TRUE);
-    aglPushMatrix();
-    aglRotatef(180.f,1.f,0.f,0.f);
-    aglPolygonMode( GL_FRONT_AND_BACK, Level->Settings.IsWireFrame ? GL_LINE : GL_FILL);
+    glEnable(GL_TEXTURE_2D);
+    glDepthMask(GL_TRUE);
+    glPushMatrix();
+    glRotatef(180.f,1.f,0.f,0.f);
+    glPolygonMode( GL_FRONT_AND_BACK, Level->Settings.IsWireFrame ? GL_LINE : GL_FILL);
 
-    aglEnable(GL_ALPHA_TEST);
-    aglEnable(GL_BLEND);
+    glEnable(GL_ALPHA_TEST);
+    glEnable(GL_BLEND);
 
     if( Level->Settings.ShowMap ) {
         for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
@@ -274,61 +274,61 @@ void DrawTSPList(Level_t *Level)
                 float V1 = /*255 -*/((Iterator->Face[i].UV1.v) /Height);
                 float U2 = ((Iterator->Face[i].UV2.u) /Width);
                 float V2 = /*255 -*/((Iterator->Face[i].UV2.v) / Height);
-                aglBindTexture(GL_TEXTURE_2D,Level->VRam->Page[TexturePage].TextureID);
-                aglBegin(GL_TRIANGLES);
-                aglColor3ub(Iterator->Color[Vert0].r,Iterator->Color[Vert0].g,Iterator->Color[Vert0].b/*,Alpha*/);
-                aglTexCoord2f(U0,V0);
-                aglVertex3s(Iterator->Vertex[Vert0].Position.x,Iterator->Vertex[Vert0].Position.y,Iterator->Vertex[Vert0].Position.z);
-                aglColor3ub(Iterator->Color[Vert1].r,Iterator->Color[Vert1].g,Iterator->Color[Vert1].b/*,Alpha*/);
-                aglTexCoord2f(U1,V1);
-                aglVertex3s(Iterator->Vertex[Vert1].Position.x,Iterator->Vertex[Vert1].Position.y,Iterator->Vertex[Vert1].Position.z);
-                aglColor3ub(Iterator->Color[Vert2].r,Iterator->Color[Vert2].g,Iterator->Color[Vert2].b/*,Alpha*/);
-                aglTexCoord2f(U2,V2);
-                aglVertex3s(Iterator->Vertex[Vert2].Position.x,Iterator->Vertex[Vert2].Position.y,Iterator->Vertex[Vert2].Position.z);
-                aglEnd();
+                glBindTexture(GL_TEXTURE_2D,Level->VRam->Page[TexturePage].TextureID);
+                glBegin(GL_TRIANGLES);
+                glColor3ub(Iterator->Color[Vert0].r,Iterator->Color[Vert0].g,Iterator->Color[Vert0].b/*,Alpha*/);
+                glTexCoord2f(U0,V0);
+                glVertex3s(Iterator->Vertex[Vert0].Position.x,Iterator->Vertex[Vert0].Position.y,Iterator->Vertex[Vert0].Position.z);
+                glColor3ub(Iterator->Color[Vert1].r,Iterator->Color[Vert1].g,Iterator->Color[Vert1].b/*,Alpha*/);
+                glTexCoord2f(U1,V1);
+                glVertex3s(Iterator->Vertex[Vert1].Position.x,Iterator->Vertex[Vert1].Position.y,Iterator->Vertex[Vert1].Position.z);
+                glColor3ub(Iterator->Color[Vert2].r,Iterator->Color[Vert2].g,Iterator->Color[Vert2].b/*,Alpha*/);
+                glTexCoord2f(U2,V2);
+                glVertex3s(Iterator->Vertex[Vert2].Position.x,Iterator->Vertex[Vert2].Position.y,Iterator->Vertex[Vert2].Position.z);
+                glEnd();
             }
         }
     }
-    aglBindTexture(GL_TEXTURE_2D,0);
+    glBindTexture(GL_TEXTURE_2D,0);
 
     if( Level->Settings.ShowCollisionData ) {
-        aglColor3f(0.37f,0.34f,0.5f);
+        glColor3f(0.37f,0.34f,0.5f);
         for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
             for( i = 0; i < Iterator->CollisionData->Header.NumFaces; i++ ) {
                 int Vert0 = Iterator->CollisionData->Face[i].V0;
                 int Vert1 = Iterator->CollisionData->Face[i].V1;
                 int Vert2 = Iterator->CollisionData->Face[i].V2;
-                aglBegin(GL_TRIANGLES);
-                aglVertex3s(Iterator->CollisionData->Vertex[Vert0].Position.x,
+                glBegin(GL_TRIANGLES);
+                glVertex3s(Iterator->CollisionData->Vertex[Vert0].Position.x,
                             Iterator->CollisionData->Vertex[Vert0].Position.y,Iterator->CollisionData->Vertex[Vert0].Position.z);
-                aglVertex3s(Iterator->CollisionData->Vertex[Vert1].Position.x,
+                glVertex3s(Iterator->CollisionData->Vertex[Vert1].Position.x,
                             Iterator->CollisionData->Vertex[Vert1].Position.y,Iterator->CollisionData->Vertex[Vert1].Position.z);
-                aglVertex3s(Iterator->CollisionData->Vertex[Vert2].Position.x,
+                glVertex3s(Iterator->CollisionData->Vertex[Vert2].Position.x,
                             Iterator->CollisionData->Vertex[Vert2].Position.y,Iterator->CollisionData->Vertex[Vert2].Position.z);
-                aglEnd();
+                glEnd();
             }
-            aglColor3f(255.f,0.f,0.f);
-            aglBegin(GL_POINTS);
+            glColor3f(255.f,0.f,0.f);
+            glBegin(GL_POINTS);
             for( i = 0; i < Iterator->CollisionData->Header.NumGs; i++ ) {
-                aglVertex3s(Iterator->CollisionData->G[i].Position.x,Iterator->CollisionData->G[i].Position.y,
+                glVertex3s(Iterator->CollisionData->G[i].Position.x,Iterator->CollisionData->G[i].Position.y,
                             Iterator->CollisionData->G[i].Position.z);
             }
-            aglEnd();
+            glEnd();
         }
     }
     if( Level->Settings.ShowAABBTree ) {
         for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
             for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
                 if( i == 0 ) {
-                    aglLineWidth(2.f);
+                    glLineWidth(2.f);
                 } else {
-                    aglLineWidth(1.f);
+                    glLineWidth(1.f);
                 }
                 if( Iterator->Node[i].NumFaces == 0 ) {
                     continue;
-                    aglColor3f(1,0.5,0);
+                    glColor3f(1,0.5,0);
                 } else {
-                    aglColor3f(1,1,0);
+                    glColor3f(1,1,0);
                 }
                 int Base = Iterator->Node[i].BaseData / sizeof(TSPFace_t);
                 int Target = Base + Iterator->Node[i].NumFaces;
@@ -337,16 +337,16 @@ void DrawTSPList(Level_t *Level)
                     int Vert0 = Iterator->Face[j].V0;
                     int Vert1 = Iterator->Face[j].V1;
                     int Vert2 = Iterator->Face[j].V2;
-                    aglBegin(GL_TRIANGLES);
-                    aglVertex3s(Iterator->Vertex[Vert0].Position.x,Iterator->Vertex[Vert0].Position.y,Iterator->Vertex[Vert0].Position.z);
-                    aglVertex3s(Iterator->Vertex[Vert1].Position.x,Iterator->Vertex[Vert1].Position.y,Iterator->Vertex[Vert1].Position.z);
-                    aglVertex3s(Iterator->Vertex[Vert2].Position.x,Iterator->Vertex[Vert2].Position.y,Iterator->Vertex[Vert2].Position.z);
-                    aglEnd();
+                    glBegin(GL_TRIANGLES);
+                    glVertex3s(Iterator->Vertex[Vert0].Position.x,Iterator->Vertex[Vert0].Position.y,Iterator->Vertex[Vert0].Position.z);
+                    glVertex3s(Iterator->Vertex[Vert1].Position.x,Iterator->Vertex[Vert1].Position.y,Iterator->Vertex[Vert1].Position.z);
+                    glVertex3s(Iterator->Vertex[Vert2].Position.x,Iterator->Vertex[Vert2].Position.y,Iterator->Vertex[Vert2].Position.z);
+                    glEnd();
                 }
             }
         }
     }
-    aglPopMatrix();
+    glPopMatrix();
 #endif
 }
 

@@ -437,6 +437,7 @@ void Sys_SwapBuffers()
 
 void InitSDL(const char *Title,int Width,int Height,bool Fullscreen)
 {
+    GLenum GlewError;
     if ( !VidConf.Initialized ) {
         DPrintf("Vidconf isn't initialized...\n");
     }
@@ -451,13 +452,20 @@ void InitSDL(const char *Title,int Width,int Height,bool Fullscreen)
     if ( !Vid_InitSDL() ) {
         DPrintf("Failed on initializing SDL.\n");
     }
-    if( !GL_InitCoreProfile("libGL.so.1") ) {
-        DPrintf("Failed on loading OpenGL SubSystem\n");
-        exit(1);
-    }
+    
     if ( !Vid_OpenWindow() ) {
         DPrintf("Failed on opening a new window.\n");
     }
+    //Needed in order to load the core 3.3 profile.
+    glewExperimental = GL_TRUE;
+    GlewError = glewInit();
+    if (GlewError != GLEW_OK) {
+        DPrintf( "Failed to init GLEW\n");
+        SDL_DestroyWindow(VideoSurface);
+        SDL_Quit();
+        return;
+    }
+
     
     VidConf.Driver = String_Copy("SDL");
     Sys_HideCursor();
@@ -609,46 +617,46 @@ bool Com_UpdateDelta()
 void GL_DrawVec3Box(BBox_t Box)
 {
 #if 0
-    aglBegin(GL_LINE_LOOP);
-    aglVertex3f(Box.Min.x, Box.Min.y, Box.Min.z);
-    aglVertex3f(Box.Min.x, Box.Min.y, Box.Max.z);
-    aglVertex3f(Box.Max.x, Box.Min.y, Box.Max.z);
-    aglVertex3f(Box.Max.x, Box.Min.y, Box.Min.z);
-    aglEnd();
+    glBegin(GL_LINE_LOOP);
+    glVertex3f(Box.Min.x, Box.Min.y, Box.Min.z);
+    glVertex3f(Box.Min.x, Box.Min.y, Box.Max.z);
+    glVertex3f(Box.Max.x, Box.Min.y, Box.Max.z);
+    glVertex3f(Box.Max.x, Box.Min.y, Box.Min.z);
+    glEnd();
     
-    aglBegin(GL_LINE_LOOP);
-    aglVertex3f(Box.Min.x, Box.Max.y, Box.Min.z);
-    aglVertex3f(Box.Min.x, Box.Max.y, Box.Max.z);
-    aglVertex3f(Box.Max.x, Box.Max.y, Box.Max.z);
-    aglVertex3f(Box.Max.x, Box.Max.y, Box.Min.z);
-    aglEnd();
+    glBegin(GL_LINE_LOOP);
+    glVertex3f(Box.Min.x, Box.Max.y, Box.Min.z);
+    glVertex3f(Box.Min.x, Box.Max.y, Box.Max.z);
+    glVertex3f(Box.Max.x, Box.Max.y, Box.Max.z);
+    glVertex3f(Box.Max.x, Box.Max.y, Box.Min.z);
+    glEnd();
     
-    aglBegin(GL_LINES);
-    aglVertex3f(Box.Min.x, Box.Min.y, Box.Min.z);
-    aglVertex3f(Box.Min.x, Box.Max.y, Box.Min.z);
-    aglVertex3f(Box.Min.x, Box.Min.y, Box.Max.z);
-    aglVertex3f(Box.Min.x, Box.Max.y, Box.Max.z);
+    glBegin(GL_LINES);
+    glVertex3f(Box.Min.x, Box.Min.y, Box.Min.z);
+    glVertex3f(Box.Min.x, Box.Max.y, Box.Min.z);
+    glVertex3f(Box.Min.x, Box.Min.y, Box.Max.z);
+    glVertex3f(Box.Min.x, Box.Max.y, Box.Max.z);
 
-    aglVertex3f(Box.Max.x, Box.Min.y, Box.Min.z);
-    aglVertex3f(Box.Max.x, Box.Max.y, Box.Min.z);
-    aglVertex3f(Box.Max.x, Box.Min.y, Box.Max.z);
-    aglVertex3f(Box.Max.x, Box.Max.y, Box.Max.z);
-    aglEnd();
+    glVertex3f(Box.Max.x, Box.Min.y, Box.Min.z);
+    glVertex3f(Box.Max.x, Box.Max.y, Box.Min.z);
+    glVertex3f(Box.Max.x, Box.Min.y, Box.Max.z);
+    glVertex3f(Box.Max.x, Box.Max.y, Box.Max.z);
+    glEnd();
 #endif
 }
 
 void GL_DrawPoint(Vec3_t Position,Color_t Color)
 {
 #if 0
-    aglColor4f(Color.r,Color.g,Color.b,Color.a);
+    glColor4f(Color.r,Color.g,Color.b,Color.a);
     //DPrintf("Drawing at %f);%f\n",Position.x,Position.y);
-    aglDisable( GL_TEXTURE_2D );
-    aglPointSize(2);
-    aglBegin(GL_POINTS);
-    aglVertex2f(Position.x,Position.y/*,Position.z*/);
-    aglEnd();
-    aglColor3f(1,1,1);
-    aglEnable(GL_TEXTURE_2D);
+    glDisable( GL_TEXTURE_2D );
+    glPointSize(2);
+    glBegin(GL_POINTS);
+    glVertex2f(Position.x,Position.y/*,Position.z*/);
+    glEnd();
+    glColor3f(1,1,1);
+    glEnable(GL_TEXTURE_2D);
 #endif
 }
 
@@ -663,17 +671,17 @@ void GL_DrawPoint(Vec3_t Position,Color_t Color)
 void GL_Set2D()
 {
 #if 0
-   aglViewport( 0, 0, VidConf.Width, VidConf.Height );
-   aglScissor( 0, 0,  VidConf.Width, VidConf.Height );
-//    aglMatrixMode(GL_PROJECTION);
-   aglLoadIdentity();
-   aglOrtho(0, VidConf.Width,VidConf.Height,0,-1,1);
-   aglMatrixMode(GL_MODELVIEW);
-   aglLoadIdentity();
-   aglDisable (GL_DEPTH_TEST);
-   aglDisable (GL_CULL_FACE);
-   aglDisable (GL_BLEND);
-   aglEnable (GL_ALPHA_TEST);
+   glViewport( 0, 0, VidConf.Width, VidConf.Height );
+   glScissor( 0, 0,  VidConf.Width, VidConf.Height );
+//    glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   glOrtho(0, VidConf.Width,VidConf.Height,0,-1,1);
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+   glDisable (GL_DEPTH_TEST);
+   glDisable (GL_CULL_FACE);
+   glDisable (GL_BLEND);
+   glEnable (GL_ALPHA_TEST);
 #endif
 
 }
@@ -744,40 +752,40 @@ void GL_SetProjectionMatrix()
 void GL_Set3D()
 {
 #if 0
-    aglEnable (GL_DEPTH_TEST);
-    aglEnable (GL_BLEND);
-    aglDisable (GL_ALPHA_TEST);
-    aglDisable(GL_TEXTURE_2D);
+    glEnable (GL_DEPTH_TEST);
+    glEnable (GL_BLEND);
+    glDisable (GL_ALPHA_TEST);
+    glDisable(GL_TEXTURE_2D);
 
     GL_SetProjectionMatrix();
 
     //glLoadIdentity();
-    aglDepthMask(GL_TRUE);
-    aglMatrixMode( GL_PROJECTION );
+    glDepthMask(GL_TRUE);
+    glMatrixMode( GL_PROJECTION );
 
-    aglViewport(0,0,VidConf.Width,VidConf.Height);
+    glViewport(0,0,VidConf.Width,VidConf.Height);
 
-    aglLoadMatrixf( VidConf.PMatrix );
+    glLoadMatrixf( VidConf.PMatrix );
 
-    aglMatrixMode( GL_MODELVIEW );
+    glMatrixMode( GL_MODELVIEW );
 
-    aglLoadIdentity( );
+    glLoadIdentity( );
 #endif
 }
 
 void GL_SetDefaultState()
 {
-//     aglShadeModel( GL_SMOOTH );
+//     glShadeModel( GL_SMOOTH );
 
-    aglClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 
-    aglClearDepth( 1.0f );
+    glClearDepth( 1.0f );
 
-    aglDepthFunc( GL_LEQUAL );
+    glDepthFunc( GL_LEQUAL );
 
-    aglEnable( GL_DEPTH_TEST );
+    glEnable( GL_DEPTH_TEST );
 
-//     aglEnableClientState( GL_VERTEX_ARRAY );
+//     glEnableClientState( GL_VERTEX_ARRAY );
 }
 
 void InitGLView()
@@ -790,13 +798,13 @@ void InitGLView()
 
 void GLFrame()
 {
-    aglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #if 0
     GL_Set3D();
-    aglRotatef(Camera.Angle.x, 1.0f, 0.0f, 0.0f);
-    aglRotatef(Camera.Angle.y, 0.0f, 1.0f, 0.0f);
-    aglRotatef(Camera.Angle.z, 0.0f, 0.0f, 1.0f);
-    aglTranslatef(-Camera.Position.x, -Camera.Position.y, -Camera.Position.z);
+    glRotatef(Camera.Angle.x, 1.0f, 0.0f, 0.0f);
+    glRotatef(Camera.Angle.y, 0.0f, 1.0f, 0.0f);
+    glRotatef(Camera.Angle.z, 0.0f, 0.0f, 1.0f);
+    glTranslatef(-Camera.Position.x, -Camera.Position.y, -Camera.Position.z);
 #endif
     vec3 temp;
     temp[0] = 1;
@@ -920,7 +928,7 @@ int main(int argc,char **argv)
     InitGLView();
     Cam_Init(&Camera);
     Level->VRam = VRamInit(Level->ImageList);
-//     DPrintf("OpenGL Version:%s\n",aglGetString(GL_VERSION));
+//     DPrintf("OpenGL Version:%s\n",glGetString(GL_VERSION));
     /* TEMP! */
     glm_perspective(glm_rad(110.f),(float) VidConf.Width/ (float) VidConf.Height,1.f, 4096.f,VidConf.PMatrixM4);
     
@@ -937,7 +945,7 @@ int main(int argc,char **argv)
         do {
         } while( !Com_UpdateDelta() );
         GLFrame();
-        aglFlush();
+        glFlush();
         Sys_SwapBuffers();
     }
 #endif

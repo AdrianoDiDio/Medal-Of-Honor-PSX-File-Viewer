@@ -216,23 +216,23 @@ VRam_t *VRamInit(TIMImage_t *ImageList)
     }
 #endif
     for( i = 0; i < VRAMSize; i++ ) {
-        aglGenTextures(1,&VRam->Page4Bit[i].TextureID);
-        aglBindTexture(GL_TEXTURE_2D,VRam->Page4Bit[i].TextureID);
-        aglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        aglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        aglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
-        aglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
-        aglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA,GL_UNSIGNED_BYTE, VRam->Page4Bit[i].Surface->pixels);
-        aglBindTexture(GL_TEXTURE_2D,0);
+        glGenTextures(1,&VRam->Page4Bit[i].TextureID);
+        glBindTexture(GL_TEXTURE_2D,VRam->Page4Bit[i].TextureID);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA,GL_UNSIGNED_BYTE, VRam->Page4Bit[i].Surface->pixels);
+        glBindTexture(GL_TEXTURE_2D,0);
         
-        aglGenTextures(1,&VRam->Page8Bit[i].TextureID);
-        aglBindTexture(GL_TEXTURE_2D,VRam->Page8Bit[i].TextureID);
-        aglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        aglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        aglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
-        aglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
-        aglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA,GL_UNSIGNED_BYTE, VRam->Page8Bit[i].Surface->pixels);
-        aglBindTexture(GL_TEXTURE_2D,0);
+        glGenTextures(1,&VRam->Page8Bit[i].TextureID);
+        glBindTexture(GL_TEXTURE_2D,VRam->Page8Bit[i].TextureID);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA,GL_UNSIGNED_BYTE, VRam->Page8Bit[i].Surface->pixels);
+        glBindTexture(GL_TEXTURE_2D,0);
     }
     return VRam;
 }

@@ -32,16 +32,16 @@
 
 #include <png.h>
 #include <SDL2/SDL.h>
-
+#include <GL/glew.h>
 //TEMPORARY!
 #include <cglm/cglm.h>
 
 #include "Types.h"
-#include "GLLoader.h"
 #include "ShaderManager.h"
 #include "Vao.h"
 #include "Tim.h"
 #include "VRam.h"
+#include "Font.h"
 #include "BSD.h"
 #include "BSDTwoPlayers.h"
 #include "TSP.h"

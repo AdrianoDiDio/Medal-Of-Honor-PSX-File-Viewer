@@ -2,9 +2,9 @@
 CC= gcc
 CFLAGS=-Wall
 
-Obj = GLLoaderCore.o ShaderManager.o Vao.o TSP.o Tim.o BSD.o BSDTwoPlayers.o VRam.o MOHLevelViewer.o
+Obj = ShaderManager.o Vao.o TSP.o Tim.o Font.o BSD.o BSDTwoPlayers.o VRam.o MOHLevelViewer.o
 
-LDFLAGS = -lSDL2 -lpng -lm
+LDFLAGS = -lSDL2 -lGL -lGLEW -lpng -lm
 
 all: release
 

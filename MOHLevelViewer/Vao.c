@@ -24,27 +24,27 @@ Vao_t *VaoInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int 
     
     Vao = malloc(sizeof(Vao_t));
     
-    aglGenVertexArrays(1, &Vao->VaoID[0]);
-    aglBindVertexArray(Vao->VaoID[0]);
+    glGenVertexArrays(1, &Vao->VaoID[0]);
+    glBindVertexArray(Vao->VaoID[0]);
         
-    aglGenBuffers(1, Vao->VboID);
-    aglBindBuffer(GL_ARRAY_BUFFER, Vao->VboID[0]);
+    glGenBuffers(1, Vao->VboID);
+    glBindBuffer(GL_ARRAY_BUFFER, Vao->VboID[0]);
             
-    aglBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
         
-    aglVertexAttribPointer(0,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(VertexOffset));
-    aglEnableVertexAttribArray(0);
-    aglVertexAttribPointer(1,2,GL_FLOAT,false,Stride,BUFFER_OFFSET(TextureOffset));
-    aglEnableVertexAttribArray(1);
-    aglVertexAttribPointer(2,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(ColorOffset));
-    aglEnableVertexAttribArray(2);
+    glVertexAttribPointer(0,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(VertexOffset));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1,2,GL_FLOAT,false,Stride,BUFFER_OFFSET(TextureOffset));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(ColorOffset));
+    glEnableVertexAttribArray(2);
 
     Vao->TSB = TSB;
     Vao->TextureID = TextureID;
     
-    aglBindBuffer(GL_ARRAY_BUFFER,0);
-    aglBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-    aglBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
     
     return Vao;
 }
@@ -55,25 +55,25 @@ Vao_t *VaoInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int Tex
     
     Vao = malloc(sizeof(Vao_t));
     
-    aglGenVertexArrays(1, &Vao->VaoID[0]);
-    aglBindVertexArray(Vao->VaoID[0]);
+    glGenVertexArrays(1, &Vao->VaoID[0]);
+    glBindVertexArray(Vao->VaoID[0]);
         
-    aglGenBuffers(1, Vao->VboID);
-    aglBindBuffer(GL_ARRAY_BUFFER, Vao->VboID[0]);
+    glGenBuffers(1, Vao->VboID);
+    glBindBuffer(GL_ARRAY_BUFFER, Vao->VboID[0]);
             
-    aglBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
         
-    aglVertexAttribPointer(0,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(VertexOffset));
-    aglEnableVertexAttribArray(0);
-    aglVertexAttribPointer(1,2,GL_FLOAT,false,Stride,BUFFER_OFFSET(TextureOffset));
-    aglEnableVertexAttribArray(1);
+    glVertexAttribPointer(0,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(VertexOffset));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1,2,GL_FLOAT,false,Stride,BUFFER_OFFSET(TextureOffset));
+    glEnableVertexAttribArray(1);
 
     Vao->TSB = TSB;
     Vao->TextureID = TextureID;
     
-    aglBindBuffer(GL_ARRAY_BUFFER,0);
-    aglBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-    aglBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
     
     return Vao;
 }
@@ -84,25 +84,25 @@ Vao_t *VaoInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int Co
     
     Vao = malloc(sizeof(Vao_t));
     
-    aglGenVertexArrays(1, &Vao->VaoID[0]);
-    aglBindVertexArray(Vao->VaoID[0]);
+    glGenVertexArrays(1, &Vao->VaoID[0]);
+    glBindVertexArray(Vao->VaoID[0]);
         
-    aglGenBuffers(1, Vao->VboID);
-    aglBindBuffer(GL_ARRAY_BUFFER, Vao->VboID[0]);
+    glGenBuffers(1, Vao->VboID);
+    glBindBuffer(GL_ARRAY_BUFFER, Vao->VboID[0]);
             
-    aglBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
         
-    aglVertexAttribPointer(0,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(VertexOffset));
-    aglEnableVertexAttribArray(0);
-    aglVertexAttribPointer(1,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(ColorOffset));
-    aglEnableVertexAttribArray(1);
+    glVertexAttribPointer(0,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(VertexOffset));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(ColorOffset));
+    glEnableVertexAttribArray(1);
 
     Vao->TSB = -1;
     Vao->TextureID = -1;
     
-    aglBindBuffer(GL_ARRAY_BUFFER,0);
-    aglBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-    aglBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
     
     return Vao;
 }
@@ -113,23 +113,23 @@ Vao_t *VaoInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset)
     
     Vao = malloc(sizeof(Vao_t));
     
-    aglGenVertexArrays(1, &Vao->VaoID[0]);
-    aglBindVertexArray(Vao->VaoID[0]);
+    glGenVertexArrays(1, &Vao->VaoID[0]);
+    glBindVertexArray(Vao->VaoID[0]);
         
-    aglGenBuffers(1, Vao->VboID);
-    aglBindBuffer(GL_ARRAY_BUFFER, Vao->VboID[0]);
+    glGenBuffers(1, Vao->VboID);
+    glBindBuffer(GL_ARRAY_BUFFER, Vao->VboID[0]);
             
-    aglBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
         
-    aglVertexAttribPointer(0,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(VertexOffset));
-    aglEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(VertexOffset));
+    glEnableVertexAttribArray(0);
 
     Vao->TSB = -1;
     Vao->TextureID = -1;
     
-    aglBindBuffer(GL_ARRAY_BUFFER,0);
-    aglBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-    aglBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
     
     return Vao;
 }

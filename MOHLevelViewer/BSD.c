@@ -966,70 +966,70 @@ void BSDDraw(Level_t *Level)
     
     if( Level->Settings.ShowBSDNodes ) {    
         Shader = Shader_Cache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
-        aglUseProgram(Shader->ProgramID);
+        glUseProgram(Shader->ProgramID);
 
-        MVPMatrixID = aglGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-        aglUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-        aglBindVertexArray(Level->BSD->NodeVao->VaoID[0]);
-        aglPointSize(10.f);
-        aglDrawArrays(GL_POINTS, 0, Level->BSD->NodeData.Header.NumNodes);
-        aglBindVertexArray(0);
-        aglUseProgram(0);
+        MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+        glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+        glBindVertexArray(Level->BSD->NodeVao->VaoID[0]);
+        glPointSize(10.f);
+        glDrawArrays(GL_POINTS, 0, Level->BSD->NodeData.Header.NumNodes);
+        glBindVertexArray(0);
+        glUseProgram(0);
         
-//         aglUseProgram(Shader->ProgramID);
+//         glUseProgram(Shader->ProgramID);
 // 
-//         MVPMatrixID = aglGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-//         aglUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-//         aglBindVertexArray(Level->BSD->NodeBoxVao->VaoID[0]);
-//         aglDrawArrays(GL_LINES, 0, Level->BSD->NodeData.Header.NumNodes);
-//         aglBindVertexArray(0);
-//         aglUseProgram(0);
+//         MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+//         glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+//         glBindVertexArray(Level->BSD->NodeBoxVao->VaoID[0]);
+//         glDrawArrays(GL_LINES, 0, Level->BSD->NodeData.Header.NumNodes);
+//         glBindVertexArray(0);
+//         glUseProgram(0);
     }
     
     if( Level->Settings.ShowBSDRenderObject ) {    
         Shader = Shader_Cache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
-        aglUseProgram(Shader->ProgramID);
+        glUseProgram(Shader->ProgramID);
 
-        MVPMatrixID = aglGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-        aglUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-        aglBindVertexArray(Level->BSD->RenderObjectPointVao->VaoID[0]);
-        aglPointSize(10.f);
-        aglDrawArrays(GL_POINTS, 0, Level->BSD->NumRenderObjectPoint);
-        aglBindVertexArray(0);
-        aglUseProgram(0);
+        MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+        glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+        glBindVertexArray(Level->BSD->RenderObjectPointVao->VaoID[0]);
+        glPointSize(10.f);
+        glDrawArrays(GL_POINTS, 0, Level->BSD->NumRenderObjectPoint);
+        glBindVertexArray(0);
+        glUseProgram(0);
         
-//         aglUseProgram(Shader->ProgramID);
+//         glUseProgram(Shader->ProgramID);
 // 
-//         MVPMatrixID = aglGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-//         aglUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-//         aglBindVertexArray(Level->BSD->NodeBoxVao->VaoID[0]);
-//         aglDrawArrays(GL_LINES, 0, Level->BSD->NodeData.Header.NumNodes);
-//         aglBindVertexArray(0);
-//         aglUseProgram(0);
+//         MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+//         glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+//         glBindVertexArray(Level->BSD->NodeBoxVao->VaoID[0]);
+//         glDrawArrays(GL_LINES, 0, Level->BSD->NodeData.Header.NumNodes);
+//         glBindVertexArray(0);
+//         glUseProgram(0);
     }
 #if 0
     Shader = Shader_Cache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
-    aglUseProgram(Shader->ProgramID);
-    MVPMatrixID = aglGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-    aglUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+    glUseProgram(Shader->ProgramID);
+    MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+    glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
 
     for( i = 0; i < Level->BSD->UBlock.NumU; i++ ) {
         if( Level->BSD->UBlock.UList[i].VertOffset == 0 ) {
             continue;
         }
-        aglBindVertexArray(Level->BSD->UObjectList[i].Vao->VaoID[0]);
-        aglPointSize(15.f);
-        aglDrawArrays(GL_POINTS, 0, Level->BSD->UBlock.UList[i].NumVertex);
-        aglBindVertexArray(0);
+        glBindVertexArray(Level->BSD->UObjectList[i].Vao->VaoID[0]);
+        glPointSize(15.f);
+        glDrawArrays(GL_POINTS, 0, Level->BSD->UBlock.UList[i].NumVertex);
+        glBindVertexArray(0);
     }
-    aglBindVertexArray(0);
-    aglUseProgram(0);
+    glBindVertexArray(0);
+    glUseProgram(0);
 #endif
         
     if( Level->Settings.DrawBSDRenderObjects ) {
             Shader = Shader_Cache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
-            aglUseProgram(Shader->ProgramID);
-            MVPMatrixID = aglGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+            glUseProgram(Shader->ProgramID);
+            MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
         for( RenderObjectIterator = Level->BSD->RenderObjectRealList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next ) {
             vec3 temp;
             glm_mat4_identity(VidConf.ModelViewMatrix);
@@ -1066,28 +1066,28 @@ void BSDDraw(Level_t *Level)
             
             //Emulate PSX Coordinate system...
             glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-            aglUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+            glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
 
             for( VaoIterator = RenderObjectIterator->FaceVao; VaoIterator; VaoIterator = VaoIterator->Next ) {
                 int VRamPage = VaoIterator->TSB & 0x3F;
                 int ColorMode = (VaoIterator->TSB & 0xC0) >> 7;
                 
                 if( ColorMode == 1 ) {
-                    aglBindTexture(GL_TEXTURE_2D,Level->VRam->Page8Bit[VRamPage].TextureID);
+                    glBindTexture(GL_TEXTURE_2D,Level->VRam->Page8Bit[VRamPage].TextureID);
                 } else {
-                    aglBindTexture(GL_TEXTURE_2D,Level->VRam->Page4Bit[VRamPage].TextureID);
+                    glBindTexture(GL_TEXTURE_2D,Level->VRam->Page4Bit[VRamPage].TextureID);
                 }
-                aglBindVertexArray(VaoIterator->VaoID[0]);
-                aglDrawArrays(GL_TRIANGLES, 0, 3);
-                aglBindVertexArray(0);
-                aglBindTexture(GL_TEXTURE_2D,0);
+                glBindVertexArray(VaoIterator->VaoID[0]);
+                glDrawArrays(GL_TRIANGLES, 0, 3);
+                glBindVertexArray(0);
+                glBindTexture(GL_TEXTURE_2D,0);
             }
         }
     }
     if( Level->Settings.DrawBSDShowCaseRenderObject ) {
         Shader = Shader_Cache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
-        aglUseProgram(Shader->ProgramID);
-        MVPMatrixID = aglGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+        glUseProgram(Shader->ProgramID);
+        MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
         for( RenderObjectIterator = Level->BSD->RenderObjectShowCaseList; RenderObjectIterator; 
                 RenderObjectIterator = RenderObjectIterator->Next ) {
             vec3 temp;
@@ -1125,27 +1125,27 @@ void BSDDraw(Level_t *Level)
             
             //Emulate PSX Coordinate system...
             glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-            aglUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+            glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
 
             for( VaoIterator = RenderObjectIterator->FaceVao; VaoIterator; VaoIterator = VaoIterator->Next ) {
                 int VRamPage = VaoIterator->TSB & 0x3F;
                 int ColorMode = (VaoIterator->TSB & 0xC0) >> 7;
                 
                 if( ColorMode == 1 ) {
-                    aglBindTexture(GL_TEXTURE_2D,Level->VRam->Page8Bit[VRamPage].TextureID);
+                    glBindTexture(GL_TEXTURE_2D,Level->VRam->Page8Bit[VRamPage].TextureID);
                 } else {
-                    aglBindTexture(GL_TEXTURE_2D,Level->VRam->Page4Bit[VRamPage].TextureID);
+                    glBindTexture(GL_TEXTURE_2D,Level->VRam->Page4Bit[VRamPage].TextureID);
                 }
-                aglBindVertexArray(VaoIterator->VaoID[0]);
-                aglDrawArrays(GL_TRIANGLES, 0, 3);
-                aglBindVertexArray(0);
-                aglBindTexture(GL_TEXTURE_2D,0);
+                glBindVertexArray(VaoIterator->VaoID[0]);
+                glDrawArrays(GL_TRIANGLES, 0, 3);
+                glBindVertexArray(0);
+                glBindTexture(GL_TEXTURE_2D,0);
             }
         }
     }
     
-    aglBindVertexArray(0);
-    aglUseProgram(0);
+    glBindVertexArray(0);
+    glUseProgram(0);
 }
 
 void ParseUVertexData(BSD_t *BSD,FILE *BSDFile)
