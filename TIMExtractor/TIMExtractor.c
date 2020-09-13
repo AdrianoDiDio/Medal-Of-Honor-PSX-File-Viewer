@@ -75,7 +75,11 @@ void CreateDirIfNotExists(char *DirName) {
     struct stat FileStat;
 
     if (stat(DirName, &FileStat) == -1) {
+#ifdef _WIN32
+        mkdir(DirName);
+#else
         mkdir(DirName, 0700);
+#endif
     }
 }
 

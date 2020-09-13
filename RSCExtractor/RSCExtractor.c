@@ -19,10 +19,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <sys/stat.h>
 
 #ifdef __linux__
-#include <sys/stat.h>
 #define PATHSEPARATOR '/'
 #else
 #include <windows.h>
@@ -45,15 +44,15 @@ typedef enum {
 } bool;
 
 void CreateDirIfNotExists(char *DirName) {
-#ifdef __linux__
     struct stat FileStat;
 
     if (stat(DirName, &FileStat) == -1) {
-        mkdir(DirName, 0700);
-    }
+#ifdef _WIN32
+        mkdir(DirName);
 #else
-    CreateDirectory(DirName,NULL);
+        mkdir(DirName, 0700);
 #endif
+    }
 }
 
 char *NormalizeSeparatorAndCreateDir(char *FName) {
