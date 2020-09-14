@@ -872,7 +872,7 @@ void GLFrame()
     y += VerticalSpacing;
     FontDrawString(Level,"Press q to enable or disable wireframe mode",10,y);
     y += VerticalSpacing;
-//     FontDrawString(Level,"Press w a s d to move camera around",10,y);
+    FontDrawString(Level,"Press w a s d to move camera around",10,y);
 //     FontDrawString(Level,"a b c d e f g h i j k l m n o p q r s t u v w x y z",0,VidConf.Height / 2);
 //     FontDrawString(Level,"A B C D E F G H I J K L M N O P Q R S T U V W X Y Z",0,(VidConf.Height / 2 ) + 10);
 //     FontDrawString(Level,"0 1 2 3 4 5 6 7 8 9 10",0,(VidConf.Height / 2 ) + 20);
