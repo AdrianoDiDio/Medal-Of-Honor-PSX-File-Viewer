@@ -206,7 +206,9 @@ VRam_t *VRamInit(TIMImage_t *ImageList)
 #ifdef _DEBUG
     for( i = 0; i < VRAMSize; i++ ) {
         char OutName[256];
+        CreateDirIfNotExists("VRAM");
         CreateDirIfNotExists("VRAM/VRAM4");
+
         sprintf(OutName,"VRAM/VRAM4/VRAM%i.png",i);
         SDL_SavePNG(VRam->Page4Bit[i].Surface, OutName);
         

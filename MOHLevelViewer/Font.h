@@ -20,8 +20,21 @@
 #ifndef __FONT_H_
 #define __FONT_H_
 
+#define MOH_FONT_TEXTURE_VRAM_PAGE 15
+#define NUM_MOH_FONT_CHARS 50
+#define NUM_MOH_FONT_CHAR_PER_COLUMN 25
+#define MOH_FONT_CHAR_WIDTH 10
+#define MOH_FONT_CHAR_HEIGHT 7
+#define MOH_FONT_CHAR_STARTING_TEXTURE_X 224
+#define MOH_FONT_CHAR_STARTING_TEXTURE_Y 0
+
 struct Level_s;
 typedef struct Level_s Level_t;
 
-void FontInit(Level_t *Level);
+typedef struct Font_s {
+    Vao_t *Characters[NUM_MOH_FONT_CHARS];
+} Font_t;
+
+Font_t *FontInit();
+void FontDrawString(Level_t *Level,char *String,float x,float y);
 #endif //__FONT_H_

@@ -182,5 +182,5 @@ typedef struct Level_s Level_t;
 
 TSP_t  *TSPLoad(char *FName,int TSPNumber);
 void    DrawTSPList(Level_t *Level);
-void CreateVAO(TSP_t *TSP);
+void    TSPCreateVAO(TSP_t *TSP);
 #endif //__TSPVIEWER_H_

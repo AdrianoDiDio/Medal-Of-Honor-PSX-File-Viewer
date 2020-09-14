@@ -91,7 +91,11 @@ void CreateDirIfNotExists(char *DirName) {
     struct stat FileStat;
 
     if (stat(DirName, &FileStat) == -1) {
+#ifdef _WIN32
+        mkdir(DirName);
+#else
         mkdir(DirName, 0700);
+#endif
     }
 }
 
@@ -798,46 +802,81 @@ void InitGLView()
 
 void GLFrame()
 {
+    float y;
+    float VerticalSpacing = 10.f;
+    
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-#if 0
-    GL_Set3D();
-    glRotatef(Camera.Angle.x, 1.0f, 0.0f, 0.0f);
-    glRotatef(Camera.Angle.y, 0.0f, 1.0f, 0.0f);
-    glRotatef(Camera.Angle.z, 0.0f, 0.0f, 1.0f);
-    glTranslatef(-Camera.Position.x, -Camera.Position.y, -Camera.Position.z);
-#endif
-    vec3 temp;
-    temp[0] = 1;
-    temp[1] = 0;
-    temp[2] = 0;
-    glm_mat4_identity(VidConf.ModelViewMatrix);
-    glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
-    temp[0] = 0;
-    temp[1] = 1;
-    temp[2] = 0;
-    glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
-    temp[0] = 0;
-    temp[1] = 0;
-    temp[2] = 1;
-    glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
-    temp[0] = -Camera.Position.x;
-    temp[1] = -Camera.Position.y;
-    temp[2] = -Camera.Position.z;
-    glm_translate(VidConf.ModelViewMatrix,temp);
     
+    glm_perspective(glm_rad(110.f),(float) VidConf.Width/ (float) VidConf.Height,1.f, 4096.f,VidConf.PMatrixM4);
+// 
+// #if 0
+//     GL_Set3D();
+//     glRotatef(Camera.Angle.x, 1.0f, 0.0f, 0.0f);
+//     glRotatef(Camera.Angle.y, 0.0f, 1.0f, 0.0f);
+//     glRotatef(Camera.Angle.z, 0.0f, 0.0f, 1.0f);
+//     glTranslatef(-Camera.Position.x, -Camera.Position.y, -Camera.Position.z);
+// #endif
+     vec3 temp;
+     temp[0] = 1;
+     temp[1] = 0;
+     temp[2] = 0;
+     glm_mat4_identity(VidConf.ModelViewMatrix);
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
+     temp[0] = 0;
+     temp[1] = 1;
+     temp[2] = 0;
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
+     temp[0] = 0;
+     temp[1] = 0;
+     temp[2] = 1;
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
+     temp[0] = -Camera.Position.x;
+     temp[1] = -Camera.Position.y;
+     temp[2] = -Camera.Position.z;
+     glm_translate(VidConf.ModelViewMatrix,temp);
+     
+     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
+     
+     //Emulate PSX Coordinate system...
+     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
+     
+ 
+     /* TEMP! */
+     BSDCheckCompartmentTrigger(Level,Camera.Position);
+     DrawTSPList(Level);
+     BSD2PDraw(Level);
+     BSDDraw(Level);
+     
+     glm_mat4_identity(VidConf.MVPMatrix);
+    
+    // 2D Drawing
+    glm_mat4_identity(VidConf.PMatrixM4);
+    glm_ortho(0,VidConf.Width,VidConf.Height,0,-1,1,VidConf.PMatrixM4);
     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-    
-    //Emulate PSX Coordinate system...
-    glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-    
-
-    /* TEMP! */
-    BSDCheckCompartmentTrigger(Level,Camera.Position);
-    DrawTSPList(Level);
-    BSD2PDraw(Level);
-    BSDDraw(Level);
-    
-    glm_mat4_identity(VidConf.MVPMatrix);
+    y = 100;
+    FontDrawString(Level,"Press ESC to exit",10,y);
+    y += VerticalSpacing;
+    FontDrawString(Level,"Press c to show or hide collision data",10,y);
+    y += VerticalSpacing;
+    FontDrawString(Level,"Press b to show or hide BSP tree data",10,y);
+    y += VerticalSpacing;
+    FontDrawString(Level,"Press i to show or hide BSD showcase",10,y);
+    y += VerticalSpacing;
+    FontDrawString(Level,"Press l to show or hide the level",10,y);
+    y += VerticalSpacing;
+    FontDrawString(Level,"Press n to show or hide BSD nodes as points",10,y);
+    y += VerticalSpacing;
+    FontDrawString(Level,"Press p to show or hide BSD RenderObject",10,y);
+    y += VerticalSpacing;
+    FontDrawString(Level,"Press r to show or hide BSD RenderObject as points",10,y);
+    y += VerticalSpacing;
+    FontDrawString(Level,"Press q to enable or disable wireframe mode",10,y);
+    y += VerticalSpacing;
+//     FontDrawString(Level,"Press w a s d to move camera around",10,y);
+//     FontDrawString(Level,"a b c d e f g h i j k l m n o p q r s t u v w x y z",0,VidConf.Height / 2);
+//     FontDrawString(Level,"A B C D E F G H I J K L M N O P Q R S T U V W X Y Z",0,(VidConf.Height / 2 ) + 10);
+//     FontDrawString(Level,"0 1 2 3 4 5 6 7 8 9 10",0,(VidConf.Height / 2 ) + 20);
+//     FontDrawString(Level,"? ! \" ' ",0,(VidConf.Height / 2 ) + 30);
 }
 
 void SetDefaultSettings(Level_t *Level)
@@ -928,11 +967,11 @@ int main(int argc,char **argv)
     InitGLView();
     Cam_Init(&Camera);
     Level->VRam = VRamInit(Level->ImageList);
+    Level->Font = FontInit();
 //     DPrintf("OpenGL Version:%s\n",glGetString(GL_VERSION));
     /* TEMP! */
-    glm_perspective(glm_rad(110.f),(float) VidConf.Width/ (float) VidConf.Height,1.f, 4096.f,VidConf.PMatrixM4);
     
-    CreateVAO(Level->TSPList);
+    TSPCreateVAO(Level->TSPList);
     BSDVAOPointList(Level->BSD);
     BSD2PVAOPointList(Level->BSDTwoP);
     BSDVAOObjectList(Level->BSD);

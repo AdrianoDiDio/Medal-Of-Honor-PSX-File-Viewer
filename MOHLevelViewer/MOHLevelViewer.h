@@ -160,6 +160,7 @@ typedef struct Level_s {
     TSP_t  *TSPList;
     TIMImage_t *ImageList;
     VRam_t *VRam;
+    Font_t *Font;
     LevelSettings_t Settings;
     // At any time there can only be 4 tsp to be rendered.
     int     TSPNumberRenderList[4];

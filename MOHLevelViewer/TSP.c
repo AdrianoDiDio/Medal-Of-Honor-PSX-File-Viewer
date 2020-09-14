@@ -19,7 +19,7 @@
 
 #include "MOHLevelViewer.h"
 
-void CreateVAO(TSP_t *TSPList)
+void TSPCreateVAO(TSP_t *TSPList)
 {
     TSP_t *Iterator;
     float Width = 256.f;
