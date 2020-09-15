@@ -174,6 +174,54 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
 
 }
 
+void TSPCreateCollisionVAO(TSP_t *TSPList)
+{
+    TSP_t *Iterator;
+    float Width = 256.f;
+    float Height = 256.f;
+    int i;
+    float *VertexData;
+    int VertexSize;
+    int VertexPointer;
+    int Stride;
+
+    for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+        for( i = 0; i < Iterator->CollisionData->Header.NumFaces; i++ ) {
+            Vao_t *Vao;
+            int Vert0 = Iterator->CollisionData->Face[i].V0;
+            int Vert1 = Iterator->CollisionData->Face[i].V1;
+            int Vert2 = Iterator->CollisionData->Face[i].V2;
+            //       XYZ
+            Stride = (3) * sizeof(float);
+                
+            VertexSize = Stride;
+            VertexData = malloc(VertexSize * 3/** sizeof(float)*/);
+            VertexPointer = 0;
+                    
+            VertexData[VertexPointer] =   Iterator->CollisionData->Vertex[Vert0].Position.x;
+            VertexData[VertexPointer+1] = Iterator->CollisionData->Vertex[Vert0].Position.y;
+            VertexData[VertexPointer+2] = Iterator->CollisionData->Vertex[Vert0].Position.z;
+            VertexPointer += 3;
+            
+            VertexData[VertexPointer] =   Iterator->CollisionData->Vertex[Vert1].Position.x;
+            VertexData[VertexPointer+1] = Iterator->CollisionData->Vertex[Vert1].Position.y;
+            VertexData[VertexPointer+2] = Iterator->CollisionData->Vertex[Vert1].Position.z;
+            VertexPointer += 3;
+            
+            VertexData[VertexPointer] =   Iterator->CollisionData->Vertex[Vert2].Position.x;
+            VertexData[VertexPointer+1] = Iterator->CollisionData->Vertex[Vert2].Position.y;
+            VertexData[VertexPointer+2] = Iterator->CollisionData->Vertex[Vert2].Position.z;
+            VertexPointer += 3;
+            
+            Vao = VaoInitXYZ(VertexData,VertexSize * 3,Stride,0);            
+            Vao->Next = Iterator->CollisionVaoList;
+            Iterator->CollisionVaoList = Vao;
+            free(VertexData);
+        }
+    }
+
+}
+
 void DrawTSP(TSP_t *TSP)
 {
 #if 1
@@ -282,45 +330,33 @@ void DrawTSPBox(TSPNode_t Node)
 //     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
     glUseProgram(0);
-#if 0
-    float Data {
-        Box.Min.x, Box.Min.y, Box.Min.z
-        Box.Min.x, Box.Min.y, Box.Max.z
-        Box.Max.x, Box.Min.y, Box.Max.z
-        Box.Max.x, Box.Min.y, Box.Min.z
-        Box.Min.x, Box.Max.y, Box.Min.z
-        Box.Min.x, Box.Max.y, Box.Max.z
-        Box.Max.x, Box.Max.y, Box.Max.z
-        Box.Max.x, Box.Max.y, Box.Min.z
-    }
-    glBegin(GL_LINE_LOOP);
-    glVertex3s(Box.Min.x, Box.Min.y, Box.Min.z);
-    glVertex3s(Box.Min.x, Box.Min.y, Box.Max.z);
-    glVertex3s(Box.Max.x, Box.Min.y, Box.Max.z);
-    glVertex3s(Box.Max.x, Box.Min.y, Box.Min.z);
-    glEnd();
-    
-    glBegin(GL_LINE_LOOP);
-    glVertex3s(Box.Min.x, Box.Max.y, Box.Min.z);
-    glVertex3s(Box.Min.x, Box.Max.y, Box.Max.z);
-    glVertex3s(Box.Max.x, Box.Max.y, Box.Max.z);
-    glVertex3s(Box.Max.x, Box.Max.y, Box.Min.z);
-    glEnd();
-    
-    glBegin(GL_LINES);
-    glVertex3s(Box.Min.x, Box.Min.y, Box.Min.z);
-    glVertex3s(Box.Min.x, Box.Max.y, Box.Min.z);
-    glVertex3s(Box.Min.x, Box.Min.y, Box.Max.z);
-    glVertex3s(Box.Min.x, Box.Max.y, Box.Max.z);
-
-    glVertex3s(Box.Max.x, Box.Min.y, Box.Min.z);
-    glVertex3s(Box.Max.x, Box.Max.y, Box.Min.z);
-    glVertex3s(Box.Max.x, Box.Min.y, Box.Max.z);
-    glVertex3s(Box.Max.x, Box.Max.y, Box.Max.z);
-    glEnd();
-#endif
 }
 
+void DrawTSPCollisionData(TSP_t *TSP)
+{
+    Vao_t *Iterator;
+    GL_Shader_t *Shader;
+    int MVPMatrixID;
+    
+    if( !TSP ) {
+        DPrintf("Invalid TSP...\n");
+        return;
+    }
+    
+    Shader = Shader_Cache("TSPCollisionShader","Shaders/TSPCollisionVertexShader.glsl","Shaders/TSPCollisionFragmentShader.glsl");
+    glUseProgram(Shader->ProgramID);
+
+    MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+    glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+    
+    for( Iterator = TSP->CollisionVaoList; Iterator; Iterator = Iterator->Next ) {
+        glBindVertexArray(Iterator->VaoID[0]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(0);
+    }
+    glUseProgram(0);
+
+}
 bool IsTSPInRenderArray(Level_t *Level,int TSPNumber)
 {
     int i;
@@ -336,6 +372,7 @@ void DrawTSPList(Level_t *Level)
 {
     TSP_t *TSPData;
     TSP_t *Iterator;
+    Vao_t *VaoIterator;
     int i;
     
     TSPData = Level->TSPList;
@@ -362,6 +399,11 @@ void DrawTSPList(Level_t *Level)
                 }
                 DrawTSPBox(Iterator->Node[i]);
             }
+        }
+    }
+    if( Level->Settings.ShowCollisionData ) {
+        for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
+            DrawTSPCollisionData(Iterator);
         }
     }
 #if 0

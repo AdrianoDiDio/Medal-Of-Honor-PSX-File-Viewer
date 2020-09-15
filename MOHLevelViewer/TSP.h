@@ -175,6 +175,7 @@ typedef struct TSP_s {
     //
     int          Number;
     Vao_t       *VaoList;
+    Vao_t       *CollisionVaoList;
     struct TSP_s *Next;
 } TSP_t;
 
@@ -185,4 +186,5 @@ TSP_t  *TSPLoad(char *FName,int TSPNumber);
 void    DrawTSPList(Level_t *Level);
 void    TSPCreateVAO(TSP_t *TSP);
 void TSPCreateNodeBBoxVAO(TSP_t *TSPList);
+void TSPCreateCollisionVAO(TSP_t *TSPList);
 #endif //__TSPVIEWER_H_

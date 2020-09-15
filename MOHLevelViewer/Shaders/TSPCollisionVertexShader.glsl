@@ -6,8 +6,7 @@ out vec3 ourColor;
 
 void main()
 {
-    mat4 View = mat4(1.0);
-
     gl_Position =  MVPMatrix * vec4(aPos, 1.0);
-    ourColor = vec3(1.0,0.0,0.0);
+    ourColor = vec3(1.0,1.0,1.0);
 }
+ 

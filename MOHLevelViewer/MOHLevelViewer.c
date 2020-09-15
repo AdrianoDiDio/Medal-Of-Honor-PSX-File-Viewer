@@ -973,6 +973,7 @@ int main(int argc,char **argv)
     
     TSPCreateVAO(Level->TSPList);
     TSPCreateNodeBBoxVAO(Level->TSPList);
+    TSPCreateCollisionVAO(Level->TSPList);
     BSDVAOPointList(Level->BSD);
     BSD2PVAOPointList(Level->BSDTwoP);
     BSDVAOObjectList(Level->BSD);
