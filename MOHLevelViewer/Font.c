@@ -120,7 +120,7 @@ void FontLoadChar(Font_t *Font,int CharIndex,float RowX,float RowY)
     Font->Characters[CharIndex] = VaoInitXYUV(VertexData,DataSize,Stride,0,2,-1,-1,true);
 }
 
-void FontDrawChar(char c,float x,float y)
+void FontDrawChar(char c,float x,float y,Color_t Color)
 {
     GL_Shader_t *Shader;
     int OrthoMatrixID;
@@ -130,10 +130,10 @@ void FontDrawChar(char c,float x,float y)
     int CharIndex;
     
     
-    color[0] = 1;
-    color[1] = 1;
-    color[2] = 1;
-    color[3] = 1;
+    color[0] = Color.r;
+    color[1] = Color.g;
+    color[2] = Color.b;
+    color[3] = Color.a;
     
     Shader = Shader_Cache("FontShader","Shaders/FontVertexShader.glsl","Shaders/FontFragmentShader.glsl");
     glUseProgram(Shader->ProgramID);
@@ -154,7 +154,7 @@ void FontDrawChar(char c,float x,float y)
     glBindVertexArray(0);
 }
 
-void FontDrawString(Level_t *Level,char *String,float x,float y)
+void FontDrawString(Level_t *Level,char *String,float x,float y,Color_t Color)
 {
 
     float Spacing = 10.f;
@@ -168,7 +168,7 @@ void FontDrawString(Level_t *Level,char *String,float x,float y)
             String++;
             continue;
         }
-        FontDrawChar(*String,currentX,y);
+        FontDrawChar(*String,currentX,y,Color);
         currentX += Spacing;
         String++;
     }

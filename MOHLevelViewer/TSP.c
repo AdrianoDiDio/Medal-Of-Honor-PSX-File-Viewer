@@ -99,6 +99,81 @@ void TSPCreateVAO(TSP_t *TSPList)
 
 }
 
+void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
+{
+    TSP_t *Iterator;
+    int i;
+    float *VertexData;
+    int VertexSize;
+    int VertexPointer;
+    int Stride;
+
+    for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+        for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
+            if( Iterator->Node[i].NumFaces == 0 ) {
+                continue;
+            }
+            //       XYZ
+            Stride = (3) * sizeof(float);
+        
+            VertexSize = Stride;
+            VertexData = malloc(VertexSize * 8/** sizeof(float)*/);
+            VertexPointer = 0;
+                    
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Min.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Min.z;
+            VertexPointer += 3;
+                        
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Min.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
+            VertexPointer += 3;
+            
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
+            VertexPointer += 3;
+            
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Min.z;
+            VertexPointer += 3;
+            
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Min.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Max.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Min.z;
+            VertexPointer += 3;
+            
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Min.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Max.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
+            VertexPointer += 3;
+                        
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Max.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
+            VertexPointer += 3;
+            
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Max.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Min.z;
+            VertexPointer += 3;
+
+            
+            unsigned short Index[16] = {
+                0, 1, 2, 3,
+                4, 5, 6, 7,
+                0, 4, 1, 5, 2, 6, 3, 7
+            };
+            
+            Iterator->Node[i].BBoxVao = VaoInitXYZIBO(VertexData,VertexSize * 8,Stride,Index,sizeof(Index),0);            
+            free(VertexData);
+        }
+    }
+
+}
+
 void DrawTSP(TSP_t *TSP)
 {
 #if 1
@@ -184,9 +259,40 @@ void TSPPrintColor(TSPColor_t Color)
     printf("RGBA:(%i;%i;%i;%i)\n",Color.r,Color.g,Color.b,Color.a);
 }
 
-void DrawTSPBox(TSPBBox_t Box)
+void DrawTSPBox(TSPNode_t Node)
 {
+    
+    GL_Shader_t *Shader;
+    int MVPMatrixID;
+    
+    Shader = Shader_Cache("TSPBBoxShader","Shaders/TSPBBoxVertexShader.glsl","Shaders/TSPBBoxFragmentShader.glsl");
+    glUseProgram(Shader->ProgramID);
+
+    MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+    glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+    
+//     glBindBuffer(GL_ARRAY_BUFFER,Node.BBoxVao->VboID[0]);
+    glBindVertexArray(Node.BBoxVao->VaoID[0]);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Node.BBoxVao->IboID[0]);
+    glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, (GLvoid*)(4*sizeof(unsigned short)));
+    glDrawElements(GL_LINES, 8, GL_UNSIGNED_SHORT, (GLvoid*)(8*sizeof(unsigned short)));
+//     glBindVertexArray(Iterator->VaoID[0]);
+//     
+//     glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glUseProgram(0);
 #if 0
+    float Data {
+        Box.Min.x, Box.Min.y, Box.Min.z
+        Box.Min.x, Box.Min.y, Box.Max.z
+        Box.Max.x, Box.Min.y, Box.Max.z
+        Box.Max.x, Box.Min.y, Box.Min.z
+        Box.Min.x, Box.Max.y, Box.Min.z
+        Box.Min.x, Box.Max.y, Box.Max.z
+        Box.Max.x, Box.Max.y, Box.Max.z
+        Box.Max.x, Box.Max.y, Box.Min.z
+    }
     glBegin(GL_LINE_LOOP);
     glVertex3s(Box.Min.x, Box.Min.y, Box.Min.z);
     glVertex3s(Box.Min.x, Box.Min.y, Box.Max.z);
@@ -230,6 +336,7 @@ void DrawTSPList(Level_t *Level)
 {
     TSP_t *TSPData;
     TSP_t *Iterator;
+    int i;
     
     TSPData = Level->TSPList;
     
@@ -244,6 +351,17 @@ void DrawTSPList(Level_t *Level)
 //                 continue;
 //             }
             DrawTSP(Iterator);
+        }
+    }
+    
+    if( Level->Settings.ShowAABBTree ) {
+        for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
+            for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
+                if( Iterator->Node[i].NumFaces == 0 ) {
+                    continue;
+                }
+                DrawTSPBox(Iterator->Node[i]);
+            }
         }
     }
 #if 0

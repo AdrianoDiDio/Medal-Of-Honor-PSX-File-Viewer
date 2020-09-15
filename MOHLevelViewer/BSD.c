@@ -496,10 +496,10 @@ void BSDShowCaseRenderObject(BSD_t *BSD)
     PSpawn = BSDGetPlayerSpawn(BSD);
     
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        if( /*BSD->RenderObjectTable.RenderObjectList[i].ID != 1342027320 ||*/
-            BSD->RenderObjectTable.RenderObjectList[i].Type != BSD_RENDER_OBJECT_PICKUP_AND_EXPLOSIVE ) {
-            continue;
-        }
+//         if( /*BSD->RenderObjectTable.RenderObjectList[i].ID != 1342027320 ||*/
+//             BSD->RenderObjectTable.RenderObjectList[i].Type != BSD_RENDER_OBJECT_PICKUP_AND_EXPLOSIVE ) {
+//             continue;
+//         }
         Object = malloc(sizeof(BSDRenderObject_t));
         Object->Type = BSD->RenderObjectTable.RenderObjectList[i].Type;
         Object->Position.x = PSpawn.x - (i * 200.f);

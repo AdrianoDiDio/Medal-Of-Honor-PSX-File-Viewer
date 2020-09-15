@@ -197,6 +197,37 @@ Vao_t *VaoInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int Co
     return Vao;
 }
 
+Vao_t *VaoInitXYZIBO(float *Data,int DataSize,int Stride,unsigned short *Index,int IndexSize,int VertexOffset)
+{
+    Vao_t *Vao;
+    
+    Vao = malloc(sizeof(Vao_t));
+    
+    glGenVertexArrays(1, &Vao->VaoID[0]);
+    glBindVertexArray(Vao->VaoID[0]);
+        
+    glGenBuffers(1, Vao->VboID);
+    glBindBuffer(GL_ARRAY_BUFFER, Vao->VboID[0]);
+    glBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
+    glVertexAttribPointer(0,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(VertexOffset));
+    glEnableVertexAttribArray(0);
+    
+    glGenBuffers(1, Vao->IboID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Vao->IboID[0]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, IndexSize,Index,GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    
+
+    Vao->TSB = -1;
+    Vao->TextureID = -1;
+    
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
+    
+    return Vao;
+}
+
 Vao_t *VaoInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset)
 {
     Vao_t *Vao;

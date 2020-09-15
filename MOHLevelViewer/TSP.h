@@ -80,6 +80,7 @@ typedef struct TSPNode_s {
     IntShortUnion U3; // 24
     int BaseData; // BaseData / sizeof(TSPFace_t) If NumFaces != 0 or BaseData / sizeof(TSPNode_t) If NumFaces == 0
     
+    Vao_t *BBoxVao;
     struct TSPNode_s *Child[2];
 //     IntShortUnion Child1Offset;
 //     IntShortUnion Child2Offset;
@@ -183,4 +184,5 @@ typedef struct Level_s Level_t;
 TSP_t  *TSPLoad(char *FName,int TSPNumber);
 void    DrawTSPList(Level_t *Level);
 void    TSPCreateVAO(TSP_t *TSP);
+void TSPCreateNodeBBoxVAO(TSP_t *TSPList);
 #endif //__TSPVIEWER_H_

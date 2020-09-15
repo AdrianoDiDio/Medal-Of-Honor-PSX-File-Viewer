@@ -25,6 +25,7 @@ typedef struct Vao_s
 {
     unsigned int VaoID[1];
     unsigned int VboID[1];
+    unsigned int IboID[1];
     int          TextureID;
     short        TSB;
 //     float       *Data;
@@ -37,6 +38,8 @@ Vao_t *VaoInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int 
 Vao_t *VaoInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID);
 Vao_t *VaoInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset);
 Vao_t *VaoInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset);
+// 3D Indexed
+Vao_t *VaoInitXYZIBO(float *Data,int DataSize,int Stride,unsigned short *Index,int IndexSize,int VertexOffset);
 // 2D
 Vao_t *VaoInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,
                       bool StaticDraw);
