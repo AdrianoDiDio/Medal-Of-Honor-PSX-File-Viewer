@@ -102,6 +102,11 @@ void TSPCreateVAO(TSP_t *TSPList)
 void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
 {
     TSP_t *Iterator;
+    float Width = 256.f;
+    float Height = 256.f;
+    int VertexOffset;
+    int TextureOffset;
+    int ColorOffset;
     int i;
     int j;
     float *VertexData;
@@ -112,19 +117,76 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
             if( Iterator->Node[i].NumFaces != 0 ) {
-                int Base = Iterator->Node[i].BaseData / sizeof(TSPCollisionFace_t);
+                int Base = Iterator->Node[i].BaseData / sizeof(TSPFace_t);
                 int Target = Base + Iterator->Node[i].NumFaces;
                 for( j = Base; j < Target; j++ ) {
-                    int Vert0 = Iterator->CollisionData->Face[j].V0;
-                    int Vert1 = Iterator->CollisionData->Face[j].V1;
-                    int Vert2 = Iterator->CollisionData->Face[j].V2;
+                    Vao_t *Vao;
+                    int Vert0 = Iterator->Face[j].V0;
+                    int Vert1 = Iterator->Face[j].V1;
+                    int Vert2 = Iterator->Face[j].V2;
                     
-                    DPrintf("Node %i has collision V0: %i;%i;%i\n",i,Iterator->CollisionData->Vertex[Vert0].Position.x,
-                            Iterator->CollisionData->Vertex[Vert0].Position.y,Iterator->CollisionData->Vertex[Vert0].Position.z);
-                    DPrintf("Node %i has collision V1: %i;%i;%i\n",i,Iterator->CollisionData->Vertex[Vert1].Position.x,
-                            Iterator->CollisionData->Vertex[Vert1].Position.y,Iterator->CollisionData->Vertex[Vert1].Position.z);
-                    DPrintf("Node %i has collision V2: %i;%i;%i\n",i,Iterator->CollisionData->Vertex[Vert2].Position.x,
-                            Iterator->CollisionData->Vertex[Vert2].Position.y,Iterator->CollisionData->Vertex[Vert2].Position.z);
+                    float U0 = (((float)Iterator->Face[j].UV0.u)/Width);
+                    float V0 = /*255 -*/(((float)Iterator->Face[j].UV0.v) / Height);
+                    float U1 = (((float)Iterator->Face[j].UV1.u) / Width);
+                    float V1 = /*255 -*/(((float)Iterator->Face[j].UV1.v) /Height);
+                    float U2 = (((float)Iterator->Face[j].UV2.u) /Width);
+                    float V2 = /*255 -*/(((float)Iterator->Face[j].UV2.v) / Height);
+
+//             int TexturePage = Iterator->Face[i].TSB.AsShort & 0x1F;
+
+            //            XYZ UV RGB
+                    Stride = (3 + 2 + 3) * sizeof(float);
+                
+                    VertexOffset = 0;
+                    TextureOffset = 3;
+                    ColorOffset = 5;
+                
+                    VertexSize = Stride;
+                    VertexData = malloc(VertexSize * 3/** sizeof(float)*/);
+                    VertexPointer = 0;
+                            
+                    VertexData[VertexPointer] =   Iterator->Vertex[Vert0].Position.x;
+                    VertexData[VertexPointer+1] = Iterator->Vertex[Vert0].Position.y;
+                    VertexData[VertexPointer+2] = Iterator->Vertex[Vert0].Position.z;
+                    VertexData[VertexPointer+3] = U0;
+                    VertexData[VertexPointer+4] = V0;
+                    VertexData[VertexPointer+5] = Iterator->Color[Vert0].r / 255.f;
+                    VertexData[VertexPointer+6] = Iterator->Color[Vert0].g / 255.f;
+                    VertexData[VertexPointer+7] = Iterator->Color[Vert0].b / 255.f;
+                    VertexPointer += 8;
+                    
+                    VertexData[VertexPointer] =   Iterator->Vertex[Vert1].Position.x;
+                    VertexData[VertexPointer+1] = Iterator->Vertex[Vert1].Position.y;
+                    VertexData[VertexPointer+2] = Iterator->Vertex[Vert1].Position.z;
+                    VertexData[VertexPointer+3] = U1;
+                    VertexData[VertexPointer+4] = V1;
+                    VertexData[VertexPointer+5] = Iterator->Color[Vert1].r / 255.f;
+                    VertexData[VertexPointer+6] = Iterator->Color[Vert1].g / 255.f;
+                    VertexData[VertexPointer+7] = Iterator->Color[Vert1].b / 255.f;
+                    VertexPointer += 8;
+                    
+                    VertexData[VertexPointer] =   Iterator->Vertex[Vert2].Position.x;
+                    VertexData[VertexPointer+1] = Iterator->Vertex[Vert2].Position.y;
+                    VertexData[VertexPointer+2] = Iterator->Vertex[Vert2].Position.z;
+                    VertexData[VertexPointer+3] = U2;
+                    VertexData[VertexPointer+4] = V2;
+                    VertexData[VertexPointer+5] = Iterator->Color[Vert2].r / 255.f;
+                    VertexData[VertexPointer+6] = Iterator->Color[Vert2].g / 255.f;
+                    VertexData[VertexPointer+7] = Iterator->Color[Vert2].b / 255.f;
+                    VertexPointer += 8;
+                    
+                    Vao = VaoInitXYZUVRGB(VertexData,VertexSize * 3,Stride,VertexOffset,TextureOffset,ColorOffset,
+                                          Iterator->Face[j].TSB.AsShort,-1);            
+                    Vao->Next = Iterator->Node[i].LeafFaceListVao;
+                    Iterator->Node[i].LeafFaceListVao = Vao;
+                    free(VertexData);
+                    
+//                     DPrintf("Node %i has collision V0: %i;%i;%i\n",i,Iterator->CollisionData->Vertex[Vert0].Position.x,
+//                             Iterator->CollisionData->Vertex[Vert0].Position.y,Iterator->CollisionData->Vertex[Vert0].Position.z);
+//                     DPrintf("Node %i has collision V1: %i;%i;%i\n",i,Iterator->CollisionData->Vertex[Vert1].Position.x,
+//                             Iterator->CollisionData->Vertex[Vert1].Position.y,Iterator->CollisionData->Vertex[Vert1].Position.z);
+//                     DPrintf("Node %i has collision V2: %i;%i;%i\n",i,Iterator->CollisionData->Vertex[Vert2].Position.x,
+//                             Iterator->CollisionData->Vertex[Vert2].Position.y,Iterator->CollisionData->Vertex[Vert2].Position.z);
                 }
 //                 continue;
             }
@@ -322,6 +384,7 @@ void TSPPrintColor(TSPColor_t Color)
 
 void DrawTSPBox(TSPNode_t Node)
 {
+    Vao_t *Iterator;
     GL_Shader_t *Shader;
     vec4 BoxColor;
     int MVPMatrixID;
@@ -335,8 +398,36 @@ void DrawTSPBox(TSPNode_t Node)
         BoxColor[1] = 1;
         BoxColor[2] = 0;
         BoxColor[3] = 1;
+
+        // TEST
         
+        Shader = Shader_Cache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
+        glUseProgram(Shader->ProgramID);
+
+        MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+        glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
         
+        if( Level->Settings.WireFrame ) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+
+        for( Iterator = Node.LeafFaceListVao; Iterator; Iterator = Iterator->Next ) {
+            int VRamPage = Iterator->TSB & 0x1F;
+            
+            if( (Iterator->TSB & 0xC0) >> 7 == 1) {
+                glBindTexture(GL_TEXTURE_2D, Level->VRam->Page8Bit[VRamPage].TextureID);
+            } else {
+                glBindTexture(GL_TEXTURE_2D, Level->VRam->Page4Bit[VRamPage].TextureID);
+            }
+            glBindVertexArray(Iterator->VaoID[0]);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+            glBindVertexArray(0);
+            glBindTexture(GL_TEXTURE_2D,0);
+        }
+        glUseProgram(0);
+        // END
     } else {
         //Splitter -- Red
         BoxColor[0] = 1;
@@ -344,7 +435,7 @@ void DrawTSPBox(TSPNode_t Node)
         BoxColor[2] = 0;
         BoxColor[3] = 1;
     }
-    
+
     Shader = Shader_Cache("TSPBBoxShader","Shaders/TSPBBoxVertexShader.glsl","Shaders/TSPBBoxFragmentShader.glsl");
     glUseProgram(Shader->ProgramID);
 

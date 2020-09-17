@@ -81,6 +81,7 @@ typedef struct TSPNode_s {
     int BaseData; // BaseData / sizeof(TSPFace_t) If NumFaces != 0 or BaseData / sizeof(TSPNode_t) If NumFaces == 0
     
     Vao_t *BBoxVao;
+    Vao_t *LeafFaceListVao;
     struct TSPNode_s *Child[2];
 //     IntShortUnion Child1Offset;
 //     IntShortUnion Child2Offset;

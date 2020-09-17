@@ -109,7 +109,7 @@ All TSP files starts with an header which contains the following data:
 **Note that all the offset starts from the beginning of the file.**
 Thanks to this format we can read each chunk separetely by moving the file position to the wanted offset.
 ### BSP Nodes
-The game uses a BSP tree probably for collision detection.
+The game uses a BSP tree for rendering all the level data.
 Each BSP node contains the following data:
 #### Vector3
 
