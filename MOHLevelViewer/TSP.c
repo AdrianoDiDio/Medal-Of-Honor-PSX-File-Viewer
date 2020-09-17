@@ -103,6 +103,7 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
 {
     TSP_t *Iterator;
     int i;
+    int j;
     float *VertexData;
     int VertexSize;
     int VertexPointer;
@@ -110,8 +111,22 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
 
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
-            if( Iterator->Node[i].NumFaces == 0 ) {
-                continue;
+            if( Iterator->Node[i].NumFaces != 0 ) {
+                int Base = Iterator->Node[i].BaseData / sizeof(TSPCollisionFace_t);
+                int Target = Base + Iterator->Node[i].NumFaces;
+                for( j = Base; j < Target; j++ ) {
+                    int Vert0 = Iterator->CollisionData->Face[j].V0;
+                    int Vert1 = Iterator->CollisionData->Face[j].V1;
+                    int Vert2 = Iterator->CollisionData->Face[j].V2;
+                    
+                    DPrintf("Node %i has collision V0: %i;%i;%i\n",i,Iterator->CollisionData->Vertex[Vert0].Position.x,
+                            Iterator->CollisionData->Vertex[Vert0].Position.y,Iterator->CollisionData->Vertex[Vert0].Position.z);
+                    DPrintf("Node %i has collision V1: %i;%i;%i\n",i,Iterator->CollisionData->Vertex[Vert1].Position.x,
+                            Iterator->CollisionData->Vertex[Vert1].Position.y,Iterator->CollisionData->Vertex[Vert1].Position.z);
+                    DPrintf("Node %i has collision V2: %i;%i;%i\n",i,Iterator->CollisionData->Vertex[Vert2].Position.x,
+                            Iterator->CollisionData->Vertex[Vert2].Position.y,Iterator->CollisionData->Vertex[Vert2].Position.z);
+                }
+//                 continue;
             }
             //       XYZ
             Stride = (3) * sizeof(float);
@@ -177,8 +192,6 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
 void TSPCreateCollisionVAO(TSP_t *TSPList)
 {
     TSP_t *Iterator;
-    float Width = 256.f;
-    float Height = 256.f;
     int i;
     float *VertexData;
     int VertexSize;
@@ -309,15 +322,37 @@ void TSPPrintColor(TSPColor_t Color)
 
 void DrawTSPBox(TSPNode_t Node)
 {
-    
     GL_Shader_t *Shader;
+    vec4 BoxColor;
     int MVPMatrixID;
+    int ColorID;
+    
+
+    
+    if( Node.NumFaces != 0 ) {
+        //Leaf -- Yellow
+        BoxColor[0] = 1;
+        BoxColor[1] = 1;
+        BoxColor[2] = 0;
+        BoxColor[3] = 1;
+        
+        
+    } else {
+        //Splitter -- Red
+        BoxColor[0] = 1;
+        BoxColor[1] = 0;
+        BoxColor[2] = 0;
+        BoxColor[3] = 1;
+    }
     
     Shader = Shader_Cache("TSPBBoxShader","Shaders/TSPBBoxVertexShader.glsl","Shaders/TSPBBoxFragmentShader.glsl");
     glUseProgram(Shader->ProgramID);
 
     MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
     glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+    
+    ColorID = glGetUniformLocation(Shader->ProgramID,"Color");
+    glUniform4fv(ColorID,1,BoxColor);
     
 //     glBindBuffer(GL_ARRAY_BUFFER,Node.BBoxVao->VboID[0]);
     glBindVertexArray(Node.BBoxVao->VaoID[0]);
@@ -372,7 +407,6 @@ void DrawTSPList(Level_t *Level)
 {
     TSP_t *TSPData;
     TSP_t *Iterator;
-    Vao_t *VaoIterator;
     int i;
     
     TSPData = Level->TSPList;
@@ -394,9 +428,6 @@ void DrawTSPList(Level_t *Level)
     if( Level->Settings.ShowAABBTree ) {
         for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
             for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
-                if( Iterator->Node[i].NumFaces == 0 ) {
-                    continue;
-                }
                 DrawTSPBox(Iterator->Node[i]);
             }
         }
