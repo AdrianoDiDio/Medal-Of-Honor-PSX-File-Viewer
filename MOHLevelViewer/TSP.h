@@ -75,13 +75,16 @@ typedef struct TSPNode_s {
     TSPNodeFileLookUp_t FileOffset;
     //
     TSPBBox_t BBox; // 12
-    /*unsigned */int NumFaces; // 16
+    /*unsigned */int NumFaces; // 16 This should be an offset relative to the face offset...
     IntShortUnion U2; // 20 //Starting index
     IntShortUnion U3; // 24
-    int BaseData; // BaseData / sizeof(TSPFace_t) If NumFaces != 0 or BaseData / sizeof(TSPNode_t) If NumFaces == 0
+    int BaseData; // This is the Node Dimension...BaseData / sizeof(TSPFace_t) If NumFaces != 0 or BaseData / sizeof(TSPNode_t) If NumFaces == 0
     
     Vao_t *BBoxVao;
     Vao_t *LeafFaceListVao;
+    Vao_t *LeafCollisionFaceListVao;
+    struct TSPNode_s *Child1;
+    struct TSPNode_s *Child2;
     struct TSPNode_s *Child[2];
 //     IntShortUnion Child1Offset;
 //     IntShortUnion Child2Offset;
@@ -172,7 +175,7 @@ typedef struct TSP_s {
     TSPColor_t  *Color;
     TSPD_t      *DBlock;
     TSPCollision_t *CollisionData;
-    
+    TSPNode_t  *BSDTree;
     //
     int          Number;
     Vao_t       *VaoList;
