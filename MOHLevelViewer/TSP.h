@@ -86,6 +86,7 @@ typedef struct TSPNode_s {
     struct TSPNode_s *Child1;
     struct TSPNode_s *Child2;
     struct TSPNode_s *Child[2];
+    struct TSPNode_s *Next;
 //     IntShortUnion Child1Offset;
 //     IntShortUnion Child2Offset;
 } TSPNode_t;

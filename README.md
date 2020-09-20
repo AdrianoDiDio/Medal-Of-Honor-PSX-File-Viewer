@@ -134,15 +134,21 @@ Each BSP node contains the following data:
 | int  | 4 bytes  | Number of Faces |
 | int  | 4 bytes  | Unknown |
 | int  | 4 bytes  | Unknown |
-| int  | 4 bytes  | Unknown |
+| int  | 4 bytes  | Offset |
 | int  | 4 bytes  | Child1 Offset |
 | int  | 4 bytes  | Child2 Offset |
 
-If the Number of faces is zero then this node has child and they can be found by using the two offset.
+If the Number of faces is zero then this node could have a child and they can be found by using the two offset.
 Each child can have an offset equals to -1 in which case it means that it is **NULL**.
+Offset Field has two purposes:
+If NumFaces != 0 then Offset represents the starting position where to load the face array that goes from
+> [Offset;Offset + (NumFaces * sizeof(Face))]
 
-**Note that the child offset starts from the node declaration as seen in the header.**
-E.G: BSD Node offset is 64, Child1 Offset is 24 then the child node will be at **64+24**.
+Otherwise it represents the next node offset in the array that needs to be loaded.
+
+
+**Note that the child and next node offset starts from the node declaration as seen in the header.**  
+E.G: TSP Node offset is 64, Child1 Offset is 24 then the child node will be at **64+24**.
 
 ### Vertex
 

@@ -471,6 +471,7 @@ void DrawNode(TSPNode_t *Node)
     GL_Shader_t *Shader;
     Vao_t *Iterator;
     int MVPMatrixID;
+    int i;
     
     if( !Node ) {
         return;
@@ -547,6 +548,11 @@ void DrawNode(TSPNode_t *Node)
             }
             glUseProgram(0);
         }
+    } else {
+        for( i = 0; i < 2; i++ ) {
+            DrawNode(Node->Child[i]);
+        }
+        DrawNode(Node->Next);
     }
 //     if( Node->Child[0] != NULL ) {
 //         DrawNode(Node->Child1);
@@ -578,11 +584,11 @@ void DrawTSPList(Level_t *Level)
     for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
 //             DrawNode(Iterator->BSDTree);
 //             DrawTSP(Iterator);
-        for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
-            DrawNode(&Iterator->Node[i]);
+//         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
+            DrawNode(&Iterator->Node[0]);
 //                 DPrintf("Drawing %i faces for %s root %i\n",TotalFaceCount2,Iterator->FName,i);
 //                 TotalFaceCount2 = 0;
-        }
+//         }
 //             exit(0);
     }
     
@@ -621,7 +627,6 @@ void TSPLookUpChildNode(TSP_t *TSP,FILE *InFile)
             Offset = TSP->Node[i].FileOffset.Child1Offset + TSP->Header.NodeOffset;
             Index = TSPGetNodeByChildOffset(TSP,Offset);
             assert(Index != -1);
-            DPrintf("For node %i child 0 is %i\n",i,Index);
             TSP->Node[i].Child[0] = &TSP->Node[Index];
         } else {
             TSP->Node[i].Child[0] = NULL;
@@ -630,10 +635,15 @@ void TSPLookUpChildNode(TSP_t *TSP,FILE *InFile)
             Offset = TSP->Node[i].FileOffset.Child2Offset + TSP->Header.NodeOffset;
             Index = TSPGetNodeByChildOffset(TSP,Offset);
             assert(Index != -1);
-            DPrintf("For node %i child 1 is %i\n",i,Index);
             TSP->Node[i].Child[1] = &TSP->Node[Index];
         } else {
             TSP->Node[i].Child[1] = NULL;
+        }
+        if( TSP->Node[i].BaseData > 0 ) {
+            Offset = TSP->Node[i].BaseData + TSP->Header.NodeOffset;
+            Index = TSPGetNodeByChildOffset(TSP,Offset);
+            assert(Index != -1);
+            TSP->Node[i].Next = &TSP->Node[Index];
         }
     }
 }
@@ -649,6 +659,7 @@ void TSPLookUpChildNode(TSP_t *TSP,FILE *InFile)
 
 */
 static int vaoCount = 0;
+static int StaticFaceCounter = 0;
 TSPNode_t *ReadTSPTreeChunk(TSP_t *TSP,int NodeOffset,FILE *InFile)
 {
     TSPNode_t *Node;
@@ -666,6 +677,8 @@ TSPNode_t *ReadTSPTreeChunk(TSP_t *TSP,int NodeOffset,FILE *InFile)
     int VertexPointer;
     int Stride;
     int NodeFilePosition;
+    
+    
     if( !TSP || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
         printf("TSPReadNodeChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
@@ -697,83 +710,27 @@ TSPNode_t *ReadTSPTreeChunk(TSP_t *TSP,int NodeOffset,FILE *InFile)
         } else {
             ExtraOffset = NodeOffset + Node->BaseData;
         }
-        if( Node->FileOffset.Child1Offset < 0 ) {
-            Node->Child1 = NULL;
-        } else {
+//         if( Node->FileOffset.Child1Offset < 0 ) {
+//             Node->Child1 = NULL;
+//         } else {
+            DPrintf("Reading children 1\n");
             Node->Child1 = ReadTSPTreeChunk(TSP,/*Node->BaseData*/ TSP->Header.NodeOffset + Node->FileOffset.Child1Offset,InFile);
-        }
-        if( Node->FileOffset.Child2Offset < 0 ) {
-            Node->Child2 = NULL;
-        } else {
+//         }
+//         if( Node->FileOffset.Child2Offset < 0 ) {
+//             Node->Child2 = NULL;
+//         } else {
+            DPrintf("Reading Children 2\n");
             Node->Child2 = ReadTSPTreeChunk(TSP,/*Node->BaseData*/ TSP->Header.NodeOffset + Node->FileOffset.Child2Offset,InFile);
-        }
+//         }
     } else {
         int Base = Node->BaseData / sizeof(TSPFace_t);
         int Target = Base + Node->NumFaces;
-//         for( j = Base; j < Target; j++ ) {
-//             DPrintf("Allocating vao %i\n",vaoCount++);
-//                     Vao_t *Vao;
-//                     int Vert0 = TSP->Face[j].V0;
-//                     int Vert1 = TSP->Face[j].V1;
-//                     int Vert2 = TSP->Face[j].V2;
-//                     
-//                     float U0 = (((float)TSP->Face[j].UV0.u)/Width);
-//                     float V0 = /*255 -*/(((float)TSP->Face[j].UV0.v) / Height);
-//                     float U1 = (((float)TSP->Face[j].UV1.u) / Width);
-//                     float V1 = /*255 -*/(((float)TSP->Face[j].UV1.v) /Height);
-//                     float U2 = (((float)TSP->Face[j].UV2.u) /Width);
-//                     float V2 = /*255 -*/(((float)TSP->Face[j].UV2.v) / Height);
-// 
-//             int TexturePage = Iterator->Face[i].TSB.AsShort & 0x1F;
-// 
-//                        XYZ UV RGB
-//                     Stride = (3 + 2 + 3) * sizeof(float);
-//                 
-//                     VertexOffset = 0;
-//                     TextureOffset = 3;
-//                     ColorOffset = 5;
-//                 
-//                     VertexSize = Stride;
-//                     VertexData = malloc(VertexSize * 3/** sizeof(float)*/);
-//                     VertexPointer = 0;
-//                             
-//                     VertexData[VertexPointer] =   TSP->Vertex[Vert0].Position.x;
-//                     VertexData[VertexPointer+1] = TSP->Vertex[Vert0].Position.y;
-//                     VertexData[VertexPointer+2] = TSP->Vertex[Vert0].Position.z;
-//                     VertexData[VertexPointer+3] = U0;
-//                     VertexData[VertexPointer+4] = V0;
-//                     VertexData[VertexPointer+5] = TSP->Color[Vert0].r / 255.f;
-//                     VertexData[VertexPointer+6] = TSP->Color[Vert0].g / 255.f;
-//                     VertexData[VertexPointer+7] = TSP->Color[Vert0].b / 255.f;
-//                     VertexPointer += 8;
-//                     
-//                     VertexData[VertexPointer] =   TSP->Vertex[Vert1].Position.x;
-//                     VertexData[VertexPointer+1] = TSP->Vertex[Vert1].Position.y;
-//                     VertexData[VertexPointer+2] = TSP->Vertex[Vert1].Position.z;
-//                     VertexData[VertexPointer+3] = U1;
-//                     VertexData[VertexPointer+4] = V1;
-//                     VertexData[VertexPointer+5] = TSP->Color[Vert1].r / 255.f;
-//                     VertexData[VertexPointer+6] = TSP->Color[Vert1].g / 255.f;
-//                     VertexData[VertexPointer+7] = TSP->Color[Vert1].b / 255.f;
-//                     VertexPointer += 8;
-//                     
-//                     VertexData[VertexPointer] =   TSP->Vertex[Vert2].Position.x;
-//                     VertexData[VertexPointer+1] = TSP->Vertex[Vert2].Position.y;
-//                     VertexData[VertexPointer+2] = TSP->Vertex[Vert2].Position.z;
-//                     VertexData[VertexPointer+3] = U2;
-//                     VertexData[VertexPointer+4] = V2;
-//                     VertexData[VertexPointer+5] = TSP->Color[Vert2].r / 255.f;
-//                     VertexData[VertexPointer+6] = TSP->Color[Vert2].g / 255.f;
-//                     VertexData[VertexPointer+7] = TSP->Color[Vert2].b / 255.f;
-//                     VertexPointer += 8;
-//                     
-//                     Vao = VaoInitXYZUVRGB(VertexData,VertexSize * 3,Stride,VertexOffset,TextureOffset,ColorOffset,
-//                                           TSP->Face[j].TSB.AsShort,-1);            
-//                     Vao->Next = Node->LeafFaceListVao;
-//                     Node->LeafFaceListVao = Vao;
-//                     free(VertexData);
-//                 }
-            }
+        DPrintf("Leaf Node has %i faces!\n",Node->NumFaces);
+        StaticFaceCounter += Node->NumFaces;
+        Node->Child1 = NULL;
+        Node->Child2 = NULL;
+                
+    }
     return Node;
 }
 void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
@@ -800,7 +757,8 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
         fread(&TSP->Node[i].U3.AsInt,sizeof(TSP->Node[i].U3.AsInt),1,InFile);
         fread(&TSP->Node[i].BaseData,sizeof(TSP->Node[i].BaseData),1,InFile);
         DPrintf("TSPReadNodeChunk:Node has %i faces\n",TSP->Node[i].NumFaces);
-        DPrintf("TSPReadNodeChunk:Node BaseData %i\n",TSP->Node[i].BaseData);
+        DPrintf("TSPReadNodeChunk:Node BaseData %i (References offset %i)\n",TSP->Node[i].BaseData,
+                TSP->Node[i].BaseData + TSP->Header.NodeOffset);
         DPrintf("TSPReadNodeChunk:Node U2 %i\n",TSP->Node[i].U2.AsInt);
         DPrintf("TSPReadNodeChunk:Node U3 %i\n",TSP->Node[i].U3.AsInt);
         int Base = TSP->Node[i].BaseData / sizeof(TSPFace_t);
@@ -810,8 +768,8 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
         if( TSP->Node[i].NumFaces == 0 ) {
             fread(&TSP->Node[i].FileOffset.Child1Offset,sizeof(TSP->Node[i].FileOffset.Child1Offset),1,InFile);
             fread(&TSP->Node[i].FileOffset.Child2Offset,sizeof(TSP->Node[i].FileOffset.Child2Offset),1,InFile);
-            DPrintf("TSPReadNodeChunk:Child1:%i\n",TSP->Node[i].FileOffset.Child1Offset);
-            DPrintf("TSPReadNodeChunk:Child2:%i\n",TSP->Node[i].FileOffset.Child2Offset);
+            DPrintf("TSPReadNodeChunk:Child1:%i\n",TSP->Node[i].FileOffset.Child1Offset + TSP->Header.NodeOffset);
+            DPrintf("TSPReadNodeChunk:Child2:%i\n",TSP->Node[i].FileOffset.Child2Offset + TSP->Header.NodeOffset);
         }
     }
     TSPLookUpChildNode(TSP,InFile);
@@ -1145,11 +1103,55 @@ int CountNodeFaces(TSP_t *TSP,TSPNode_t *Node) {
 //                     free(VertexData);
 //         }
         count += Node->NumFaces;
+        return count;
     }
     count += CountNodeFaces(TSP,Node->Child1);
     count += CountNodeFaces(TSP,Node->Child2);
     return count;
     
+}
+
+void Print2DTree(TSPNode_t *Root, int Space)
+{
+    if (Root == NULL)  
+        return;  
+  
+    // Increase distance between levels  
+    Space += 10;  
+  
+    // Process right child first  
+    Print2DTree(Root->Child[1], Space);  
+  
+    // Print current node after space  
+    // count  
+    DPrintf("");
+    for (int i = 10; i < Space; i++)  
+        DPrintf(" ");  
+    DPrintf("%i\n",Root->NumFaces);  
+  
+    // Process left child  
+    Print2DTree(Root->Child[0], Space);  
+}
+
+void padding ( char ch, int n ){
+  int i;
+  
+  for ( i = 0; i < n; i++ )
+    putchar ( ch );
+}
+
+void structure ( TSPNode_t *root, int level ){
+  int i;
+  
+  if ( root == NULL ) {
+    padding ( '\t', level );
+    puts ( "~" );
+  } else {
+    structure ( root->Child[1], level + 1 );
+    padding ( '\t', level );
+    DPrintf ( "%d\n", root->NumFaces );
+    structure ( root->Child[0], level + 1 );
+  }
 }
 TSP_t *TSPLoad(char *FName,int TSPNumber)
 {
@@ -1201,8 +1203,14 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
 //     for( int i = 0; i < TSP->Header.NumNodes; i++) {
         TSP->BSDTree = ReadTSPTreeChunk(TSP,TSP->Header.NodeOffset,TSPFile);
 //         DPrintf("Required vao for %s %i\n",TSP->FName,vaoCount);
-        int Counter = CountNodeFaces(TSP,TSP->BSDTree);
-        DPrintf("Iterated tree %s got %i faces\n",TSP->FName,Counter);
+//         int Counter = CountNodeFaces(TSP,TSP->BSDTree);
+        DPrintf("Iterated tree %s got %i faces\n",TSP->FName,StaticFaceCounter);
+//         DPrintf("Printing IT\n");
+//         for( int i = 0; i < TSP->Header.NumNodes; i++ ) {
+//             DPrintf(" -- TREE %i --\n",i);
+//             structure(&TSP->Node[i],0);
+//         }
+//         DPrintf("DONE\n");
 //     }
     return TSP;
 }
