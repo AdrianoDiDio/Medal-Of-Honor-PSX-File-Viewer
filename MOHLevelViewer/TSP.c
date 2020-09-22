@@ -19,6 +19,44 @@
 
 #include "MOHLevelViewer.h"
 
+void Vec4FromXYZ(float x,float y,float z,vec4 Out)
+{
+    Out[0] = x;
+    Out[1] = y;
+    Out[2] = z;
+    Out[3] = 1;
+}
+
+bool TSPBoxInFrustum(ViewParm_t Camera,TSPBBox_t BBox)
+{
+    vec4 BoxCornerList[8];
+    int BoxOutsideCount;
+    int i;
+    int j;
+    
+    Vec4FromXYZ(BBox.Min.x,BBox.Min.y,BBox.Min.z,BoxCornerList[0]);
+    Vec4FromXYZ(BBox.Max.x,BBox.Min.y,BBox.Min.z,BoxCornerList[1]);
+    Vec4FromXYZ(BBox.Min.x,BBox.Max.y,BBox.Min.z,BoxCornerList[2]);
+    Vec4FromXYZ(BBox.Min.x,BBox.Max.y,BBox.Min.z,BoxCornerList[3]);
+    Vec4FromXYZ(BBox.Min.x,BBox.Min.y,BBox.Max.z,BoxCornerList[4]);
+    Vec4FromXYZ(BBox.Max.x,BBox.Min.y,BBox.Max.z,BoxCornerList[5]);
+    Vec4FromXYZ(BBox.Min.x,BBox.Max.y,BBox.Max.z,BoxCornerList[6]);
+    Vec4FromXYZ(BBox.Max.x,BBox.Max.y,BBox.Max.z,BoxCornerList[7]);
+
+    for( i = 0; i < 6; i++ ) {
+        BoxOutsideCount = 0;
+        for( j = 0; j < 8; j++ ) {
+            if( glm_vec4_dot(Camera.FrustumPlaneList[i],BoxCornerList[j]) < 0.f ) {
+                BoxOutsideCount++;
+            }
+        }
+        if( BoxOutsideCount == 8 ) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void TSPCreateVAO(TSP_t *TSPList)
 {
     TSP_t *Iterator;
@@ -114,18 +152,21 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
     int VertexPointer;
     int Stride;
     int TotalFaceCount = 0;
-
+    int Vert0;
+    int Vert1;
+    int Vert2;
+    Vao_t *Vao;
+    
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
             if( Iterator->Node[i].NumFaces != 0 ) {
                 TotalFaceCount += Iterator->Node[i].NumFaces;
                 int Base = Iterator->Node[i].BaseData / sizeof(TSPFace_t);
                 int Target = Base + Iterator->Node[i].NumFaces;
-                for( j = Base; j < Target; j++ ) {
-                    Vao_t *Vao;
-                    int Vert0 = Iterator->Face[j].V0;
-                    int Vert1 = Iterator->Face[j].V1;
-                    int Vert2 = Iterator->Face[j].V2;
+                for( j = Target - 1; j >= Base; j-- ) {
+                    Vert0 = Iterator->Face[j].V0;
+                    Vert1 = Iterator->Face[j].V1;
+                    Vert2 = Iterator->Face[j].V2;
                     
                     float U0 = (((float)Iterator->Face[j].UV0.u)/Width);
                     float V0 = /*255 -*/(((float)Iterator->Face[j].UV0.v) / Height);
@@ -133,9 +174,6 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                     float V1 = /*255 -*/(((float)Iterator->Face[j].UV1.v) /Height);
                     float U2 = (((float)Iterator->Face[j].UV2.u) /Width);
                     float V2 = /*255 -*/(((float)Iterator->Face[j].UV2.v) / Height);
-
-//             int TexturePage = Iterator->Face[i].TSB.AsShort & 0x1F;
-
             //            XYZ UV RGB
                     Stride = (3 + 2 + 3) * sizeof(float);
                 
@@ -181,16 +219,44 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                                           Iterator->Face[j].TSB.AsShort,-1);            
                     Vao->Next = Iterator->Node[i].LeafFaceListVao;
                     Iterator->Node[i].LeafFaceListVao = Vao;
-                    free(VertexData);
-                    
-//                     DPrintf("Node %i has collision V0: %i;%i;%i\n",i,Iterator->CollisionData->Vertex[Vert0].Position.x,
-//                             Iterator->CollisionData->Vertex[Vert0].Position.y,Iterator->CollisionData->Vertex[Vert0].Position.z);
-//                     DPrintf("Node %i has collision V1: %i;%i;%i\n",i,Iterator->CollisionData->Vertex[Vert1].Position.x,
-//                             Iterator->CollisionData->Vertex[Vert1].Position.y,Iterator->CollisionData->Vertex[Vert1].Position.z);
-//                     DPrintf("Node %i has collision V2: %i;%i;%i\n",i,Iterator->CollisionData->Vertex[Vert2].Position.x,
-//                             Iterator->CollisionData->Vertex[Vert2].Position.y,Iterator->CollisionData->Vertex[Vert2].Position.z);
+                    free(VertexData);                    
                 }
-//                 continue;
+                
+                
+                //COLLISION
+                Base = Iterator->Node[i].BaseData / sizeof(TSPCollisionFace_t);
+                Target = Base + Iterator->Node[i].NumFaces;
+                for( j = Base; j < Target; j++ ) {
+                    Vert0 = Iterator->CollisionData->Face[j].V0;
+                    Vert1 = Iterator->CollisionData->Face[j].V1;
+                    Vert2 = Iterator->CollisionData->Face[j].V2;
+                    //       XYZ
+                    Stride = (3) * sizeof(float);
+                        
+                    VertexSize = Stride;
+                    VertexData = malloc(VertexSize * 3/** sizeof(float)*/);
+                    VertexPointer = 0;
+                            
+                    VertexData[VertexPointer] =   Iterator->CollisionData->Vertex[Vert0].Position.x;
+                    VertexData[VertexPointer+1] = Iterator->CollisionData->Vertex[Vert0].Position.y;
+                    VertexData[VertexPointer+2] = Iterator->CollisionData->Vertex[Vert0].Position.z;
+                    VertexPointer += 3;
+                    
+                    VertexData[VertexPointer] =   Iterator->CollisionData->Vertex[Vert1].Position.x;
+                    VertexData[VertexPointer+1] = Iterator->CollisionData->Vertex[Vert1].Position.y;
+                    VertexData[VertexPointer+2] = Iterator->CollisionData->Vertex[Vert1].Position.z;
+                    VertexPointer += 3;
+                    
+                    VertexData[VertexPointer] =   Iterator->CollisionData->Vertex[Vert2].Position.x;
+                    VertexData[VertexPointer+1] = Iterator->CollisionData->Vertex[Vert2].Position.y;
+                    VertexData[VertexPointer+2] = Iterator->CollisionData->Vertex[Vert2].Position.z;
+                    VertexPointer += 3;
+                    
+                    Vao = VaoInitXYZ(VertexData,VertexSize * 3,Stride,0);            
+                    Vao->Next = Iterator->Node[i].LeafCollisionFaceListVao;
+                    Iterator->Node[i].LeafCollisionFaceListVao = Vao;
+                    free(VertexData);
+                }
             }
             
             //       XYZ
@@ -464,61 +530,28 @@ bool IsTSPInRenderArray(Level_t *Level,int TSPNumber)
     return false;
 }
 
-static int TotalFaceCount2 = 0; 
-
-void DrawNode(TSPNode_t *Node)
+static int TotalFaceCount2 = 0;
+static int NodeCulled = 0;
+void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
 {
     GL_Shader_t *Shader;
     Vao_t *Iterator;
     int MVPMatrixID;
+    int EnableLightingID;
     int i;
     
     if( !Node ) {
         return;
     }
     
-//     if( Node->NumFaces != 0 ) {
-//                 Shader = Shader_Cache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
-//         glUseProgram(Shader->ProgramID);
-// 
-//         MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-//         glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-//                 
-//         if( Level->Settings.WireFrame ) {
-//             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-//         } else {
-//             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-//         }
-//         for( Iterator = Node->LeafFaceListVao; Iterator; Iterator = Iterator->Next ) {
-//             DPrintf("DRawing\n");
-//             int VRamPage = Iterator->TSB & 0x1F;
-//                 
-//             if( (Iterator->TSB & 0xC0) >> 7 == 1) {
-//                 glBindTexture(GL_TEXTURE_2D, Level->VRam->Page8Bit[VRamPage].TextureID);
-//             } else {
-//                 glBindTexture(GL_TEXTURE_2D, Level->VRam->Page4Bit[VRamPage].TextureID);
-//             }
-//             glBindVertexArray(Iterator->VaoID[0]);
-//             glDrawArrays(GL_TRIANGLES, 0, 3);
-//             glBindVertexArray(0);
-//             glBindTexture(GL_TEXTURE_2D,0);
-//         }
-//         glUseProgram(0);
-//         return;
-//     }
-
-//     if( Node->NumFaces != 0 ) {
-//                 TotalFaceCount2 += Node->NumFaces;
-//         return;
-//     }
-//     
-        if( Level->Settings.ShowAABBTree ) {
-//             for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
-//                 for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
-                    DrawTSPBox(*Node);
-//                 }
-//             }
-        }
+    if( LevelSettings.EnableFrustumCulling && !TSPBoxInFrustum(Camera,Node->BBox) ) {
+        NodeCulled++;
+        return;
+    }
+    
+    if( Level->Settings.ShowAABBTree ) {
+        DrawTSPBox(*Node);
+    }
     if( Node->NumFaces != 0 ) {
         if( Level->Settings.ShowMap ) {
             Shader = Shader_Cache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
@@ -526,7 +559,8 @@ void DrawNode(TSPNode_t *Node)
 
             MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
             glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-                    
+            EnableLightingID = glGetUniformLocation(Shader->ProgramID,"EnableLighting");
+            glUniform1i(EnableLightingID, LevelSettings.EnableLighting);
             if( Level->Settings.WireFrame ) {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             } else {
@@ -548,11 +582,25 @@ void DrawNode(TSPNode_t *Node)
             }
             glUseProgram(0);
         }
+        if( Level->Settings.ShowCollisionData ) {
+            Shader = Shader_Cache("TSPCollisionShader","Shaders/TSPCollisionVertexShader.glsl","Shaders/TSPCollisionFragmentShader.glsl");
+            glUseProgram(Shader->ProgramID);
+
+            MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+            glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+            
+            for( Iterator = Node->LeafCollisionFaceListVao; Iterator; Iterator = Iterator->Next ) {
+                glBindVertexArray(Iterator->VaoID[0]);
+                glDrawArrays(GL_TRIANGLES, 0, 3);
+                glBindVertexArray(0);
+            }
+            glUseProgram(0);
+        }
     } else {
         for( i = 0; i < 2; i++ ) {
-            DrawNode(Node->Child[i]);
+            DrawNode(Node->Child[i],LevelSettings);
         }
-        DrawNode(Node->Next);
+        DrawNode(Node->Next,LevelSettings);
     }
 //     if( Node->Child[0] != NULL ) {
 //         DrawNode(Node->Child1);
@@ -582,21 +630,22 @@ void DrawTSPList(Level_t *Level)
     }
     
     for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
+        NodeCulled = 0;
 //             DrawNode(Iterator->BSDTree);
 //             DrawTSP(Iterator);
 //         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
-            DrawNode(&Iterator->Node[0]);
+        DrawNode(&Iterator->Node[0],Level->Settings);
 //                 DPrintf("Drawing %i faces for %s root %i\n",TotalFaceCount2,Iterator->FName,i);
 //                 TotalFaceCount2 = 0;
 //         }
 //             exit(0);
     }
     
-    if( Level->Settings.ShowCollisionData ) {
-        for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
-            DrawTSPCollisionData(Iterator);
-        }
-    }
+//     if( Level->Settings.ShowCollisionData ) {
+//         for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
+//             DrawTSPCollisionData(Iterator);
+//         }
+//     }
 }
 
 int TSPGetNodeByChildOffset(TSP_t *TSP,int Offset)

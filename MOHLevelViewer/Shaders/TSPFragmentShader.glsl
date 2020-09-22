@@ -3,7 +3,7 @@ out vec4 FragColor;
   
 in vec3 ourColor;
 in vec2 TexCoord;
-
+in float LightingEnabled;
 uniform sampler2D ourTexture;
 
 void main()
@@ -17,5 +17,9 @@ void main()
         discard;
     }
     //Water not visible in 1_1/1_2
-    FragColor = TexColor * vec4(ourColor.rgb,1);
+    if( LightingEnabled == 1.0 ) {
+        FragColor = TexColor * vec4(ourColor.rgb,1);
+    } else {
+        FragColor = TexColor;
+    }
 }

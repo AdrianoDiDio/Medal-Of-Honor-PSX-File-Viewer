@@ -108,6 +108,7 @@ typedef struct ComTimeInfo_s
     float Optimal_Time;
     float UpdateLength;
     char  FpsString[256];
+    char  FpsSimpleString[256];
 } ComTimeInfo_t;
 
 
@@ -121,6 +122,8 @@ typedef struct ViewParm_s
     Vec3_t	Up;
     Vec3_t	Right;
     Vec3_t	Forward;
+    vec4    FrustumPlaneList[6];
+    vec4    FrustumCornerList[8];
 } ViewParm_t;
 
 typedef enum
@@ -148,6 +151,8 @@ typedef struct LevelSettings_s {
     bool ShowBSDRenderObject;
     bool DrawBSDRenderObjects;
     bool DrawBSDShowCaseRenderObject;
+    bool EnableFrustumCulling;
+    bool EnableLighting;
 } LevelSettings_t;
 
 typedef struct Level_s {

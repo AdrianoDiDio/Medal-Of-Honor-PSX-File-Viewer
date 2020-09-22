@@ -484,7 +484,7 @@ void Sys_VidInit(int Width, int Height, bool Fullscreen)
 void Sys_CheckKeyEvents()
 {
     SDL_Event Event;
-    float CamSpeed = 20.f;
+    float CamSpeed = 40.f;
     while( SDL_PollEvent(&Event) ) {
         switch( Event.type ) {
             case SDL_MOUSEMOTION:
@@ -542,6 +542,18 @@ void Sys_CheckKeyEvents()
                     // Toggle to render all the available RenderObject.
                     //
                     Level->Settings.DrawBSDShowCaseRenderObject = !Level->Settings.DrawBSDShowCaseRenderObject;
+                }
+                if( Event.key.keysym.sym == SDLK_f ) {
+                    //
+                    // Toggle Frustum Culling
+                    //
+                    Level->Settings.EnableFrustumCulling = !Level->Settings.EnableFrustumCulling;
+                }
+                if( Event.key.keysym.sym == SDLK_g ) {
+                    //
+                    // Toggle Level Lighting
+                    //
+                    Level->Settings.EnableLighting = !Level->Settings.EnableLighting;
                 }
                 if( Event.key.keysym.sym == SDLK_w ) {
                     Cam_Update(&Camera, DIR_FORWARD, CamSpeed * ComTime->Delta);
@@ -610,6 +622,9 @@ bool Com_UpdateDelta()
                 ComTime->Fps,
                 1000.f/(float)ComTime->Fps,
                 ComTime->LastFpsTime,ComTime->Delta);
+        sprintf(ComTime->FpsSimpleString,"FPS %i Ms %.2f ms",
+                ComTime->Fps,
+                1000.f/(float)ComTime->Fps);
         DPrintf("%s\n",ComTime->FpsString);
         DPrintf("Current Camera Position:%f;%f;%f\n",Camera.Position.x,Camera.Position.y,Camera.Position.z);
         ComTime->LastFpsTime = 0;
@@ -840,7 +855,9 @@ void GLFrame()
      //Emulate PSX Coordinate system...
      glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
      
- 
+     glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
+     glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
+     
      /* TEMP! */
      BSDCheckCompartmentTrigger(Level,Camera.Position);
      DrawTSPList(Level);
@@ -854,6 +871,8 @@ void GLFrame()
     glm_ortho(0,VidConf.Width,VidConf.Height,0,-1,1,VidConf.PMatrixM4);
     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
     y = 100;
+    FontDrawString(Level,ComTime->FpsSimpleString,10,y,c_White);
+    y += VerticalSpacing;
     FontDrawString(Level,"Press ESC to exit",10,y,c_White);
     y += VerticalSpacing;
     FontDrawString(Level,"Press c to show or hide collision data",10,y,Level->Settings.ShowCollisionData ? c_Yellow : c_Red);
@@ -872,6 +891,10 @@ void GLFrame()
     y += VerticalSpacing;
     FontDrawString(Level,"Press q to enable or disable wireframe mode",10,y,Level->Settings.WireFrame ? c_Yellow : c_Red);
     y += VerticalSpacing;
+    FontDrawString(Level,"Press f to enable or disable frustum culling",10,y,Level->Settings.EnableFrustumCulling ? c_Yellow : c_Red);
+    y += VerticalSpacing;
+    FontDrawString(Level,"Press g to enable or disable level Lighting",10,y,Level->Settings.EnableLighting ? c_Yellow : c_Red);
+    y += VerticalSpacing;
     FontDrawString(Level,"Press w a s d to move camera around",10,y,c_White);
 //     FontDrawString(Level,"a b c d e f g h i j k l m n o p q r s t u v w x y z",0,VidConf.Height / 2);
 //     FontDrawString(Level,"A B C D E F G H I J K L M N O P Q R S T U V W X Y Z",0,(VidConf.Height / 2 ) + 10);
@@ -886,6 +909,8 @@ void SetDefaultSettings(Level_t *Level)
     Level->Settings.ShowBSDRenderObject = true;
     Level->Settings.DrawBSDRenderObjects = true;
     Level->Settings.DrawBSDShowCaseRenderObject = false;
+    Level->Settings.EnableFrustumCulling = true;
+    Level->Settings.EnableLighting = true;
 }
 bool InitLevel(char *Directory,char *MissionNumber,char *LevelNumber)
 {
