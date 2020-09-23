@@ -13,11 +13,11 @@ void main()
     TexColor = texture(ourTexture, TexCoord);
     
     //PS1 Uses black color as the transparent color.
-    if( TexColor.rgb == vec3(0.0,0.0,0.0) ) {
+    if( TexColor.r <= 0.0 && TexColor.g <= 0.0 && TexColor.b <= 0.0 ) {
         discard;
     }
     //Water not visible in 1_1/1_2
-    if( LightingEnabled == 1.0 ) {
+    if( LightingEnabled > 0.5 ) {
         FragColor = TexColor * vec4(ourColor.rgb,1);
     } else {
         FragColor = TexColor;

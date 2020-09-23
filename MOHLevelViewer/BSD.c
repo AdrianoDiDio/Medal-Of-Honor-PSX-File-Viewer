@@ -58,7 +58,7 @@ void BSDVAOPointList(BSD_t *BSD)
             NodeData[NodeDataPointer+3] = 0.f;
             NodeData[NodeDataPointer+4] = 1.f;
             NodeData[NodeDataPointer+5] = 0.f;
-        } else if( BSD->NodeData.Node[i].Id == 3088847075 ) {
+        } else if( BSD->NodeData.Node[i].Id == BSD_NODE_SCRIPT ) {
             // Yellow
             NodeData[NodeDataPointer+3] = 1.f;
             NodeData[NodeDataPointer+4] = 1.f;
@@ -356,6 +356,7 @@ void BSDVAOTexturedObjectList(BSD_t *BSD)
             VertexData[VertexPointer+3] = U2;
             VertexData[VertexPointer+4] = V2;
             VertexPointer += 5;
+            
             Vao = VaoInitXYZUV(VertexData,VertexSize * 3,Stride,VertexOffset,TextureOffset,BSD->RenderObjectList[i].Face[j].TexInfo,-1);
             Vao->Next = BSD->RenderObjectList[i].FaceVao;
             BSD->RenderObjectList[i].FaceVao = Vao;
@@ -496,10 +497,10 @@ void BSDShowCaseRenderObject(BSD_t *BSD)
     PSpawn = BSDGetPlayerSpawn(BSD);
     
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-//         if( /*BSD->RenderObjectTable.RenderObjectList[i].ID != 1342027320 ||*/
-//             BSD->RenderObjectTable.RenderObjectList[i].Type != BSD_RENDER_OBJECT_PICKUP_AND_EXPLOSIVE ) {
-//             continue;
-//         }
+        if( /*BSD->RenderObjectTable.RenderObjectList[i].ID != 1342027320 ||*/
+            BSD->RenderObjectTable.RenderObjectList[i].Type != BSD_RENDER_OBJECT_PICKUP_AND_EXPLOSIVE ) {
+            continue;
+        }
         Object = malloc(sizeof(BSDRenderObject_t));
         Object->Type = BSD->RenderObjectTable.RenderObjectList[i].Type;
         Object->Position.x = PSpawn.x - (i * 200.f);
@@ -954,6 +955,7 @@ char *BSDRenderObjectGetEnumStringFromType(int RenderObjectType)
             return "Unknown";
     }
 }
+
 //TODO:Spawn the RenderObject when loading node data!
 //     Some nodes don't have a corresponding RenderObject like the PlayerSpawn.
 //     BSDSpawnEntity(int UBlockID,Vec3_t NodePos) => Store into a list and transform to vao.
@@ -1025,12 +1027,14 @@ void BSDDraw(Level_t *Level)
     glBindVertexArray(0);
     glUseProgram(0);
 #endif
-        
+    
+    
     if( Level->Settings.DrawBSDRenderObjects ) {
             Shader = Shader_Cache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
             glUseProgram(Shader->ProgramID);
             MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-        for( RenderObjectIterator = Level->BSD->RenderObjectRealList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next ) {
+        for( RenderObjectIterator = Level->BSD->RenderObjectRealList; RenderObjectIterator; 
+            RenderObjectIterator = RenderObjectIterator->Next ) {
             vec3 temp;
             glm_mat4_identity(VidConf.ModelViewMatrix);
             temp[0] = 1;
@@ -1158,6 +1162,7 @@ void ParseUVertexData(BSD_t *BSD,FILE *BSDFile)
         if( BSD->RenderObjectTable.RenderObjectList[i].VertOffset == 0 ) {
             continue;
         }
+
         int UVertSize = sizeof(BSDPosition_t) * BSD->RenderObjectTable.RenderObjectList[i].NumVertex;
 //         DPrintf("Element Size is %i\n",UVertSize); 
         BSD->RenderObjectList[i].Vertex = malloc(UVertSize);
@@ -1171,6 +1176,7 @@ void ParseUVertexData(BSD_t *BSD,FILE *BSDFile)
                     BSD->RenderObjectList[i].Vertex[j].y,BSD->RenderObjectList[i].Vertex[j].z,
                     BSD->RenderObjectList[i].Vertex[j].Pad
             );
+            
         }
     }
 }

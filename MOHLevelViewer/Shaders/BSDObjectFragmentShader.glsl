@@ -11,7 +11,7 @@ void main()
     vec4 Color;
 
     TexColor = texture(ourTexture, TexCoord);
-    if( TexColor.rgb == vec3(0.0,0.0,0.0) ) {
+    if( TexColor.r <= 0.0 && TexColor.g <= 0.0 && TexColor.b <= 0.0 ) {
         discard;
     }
     if( TexColor.rgb == vec3(0.14453125,0.14453125,0.21875) ) {

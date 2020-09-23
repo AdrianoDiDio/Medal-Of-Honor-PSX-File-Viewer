@@ -42,9 +42,9 @@
 #include "Tim.h"
 #include "VRam.h"
 #include "Font.h"
+#include "TSP.h"
 #include "BSD.h"
 #include "BSDTwoPlayers.h"
-#include "TSP.h"
 
 #ifdef __linux__
 #define PATHSEPARATOR '/'

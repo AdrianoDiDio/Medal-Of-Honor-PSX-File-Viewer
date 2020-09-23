@@ -14,7 +14,7 @@ void main(void) {
     
     TexColor = texture(ourTexture, TexCoord);
     //PS1 Uses black color as the transparent color.
-    if( TexColor.rgb == vec3(0.0,0.0,0.0) ) {
+    if( TexColor.r <= 0.0 && TexColor.g <= 0.0 && TexColor.b <= 0.0 ) {
         discard;
     }
     FragColor = TexColor * ourColor;

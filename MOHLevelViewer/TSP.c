@@ -530,8 +530,6 @@ bool IsTSPInRenderArray(Level_t *Level,int TSPNumber)
     return false;
 }
 
-static int TotalFaceCount2 = 0;
-static int NodeCulled = 0;
 void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
 {
     GL_Shader_t *Shader;
@@ -545,13 +543,13 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
     }
     
     if( LevelSettings.EnableFrustumCulling && !TSPBoxInFrustum(Camera,Node->BBox) ) {
-        NodeCulled++;
         return;
     }
     
     if( Level->Settings.ShowAABBTree ) {
         DrawTSPBox(*Node);
     }
+
     if( Node->NumFaces != 0 ) {
         if( Level->Settings.ShowMap ) {
             Shader = Shader_Cache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
@@ -619,8 +617,6 @@ void DrawTSPList(Level_t *Level)
 {
     TSP_t *TSPData;
     TSP_t *Iterator;
-    Vao_t *VaoIterator;
-    int i;
     
     TSPData = Level->TSPList;
     
@@ -630,7 +626,6 @@ void DrawTSPList(Level_t *Level)
     }
     
     for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
-        NodeCulled = 0;
 //             DrawNode(Iterator->BSDTree);
 //             DrawTSP(Iterator);
 //         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
@@ -707,26 +702,10 @@ void TSPLookUpChildNode(TSP_t *TSP,FILE *InFile)
         }
 
 */
-static int vaoCount = 0;
-static int StaticFaceCounter = 0;
+
 TSPNode_t *ReadTSPTreeChunk(TSP_t *TSP,int NodeOffset,FILE *InFile)
 {
     TSPNode_t *Node;
-    int Child1Offset;
-    int Child2Offset;
-                float Width = 256.f;
-    float Height = 256.f;
-    int VertexOffset;
-    int TextureOffset;
-    int ColorOffset;
-    int i;
-    int j;
-    float *VertexData;
-    int VertexSize;
-    int VertexPointer;
-    int Stride;
-    int NodeFilePosition;
-    
     
     if( !TSP || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
@@ -753,12 +732,6 @@ TSPNode_t *ReadTSPTreeChunk(TSP_t *TSP,int NodeOffset,FILE *InFile)
         fread(&Node->FileOffset.Child2Offset,sizeof(Node->FileOffset.Child2Offset),1,InFile);
         DPrintf("Node has Child1Offset: %i\n",Node->FileOffset.Child1Offset);
         DPrintf("Node has Child2Offset: %i\n",Node->FileOffset.Child2Offset);
-        int ExtraOffset;
-        if( Node->BaseData < 0 ) {
-            ExtraOffset = 0;
-        } else {
-            ExtraOffset = NodeOffset + Node->BaseData;
-        }
 //         if( Node->FileOffset.Child1Offset < 0 ) {
 //             Node->Child1 = NULL;
 //         } else {
@@ -768,14 +741,9 @@ TSPNode_t *ReadTSPTreeChunk(TSP_t *TSP,int NodeOffset,FILE *InFile)
 //         if( Node->FileOffset.Child2Offset < 0 ) {
 //             Node->Child2 = NULL;
 //         } else {
-            DPrintf("Reading Children 2\n");
             Node->Child2 = ReadTSPTreeChunk(TSP,/*Node->BaseData*/ TSP->Header.NodeOffset + Node->FileOffset.Child2Offset,InFile);
 //         }
     } else {
-        int Base = Node->BaseData / sizeof(TSPFace_t);
-        int Target = Base + Node->NumFaces;
-        DPrintf("Leaf Node has %i faces!\n",Node->NumFaces);
-        StaticFaceCounter += Node->NumFaces;
         Node->Child1 = NULL;
         Node->Child2 = NULL;
                 
