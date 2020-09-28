@@ -163,7 +163,17 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                 TotalFaceCount += Iterator->Node[i].NumFaces;
                 int Base = Iterator->Node[i].BaseData / sizeof(TSPFace_t);
                 int Target = Base + Iterator->Node[i].NumFaces;
-                for( j = Target - 1; j >= Base; j-- ) {
+                for( j = Base; j < Target; j++ ) {
+                    int ColorMode = (Iterator->Face[j].TSB.AsShort & 0x80) >> 7;
+                    int VRamPage = Iterator->Face[j].TSB.AsShort & 0x1F;
+                    int ABRRate = (Iterator->Face[j].TSB.AsShort & 0x60) >> 5;
+                    if( VRamPage != 8 || ColorMode != 1 ) {
+//                         continue;
+                    }
+                    DPrintf("TSB is %u\n",Iterator->Face[j].TSB.AsShort);
+                    DPrintf("Expected VRam Page:%i\n",VRamPage);
+                    DPrintf("Expected Color Mode:%i\n",ColorMode);
+                    DPrintf("Expected ABR rate:%i\n",ABRRate);
                     Vert0 = Iterator->Face[j].V0;
                     Vert1 = Iterator->Face[j].V1;
                     Vert2 = Iterator->Face[j].V2;
@@ -174,6 +184,11 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                     float V1 = /*255 -*/(((float)Iterator->Face[j].UV1.v) /Height);
                     float U2 = (((float)Iterator->Face[j].UV2.u) /Width);
                     float V2 = /*255 -*/(((float)Iterator->Face[j].UV2.v) / Height);
+                    
+                    DPrintf("Tex Coords are %i;%i %i;%i %i;%i\n",
+                            Iterator->Face[j].UV0.u,Iterator->Face[j].UV0.v,
+                            Iterator->Face[j].UV1.u,Iterator->Face[j].UV1.v,
+                            Iterator->Face[j].UV2.u,Iterator->Face[j].UV2.v);
             //            XYZ UV RGB
                     Stride = (3 + 2 + 3) * sizeof(float);
                 
@@ -216,7 +231,7 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                     VertexPointer += 8;
                     
                     Vao = VaoInitXYZUVRGB(VertexData,VertexSize * 3,Stride,VertexOffset,TextureOffset,ColorOffset,
-                                          Iterator->Face[j].TSB.AsShort,-1);            
+                                          Iterator->Face[j].TSB.AsShort,Iterator->Face[j].Unk0.AsShort);            
                     Vao->Next = Iterator->Node[i].LeafFaceListVao;
                     Iterator->Node[i].LeafFaceListVao = Vao;
                     free(VertexData);                    
@@ -387,32 +402,35 @@ void DrawTSP(TSP_t *TSP)
     }
 
     for( Iterator = TSP->VaoList; Iterator; Iterator = Iterator->Next ) {
+//         int VRamPage = Iterator->TSB & 0x1F;
+        int ColorMode = (Iterator->TSB & 0x80) >> 7;
         int VRamPage = Iterator->TSB & 0x1F;
-        
-#if 0
+        int ABRRate = (Iterator->TSB & 0x60) >> 5;
+#if 1
         //DO THIS ONLY IF ABE IS ENABLED...
-        int Trans = (Iterator->TSB & 0x30) >> 4;
-        glEnable(GL_BLEND);
-        if( Trans == 0 ) {
-            glBlendEquation(GL_FUNC_ADD);
-            glBlendColor(1.0, 1.0, 1.0, 0.5);
-            glBlendFunc(GL_CONSTANT_ALPHA, GL_CONSTANT_ALPHA);
-        } else if( Trans == 1 ) {
-            glBlendEquation(GL_FUNC_ADD);
-            glBlendFunc(GL_ONE, GL_ONE);
-        } else if( Trans == 2 ) {
-            glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
-            glBlendFunc(GL_ONE, GL_ONE);
-        } else if ( Trans == 3 ) {
-            glBlendEquation(GL_FUNC_ADD);
-            glBlendColor(1.0, 1.0, 1.0, 0.25);
-            glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE);
-        } else {
-            glDisable(GL_BLEND);
-        }
+//         int Trans = (Iterator->TSB & 0x30) >> 4;
+//         glEnable(GL_BLEND);
+//         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//         if( ABRRate == 0 ) {
+//             glBlendEquation(GL_FUNC_ADD);
+//             glBlendColor(1.0, 1.0, 1.0, 0.5);
+//             glBlendFunc(GL_CONSTANT_ALPHA, GL_CONSTANT_ALPHA);
+//         } else if( ABRRate == 1 ) {
+//             glBlendEquation(GL_FUNC_ADD);
+//             glBlendFunc(GL_ONE, GL_ONE);
+//         } else if( ABRRate == 2 ) {
+//             glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
+//             glBlendFunc(GL_ONE, GL_ONE);
+//         } else if ( ABRRate == 3 ) {
+//             glBlendEquation(GL_FUNC_ADD);
+//             glBlendColor(1.0, 1.0, 1.0, 0.25);
+//             glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE);
+//         } else {
+//             glDisable(GL_BLEND);
+//         }
 #endif
         
-        if( (Iterator->TSB & 0xC0) >> 7 == 1) {
+        if( ColorMode == 1) {
             glBindTexture(GL_TEXTURE_2D, Level->VRam->Page8Bit[VRamPage].TextureID);
         } else {
             glBindTexture(GL_TEXTURE_2D, Level->VRam->Page4Bit[VRamPage].TextureID);
@@ -421,6 +439,7 @@ void DrawTSP(TSP_t *TSP)
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D,0);
+        glDisable(GL_BLEND);
     }
     glUseProgram(0);
 #endif
@@ -567,7 +586,9 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
 
             for( Iterator = Node->LeafFaceListVao; Iterator; Iterator = Iterator->Next ) {
                 int VRamPage = Iterator->TSB & 0x1F;
-                    
+                
+        int Trans = (Iterator->TextureID & 0x30) >> 4;
+//         if( Trans == 0 ) {
                 if( (Iterator->TSB & 0xC0) >> 7 == 1) {
                     glBindTexture(GL_TEXTURE_2D, Level->VRam->Page8Bit[VRamPage].TextureID);
                 } else {
@@ -578,6 +599,7 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
                 glBindVertexArray(0);
                 glBindTexture(GL_TEXTURE_2D,0);
             }
+            glDisable(GL_BLEND);
             glUseProgram(0);
         }
         if( Level->Settings.ShowCollisionData ) {
@@ -635,6 +657,7 @@ void DrawTSPList(Level_t *Level)
 //         }
 //             exit(0);
     }
+    
     
 //     if( Level->Settings.ShowCollisionData ) {
 //         for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
@@ -830,6 +853,7 @@ void TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
         printf("V0:%u\n",TSP->Face[i].V0);
         printf("V1:%u\n",TSP->Face[i].V1);
         printf("V2:%u\n",TSP->Face[i].V2);
+        printf("Unk0:%u\n",TSP->Face[i].Unk0.AsShort);
         printf("TSB:%u\n",TSP->Face[i].TSB.AsShort);
 //     }
 #endif
@@ -960,9 +984,9 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
         printf("TSPReadCollisionChunk:Early failure when reading collision header.\n");
     }
     printf("TSPReadCollisionChunk:Header\n");
-    printf("U0|U1|U2|U3:%u %u %u %u\n",TSP->CollisionData->Header.U0,TSP->CollisionData->Header.U1,TSP->CollisionData->Header.U2,
-        TSP->CollisionData->Header.U3
-    );
+//     printf("U0|U1|U2|U3:%u %u %u %u\n",TSP->CollisionData->Header.U0,TSP->CollisionData->Header.U1,TSP->CollisionData->Header.U2,
+//         TSP->CollisionData->Header.U3
+//     );
     printf("NumGs:%u\n",TSP->CollisionData->Header.NumGs);
     printf("NumHs:%u\n",TSP->CollisionData->Header.NumHs);
     printf("NumVertices:%u\n",TSP->CollisionData->Header.NumVertices);

@@ -181,6 +181,7 @@ typedef struct TSP_s {
     int          Number;
     Vao_t       *VaoList;
     Vao_t       *CollisionVaoList;
+    Vao_t       *WorldBBoxVao;
     struct TSP_s *Next;
 } TSP_t;
 

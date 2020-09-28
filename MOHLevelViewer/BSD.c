@@ -23,6 +23,8 @@
     1_1.BSD Compartment Trigger => 3246.604492;9.330523;-8456.515625
     673.832092;22.795897;-3504.162842
 */
+
+
 void BSDVAOPointList(BSD_t *BSD)
 {
     int NumSkip;
@@ -83,7 +85,6 @@ void BSDVAOPointList(BSD_t *BSD)
     }
     BSD->NodeVao = VaoInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3);            
     free(NodeData);
-//     BSDVAOBoxList(BSD);
 }
 void BSDVAORenderObjectPointList(BSD_t *BSD)
 {
@@ -256,6 +257,7 @@ void BSDVAOBoxList(BSD_t *BSD)
     free(NodeData);
 }
 #endif
+
 void BSDVAOObjectList(BSD_t *BSD)
 {
     float  *NodeData;
@@ -497,10 +499,10 @@ void BSDShowCaseRenderObject(BSD_t *BSD)
     PSpawn = BSDGetPlayerSpawn(BSD);
     
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        if( /*BSD->RenderObjectTable.RenderObjectList[i].ID != 1342027320 ||*/
-            BSD->RenderObjectTable.RenderObjectList[i].Type != BSD_RENDER_OBJECT_PICKUP_AND_EXPLOSIVE ) {
-            continue;
-        }
+//         if( /*BSD->RenderObjectTable.RenderObjectList[i].ID != 1342027320 ||*/
+//             BSD->RenderObjectTable.RenderObjectList[i].Type != 5125 ) {
+//             continue;
+//         }
         Object = malloc(sizeof(BSDRenderObject_t));
         Object->Type = BSD->RenderObjectTable.RenderObjectList[i].Type;
         Object->Position.x = PSpawn.x - (i * 200.f);
@@ -1087,7 +1089,9 @@ void BSDDraw(Level_t *Level)
                 glBindTexture(GL_TEXTURE_2D,0);
             }
         }
+        glUseProgram(0);
     }
+    
     if( Level->Settings.DrawBSDShowCaseRenderObject ) {
         Shader = Shader_Cache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
         glUseProgram(Shader->ProgramID);
@@ -1207,6 +1211,7 @@ void ParseRenderObjectFaceData(BSD_t *BSD,FILE *BSDFile)
         BSD->RenderObjectList[i].Position.y = y;
         BSD->RenderObjectList[i].Position.z = z;
         Vec_RotateXAxis(DEGTORAD(180.f),&BSD->RenderObjectList[i].Position);
+        DPrintf("ParseRenderObjectFaceData:RenderObject ID %u\n",BSD->RenderObjectTable.RenderObjectList[i].ID);
         DPrintf("Face is at %u;%u;%u\n",x,y,z); 
         fseek(BSDFile,BSD->RenderObjectTable.RenderObjectList[i].FaceOffset + 2048,SEEK_SET);
         fread(&BSD->RenderObjectList[i].NumFaces,sizeof(int),1,BSDFile);

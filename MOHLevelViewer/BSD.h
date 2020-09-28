@@ -51,7 +51,8 @@ typedef enum {
     BSD_RENDER_OBJECT_UNKNOWN1 = 5125,
     BSD_RENDER_OBJECT_DESTRUCTIBLE_WINDOW = 6007,
     BSD_RENDER_OBJECT_UNKNOWN3 = 6005,
-    BSD_RENDER_OBJECT_EXPLOSIVE_CHARGE = 6008
+    BSD_RENDER_OBJECT_EXPLOSIVE_CHARGE = 6008,
+    BSD_RENDER_OBJECT_V2_ROCKET = 6004
 } BSDRenderObjectType;
 
 typedef enum {
@@ -132,7 +133,8 @@ unsigned int ID;
     int     FaceOffset;
     char    U[8];
     int     UnknownOffset1; // => References 0x564 BSDFile/EntryTable.
-    char    Pad[72];
+    int     UnknownOffset4;
+    char    Pad[68];
     int     UnknownOffset2; // => References 0x574 BSDFile/EntryTable.
     int     VertOffset;
 unsigned short NumVertex;

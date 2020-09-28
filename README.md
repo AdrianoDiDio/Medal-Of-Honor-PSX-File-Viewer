@@ -290,6 +290,7 @@ By trial and error I've discovered the following RenderObject Types:
 | 6007 | Destructible Windows |
 | 6005 | Unknown |
 | 6008 | Explosive Charges |
+| 6004 | V2 Rocket |
 
 If the Face Data Offset is not zero then the RenderObject can be rendered using the following face structure:
 

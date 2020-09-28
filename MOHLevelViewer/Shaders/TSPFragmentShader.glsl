@@ -12,6 +12,9 @@ void main()
     vec4 Color;
     TexColor = texture(ourTexture, TexCoord);
     
+    if(TexColor.a < 0.5) {
+        discard;
+    }
     //PS1 Uses black color as the transparent color.
     if( TexColor.r <= 0.0 && TexColor.g <= 0.0 && TexColor.b <= 0.0 ) {
         discard;
