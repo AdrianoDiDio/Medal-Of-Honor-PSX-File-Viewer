@@ -184,11 +184,11 @@ Each face is made by 3 vertices that forms a triangle.
 | unsigned short | 2 byte  | V0 First vertex and color index in array |
 | unsigned short | 2 byte  | V1 Second vertex and color index in array |
 | unsigned short | 2 byte  | V2 Third vertex and color index in array |
-| [UV](#uv-coordinates(uv)) | 2 byte  | UV0 Texture coordinate for vertex 0  |
+| [UV](#uv-coordinatesuv) | 2 byte  | UV0 Texture coordinate for vertex 0  |
 | short | 2 byte  | Unknown  |
-| [UV](#uv-coordinates(uv)) | 2 byte  | UV1 Texture coordinate for vertex 1  |
+| [UV](#uv-coordinatesuv) | 2 byte  | UV1 Texture coordinate for vertex 1  |
 | short | 2 byte  | TSB that contains info about the used texture ( read [TSB](#TSB) for more information)|
-| [UV](#uv-coordinates(uv)) | 2 byte  | UV2 Texture coordinate for vertex 2  |
+| [UV](#uv-coordinatesuv) | 2 byte  | UV2 Texture coordinate for vertex 2  |
 
 
 
@@ -296,11 +296,11 @@ If the Face Data Offset is not zero then the RenderObject can be rendered using 
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| [UV](#uv-coordinates(uv))  | 2 bytes  | UV Coordinates of Vertex 0 |
+| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 0 |
 | short  | 2 bytes  | [TSB](#TSB) Info |
-| [UV](#uv-coordinates(uv))  | 2 bytes  | UV Coordinates of Vertex 1 |
+| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 1 |
 | short  | 2 bytes  | Texture Info |
-| [UV](#uv-coordinates(uv))  | 2 bytes  | UV Coordinates of Vertex 2 |
+| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 2 |
 | unsigned int  | 4 bytes  | Vertex Data |
 
 Texture info contains all the information about the used texture for the current face and can be extracted in this way:
