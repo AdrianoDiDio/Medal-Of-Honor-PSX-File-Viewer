@@ -18,116 +18,83 @@
 */ 
 #include "MOHLevelViewer.h"
 
-/* libpng callbacks */ 
-static void png_error_SDL(png_structp ctx, png_const_charp str)
+void VRamWritePNG(SDL_Surface *ImageSurface,char *OutName)
 {
-	SDL_SetError("libpng: %s\n", str);
+    FILE *PNGImage;
+    png_structp PNGPtr;
+    png_infop PNGInfoPtr;
+    Byte **RowPointer;
+    int y;
+
+    
+    PNGImage = fopen(OutName,"wb");
+    
+    if( PNGImage == NULL ) {
+        printf("Error creating image %s!\n",OutName);
+        return;
+    }
+    
+    if( ImageSurface == NULL ) {
+        printf("Couldn't dump %s\n",OutName);
+        return;
+    }
+    
+    DPrintf("Surface has palette:%i\n",ImageSurface->format->palette);
+    DPrintf("Surface has bpp:%i\n",ImageSurface->format->BytesPerPixel);
+    DPrintf("Surface has AMask:%i\n",ImageSurface->format->Amask);
+    PNGPtr = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (PNGPtr == NULL) {
+        printf("PNG: Couldn't create write struct!\n");
+        return;
+    }
+    
+    PNGInfoPtr = png_create_info_struct (PNGPtr);
+    if (PNGInfoPtr == NULL) {
+        printf("PNG: Couldn't create info struct!\n");
+    }
+
+    png_set_IHDR (PNGPtr,
+                  PNGInfoPtr,
+                  ImageSurface->w,
+                  ImageSurface->h,
+                  8, // Depth
+                  PNG_COLOR_TYPE_RGBA,
+                  PNG_INTERLACE_NONE,
+                  PNG_COMPRESSION_TYPE_DEFAULT,
+                  PNG_FILTER_TYPE_DEFAULT);
+    
+    png_init_io (PNGPtr, PNGImage);
+    RowPointer = png_malloc  (PNGPtr, ImageSurface->h * sizeof (Byte *));
+    for (y = 0; y < ImageSurface->h; y++) {
+        RowPointer[y] = ImageSurface->pixels + y * ImageSurface->pitch;
+    }
+    png_set_rows (PNGPtr, PNGInfoPtr, RowPointer);
+    png_write_png (PNGPtr, PNGInfoPtr, PNG_TRANSFORM_IDENTITY, NULL);
+    png_free (PNGPtr, RowPointer);
+    fclose(PNGImage);
 }
-static void png_write_SDL(png_structp png_ptr, png_bytep data, png_size_t length)
+
+void VRamDump(VRam_t *VRam,int VRamSize)
 {
-	SDL_RWops *rw = (SDL_RWops*)png_get_io_ptr(png_ptr);
-	SDL_RWwrite(rw, data, sizeof(png_byte), length);
+    int i;
+    for( i = 0; i < VRamSize; i++ ) {
+        char OutName[256];
+        CreateDirIfNotExists("VRAM");
+        CreateDirIfNotExists("VRAM/VRAM4");
+
+        sprintf(OutName,"VRAM/VRAM4/VRAM%i.png",i);
+        VRamWritePNG(VRam->Page4Bit[i].Surface,OutName);
+//         SDL_SavePNG(VRam->Page4Bit[i].Surface, OutName);
+        
+        CreateDirIfNotExists("VRAM/VRAM8");
+        sprintf(OutName,"VRAM/VRAM8/VRAM%i.png",i);
+        VRamWritePNG(VRam->Page8Bit[i].Surface,OutName);
+
+//         SDL_SavePNG(VRam->Page8Bit[i].Surface, OutName);
+    }
 }
 
-
-int SDL_SavePNG_RW(SDL_Surface *surface, SDL_RWops *dst, int freedst) 
-{
-	png_structp png_ptr;
-	png_infop info_ptr;
-	png_colorp pal_ptr;
-	SDL_Palette *pal;
-	int i, colortype;
-    int rmask = 0x000000ff;
-    int gmask = 0x0000ff00;
-    int bmask = 0x00ff0000;
-	png_bytep *row_pointers;
-
-    /* Initialize and do basic error checking */
-	if (!dst)
-	{
-		SDL_SetError("Argument 2 to SDL_SavePNG_RW can't be NULL, expecting SDL_RWops*\n");
-		return -1;
-	}
-	if (!surface)
-	{
-		SDL_SetError("Argument 1 to SDL_SavePNG_RW can't be NULL, expecting SDL_Surface*\n");
-		if (freedst) SDL_RWclose(dst);
-		return -1;
-	}
-	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, png_error_SDL, NULL); /* err_ptr, err_fn, warn_fn */
-	if (!png_ptr) 
-	{
-		SDL_SetError("Unable to png_create_write_struct on %s\n", PNG_LIBPNG_VER_STRING);
-		if (freedst) SDL_RWclose(dst);
-		return -1;
-	}
-	info_ptr = png_create_info_struct(png_ptr);
-	if (!info_ptr)
-	{
-		SDL_SetError("Unable to png_create_info_struct\n");
-		png_destroy_write_struct(&png_ptr, NULL);
-		if (freedst) SDL_RWclose(dst);
-		return -1;
-	}
-	if (setjmp(png_jmpbuf(png_ptr)))	/* All other errors, see also "png_error_SDL" */
-	{
-		png_destroy_write_struct(&png_ptr, &info_ptr);
-		if (freedst) SDL_RWclose(dst);
-		return -1;
-	}
-
-	/* Setup our RWops writer */
-	png_set_write_fn(png_ptr, dst, png_write_SDL, NULL); /* w_ptr, write_fn, flush_fn */
-
-	/* Prepare chunks */
-	colortype = PNG_COLOR_MASK_COLOR;
-	if (surface->format->BytesPerPixel > 0
-	&&  surface->format->BytesPerPixel <= 8
-	&& (pal = surface->format->palette))
-	{
-		colortype |= PNG_COLOR_MASK_PALETTE;
-		pal_ptr = (png_colorp)malloc(pal->ncolors * sizeof(png_color));
-		for (i = 0; i < pal->ncolors; i++) {
-			pal_ptr[i].red   = pal->colors[i].r;
-			pal_ptr[i].green = pal->colors[i].g;
-			pal_ptr[i].blue  = pal->colors[i].b;
-		}
-		png_set_PLTE(png_ptr, info_ptr, pal_ptr, pal->ncolors);
-		free(pal_ptr);
-	}
-	else if (surface->format->BytesPerPixel > 3 || surface->format->Amask)
-		colortype |= PNG_COLOR_MASK_ALPHA;
-
-	png_set_IHDR(png_ptr, info_ptr, surface->w, surface->h, 8, colortype,
-		PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-
-//	png_set_packing(png_ptr);
-
-	/* Allow BGR surfaces */
-	if (surface->format->Rmask == bmask
-	&& surface->format->Gmask == gmask
-	&& surface->format->Bmask == rmask)
-		png_set_bgr(png_ptr);
-
-	/* Write everything */
-	png_write_info(png_ptr, info_ptr);
-	row_pointers = (png_bytep*) malloc(sizeof(png_bytep)*surface->h);
-	for (i = 0; i < surface->h; i++)
-		row_pointers[i] = (png_bytep)(Uint8*)surface->pixels + i * surface->pitch;
-	png_write_image(png_ptr, row_pointers);
-	free(row_pointers);
-
-	png_write_end(png_ptr, info_ptr);
-
-	/* Done */
-	png_destroy_write_struct(&png_ptr, &info_ptr);
-	if (freedst) SDL_RWclose(dst);
-	return 0;
-}
-#define SDL_SavePNG(surface, file) \
-SDL_SavePNG_RW(surface, SDL_RWFromFile(file, "wb"), 1)
-
-void PutTextureToVRam(VRam_t *VRam,TIMImage_t *Image)
+void VRamPutTexture(VRam_t *VRam,TIMImage_t *Image)
 {
     int VRAMPage;
     SDL_Surface *Src;
@@ -201,21 +168,10 @@ VRam_t *VRamInit(TIMImage_t *ImageList)
     }
 
     for( Iterator = ImageList; Iterator; Iterator = Iterator->Next ) {
-        PutTextureToVRam(VRam,Iterator);
+        VRamPutTexture(VRam,Iterator);
     }
 #ifdef _DEBUG
-    for( i = 0; i < VRAMSize; i++ ) {
-        char OutName[256];
-        CreateDirIfNotExists("VRAM");
-        CreateDirIfNotExists("VRAM/VRAM4");
-
-        sprintf(OutName,"VRAM/VRAM4/VRAM%i.png",i);
-        SDL_SavePNG(VRam->Page4Bit[i].Surface, OutName);
-        
-        CreateDirIfNotExists("VRAM/VRAM8");
-        sprintf(OutName,"VRAM/VRAM8/VRAM%i.png",i);
-        SDL_SavePNG(VRam->Page8Bit[i].Surface, OutName);
-    }
+    VRamDump(VRam,VRAMSize);
 #endif
     for( i = 0; i < VRAMSize; i++ ) {
         glGenTextures(1,&VRam->Page4Bit[i].TextureID);
