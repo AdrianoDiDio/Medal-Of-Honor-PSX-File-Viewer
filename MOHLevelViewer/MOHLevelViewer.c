@@ -493,7 +493,7 @@ void Sys_CheckKeyEvents()
                 break;
             case SDL_KEYDOWN:
                 if( Event.key.keysym.sym == SDLK_ESCAPE ) {
-                    exit(0);
+                    Quit();
                 }
                 if( Event.key.keysym.sym == SDLK_q ) {
                     //
@@ -588,7 +588,7 @@ void Sys_CheckKeyEvents()
                 Cam_FixAngles(&Camera);
                 break;
             case SDL_QUIT:
-                exit(0);
+                Quit();
                 break;
             default:
                 break;
@@ -912,7 +912,7 @@ void SetDefaultSettings(Level_t *Level)
     Level->Settings.EnableFrustumCulling = true;
     Level->Settings.EnableLighting = true;
 }
-bool InitLevel(char *Directory,char *MissionNumber,char *LevelNumber)
+bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
 {
     TSP_t *TSP;
     char Buffer[512];
@@ -922,6 +922,10 @@ bool InitLevel(char *Directory,char *MissionNumber,char *LevelNumber)
         free(Level);
     }
     Level = malloc(sizeof(Level_t));
+    Level->Font = NULL;
+    Level->VRam = NULL;
+    Level->TSPList = NULL;
+    Level->ImageList = NULL;
     SetDefaultSettings(Level);
     Level->MissionNumber = StringToInt(MissionNumber);
     Level->LevelNumber = StringToInt(LevelNumber);
@@ -969,28 +973,12 @@ bool InitLevel(char *Directory,char *MissionNumber,char *LevelNumber)
 }
 
 /*
- * Requires 3 things:
-    - MOH DATA Location
-    - MISSION NUMBER
-    - LEVEL NUMBER
+    Late level initialization for all the subsystems that
+    requires a valid OpenGL context.
 */
-#define _ENABLEVIDEOOUT 1
-int main(int argc,char **argv)
+void LevelLateInit()
 {
-    if( argc != 4 ) {
-        printf("%s <MOH Directory> <Mission Number> <Level Number> will load level files from that mission.\n",argv[0]);
-        return -1;
-    }
-    if( !InitLevel(argv[1],argv[2],argv[3]) ) {
-        printf("Couldn't load data.\n");
-        return -1;
-    }
-#if _ENABLEVIDEOOUT
-    Sys_VidInit(1366,768,false);
-    ComTime = malloc(sizeof(ComTimeInfo_t));
-    memset(ComTime,0,sizeof(ComTimeInfo_t));
-    InitGLView();
-    Cam_Init(&Camera);
+    ShaderManagerInit();
     Level->VRam = VRamInit(Level->ImageList);
     Level->Font = FontInit();
 //     DPrintf("OpenGL Version:%s\n",glGetString(GL_VERSION));
@@ -1005,6 +993,51 @@ int main(int argc,char **argv)
     BSDVAOTexturedObjectList(Level->BSD);
     BSDSpawnNodes(Level->BSD);
     BSDSpawnShowCase(Level->BSD);
+}
+void LevelCleanUp()
+{
+    BSDFree(Level->BSD);
+    BSD2PFree(Level->BSDTwoP);
+    TSPFreeList(Level->TSPList);
+    TimImageListFree(Level->ImageList);
+    free(Level->VRam);
+    FontFree(Level->Font);
+    free(Level);
+}
+
+void Quit()
+{
+    LevelCleanUp();
+    ShaderManagerFree();
+    free(ComTime);
+    SDL_Quit();
+    exit(0);
+}
+/*
+ * Requires 3 things:
+    - MOH DATA Location
+    - MISSION NUMBER
+    - LEVEL NUMBER
+*/
+#define _ENABLEVIDEOOUT 1
+int main(int argc,char **argv)
+{
+    if( argc != 4 ) {
+        printf("%s <MOH Directory> <Mission Number> <Level Number> will load level files from that mission.\n",argv[0]);
+        return -1;
+    }
+    if( !LevelInit(argv[1],argv[2],argv[3]) ) {
+        printf("Couldn't load data.\n");
+        return -1;
+    }
+
+#if _ENABLEVIDEOOUT
+    Sys_VidInit(1366,768,false);
+    ComTime = malloc(sizeof(ComTimeInfo_t));
+    memset(ComTime,0,sizeof(ComTimeInfo_t));
+    InitGLView();
+    Cam_Init(&Camera);
+    LevelLateInit();
     /* TEMP! */
     while( 1 ) {
         Sys_CheckKeyEvents();
@@ -1014,6 +1047,10 @@ int main(int argc,char **argv)
         glFlush();
         Sys_SwapBuffers();
     }
+#else
+    #ifdef _DEBUG
+    Quit();
+    #endif
 #endif
 // 
     return 0;

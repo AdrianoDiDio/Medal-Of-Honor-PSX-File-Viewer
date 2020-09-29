@@ -83,8 +83,6 @@ typedef struct TSPNode_s {
     Vao_t *BBoxVao;
     Vao_t *LeafFaceListVao;
     Vao_t *LeafCollisionFaceListVao;
-    struct TSPNode_s *Child1;
-    struct TSPNode_s *Child2;
     struct TSPNode_s *Child[2];
     struct TSPNode_s *Next;
 //     IntShortUnion Child1Offset;
@@ -176,12 +174,10 @@ typedef struct TSP_s {
     TSPColor_t  *Color;
     TSPD_t      *DBlock;
     TSPCollision_t *CollisionData;
-    TSPNode_t  *BSDTree;
     //
     int          Number;
     Vao_t       *VaoList;
     Vao_t       *CollisionVaoList;
-    Vao_t       *WorldBBoxVao;
     struct TSP_s *Next;
 } TSP_t;
 
@@ -193,4 +189,6 @@ void    DrawTSPList(Level_t *Level);
 void    TSPCreateVAO(TSP_t *TSP);
 void TSPCreateNodeBBoxVAO(TSP_t *TSPList);
 void TSPCreateCollisionVAO(TSP_t *TSPList);
+void TSPFree(TSP_t *TSP);
+void TSPFreeList(TSP_t *List);
 #endif //__TSPVIEWER_H_

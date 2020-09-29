@@ -19,6 +19,18 @@
 
 #include "MOHLevelViewer.h"
 
+void TimImageListFree(TIMImage_t *ImageList)
+{
+    TIMImage_t *Temp;
+    
+    while( ImageList ) {
+        Temp = ImageList;
+        ImageList = ImageList->Next;
+        free(Temp->CLUT);
+        free(Temp->Data);
+        free(Temp);
+    }
+}
 void PrintClut(TIMImage_t *Image,int ClutIndex)
 {
     printf("CLUT %i => (%i;%i;%i)\n",ClutIndex,Image->CLUT[ClutIndex].R,Image->CLUT[ClutIndex].G,Image->CLUT[ClutIndex].B);
@@ -539,5 +551,6 @@ TIMImage_t *GetAllTimImages(char *File)
         List = Image;
         NumImages++;
     }
+    fclose(TIMFile);
     return List;
 }

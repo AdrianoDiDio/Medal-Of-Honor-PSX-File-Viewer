@@ -19,6 +19,81 @@
 
 #include "MOHLevelViewer.h"
 
+//     TSPNodeFileLookUp_t FileOffset;
+//     
+//     TSPBBox_t BBox; // 12
+//     /*unsigned */int NumFaces; // 16 This should be an offset relative to the face offset...
+//     IntShortUnion U2; // 20 //Starting index
+//     IntShortUnion U3; // 24
+//     int BaseData; // This is the Node Dimension...BaseData / sizeof(TSPFace_t) If NumFaces != 0 or BaseData / sizeof(TSPNode_t) If NumFaces == 0
+//     
+//     Vao_t *BBoxVao;
+//     Vao_t *LeafFaceListVao;
+//     Vao_t *LeafCollisionFaceListVao;
+//     struct TSPNode_s *Child1;
+//     struct TSPNode_s *Child2;
+//     struct TSPNode_s *Child[2];
+//     struct TSPNode_s *Next;
+// void TSPRecursiveNodeFree(TSPNode_t *Node)
+// {
+//     if( Node == NULL ) {
+//         return;
+//     }
+//     VaoFree(Node->BBoxVao);
+//     VaoFree(Node->LeafFaceListVao);
+//     VaoFree(Node->LeafCollisionFaceListVao);
+//     
+//     TSPRecursiveNodeFree(Node->Child[0]);
+//     TSPRecursiveNodeFree(Node->Child[1]);
+//     
+//     Node->Child[0] = NULL;
+//     Node->Child[1] = NULL;
+//     TSPRecursiveNodeFree(Node->Next);
+//     free(Node);
+// }
+
+
+void TSPFree(TSP_t *TSP)
+{
+    int i;
+//     TSP->Node
+//     TSPRecursiveNodeFree(&TSP->Node[0]);
+    for( i = 0; i < TSP->Header.NumNodes; i++ ) {
+        VaoFree(TSP->Node[i].BBoxVao);
+        VaoFree(TSP->Node[i].LeafFaceListVao);
+        VaoFree(TSP->Node[i].LeafCollisionFaceListVao);
+        //Don't bother traversing the tree since we can walk the whole array and free all the pointers...
+        TSP->Node[i].Child[0] = NULL;
+        TSP->Node[i].Child[1] = NULL;
+        TSP->Node[i].Next = NULL;
+    }
+    free(TSP->Node);
+    free(TSP->Face);
+    free(TSP->Vertex);
+    free(TSP->Color);
+    
+    free(TSP->CollisionData->G);
+    free(TSP->CollisionData->H);
+    free(TSP->CollisionData->Vertex);
+    free(TSP->CollisionData->Normal);
+    free(TSP->CollisionData->Face);
+    free(TSP->CollisionData);
+    
+    VaoFree(TSP->VaoList);
+    VaoFree(TSP->CollisionVaoList);
+    free(TSP);
+}
+
+void TSPFreeList(TSP_t *List)
+{
+    TSP_t *Temp;
+    while( List ) {
+        Temp = List;
+        List = List->Next;
+        TSPFree(Temp);
+    }
+}
+
 void Vec4FromXYZ(float x,float y,float z,vec4 Out)
 {
     Out[0] = x;
@@ -405,7 +480,7 @@ void DrawTSP(TSP_t *TSP)
 //         int VRamPage = Iterator->TSB & 0x1F;
         int ColorMode = (Iterator->TSB & 0x80) >> 7;
         int VRamPage = Iterator->TSB & 0x1F;
-        int ABRRate = (Iterator->TSB & 0x60) >> 5;
+//         int ABRRate = (Iterator->TSB & 0x60) >> 5;
 #if 1
         //DO THIS ONLY IF ABE IS ENABLED...
 //         int Trans = (Iterator->TSB & 0x30) >> 4;
@@ -587,7 +662,7 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
             for( Iterator = Node->LeafFaceListVao; Iterator; Iterator = Iterator->Next ) {
                 int VRamPage = Iterator->TSB & 0x1F;
                 
-        int Trans = (Iterator->TextureID & 0x30) >> 4;
+//         int Trans = (Iterator->TextureID & 0x30) >> 4;
 //         if( Trans == 0 ) {
                 if( (Iterator->TSB & 0xC0) >> 7 == 1) {
                     glBindTexture(GL_TEXTURE_2D, Level->VRam->Page8Bit[VRamPage].TextureID);
@@ -711,6 +786,8 @@ void TSPLookUpChildNode(TSP_t *TSP,FILE *InFile)
             Index = TSPGetNodeByChildOffset(TSP,Offset);
             assert(Index != -1);
             TSP->Node[i].Next = &TSP->Node[Index];
+        } else {
+            TSP->Node[i].Next = NULL;
         }
     }
 }
@@ -726,53 +803,6 @@ void TSPLookUpChildNode(TSP_t *TSP,FILE *InFile)
 
 */
 
-TSPNode_t *ReadTSPTreeChunk(TSP_t *TSP,int NodeOffset,FILE *InFile)
-{
-    TSPNode_t *Node;
-    
-    if( !TSP || !InFile ) {
-        bool InvalidFile = (InFile == NULL ? true : false);
-        printf("TSPReadNodeChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
-        return NULL;
-    }
-    
-    if( NodeOffset == -1 ) {
-        DPrintf("LEaf\n");
-        return NULL;
-    }
-    
-    Node = malloc(sizeof(TSPNode_t));
-    DPrintf(" Loading Node at offset %i\n",NodeOffset);
-    fseek(InFile,/*TSP->Header.NodeOffset + */NodeOffset,SEEK_SET);
-    fread(&Node->BBox,sizeof(TSPBBox_t),1,InFile);
-    fread(&Node->NumFaces,sizeof(Node->NumFaces),1,InFile);
-    fread(&Node->U2.AsInt,sizeof(Node->U2.AsInt),1,InFile);
-    fread(&Node->U3.AsInt,sizeof(Node->U3.AsInt),1,InFile);
-    fread(&Node->BaseData,sizeof(Node->BaseData),1,InFile);
-    
-    if( Node->NumFaces == 0 ) {
-        fread(&Node->FileOffset.Child1Offset,sizeof(Node->FileOffset.Child1Offset),1,InFile);
-        fread(&Node->FileOffset.Child2Offset,sizeof(Node->FileOffset.Child2Offset),1,InFile);
-        DPrintf("Node has Child1Offset: %i\n",Node->FileOffset.Child1Offset);
-        DPrintf("Node has Child2Offset: %i\n",Node->FileOffset.Child2Offset);
-//         if( Node->FileOffset.Child1Offset < 0 ) {
-//             Node->Child1 = NULL;
-//         } else {
-            DPrintf("Reading children 1\n");
-            Node->Child1 = ReadTSPTreeChunk(TSP,/*Node->BaseData*/ TSP->Header.NodeOffset + Node->FileOffset.Child1Offset,InFile);
-//         }
-//         if( Node->FileOffset.Child2Offset < 0 ) {
-//             Node->Child2 = NULL;
-//         } else {
-            Node->Child2 = ReadTSPTreeChunk(TSP,/*Node->BaseData*/ TSP->Header.NodeOffset + Node->FileOffset.Child2Offset,InFile);
-//         }
-    } else {
-        Node->Child1 = NULL;
-        Node->Child2 = NULL;
-                
-    }
-    return Node;
-}
 void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
 {
     int i;
@@ -787,6 +817,7 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
         return;
     }
     TSP->Node = malloc(TSP->Header.NumNodes * sizeof(TSPNode_t));
+    memset(TSP->Node,0,TSP->Header.NumNodes * sizeof(TSPNode_t));
     for( i = 0; i < TSP->Header.NumNodes; i++ ) {
         DPrintf(" -- NODE %i -- \n",i);
         TSP->Node[i].FileOffset.Offset = ftell(InFile);
@@ -1071,6 +1102,8 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
         return NULL;
     }
     TSP = malloc(sizeof(TSP_t));
+    TSP->VaoList = NULL;
+    TSP->CollisionVaoList = NULL;
     TSP->Next = NULL;
     TSP->Number = TSPNumber;
     strcpy(TSP->FName,GetBaseName(FName));
@@ -1103,5 +1136,6 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
     TSPReadDChunk(TSP,TSPFile);
     assert(ftell(TSPFile) == TSP->Header.CollisionOffset);
     TSPReadCollisionChunk(TSP,TSPFile);
+    fclose(TSPFile);
     return TSP;
 }

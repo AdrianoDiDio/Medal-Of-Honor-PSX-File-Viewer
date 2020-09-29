@@ -195,6 +195,6 @@ void    Vec_RotateXAxis(float Theta,Vec3_t *Vector);
 void    GL_Set3D();
 void    Cam_Update(ViewParm_t *Camera,int Orientation, float Sensibility);
 void    Cam_UpdateVectors(ViewParm_t *Camera);
-
+void    Quit();
 
 #endif //__MOHLEVELVIEWER_H_

@@ -33,7 +33,8 @@ int NumShaders;
 
 GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *FragmentShaderFile);
 GL_Shader_t *Shader_Get(const char *ShaderName);
-void         ShaderManager_Init();
+void         ShaderManagerInit();
+void         ShaderManagerFree();
 
 
 #endif //__SHADERMANAGER_H_

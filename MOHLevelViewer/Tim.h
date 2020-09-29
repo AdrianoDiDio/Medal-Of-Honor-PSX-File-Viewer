@@ -57,7 +57,6 @@ typedef struct TIMImage_s {
     unsigned int   TexturePage;
     CLUTColor_t *CLUT;
     unsigned short /*Byte*/ *Data;
-    unsigned short *BData;
     struct TIMImage_s *Next;
 } TIMImage_t;
 
@@ -65,5 +64,5 @@ TIMImage_t *LoadTIMImage(FILE *TIMImage,int NumImages);
 TIMImage_t *GetAllTimImages(char *File);
 Byte *TimToOpenGL24(TIMImage_t *Image);
 Byte *TimToOpenGL32(TIMImage_t *Image);
-
+void TimImageListFree(TIMImage_t *ImageList);
 #endif //__TIM_H_

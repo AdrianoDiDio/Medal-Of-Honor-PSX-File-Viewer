@@ -54,6 +54,7 @@ typedef struct Level_s Level_t;
 void      BSD2PVAOPointList(BSD2P_t *BSD);
 void      BSD2PDraw(Level_t *Level);
 BSD2P_t  *BSD2PLoad(char *FName,int MissionNumber);
+void      BSD2PFree(BSD2P_t *BSD);
 // void    BSDCheckCompartmentTrigger(Level_t *Level,Vec3_t CameraPosition);
 // char   *BSDNodeGetEnumStringFromValue(unsigned int Value);
 // Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD);

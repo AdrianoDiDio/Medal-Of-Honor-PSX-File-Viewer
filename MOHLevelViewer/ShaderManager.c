@@ -18,6 +18,16 @@
 */ 
 #include "MOHLevelViewer.h"
 
+void ShaderManagerFree()
+{
+    GL_Shader_t *Temp;
+    
+    while( ShaderList ) {
+        Temp = ShaderList;
+        ShaderList = ShaderList->Next;
+        free(Temp);
+    }
+}
 char *Shader_Read(char *ShaderPath)
 {
     char *Result;
@@ -124,7 +134,7 @@ GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *Fragment
 
 }
 
-void ShaderManager_Init()
+void ShaderManagerInit()
 {
     ShaderList = NULL;
     NumShaders = 0;

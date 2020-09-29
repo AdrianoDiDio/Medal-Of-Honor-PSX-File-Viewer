@@ -18,6 +18,16 @@
 */ 
 #include "MOHLevelViewer.h"
 
+void VaoFree(Vao_t *Vao)
+{
+    Vao_t *Temp;
+    while( Vao ) {
+        Temp = Vao;
+        Vao = Vao->Next;
+        free(Temp);
+    }
+}
+
 Vao_t *VaoInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID)
 {
     Vao_t *Vao;
@@ -41,6 +51,7 @@ Vao_t *VaoInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int 
 
     Vao->TSB = TSB;
     Vao->TextureID = TextureID;
+    Vao->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
@@ -73,6 +84,7 @@ Vao_t *VaoInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int T
 
     Vao->TSB = TSB;
     Vao->TextureID = TextureID;
+    Vao->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
@@ -102,6 +114,7 @@ Vao_t *VaoInitXYRGB(float *Data,int DataSize,int Stride,int VertexOffset,int Col
 
     Vao->TSB = -1;
     Vao->TextureID = -1;
+    Vao->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
@@ -131,6 +144,7 @@ Vao_t *VaoInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int Text
 
     Vao->TSB = TSB;
     Vao->TextureID = TextureID;
+    Vao->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
@@ -160,6 +174,7 @@ Vao_t *VaoInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int Tex
 
     Vao->TSB = TSB;
     Vao->TextureID = TextureID;
+    Vao->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
@@ -189,6 +204,7 @@ Vao_t *VaoInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int Co
 
     Vao->TSB = -1;
     Vao->TextureID = -1;
+    Vao->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
@@ -220,6 +236,7 @@ Vao_t *VaoInitXYZIBO(float *Data,int DataSize,int Stride,unsigned short *Index,i
 
     Vao->TSB = -1;
     Vao->TextureID = -1;
+    Vao->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);

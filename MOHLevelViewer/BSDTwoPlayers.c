@@ -19,6 +19,15 @@
 
 #include "MOHLevelViewer.h"
 
+void BSD2PFree(BSD2P_t *BSD)
+{
+    free(BSD->NodeData.Table);
+    free(BSD->NodeData.Node);
+    free(BSD->RenderObjectTable.RenderObjectList);
+    VaoFree(BSD->NodeVao);
+    free(BSD);
+}
+
 void BSD2PVAOPointList(BSD2P_t *BSD)
 {
     int NumSkip;
@@ -231,7 +240,6 @@ void BSD2PReadNodeChunk(BSD2P_t *BSD,FILE *InFile)
         SkipFileSection(InFile,Jump);
     }
     DPrintf("NodeList ends at %i\n",GetCurrentFilePosition(InFile));
-
 }
 BSD2P_t *BSD2PLoad(char *FName,int MissionNumber)
 {
@@ -248,6 +256,7 @@ BSD2P_t *BSD2PLoad(char *FName,int MissionNumber)
         return NULL;
     }
     BSD = malloc(sizeof(BSD2P_t));
+    BSD->NodeVao = NULL;
     assert(sizeof(BSD->Header) == 2048);
     fread(&BSD->Header,sizeof(BSD->Header),1,BSDFile);
     DPrintf("BSD2PLoad:Header contains %i(%#02x) element.\n",BSD->Header.NumHeadElements,BSD->Header.NumHeadElements);
@@ -258,8 +267,7 @@ BSD2P_t *BSD2PLoad(char *FName,int MissionNumber)
     BSD2PReadEntryTableChunk(BSD,BSDFile);
     BSD2PReadRenderObjectChunk(BSD,BSDFile);
     BSD2PReadNodeChunk(BSD,BSDFile);
-
-
+    fclose(BSDFile);
     return BSD;
 }
 

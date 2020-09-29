@@ -37,4 +37,5 @@ typedef struct Font_s {
 
 Font_t *FontInit();
 void FontDrawString(Level_t *Level,char *String,float x,float y,Color_t Color);
+void FontFree(Font_t *Font);
 #endif //__FONT_H_

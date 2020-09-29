@@ -46,4 +46,6 @@ Vao_t *VaoInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int T
 Vao_t *VaoInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID,
                       bool StaticDraw);
 Vao_t *VaoInitXYRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset,bool StaticDraw);
+
+void VaoFree(Vao_t *Vao);
 #endif //__VAO_H_

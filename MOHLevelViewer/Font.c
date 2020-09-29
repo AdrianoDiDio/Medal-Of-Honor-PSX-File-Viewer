@@ -44,6 +44,17 @@ static const uint8_t ASCII_To_MOH_Table[128] = {
     15,  16,  17,  18,  19,  20,  25,  26,  27,  28,  29,  0 ,  0 ,  0 ,  0 ,  0 ,
 };
 
+void FontFree(Font_t *Font)
+{
+    int i;
+    if( Font == NULL ) {
+        return;
+    }
+    for( i = 0; i < NUM_MOH_FONT_CHARS; i++ ) {
+        free(Font->Characters[i]);
+    }
+    free(Font->Characters);
+}
 int FontGetStride()
 {
 //          XY  UV

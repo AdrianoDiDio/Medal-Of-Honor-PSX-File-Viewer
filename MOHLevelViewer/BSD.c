@@ -22,7 +22,61 @@
 /*
     1_1.BSD Compartment Trigger => 3246.604492;9.330523;-8456.515625
     673.832092;22.795897;-3504.162842
+    
+    FIXME:RenderObjectList,RenderObjectRealList,RenderObjectShowCaseList CLEANUP!
 */
+
+void BSDRenderObjectListCleanUp(BSDRenderObject_t *RenderObjectList)
+{
+    BSDRenderObject_t *Temp;
+    
+    while( RenderObjectList ) {
+        Temp = RenderObjectList;
+        if( RenderObjectList->Face != NULL ) {
+            free(RenderObjectList->Face);
+        }
+        if( RenderObjectList->Vertex != NULL ) {
+            free(RenderObjectList->Vertex);
+        }
+        VaoFree(RenderObjectList->Vao);
+        VaoFree(RenderObjectList->FaceVao);
+        RenderObjectList = RenderObjectList->Next;
+        free(Temp);
+    }
+}
+
+void BSDFree(BSD_t *BSD)
+{
+    int i;
+    
+    BSDTSPStreamNode_t *Temp;
+    
+    free(BSD->NodeData.Table);
+    free(BSD->NodeData.Node);
+
+    for( i = 0; i < BSD->PropertySetFile.NumProperties; i++ ) {
+        free(BSD->PropertySetFile.Property[i].Data);
+    }
+    free(BSD->PropertySetFile.Property);
+    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
+        free(BSD->RenderObjectList[i].Face);            
+        free(BSD->RenderObjectList[i].Vertex);            
+    }
+    free(BSD->RenderObjectTable.RenderObjectList);
+    free(BSD->RenderObjectList);
+    BSDRenderObjectListCleanUp(BSD->RenderObjectRealList);
+    BSDRenderObjectListCleanUp(BSD->RenderObjectShowCaseList);
+    VaoFree(BSD->NodeVao);
+    VaoFree(BSD->NodeBoxVao);
+    VaoFree(BSD->RenderObjectPointVao);
+    
+    while( BSD->TSPStreamNodeList ) {
+        Temp = BSD->TSPStreamNodeList;
+        BSD->TSPStreamNodeList = BSD->TSPStreamNodeList->Next;
+        free(Temp);
+    }
+    free(BSD);
+}
 
 
 void BSDVAOPointList(BSD_t *BSD)
@@ -476,6 +530,8 @@ void BSDAddNodeToRenderObjectList(BSD_t *BSD,int MissionNumber,unsigned int Node
     Object = malloc(sizeof(BSDRenderObject_t));
     Object->Type = BSD->RenderObjectTable.RenderObjectList[RenderObjectIndex].Type;
     Object->Position = Position;
+    Object->Face = NULL;
+    Object->Vertex = NULL;
     //PSX GTE Uses 4096 as unit value only when dealing with fixed math operation.
     //When dealing with rotation then 4096 = 360 degrees.
     //We need to map it back to OpenGL standard format [0;360]. 
@@ -485,6 +541,7 @@ void BSDAddNodeToRenderObjectList(BSD_t *BSD,int MissionNumber,unsigned int Node
 
     Object->RenderObjectID = RenderObjectID;
     Object->FaceVao = NULL;
+    Object->Vao = NULL;
     Object->Next = BSD->RenderObjectRealList;
     BSD->RenderObjectRealList = Object;
     BSD->NumRenderObjectPoint++;
@@ -516,7 +573,10 @@ void BSDShowCaseRenderObject(BSD_t *BSD)
         Object->Rotation.z = 0;
 
         Object->RenderObjectID = BSD->RenderObjectTable.RenderObjectList[i].ID;
+        Object->Vertex = NULL;
+        Object->Face = NULL;
         Object->FaceVao = NULL;
+        Object->Vao = NULL;
         Object->Next = BSD->RenderObjectShowCaseList;
         BSD->RenderObjectShowCaseList = Object;
     }
@@ -1162,6 +1222,7 @@ void ParseUVertexData(BSD_t *BSD,FILE *BSDFile)
     int j;
     
     BSD->RenderObjectList = malloc(BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObject_t));
+    memset(BSD->RenderObjectList,0,BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObject_t));
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
         if( BSD->RenderObjectTable.RenderObjectList[i].VertOffset == 0 ) {
             continue;
@@ -1170,6 +1231,7 @@ void ParseUVertexData(BSD_t *BSD,FILE *BSDFile)
         int UVertSize = sizeof(BSDPosition_t) * BSD->RenderObjectTable.RenderObjectList[i].NumVertex;
 //         DPrintf("Element Size is %i\n",UVertSize); 
         BSD->RenderObjectList[i].Vertex = malloc(UVertSize);
+        memset(BSD->RenderObjectList[i].Vertex,0,UVertSize);
         fseek(BSDFile,BSD->RenderObjectTable.RenderObjectList[i].VertOffset + 2048,SEEK_SET);
         DPrintf("Reading Vertex definition at %i (Current:%i)\n",
                 BSD->RenderObjectTable.RenderObjectList[i].VertOffset + 2048,GetCurrentFilePosition(BSDFile)); 
@@ -1187,6 +1249,7 @@ void ParseUVertexData(BSD_t *BSD,FILE *BSDFile)
 
 void ParseRenderObjectFaceData(BSD_t *BSD,FILE *BSDFile)
 {
+    int FaceListSize;
     int i;
     int j;
     
@@ -1215,8 +1278,10 @@ void ParseRenderObjectFaceData(BSD_t *BSD,FILE *BSDFile)
         DPrintf("Face is at %u;%u;%u\n",x,y,z); 
         fseek(BSDFile,BSD->RenderObjectTable.RenderObjectList[i].FaceOffset + 2048,SEEK_SET);
         fread(&BSD->RenderObjectList[i].NumFaces,sizeof(int),1,BSDFile);
-        DPrintf("Reading %i faces\n",BSD->RenderObjectList[i].NumFaces); 
-        BSD->RenderObjectList[i].Face = malloc(BSD->RenderObjectList[i].NumFaces * sizeof(BSDFace_t));
+        DPrintf("Reading %i faces\n",BSD->RenderObjectList[i].NumFaces);
+        FaceListSize = BSD->RenderObjectList[i].NumFaces * sizeof(BSDFace_t);
+        BSD->RenderObjectList[i].Face = malloc(FaceListSize);
+        memset(BSD->RenderObjectList[i].Face,0,FaceListSize);
         DPrintf("Reading Face definition at %i (Current:%i)\n",BSD->RenderObjectTable.RenderObjectList[i].FaceOffset
             + 2048,GetCurrentFilePosition(BSDFile)); 
         for( j = 0; j < BSD->RenderObjectList[i].NumFaces; j++ ) {
@@ -1285,8 +1350,8 @@ void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
     fread(&BSD->PropertySetFile.NumProperties,sizeof(BSD->PropertySetFile.NumProperties),1,BSDFile);
     DPrintf("BSDReadPropertySetFile:Reading %i properties at %i (%i).\n",BSD->PropertySetFile.NumProperties,
             GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
-    BSD->PropertySetFile.Property = malloc(sizeof(BSDProperty_t));
     BSD->PropertySetFile.NumProperties++;
+    BSD->PropertySetFile.Property = malloc(sizeof(BSDProperty_t) * BSD->PropertySetFile.NumProperties);
     for( i = 0; i < BSD->PropertySetFile.NumProperties; i++ ) {
         DPrintf("BSDReadPropertySetFile:Reading property %i at %i (%i)\n",i,GetCurrentFilePosition(BSDFile),
             GetCurrentFilePosition(BSDFile) - 2048
@@ -1344,6 +1409,17 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
         return NULL;
     }
     BSD = malloc(sizeof(BSD_t));
+    
+    BSD->TSPStreamNodeList = NULL;
+    BSD->RenderObjectRealList = NULL;
+    BSD->RenderObjectList = NULL;
+    BSD->RenderObjectShowCaseList = NULL;
+    
+    BSD->NodeVao = NULL;
+    BSD->NodeBoxVao = NULL;
+    BSD->RenderObjectPointVao = NULL;
+    BSD->NumRenderObjectPoint = 0;
+    
     assert(sizeof(BSD->Header) == 2048);
     fread(&BSD->Header,sizeof(BSD->Header),1,BSDFile);
     DPrintf("Header contains %i(%#02x) element.\n",BSD->Header.NumHeadElements,BSD->Header.NumHeadElements);
@@ -1520,7 +1596,9 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
                 StreamNode = malloc(sizeof(BSDTSPStreamNode_t));
                 StreamNode->Position = NodePosition;
                 for( j = 0; j < 4; j++ ) {
+                    StreamNode->TSPNumberRenderList[j] = -1;
                     fread(&StreamNode->TSPNumberRenderList[j],sizeof(short),1,BSDFile);
+                    assert(StreamNode->TSPNumberRenderList[j] != -1);
                     DPrintf("Node will ask TSP to draw Compartment %i\n",StreamNode->TSPNumberRenderList[j]);
                 }
                 StreamNode->Next = BSD->TSPStreamNodeList;
@@ -1586,6 +1664,7 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
     ParseUVertexData(BSD,BSDFile);
     ParseRenderObjectFaceData(BSD,BSDFile);
     BSDShowCaseRenderObject(BSD);
+    fclose(BSDFile);
     return BSD;
 }
 
