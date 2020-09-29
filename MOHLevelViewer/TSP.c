@@ -19,40 +19,6 @@
 
 #include "MOHLevelViewer.h"
 
-//     TSPNodeFileLookUp_t FileOffset;
-//     
-//     TSPBBox_t BBox; // 12
-//     /*unsigned */int NumFaces; // 16 This should be an offset relative to the face offset...
-//     IntShortUnion U2; // 20 //Starting index
-//     IntShortUnion U3; // 24
-//     int BaseData; // This is the Node Dimension...BaseData / sizeof(TSPFace_t) If NumFaces != 0 or BaseData / sizeof(TSPNode_t) If NumFaces == 0
-//     
-//     Vao_t *BBoxVao;
-//     Vao_t *LeafFaceListVao;
-//     Vao_t *LeafCollisionFaceListVao;
-//     struct TSPNode_s *Child1;
-//     struct TSPNode_s *Child2;
-//     struct TSPNode_s *Child[2];
-//     struct TSPNode_s *Next;
-// void TSPRecursiveNodeFree(TSPNode_t *Node)
-// {
-//     if( Node == NULL ) {
-//         return;
-//     }
-//     VaoFree(Node->BBoxVao);
-//     VaoFree(Node->LeafFaceListVao);
-//     VaoFree(Node->LeafCollisionFaceListVao);
-//     
-//     TSPRecursiveNodeFree(Node->Child[0]);
-//     TSPRecursiveNodeFree(Node->Child[1]);
-//     
-//     Node->Child[0] = NULL;
-//     Node->Child[1] = NULL;
-//     TSPRecursiveNodeFree(Node->Next);
-//     free(Node);
-// }
-
-
 void TSPFree(TSP_t *TSP)
 {
     int i;
