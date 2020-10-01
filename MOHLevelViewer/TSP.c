@@ -277,42 +277,6 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                     Iterator->Node[i].LeafFaceListVao = Vao;
                     free(VertexData);                    
                 }
-                
-                
-                //COLLISION
-                Base = Iterator->Node[i].BaseData / sizeof(TSPCollisionFace_t);
-                Target = Base + Iterator->Node[i].NumFaces;
-                for( j = Base; j < Target; j++ ) {
-                    Vert0 = Iterator->CollisionData->Face[j].V0;
-                    Vert1 = Iterator->CollisionData->Face[j].V1;
-                    Vert2 = Iterator->CollisionData->Face[j].V2;
-                    //       XYZ
-                    Stride = (3) * sizeof(float);
-                        
-                    VertexSize = Stride;
-                    VertexData = malloc(VertexSize * 3/** sizeof(float)*/);
-                    VertexPointer = 0;
-                            
-                    VertexData[VertexPointer] =   Iterator->CollisionData->Vertex[Vert0].Position.x;
-                    VertexData[VertexPointer+1] = Iterator->CollisionData->Vertex[Vert0].Position.y;
-                    VertexData[VertexPointer+2] = Iterator->CollisionData->Vertex[Vert0].Position.z;
-                    VertexPointer += 3;
-                    
-                    VertexData[VertexPointer] =   Iterator->CollisionData->Vertex[Vert1].Position.x;
-                    VertexData[VertexPointer+1] = Iterator->CollisionData->Vertex[Vert1].Position.y;
-                    VertexData[VertexPointer+2] = Iterator->CollisionData->Vertex[Vert1].Position.z;
-                    VertexPointer += 3;
-                    
-                    VertexData[VertexPointer] =   Iterator->CollisionData->Vertex[Vert2].Position.x;
-                    VertexData[VertexPointer+1] = Iterator->CollisionData->Vertex[Vert2].Position.y;
-                    VertexData[VertexPointer+2] = Iterator->CollisionData->Vertex[Vert2].Position.z;
-                    VertexPointer += 3;
-                    
-                    Vao = VaoInitXYZ(VertexData,VertexSize * 3,Stride,0);            
-                    Vao->Next = Iterator->Node[i].LeafCollisionFaceListVao;
-                    Iterator->Node[i].LeafCollisionFaceListVao = Vao;
-                    free(VertexData);
-                }
             }
             
             //       XYZ
@@ -643,20 +607,6 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
             glDisable(GL_BLEND);
             glUseProgram(0);
         }
-        if( Level->Settings.ShowCollisionData ) {
-            Shader = Shader_Cache("TSPCollisionShader","Shaders/TSPCollisionVertexShader.glsl","Shaders/TSPCollisionFragmentShader.glsl");
-            glUseProgram(Shader->ProgramID);
-
-            MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-            glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-            
-            for( Iterator = Node->LeafCollisionFaceListVao; Iterator; Iterator = Iterator->Next ) {
-                glBindVertexArray(Iterator->VaoID[0]);
-                glDrawArrays(GL_TRIANGLES, 0, 3);
-                glBindVertexArray(0);
-            }
-            glUseProgram(0);
-        }
     } else {
         for( i = 0; i < 2; i++ ) {
             DrawNode(Node->Child[i],LevelSettings);
@@ -700,11 +650,11 @@ void DrawTSPList(Level_t *Level)
     }
     
     
-//     if( Level->Settings.ShowCollisionData ) {
-//         for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
-//             DrawTSPCollisionData(Iterator);
-//         }
-//     }
+    if( Level->Settings.ShowCollisionData ) {
+        for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
+            DrawTSPCollisionData(Iterator);
+        }
+    }
 }
 
 int TSPGetNodeByChildOffset(TSP_t *TSP,int Offset)
