@@ -4,7 +4,13 @@ CFLAGS=-Wall
 
 Obj = ShaderManager.o Vao.o TSP.o Tim.o Font.o BSD.o BSDTwoPlayers.o VRam.o MOHLevelViewer.o
 
-LDFLAGS = -lSDL2 -lGL -lGLEW -lpng -lm
+
+ifeq ($(OS),Windows_NT)
+	CFLAGS += -Wl,-subsystem,windows
+	LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lglew32 -lpng -lm
+else
+	LDFLAGS = -lSDL2 -lGL -lGLEW -lpng -lm
+endif
 
 all: release
 
