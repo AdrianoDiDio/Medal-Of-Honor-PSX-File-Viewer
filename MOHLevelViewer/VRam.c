@@ -39,9 +39,6 @@ void VRamWritePNG(SDL_Surface *ImageSurface,char *OutName)
         return;
     }
     
-    DPrintf("Surface has palette:%i\n",ImageSurface->format->palette);
-    DPrintf("Surface has bpp:%i\n",ImageSurface->format->BytesPerPixel);
-    DPrintf("Surface has AMask:%i\n",ImageSurface->format->Amask);
     PNGPtr = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (PNGPtr == NULL) {
         printf("PNG: Couldn't create write struct!\n");
@@ -80,17 +77,14 @@ void VRamDump(VRam_t *VRam,int VRamSize)
     for( i = 0; i < VRamSize; i++ ) {
         char OutName[256];
         CreateDirIfNotExists("VRAM");
+        
         CreateDirIfNotExists("VRAM/VRAM4");
-
         sprintf(OutName,"VRAM/VRAM4/VRAM%i.png",i);
         VRamWritePNG(VRam->Page4Bit[i].Surface,OutName);
-//         SDL_SavePNG(VRam->Page4Bit[i].Surface, OutName);
         
         CreateDirIfNotExists("VRAM/VRAM8");
         sprintf(OutName,"VRAM/VRAM8/VRAM%i.png",i);
         VRamWritePNG(VRam->Page8Bit[i].Surface,OutName);
-
-//         SDL_SavePNG(VRam->Page8Bit[i].Surface, OutName);
     }
 }
 
@@ -105,7 +99,6 @@ void VRamPutTexture(VRam_t *VRam,TIMImage_t *Image)
     VRAMPage = Image->TexturePage;
 
     if( Image->Header.BPP == BPP_4 ) {
-//         return;
         if( Image->FrameBufferY >= 256 ) {
             DestX = (Image->FrameBufferX - ((Image->TexturePage - 16) * 64)) * 4;
             DestY = Image->FrameBufferY - 256;
@@ -122,12 +115,7 @@ void VRamPutTexture(VRam_t *VRam,TIMImage_t *Image)
         Byte *Data = TimToOpenGL32(Image);
         Src = SDL_CreateRGBSurfaceFrom(Data,Image->Width,Image->Height,32,4 * Image->Width,0x000000FF,0x0000FF00,0x00FF0000, 0xFF000000);
         SDL_BlitScaled(Src,NULL,VRam->Page4Bit[VRAMPage].Surface,&SrcRect);
-    } else if( Image->Header.BPP == BPP_8 ) {
-//         return;
-//         DPrintf("Image BPP_8 has texture page %i\n",Image->TexturePage);
-//         DPrintf("Image BPP_8 has FrameBufferX %i\n",Image->FrameBufferX);
-//         DPrintf("Image BPP_8 has FrameBufferY %i\n",Image->FrameBufferY);
-        
+    } else if( Image->Header.BPP == BPP_8 ) {        
         if( Image->FrameBufferY >= 256 ) {
             DestX = (Image->FrameBufferX - ((Image->TexturePage - 16) * 64)) * 2;
             DestY = Image->FrameBufferY - 256;
@@ -135,7 +123,7 @@ void VRamPutTexture(VRam_t *VRam,TIMImage_t *Image)
             DestX = (Image->FrameBufferX - (Image->TexturePage * 64 )) * 2;
             DestY = Image->FrameBufferY;
         }
-          
+        
         SrcRect.x = DestX;
         SrcRect.y = DestY;
         SrcRect.w = Image->Width;

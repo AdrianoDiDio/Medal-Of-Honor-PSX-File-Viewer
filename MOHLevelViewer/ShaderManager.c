@@ -60,7 +60,7 @@ GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *Fragment
     int FragmentShaderID;
     int ProgramID;
     int InfoLogLength;
-    int CompileResult;
+    int ShaderTaskResult;
     char *ShaderSource;
     
     if( (Result = Shader_Get(ShaderName)) != NULL ) {
@@ -77,10 +77,10 @@ GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *Fragment
     glShaderSource(VertexShaderID, 1, (const GLchar**) &ShaderSource, NULL);
     glCompileShader(VertexShaderID);
 
-    glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &CompileResult);
+    glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &ShaderTaskResult);
     glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
     
-    if ( InfoLogLength > 0 ){
+    if ( InfoLogLength > 0 && ShaderTaskResult == 1 ){
         ShaderInfoLog = malloc(InfoLogLength + 1);
         glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, ShaderInfoLog);
         ShaderInfoLog[InfoLogLength] = '\0';
@@ -92,10 +92,10 @@ GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *Fragment
     glShaderSource(FragmentShaderID, 1, (const GLchar**) &ShaderSource, NULL);
     glCompileShader(FragmentShaderID);
 
-    glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &CompileResult);
+    glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &ShaderTaskResult);
     glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
     
-    if ( InfoLogLength > 0 ){
+    if ( InfoLogLength > 0 && ShaderTaskResult == 1){
         ShaderInfoLog = malloc(InfoLogLength + 1);
         glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, ShaderInfoLog);
         ShaderInfoLog[InfoLogLength] = '\0';
@@ -109,10 +109,10 @@ GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *Fragment
     glAttachShader(ProgramID, FragmentShaderID);
     glLinkProgram(ProgramID);
 
-    glGetProgramiv(ProgramID, GL_LINK_STATUS, &CompileResult);
+    glGetProgramiv(ProgramID, GL_LINK_STATUS, &ShaderTaskResult);
     glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
 
-    if ( InfoLogLength > 0 ){
+    if ( InfoLogLength > 0  && ShaderTaskResult == 1){
         ShaderInfoLog = malloc(InfoLogLength + 1);
         glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, ShaderInfoLog);
         ShaderInfoLog[InfoLogLength] = '\0';
