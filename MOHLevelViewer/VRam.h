@@ -31,7 +31,6 @@ typedef struct VRamPage_s {
 typedef struct VRam_s {
     VRamPage_t Page4Bit[32];
     VRamPage_t Page8Bit[32];
-    VRamPage_t Page16Bit[32];
 } VRam_t;
 
 VRam_t *VRamInit(TIMImage_t *ImageList);

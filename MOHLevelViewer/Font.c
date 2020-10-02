@@ -129,6 +129,7 @@ void FontLoadChar(Font_t *Font,int CharIndex,float RowX,float RowY)
     VertexData[VertexPointer+3] = v0;
     VertexPointer += 4;        
     Font->Characters[CharIndex] = VaoInitXYUV(VertexData,DataSize,Stride,0,2,-1,-1,true);
+    free(VertexData);
 }
 
 void FontDrawChar(char c,float x,float y,Color_t Color)
@@ -203,11 +204,11 @@ void FontLoad(Font_t *Font)
         ColumnPosition += MOH_FONT_CHAR_HEIGHT;
     }
 }
+
 Font_t *FontInit()
 {
     Font_t *Font;
     Font = malloc(sizeof(Font_t));
     FontLoad(Font);
     return Font;
-//     FontLoadChar();
 }

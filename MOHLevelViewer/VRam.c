@@ -145,7 +145,7 @@ VRam_t *VRamInit(TIMImage_t *ImageList)
     VRam = malloc(sizeof(VRam_t));
     VRAMSize = sizeof(VRam->Page4Bit) / sizeof(VRam->Page4Bit[0]);
     
-    //Set 31 256x256 texture pages and fill them with the image.
+    //Set 32 256x256 texture pages and fill them with the image.
     //To debug dump the vram texture to file.
     //3 since it is an RGB image.
     for( i = 0; i < VRAMSize; i++ ) {
