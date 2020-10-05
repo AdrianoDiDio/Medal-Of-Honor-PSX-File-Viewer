@@ -147,7 +147,7 @@ If NumFaces != 0 then Offset represents the starting position where to load the 
 Otherwise it represents the next node offset in the array that needs to be loaded.
 
 
-**Note that the child and next node offset starts from the node declaration as seen in the header.**  
+**Note that the child and next node offset starts from the node declaration as seen in the header.**
 E.G: TSP Node offset is 64, Child1 Offset is 24 then the child node will be at **64+24**.
 
 ### Vertex
@@ -369,10 +369,18 @@ Each node has the following structure:
 | int  | 4 bytes | Size |
 | int  | 4 bytes | Unknown |
 | int  | 4 bytes | Type |
-| [NodePosition](#node-position)  | 4 bytes | Position |
-| [NodePosition](#node-position)  | 4 bytes | Rotation |
+| [NodePosition](#node-position)  | 8 bytes | Position |
+| [NodePosition](#node-position)  | 8 bytes | Rotation |
+| char | 8 bytes | Unknown |
+| short | 2 bytes | Collision Volume Type |
+| [Vector3](#Vector3) | 6 bytes | Collision Volume Half Extent |
+| char | 8 bytes | Unknown |
+| int  | 4 bytes | Message Data ID List |
+
 
 **Note that Rotation is stored in fixed math format where 4096 is 360 degrees**
+
+**Note that Collision Volume starts from Node Position and uses Half extent to construct a bounding box.**
 
 ##### Node Type
 

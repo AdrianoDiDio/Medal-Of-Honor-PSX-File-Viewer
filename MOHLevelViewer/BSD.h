@@ -96,7 +96,7 @@ typedef struct BSDNode_s {
     short CollisionVolumeType;
     BSDPositionNoPad_t Extent;
     char Pad2[8];
-    int HasCollisionVolume;
+    int MessageData; //Offset to a list of Message IDs
 } BSDNode_t;
 
 typedef struct BSDTSPStreamNode_s {

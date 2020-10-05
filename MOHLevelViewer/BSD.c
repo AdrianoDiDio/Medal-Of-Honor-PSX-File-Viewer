@@ -90,12 +90,12 @@ void BSDCreateNodeBBoxVAO(BSD_t *BSD)
     int i;
     
     for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
-        if( BSD->NodeData.Node[i].HasCollisionVolume == 0 ) {
-            DPrintf("Skipped node %i:HasCollisionVolume is 0...VolumeType was %i\n",BSD->NodeData.Node[i].CollisionVolumeType);
+        if( BSD->NodeData.Node[i].MessageData == 0 ) {
+            DPrintf("Skipped node %i:MessageData is 0...VolumeType was %i\n",i,BSD->NodeData.Node[i].CollisionVolumeType);
             continue;
         }
         if( BSD->NodeData.Node[i].CollisionVolumeType != 1 ) {
-            DPrintf("Skipped node %i:Unknown VolumeType was %i\n",BSD->NodeData.Node[i].CollisionVolumeType);
+            DPrintf("Skipped node %i:Unknown VolumeType was %i\n",i,BSD->NodeData.Node[i].CollisionVolumeType);
             continue;
         }
         //       XYZ
@@ -1676,6 +1676,7 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
                 BSD->NodeData.Node[i].Rotation.z,BSD->NodeData.Node[i].Rotation.Pad);
         DPrintf("CollisionType:%i Extent:(%i;%i;%i) \n",BSD->NodeData.Node[i].CollisionVolumeType,BSD->NodeData.Node[i].Extent.x,
                 BSD->NodeData.Node[i].Extent.y,BSD->NodeData.Node[i].Extent.z);
+        DPrintf("MessageData at %i\n",BSD->NodeData.Node[i].MessageData);
         assert(BSD->NodeData.Node[i].Position.Pad == 0);
         assert(BSD->NodeData.Node[i].Rotation.Pad == 0);
                 
