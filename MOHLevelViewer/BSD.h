@@ -68,6 +68,11 @@ typedef struct BSDPosition_s {
     short Pad; // Always zero but doublecheck!
 } BSDPosition_t;
 
+typedef struct BSDPositionNoPad_s {
+    short x;
+    short y;
+    short z;
+} BSDPositionNoPad_t;
 
 typedef struct BSDUv_s {
     Byte u;
@@ -87,6 +92,11 @@ typedef struct BSDNode_s {
     int Type;
     BSDPosition_t Position;
     BSDPosition_t Rotation;
+    char Pad[8];
+    short CollisionVolumeType;
+    BSDPositionNoPad_t Extent;
+    char Pad2[8];
+    int HasCollisionVolume;
 } BSDNode_t;
 
 typedef struct BSDTSPStreamNode_s {
@@ -289,6 +299,7 @@ char   *BSDNodeGetEnumStringFromNodeID(unsigned int NodeID);
 char   *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
 Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD);
 void    BSDVAOBoxList(BSD_t *BSD);
+void    BSDCreateNodeBBoxVAO(BSD_t *BSD);
 void    BSDVAOPointList(BSD_t *BSD);
 void    BSDVAOObjectList(BSD_t *BSD);
 void    BSDVAOTexturedObjectList(BSD_t *BSD);

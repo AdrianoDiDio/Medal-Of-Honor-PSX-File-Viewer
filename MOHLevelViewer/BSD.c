@@ -79,6 +79,95 @@ void BSDFree(BSD_t *BSD)
 }
 
 
+void BSDCreateNodeBBoxVAO(BSD_t *BSD)
+{
+    TSPBBox_t BBox;
+    float *VertexData;
+    int VertexSize;
+    int VertexPointer;
+    int Stride;
+    Vao_t *Vao;
+    int i;
+    
+    for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
+        if( BSD->NodeData.Node[i].HasCollisionVolume == 0 ) {
+            DPrintf("Skipped node %i:HasCollisionVolume is 0...VolumeType was %i\n",BSD->NodeData.Node[i].CollisionVolumeType);
+            continue;
+        }
+        if( BSD->NodeData.Node[i].CollisionVolumeType != 1 ) {
+            DPrintf("Skipped node %i:Unknown VolumeType was %i\n",BSD->NodeData.Node[i].CollisionVolumeType);
+            continue;
+        }
+        //       XYZ
+        Stride = (3) * sizeof(float);
+        
+        VertexSize = Stride;
+        VertexData = malloc(VertexSize * 8/** sizeof(float)*/);
+        VertexPointer = 0;
+        
+        BBox.Min.x = BSD->NodeData.Node[i].Position.x - (BSD->NodeData.Node[i].Extent.x / 2);
+        BBox.Min.y = BSD->NodeData.Node[i].Position.y - (BSD->NodeData.Node[i].Extent.y / 2);
+        BBox.Min.z = BSD->NodeData.Node[i].Position.z - (BSD->NodeData.Node[i].Extent.z / 2);
+        
+        BBox.Max.x = BSD->NodeData.Node[i].Position.x + (BSD->NodeData.Node[i].Extent.x / 2);
+        BBox.Max.y = BSD->NodeData.Node[i].Position.y + (BSD->NodeData.Node[i].Extent.y / 2);
+        BBox.Max.z = BSD->NodeData.Node[i].Position.z + (BSD->NodeData.Node[i].Extent.z / 2);
+
+        VertexData[VertexPointer] =   BBox.Min.x;
+        VertexData[VertexPointer+1] = BBox.Min.y;
+        VertexData[VertexPointer+2] = BBox.Min.z;
+        VertexPointer += 3;
+                    
+        VertexData[VertexPointer] =   BBox.Min.x;
+        VertexData[VertexPointer+1] = BBox.Min.y;
+        VertexData[VertexPointer+2] = BBox.Max.z;
+        VertexPointer += 3;
+            
+        VertexData[VertexPointer] =   BBox.Max.x;
+        VertexData[VertexPointer+1] = BBox.Min.y;
+        VertexData[VertexPointer+2] = BBox.Max.z;
+        VertexPointer += 3;
+            
+        VertexData[VertexPointer] =   BBox.Max.x;
+        VertexData[VertexPointer+1] = BBox.Min.y;
+        VertexData[VertexPointer+2] = BBox.Min.z;
+        VertexPointer += 3;
+            
+        VertexData[VertexPointer] =   BBox.Min.x;
+        VertexData[VertexPointer+1] = BBox.Max.y;
+        VertexData[VertexPointer+2] = BBox.Min.z;
+        VertexPointer += 3;
+            
+        VertexData[VertexPointer] =   BBox.Min.x;
+        VertexData[VertexPointer+1] = BBox.Max.y;
+        VertexData[VertexPointer+2] = BBox.Max.z;
+        VertexPointer += 3;
+                        
+        VertexData[VertexPointer] =   BBox.Max.x;
+        VertexData[VertexPointer+1] = BBox.Max.y;
+        VertexData[VertexPointer+2] = BBox.Max.z;
+        VertexPointer += 3;
+            
+        VertexData[VertexPointer] =   BBox.Max.x;
+        VertexData[VertexPointer+1] = BBox.Max.y;
+        VertexData[VertexPointer+2] = BBox.Min.z;
+        VertexPointer += 3;
+
+            
+        unsigned short Index[16] = {
+            0, 1, 2, 3,
+            4, 5, 6, 7,
+            0, 4, 1, 5, 2, 6, 3, 7
+        };
+            
+        Vao = VaoInitXYZIBO(VertexData,VertexSize * 8,Stride,Index,sizeof(Index),0);            
+        Vao->Next = BSD->NodeBoxVao;
+        BSD->NodeBoxVao = Vao;
+        free(VertexData);
+    }
+}
+
+
 void BSDVAOPointList(BSD_t *BSD)
 {
     int NumSkip;
@@ -1027,6 +1116,8 @@ void BSDDraw(Level_t *Level)
     BSDRenderObject_t *RenderObjectIterator;
     Vao_t *VaoIterator;
     int MVPMatrixID;
+    int ColorID;
+    vec4 BoxColor;
     
     if( Level->Settings.ShowBSDNodes ) {    
         Shader = Shader_Cache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
@@ -1039,6 +1130,30 @@ void BSDDraw(Level_t *Level)
         glDrawArrays(GL_POINTS, 0, Level->BSD->NodeData.Header.NumNodes);
         glBindVertexArray(0);
         glUseProgram(0);
+        
+        for( VaoIterator = Level->BSD->NodeBoxVao; VaoIterator; VaoIterator = VaoIterator->Next ) {
+            BoxColor[0] = 1;
+            BoxColor[1] = 0;
+            BoxColor[2] = 0;
+            BoxColor[3] = 1;
+            
+            Shader = Shader_Cache("TSPBBoxShader","Shaders/TSPBBoxVertexShader.glsl","Shaders/TSPBBoxFragmentShader.glsl");
+            glUseProgram(Shader->ProgramID);
+            
+            MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+            glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+                
+            ColorID = glGetUniformLocation(Shader->ProgramID,"Color");
+            glUniform4fv(ColorID,1,BoxColor);
+            
+            glBindVertexArray(VaoIterator->VaoID[0]);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VaoIterator->IboID[0]);
+            glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, 0);
+            glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, (GLvoid*)(4*sizeof(unsigned short)));
+            glDrawElements(GL_LINES, 8, GL_UNSIGNED_SHORT, (GLvoid*)(8*sizeof(unsigned short)));
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+            glUseProgram(0);
+        }
         
 //         glUseProgram(Shader->ProgramID);
 // 
@@ -1130,7 +1245,7 @@ void BSDDraw(Level_t *Level)
             glm_rotate(VidConf.ModelViewMatrix,glm_rad(RenderObjectIterator->Rotation.z), temp);
             glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
             
-            //Emulate PSX Coordinate system...
+//             Emulate PSX Coordinate system...
             glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
             glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
 
@@ -1559,6 +1674,8 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
                 BSD->NodeData.Node[i].Position.z,BSD->NodeData.Node[i].Position.Pad);
         DPrintf("Rotation:(%i;%i;%i) Pad %i\n",BSD->NodeData.Node[i].Rotation.x,BSD->NodeData.Node[i].Rotation.y,
                 BSD->NodeData.Node[i].Rotation.z,BSD->NodeData.Node[i].Rotation.Pad);
+        DPrintf("CollisionType:%i Extent:(%i;%i;%i) \n",BSD->NodeData.Node[i].CollisionVolumeType,BSD->NodeData.Node[i].Extent.x,
+                BSD->NodeData.Node[i].Extent.y,BSD->NodeData.Node[i].Extent.z);
         assert(BSD->NodeData.Node[i].Position.Pad == 0);
         assert(BSD->NodeData.Node[i].Rotation.Pad == 0);
                 
@@ -1568,6 +1685,7 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
         NodeRotation.x = BSD->NodeData.Node[i].Rotation.x;
         NodeRotation.y = BSD->NodeData.Node[i].Rotation.y;
         NodeRotation.z = BSD->NodeData.Node[i].Rotation.z;
+        
         PrevPos = GetCurrentFilePosition(BSDFile);
         int MessageRegIndex;
         fseek(BSDFile,PrevPos + 52,SEEK_SET);
