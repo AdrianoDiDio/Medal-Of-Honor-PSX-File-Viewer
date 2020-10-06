@@ -988,7 +988,6 @@ void LevelLateInit()
     TSPCreateNodeBBoxVAO(Level->TSPList);
     TSPCreateCollisionVAO(Level->TSPList);
     BSDVAOPointList(Level->BSD);
-    BSDCreateNodeBBoxVAO(Level->BSD);
     BSD2PVAOPointList(Level->BSDTwoP);
     BSDVAOObjectList(Level->BSD);
     BSDVAOTexturedObjectList(Level->BSD);

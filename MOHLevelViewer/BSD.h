@@ -282,7 +282,6 @@ typedef struct BSD_s {
     BSDRenderObject_t *RenderObjectShowCaseList;
     //
     Vao_t       *NodeVao;
-    Vao_t       *NodeBoxVao;
     Vao_t       *RenderObjectPointVao;
     int          NumRenderObjectPoint;
     //Easy lookup to see if the camera is in that node position so that
@@ -299,7 +298,6 @@ char   *BSDNodeGetEnumStringFromNodeID(unsigned int NodeID);
 char   *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
 Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD);
 void    BSDVAOBoxList(BSD_t *BSD);
-void    BSDCreateNodeBBoxVAO(BSD_t *BSD);
 void    BSDVAOPointList(BSD_t *BSD);
 void    BSDVAOObjectList(BSD_t *BSD);
 void    BSDVAOTexturedObjectList(BSD_t *BSD);
