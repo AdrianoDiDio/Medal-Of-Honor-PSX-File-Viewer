@@ -68,12 +68,6 @@ typedef struct BSDPosition_s {
     short Pad; // Always zero but doublecheck!
 } BSDPosition_t;
 
-typedef struct BSDPositionNoPad_s {
-    short x;
-    short y;
-    short z;
-} BSDPositionNoPad_t;
-
 typedef struct BSDUv_s {
     Byte u;
     Byte v;
@@ -94,7 +88,9 @@ typedef struct BSDNode_s {
     BSDPosition_t Rotation;
     char Pad[8];
     short CollisionVolumeType;
-    BSDPositionNoPad_t Extent;
+    short Radius;
+    short MinY;
+    short MaxY;
     char Pad2[8];
     int MessageData; //Offset to a list of Message IDs
 } BSDNode_t;

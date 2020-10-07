@@ -1021,13 +1021,78 @@ char *BSDGetCollisionVolumeStringFromType(int CollisionVolumeType)
     switch( CollisionVolumeType ) {
         case 0:
             return "Sphere";
-            break;
         case 1:
             return "Cylinder";
-            break;
         case 2:
         default:
             return "Unknown";
+    }
+}
+
+bool PointInSphere(Vec3_t Point,BSDPosition_t Center,float Radius)
+{
+    Vec3_t Node;
+    float DeltaX;
+    float DeltaY;
+    float DeltaZ;
+    float Temp;
+  
+    Node.x = Center.x;
+    Node.y = Center.y;
+    Node.z = Center.z;
+    Vec_RotateXAxis(DEGTORAD(180.f),&Node);
+    
+    DeltaX = abs(Point.x - Node.x);
+    DeltaY = abs(Point.y - Node.y);
+    DeltaZ = abs(Point.z - Node.z);
+    
+    return ( DeltaX*DeltaX + DeltaY*DeltaY + DeltaZ*DeltaZ <= Radius*Radius );
+}
+
+bool PointInCylinder(Vec3_t Point,BSDPosition_t Center,float Radius,float MinY,float MaxY)
+{
+//   int DeltaY;
+//   int DeltaX;
+    Vec3_t Node;
+    float DeltaX;
+    float DeltaY;
+    float DeltaZ;
+    float Temp;
+  
+    Node.x = Center.x;
+    Node.y = Center.y;
+    Node.z = Center.z;
+    Vec_RotateXAxis(DEGTORAD(180.f),&Node);
+
+    //Make sure Min/Max are not swapped out.
+    if( MaxY < MinY ) {
+        Temp = MaxY;
+        MaxY = MinY;
+        MinY = Temp;
+    }
+    
+    DeltaX = Point.x - Node.x;
+    DeltaY = Point.y - Node.y;
+    DeltaZ = Point.z - Node.z;
+    
+    if( DeltaX * DeltaX + DeltaZ * DeltaZ <= Radius * Radius ) {
+        if( DeltaY >= MinY && DeltaY <= MaxY ) {
+            return true;
+        } 
+    }
+    return false;
+}
+
+bool BSDPointInNode(Vec3_t Position,BSDNode_t *Node)
+{
+    switch( Node->CollisionVolumeType ) {
+        case 0:
+            return PointInSphere(Position,Node->Position,Node->Radius);
+        case 1:
+            return PointInCylinder(Position,Node->Position,Node->Radius,Node->MinY,Node->MaxY);
+        case 2:
+        default:
+            return false;
     }
 }
 
@@ -1041,6 +1106,21 @@ void BSDDraw(Level_t *Level)
     Vao_t *VaoIterator;
     int MVPMatrixID;
     
+    if( 1 ) {
+        for( int i = 0; i < Level->BSD->NodeData.Header.NumNodes; i++ ) {
+            if( Level->BSD->NodeData.Node[i].MessageData == 0 ) {
+                continue;
+            }
+//             if( Level->BSD->NodeData.Node[i].CollisionVolumeType != 2 ) {
+//                 continue;
+//             }
+            if( BSDPointInNode(Camera.Position,&Level->BSD->NodeData.Node[i]) ) {
+                DPrintf("Camera is inside node %i => %s\n",i,BSDNodeGetEnumStringFromNodeID(Level->BSD->NodeData.Node[i].Id));
+                DPrintf("Node CollisionVolumeType:%s\n",BSDGetCollisionVolumeStringFromType(Level->BSD->NodeData.Node[i].CollisionVolumeType));
+                break;
+            }
+        }
+    }
     if( Level->Settings.ShowBSDNodes ) {    
         Shader = Shader_Cache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
         glUseProgram(Shader->ProgramID);
@@ -1570,8 +1650,10 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
                 BSD->NodeData.Node[i].Position.z,BSD->NodeData.Node[i].Position.Pad);
         DPrintf("Rotation:(%i;%i;%i) Pad %i\n",BSD->NodeData.Node[i].Rotation.x,BSD->NodeData.Node[i].Rotation.y,
                 BSD->NodeData.Node[i].Rotation.z,BSD->NodeData.Node[i].Rotation.Pad);
-        DPrintf("CollisionType:%s Extent:(%i;%i;%i) \n",BSDGetCollisionVolumeStringFromType(BSD->NodeData.Node[i].CollisionVolumeType),
-                BSD->NodeData.Node[i].Extent.x,BSD->NodeData.Node[i].Extent.y,BSD->NodeData.Node[i].Extent.z);
+        DPrintf("CollisionType:%s Radius:%i; MinY:%i MaxY:%i) \n",
+                                        BSDGetCollisionVolumeStringFromType(BSD->NodeData.Node[i].CollisionVolumeType),
+                                        BSD->NodeData.Node[i].Radius,BSD->NodeData.Node[i].MinY,
+                                        BSD->NodeData.Node[i].MaxY);
         DPrintf("MessageData at %i\n",BSD->NodeData.Node[i].MessageData);
         assert(BSD->NodeData.Node[i].Position.Pad == 0);
         assert(BSD->NodeData.Node[i].Rotation.Pad == 0);
