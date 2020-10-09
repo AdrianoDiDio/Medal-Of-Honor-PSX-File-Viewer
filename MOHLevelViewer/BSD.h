@@ -88,9 +88,9 @@ typedef struct BSDNode_s {
     BSDPosition_t Rotation;
     char Pad[8];
     short CollisionVolumeType;
-    short Radius;
-    short MinY;
-    short MaxY;
+    short CollisionInfo0; // Radius or BoxWidth
+    short CollisionInfo1; // CylinderBottom or BoxHeight
+    short CollisionInfo2; // CylinderTop or BoxDepth
     char Pad2[8];
     int MessageData; //Offset to a list of Message IDs
 } BSDNode_t;

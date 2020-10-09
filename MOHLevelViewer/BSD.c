@@ -92,7 +92,11 @@ void BSDVAOPointList(BSD_t *BSD)
     NodeDataPointer = 0;
     NumSkip = 0;
     for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
-//         if( BSD->NodeData.Node[i].Id != BSD_PICKUP_OBJECT ) {
+//         if( BSD->NodeData.Node[i].CollisionVolumeType != 2 ) {
+//             NumSkip++;
+//             continue;
+//         }
+//         if( Level->BSD->NodeData.Node[i].MessageData == 0 ) {
 //             NumSkip++;
 //             continue;
 //         }
@@ -1025,17 +1029,16 @@ char *BSDGetCollisionVolumeStringFromType(int CollisionVolumeType)
             return "Cylinder";
         case 2:
         default:
-            return "Unknown";
+            return "Box";
     }
 }
 
-bool PointInSphere(Vec3_t Point,BSDPosition_t Center,float Radius)
+bool BSDPointInSphere(Vec3_t Point,BSDPosition_t Center,float Radius)
 {
     Vec3_t Node;
     float DeltaX;
     float DeltaY;
     float DeltaZ;
-    float Temp;
   
     Node.x = Center.x;
     Node.y = Center.y;
@@ -1049,7 +1052,13 @@ bool PointInSphere(Vec3_t Point,BSDPosition_t Center,float Radius)
     return ( DeltaX*DeltaX + DeltaY*DeltaY + DeltaZ*DeltaZ <= Radius*Radius );
 }
 
-bool PointInCylinder(Vec3_t Point,BSDPosition_t Center,float Radius,float MinY,float MaxY)
+/*
+    Cylinder is described using:
+    Center Point
+    Radius
+    MinY/MaxY: Bottom and Top Y coordinate of the cylinder from the center position.
+*/
+bool BSDPointInCylinder(Vec3_t Point,BSDPosition_t Center,float Radius,float MinY,float MaxY)
 {
 //   int DeltaY;
 //   int DeltaX;
@@ -1083,15 +1092,57 @@ bool PointInCylinder(Vec3_t Point,BSDPosition_t Center,float Radius,float MinY,f
     return false;
 }
 
+bool BSDPointInBox(Vec3_t Point,BSDPosition_t Center,BSDPosition_t NodeRotation,float Width,float Height,float Depth)
+{
+    Vec3_t Node;
+    vec3 Delta;
+    float HalfSizeX;
+    float HalfSizeY;
+    float HalfSizeZ;
+    vec3  Rotation;
+    mat4  RotationMatrix;
+  
+    Node.x = Center.x;
+    Node.y = Center.y;
+    Node.z = Center.z;
+    Vec_RotateXAxis(DEGTORAD(180.f),&Node);
+    
+    HalfSizeX = abs(Width) / 2.f;
+    HalfSizeY = abs(Height)/ 2.f;
+    HalfSizeZ = abs(Depth) / 2.f;
+
+    Delta[0] = Node.x - Point.x;
+    Delta[1] = Node.y - Point.y;
+    Delta[2] = Node.z - Point.z;
+
+    if( NodeRotation.x != 0 || NodeRotation.y != 0 || NodeRotation.z != 0 ) {
+//         OOB Test...
+        Rotation[0] = -glm_rad(((NodeRotation.x / 4096.f) * 360.f));
+        Rotation[1] = -glm_rad(((NodeRotation.y / 4096.f) * 360.f));
+        Rotation[2] = -glm_rad(((NodeRotation.z / 4096.f) * 360.f));
+    
+        glm_mat4_identity(RotationMatrix);
+        glm_euler_yxz(Rotation,RotationMatrix);
+        glm_mat4_mulv3(RotationMatrix, Delta, 1, Delta);
+    }
+    
+    if( abs(Delta[0]) <= HalfSizeX && abs(Delta[1]) <= HalfSizeY && abs(Delta[2]) <= HalfSizeZ ) {
+        return true;
+    }
+    return false;
+}
+
 bool BSDPointInNode(Vec3_t Position,BSDNode_t *Node)
 {
     switch( Node->CollisionVolumeType ) {
         case 0:
-            return PointInSphere(Position,Node->Position,Node->Radius);
+            return BSDPointInSphere(Position,Node->Position,Node->CollisionInfo0);
         case 1:
-            return PointInCylinder(Position,Node->Position,Node->Radius,Node->MinY,Node->MaxY);
+            return BSDPointInCylinder(Position,Node->Position,Node->CollisionInfo0,Node->CollisionInfo1,Node->CollisionInfo2);
         case 2:
+            return BSDPointInBox(Position,Node->Position,Node->Rotation,Node->CollisionInfo0,Node->CollisionInfo1,Node->CollisionInfo2);
         default:
+            DPrintf("Unknown CollisionVolumeType %i for node %i\n",Node->CollisionVolumeType,Node->Id);
             return false;
     }
 }
@@ -1650,10 +1701,22 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
                 BSD->NodeData.Node[i].Position.z,BSD->NodeData.Node[i].Position.Pad);
         DPrintf("Rotation:(%i;%i;%i) Pad %i\n",BSD->NodeData.Node[i].Rotation.x,BSD->NodeData.Node[i].Rotation.y,
                 BSD->NodeData.Node[i].Rotation.z,BSD->NodeData.Node[i].Rotation.Pad);
-        DPrintf("CollisionType:%s Radius:%i; MinY:%i MaxY:%i) \n",
-                                        BSDGetCollisionVolumeStringFromType(BSD->NodeData.Node[i].CollisionVolumeType),
-                                        BSD->NodeData.Node[i].Radius,BSD->NodeData.Node[i].MinY,
-                                        BSD->NodeData.Node[i].MaxY);
+        if( BSD->NodeData.Node[i].CollisionVolumeType == 0 ) {
+            DPrintf("CollisionType:%s Radius:%i\n",
+                                    BSDGetCollisionVolumeStringFromType(BSD->NodeData.Node[i].CollisionVolumeType),
+                                    BSD->NodeData.Node[i].CollisionInfo0);
+        } else if( BSD->NodeData.Node[i].CollisionVolumeType == 1 ) {
+            DPrintf("CollisionType:%s Radius:%i BottomY:%i TopY:%i \n",
+                                    BSDGetCollisionVolumeStringFromType(BSD->NodeData.Node[i].CollisionVolumeType),
+                                    BSD->NodeData.Node[i].CollisionInfo0,BSD->NodeData.Node[i].CollisionInfo1,
+                                    BSD->NodeData.Node[i].CollisionInfo2);
+        } else {
+            DPrintf("CollisionType:%s Width:%i Height:%i Depth:%i \n",
+                            BSDGetCollisionVolumeStringFromType(BSD->NodeData.Node[i].CollisionVolumeType),
+                            BSD->NodeData.Node[i].CollisionInfo0,BSD->NodeData.Node[i].CollisionInfo1,
+                            BSD->NodeData.Node[i].CollisionInfo2);
+        }
+
         DPrintf("MessageData at %i\n",BSD->NodeData.Node[i].MessageData);
         assert(BSD->NodeData.Node[i].Position.Pad == 0);
         assert(BSD->NodeData.Node[i].Rotation.Pad == 0);
