@@ -947,8 +947,9 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
             printf("TSPReadCollisionChunk:Early failure when reading G data.\n");
             return;
         }
-//         printf(" -- G %i --\n",i);
-//         PrintTSPVec3(TSP->CollisionData->G[i].Position);
+//         DPrintf("%i;%i;%i;%i\n",TSP->CollisionData->G[i].Position.x,TSP->CollisionData->G[i].Position.y,TSP->CollisionData->G[i].Position.z,
+//             TSP->CollisionData->G[i].Pad
+//         );
 //         printf("Pad is %i\n",TSP->CollisionData->G[i].Pad);
     }
     TSP->CollisionData->H = malloc(TSP->CollisionData->Header.NumHs * sizeof(short));
@@ -958,7 +959,7 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
             DPrintf("TSPReadCollisionChunk:Early failure when reading H data.\n");
             return;
         }
-        DPrintf("-- H %i at %i --\n",i,GetCurrentFilePosition(InFile));
+//         DPrintf("-- H %i at %i --\n",i,GetCurrentFilePosition(InFile));
 //         printf("%i\n",TSP->CollisionData->H[i]);
     }
     fread(&Pad,sizeof(Pad),1,InFile);
@@ -967,6 +968,7 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
         fseek(InFile,-sizeof(Pad),SEEK_CUR);
         
     }
+    DPrintf("TSPReadCollisionChunk:Vertex at %li\n",ftell(InFile));
     TSP->CollisionData->Vertex = malloc(TSP->CollisionData->Header.NumVertices * sizeof(TSPVert_t));
     for( i = 0; i < TSP->CollisionData->Header.NumVertices; i++ ) {
         Ret = fread(&TSP->CollisionData->Vertex[i],sizeof(TSP->CollisionData->Vertex[i]),1,InFile);
@@ -979,6 +981,7 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
 //         printf("Pad is %i\n",TSP->CollisionData->Vertex[i].Pad);
         assert(TSP->CollisionData->Vertex[i].Pad == 104);
     }
+    DPrintf("TSPReadCollisionChunk:Normals at %li\n",ftell(InFile));
     TSP->CollisionData->Normal = malloc(TSP->CollisionData->Header.NumNormals * sizeof(TSPVert_t));
     for( i = 0; i < TSP->CollisionData->Header.NumNormals; i++ ) {
         Ret = fread(&TSP->CollisionData->Normal[i],sizeof(TSP->CollisionData->Normal[i]),1,InFile);
@@ -991,6 +994,7 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
 //         printf("Pad is %i\n",TSP->CollisionData->Normal[i].Pad);
         assert(TSP->CollisionData->Normal[i].Pad == 0);
     }
+    DPrintf("TSPReadCollisionChunk:Faces at %li\n",ftell(InFile));
     TSP->CollisionData->Face = malloc(TSP->CollisionData->Header.NumFaces * sizeof(TSPCollisionFace_t));
     for( i = 0; i < TSP->CollisionData->Header.NumFaces; i++ ) {
         Ret = fread(&TSP->CollisionData->Face[i],sizeof(TSP->CollisionData->Face[i]),1,InFile);
@@ -998,12 +1002,23 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
             printf("TSPReadCollisionChunk:Early failure when reading face data.\n");
             return;
         }
-//         printf("-- Face %i --\n",i);
+        printf("-- Face %i --\n",i);
 //         printf("V0|V1|V2:%u %u %u\n",TSP->CollisionData->Face[i].V0,TSP->CollisionData->Face[i].V1,TSP->CollisionData->Face[i].V2);
 //         printf("Normal Index:%u\n",TSP->CollisionData->Face[i].NormalIndex);
-//         printf("Flags:%u\n",TSP->CollisionData->Face[i].Flags);
+
     }
     assert(ftell(InFile) == GetFileLength(InFile));
+    
+    //TEST
+    for( i = 0; i < TSP->CollisionData->Header.NumGs; i++ ) {
+        DPrintf(" -- G %i --\n",i);
+        if( TSP->CollisionData->G[i].Position.x < 0 ) {
+            int NumFaces = ~TSP->CollisionData->G[i].Position.x;
+            int HIndex = TSP->CollisionData->G[i].Position.y;
+            int FaceIndex = TSP->CollisionData->H[HIndex];
+            DPrintf("G is referencing %i faces using H index %i which References face index %i\n",NumFaces,HIndex,FaceIndex);
+        }
+    }
 }
 
 TSP_t *TSPLoad(char *FName,int TSPNumber)

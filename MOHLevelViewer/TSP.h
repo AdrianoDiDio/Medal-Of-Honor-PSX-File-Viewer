@@ -129,7 +129,7 @@ typedef struct TSPCollisionFace_s {
 typedef struct TSPCollision_s {
     TSPCollisionHeader_t Header;
     TSPVert_t *G;
-    short *H; //Hm?
+    short *H; // Index to the collided face...
     TSPVert_t *Vertex;
     TSPVert_t *Normal;
     TSPCollisionFace_t *Face;

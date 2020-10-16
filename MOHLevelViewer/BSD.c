@@ -1111,9 +1111,9 @@ bool BSDPointInBox(Vec3_t Point,BSDPosition_t Center,BSDPosition_t NodeRotation,
     HalfSizeY = abs(Height)/ 2.f;
     HalfSizeZ = abs(Depth) / 2.f;
 
-    Delta[0] = Node.x - Point.x;
-    Delta[1] = Node.y - Point.y;
-    Delta[2] = Node.z - Point.z;
+    Delta[0] = Point.x - Node.x;
+    Delta[1] = Point.y - Node.y;
+    Delta[2] = Point.z - Node.z;
 
     if( NodeRotation.x != 0 || NodeRotation.y != 0 || NodeRotation.z != 0 ) {
 //         OOB Test...
