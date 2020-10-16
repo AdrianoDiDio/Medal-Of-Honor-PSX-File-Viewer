@@ -26,6 +26,31 @@
     FIXME:RenderObjectList,RenderObjectRealList,RenderObjectShowCaseList CLEANUP!
 */
 
+void BSDFixRenderObjectPosition(Level_t *Level)
+{
+    BSDRenderObject_t *RenderObjectIterator;
+    TSPVec3_t Point;
+    int Result;
+    int OutY;
+    int Delta;
+    
+    for( RenderObjectIterator = Level->BSD->RenderObjectRealList; RenderObjectIterator; 
+        RenderObjectIterator = RenderObjectIterator->Next ) {
+        Point.x = RenderObjectIterator->Position.x;
+        Point.y = RenderObjectIterator->Position.y;
+        Point.z = RenderObjectIterator->Position.z;
+        Result = TSPGetPointYComponentFromBVH(Point,Level->TSPList,&OutY);
+        if( Result == -1 ) {
+            DPrintf("BSDFixRenderObjectPosition:Not found in BVH!\n");
+            continue;
+        }
+        Delta = abs(Point.y - OutY);
+        if( Delta < 55 ) {
+            RenderObjectIterator->Position.y = OutY;
+        }
+    }
+}
+
 void BSDRenderObjectListCleanUp(BSDRenderObject_t *RenderObjectList)
 {
     BSDRenderObject_t *Temp;
@@ -540,7 +565,7 @@ void BSDAddNodeToRenderObjectList(BSD_t *BSD,int MissionNumber,unsigned int Node
     Object->Rotation.x = (Rotation.x  / 4096) * 360.f;
     Object->Rotation.y = (Rotation.y  / 4096) * 360.f;
     Object->Rotation.z = (Rotation.z  / 4096) * 360.f;
-
+    
     Object->RenderObjectID = RenderObjectID;
     Object->FaceVao = NULL;
     Object->Vao = NULL;
@@ -1254,6 +1279,7 @@ void BSDDraw(Level_t *Level)
             temp[1] = 0;
             temp[2] = 1;
             glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
+            
             temp[0] = -(Camera.Position.x - RenderObjectIterator->Position.x);
             temp[1] = -(Camera.Position.y + RenderObjectIterator->Position.y);
             temp[2] = -(Camera.Position.z + RenderObjectIterator->Position.z);

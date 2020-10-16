@@ -38,8 +38,8 @@ void TSPFree(TSP_t *TSP)
     free(TSP->Vertex);
     free(TSP->Color);
     
-    free(TSP->CollisionData->G);
-    free(TSP->CollisionData->H);
+    free(TSP->CollisionData->BVH);
+    free(TSP->CollisionData->FaceIndexList);
     free(TSP->CollisionData->Vertex);
     free(TSP->CollisionData->Normal);
     free(TSP->CollisionData->Face);
@@ -934,29 +934,29 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
 //     printf("U0|U1|U2|U3:%u %u %u %u\n",TSP->CollisionData->Header.U0,TSP->CollisionData->Header.U1,TSP->CollisionData->Header.U2,
 //         TSP->CollisionData->Header.U3
 //     );
-    printf("NumGs:%u\n",TSP->CollisionData->Header.NumGs);
-    printf("NumHs:%u\n",TSP->CollisionData->Header.NumHs);
+    printf("CollisionBoundMinX:%i\n",TSP->CollisionData->Header.CollisionBoundMinX);
+    printf("CollisionBoundMinZ:%i\n",TSP->CollisionData->Header.CollisionBoundMinZ);
+    printf("CollisionBoundMaxX:%i\n",TSP->CollisionData->Header.CollisionBoundMaxX);
+    printf("CollisionBoundMaxZ:%i\n",TSP->CollisionData->Header.CollisionBoundMaxZ);
+    printf("Num Collision BVH Nodes:%u\n",TSP->CollisionData->Header.NumCollisionBVHNodes);
+    printf("Num Collision Face Index:%u\n",TSP->CollisionData->Header.NumCollisionFaceIndex);
     printf("NumVertices:%u\n",TSP->CollisionData->Header.NumVertices);
     printf("NumNormals:%u\n",TSP->CollisionData->Header.NumNormals);
     printf("NumFaces:%u\n",TSP->CollisionData->Header.NumFaces);
-    //NOTE(Adriano):G data should be a list of planes in the form ax+by+cz+d where d is the pad....
-    TSP->CollisionData->G = malloc(TSP->CollisionData->Header.NumGs * sizeof(TSPVert_t));
-    for( i = 0; i < TSP->CollisionData->Header.NumGs; i++ ) {
-        Ret = fread(&TSP->CollisionData->G[i],sizeof(TSP->CollisionData->G[i]),1,InFile);
+
+    TSP->CollisionData->BVH = malloc(TSP->CollisionData->Header.NumCollisionBVHNodes * sizeof(TSPCollisionBVH_t));
+    for( i = 0; i < TSP->CollisionData->Header.NumCollisionBVHNodes; i++ ) {
+        Ret = fread(&TSP->CollisionData->BVH[i],sizeof(TSP->CollisionData->BVH[i]),1,InFile);
         if( Ret != 1 ) {
-            printf("TSPReadCollisionChunk:Early failure when reading G data.\n");
+            printf("TSPReadCollisionChunk:Early failure when reading BVH nodes.\n");
             return;
         }
-//         DPrintf("%i;%i;%i;%i\n",TSP->CollisionData->G[i].Position.x,TSP->CollisionData->G[i].Position.y,TSP->CollisionData->G[i].Position.z,
-//             TSP->CollisionData->G[i].Pad
-//         );
-//         printf("Pad is %i\n",TSP->CollisionData->G[i].Pad);
     }
-    TSP->CollisionData->H = malloc(TSP->CollisionData->Header.NumHs * sizeof(short));
-    for( i = 0; i < TSP->CollisionData->Header.NumHs; i++ ) {
-        Ret = fread(&TSP->CollisionData->H[i],sizeof(TSP->CollisionData->H[i]),1,InFile);
+    TSP->CollisionData->FaceIndexList = malloc(TSP->CollisionData->Header.NumCollisionFaceIndex * sizeof(short));
+    for( i = 0; i < TSP->CollisionData->Header.NumCollisionFaceIndex; i++ ) {
+        Ret = fread(&TSP->CollisionData->FaceIndexList[i],sizeof(TSP->CollisionData->FaceIndexList[i]),1,InFile);
         if( Ret != 1 ) {
-            DPrintf("TSPReadCollisionChunk:Early failure when reading H data.\n");
+            DPrintf("TSPReadCollisionChunk:Early failure when reading Collison Face Index data.\n");
             return;
         }
 //         DPrintf("-- H %i at %i --\n",i,GetCurrentFilePosition(InFile));
@@ -1008,17 +1008,193 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
 
     }
     assert(ftell(InFile) == GetFileLength(InFile));
-    
-    //TEST
-    for( i = 0; i < TSP->CollisionData->Header.NumGs; i++ ) {
-        DPrintf(" -- G %i --\n",i);
-        if( TSP->CollisionData->G[i].Position.x < 0 ) {
-            int NumFaces = ~TSP->CollisionData->G[i].Position.x;
-            int HIndex = TSP->CollisionData->G[i].Position.y;
-            int FaceIndex = TSP->CollisionData->H[HIndex];
-            DPrintf("G is referencing %i faces using H index %i which References face index %i\n",NumFaces,HIndex,FaceIndex);
+}
+
+TSPCollision_t *TSPGetCollisionDataFromPoint(TSP_t *TSPList,TSPVec3_t Point)
+{
+    TSP_t *TSP;
+
+    for( TSP = TSPList; TSP; TSP = TSP->Next ) {
+        if( Point.x >= TSP->CollisionData->Header.CollisionBoundMinX && Point.x <= TSP->CollisionData->Header.CollisionBoundMaxX &&
+        Point.z >= TSP->CollisionData->Header.CollisionBoundMinZ && Point.z <= TSP->CollisionData->Header.CollisionBoundMaxZ ) {
+            return TSP->CollisionData;
         }
     }
+    return NULL;
+}
+
+void TSPVec3ToVec2(TSPVec3_t Point,vec2 Out)
+{
+    Out[0] = Point.x;
+    Out[1] = Point.z;
+}
+
+float TSPFixedToFloat(int input,int FixedShift)
+{
+    return ((float)input / (float)(1 << FixedShift));
+}
+
+int TSPGetYFromCollisionFace(TSPCollision_t *CollisionData,TSPVec3_t Point,TSPCollisionFace_t *Face)
+{
+    float OutY;
+    float SolveFaceY;
+    TSPVec3_t Normal;
+    vec2 Point2D;
+    
+    TSPVec3ToVec2(Point,Point2D);
+
+    
+    Normal = CollisionData->Normal[Face->NormalIndex].Position;
+    if( abs(Normal.y) < 257 ) {
+        printf("TSPGetYFromCollisionFace:Returning it normal...\n");
+        OutY = TSPFixedToFloat(Normal.y,15);
+    } else {
+        printf("Normal fixed is:%i;%i;%i\n",Normal.x,Normal.y,Normal.z);
+        float NormalX;
+        float NormalY;
+        float NormalZ;
+        float PointX;
+        float PointZ;
+        printf("Normal as int is:%i;%i;%i\n",Normal.x,Normal.y,Normal.z);
+        NormalX = /*FixedToInt*/TSPFixedToFloat(Normal.x,15);
+        NormalY = /*FixedToInt*/TSPFixedToFloat(Normal.y,15);
+        NormalZ = /*FixedToInt*/TSPFixedToFloat(Normal.z,15);
+        PointX = /*fixed_to_float*/(Point2D[0]);
+        PointZ = /*fixed_to_float*/(Point2D[1]);
+        printf("Normal as float is:%f;%f;%f\n",NormalX,NormalY,NormalZ);
+//         DistanceOffset = ;
+        printf("TSPGetYFromCollisionFace:DistanceOffset Fixed:%i Real:%i\n",Face->PlaneDistance << 0xf,Face->PlaneDistance );
+        SolveFaceY = -(NormalX * PointX + NormalZ * PointZ + (Face->PlaneDistance /*<< 0xf*/));
+        OutY = SolveFaceY / NormalY;
+    }
+    return (int) OutY;
+}
+
+//Cross product that returns the sign of the new vector.
+float TSPSign (vec2 p1, vec2 p2, vec2 p3)
+{
+    return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1]);
+}
+
+bool TSPPointInTriangle (TSPCollision_t *CollisionData,TSPVec3_t Point,TSPCollisionFace_t *Face)
+{
+    float d1, d2, d3;
+    bool has_neg, has_pos;
+    vec2 v1;
+    vec2 v2;
+    vec2 v3;
+    vec2 pt;
+ 
+    TSPVec3ToVec2(Point,pt);
+    TSPVec3ToVec2(CollisionData->Vertex[Face->V0].Position,v1);
+    TSPVec3ToVec2(CollisionData->Vertex[Face->V1].Position,v2);
+    TSPVec3ToVec2(CollisionData->Vertex[Face->V2].Position,v3);
+        
+    if( CollisionData->Normal[Face->NormalIndex].Position.y > 0 ) {
+        return false;
+    }
+
+    d1 = TSPSign(pt, v1, v2);
+    d2 = TSPSign(pt, v2, v3);
+    d3 = TSPSign(pt, v3, v1);
+
+    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    return !(has_neg && has_pos);
+}
+
+int TSPCheckCollisionFaceIntersection(TSPCollision_t *CollisionData,TSPVec3_t Point,int StartingFaceListIndex,int NumFaces,int *OutY)
+{
+    int i;
+    TSPCollisionFace_t *CurrentFace;
+    int FaceListIndex;
+    int FaceIndex;
+    int Y;
+    int MinY;
+    
+    MinY = 99999;
+    printf("TSPCheckCollisionFaceIntersection:Checking %i faces\n",NumFaces);
+    FaceListIndex = StartingFaceListIndex;
+    i = 0;
+
+    while( i < NumFaces ) {
+        //First fetch the face index from H array...
+        FaceIndex = CollisionData->FaceIndexList[FaceListIndex];
+        //Then grab the corresponding face from the face array...
+        CurrentFace = &CollisionData->Face[FaceIndex];
+        printf("Iteration %i\n",i);
+        if( TSPPointInTriangle(CollisionData,Point,CurrentFace) == 1) {
+            printf("Point is in face %i...grabbing Y value\n",FaceIndex);
+            Y = TSPGetYFromCollisionFace(CollisionData,Point,CurrentFace);
+            printf("Got %i as Y PointY was:%i\n",Y,Point.y);
+        } else {
+            printf("Missed face %i...\n",FaceIndex);
+        }
+        if( Y < MinY ) {
+            MinY = Y;
+        }
+        //Make sure to increment it in order to fetch the next face.
+        FaceListIndex++;
+        i++;
+    }
+    if( MinY != 99999 ) {
+        *OutY = MinY;
+        return 1;
+    }
+    return -1;
+}
+
+int TSPGetPointYComponentFromBVH(TSPVec3_t Point,TSP_t *TSPList,int *OutY)
+{
+    TSPCollision_t *CollisionData;
+    TSPCollisionBVH_t *Node;
+    int WorldBoundMinX;
+    int WorldBoundMinZ;
+    int MinValue;
+    int CurrentNode;
+    
+    CollisionData = TSPGetCollisionDataFromPoint(TSPList,Point);
+    
+    if( CollisionData == NULL ) {
+        DPrintf("TSPGetPointYComponentFromBVH:Point wasn't in any collision data...\n");
+        return -1;
+    }
+    
+    WorldBoundMinX = CollisionData->Header.CollisionBoundMinX;
+    WorldBoundMinZ = CollisionData->Header.CollisionBoundMinZ;
+    
+    CurrentNode = 0;
+    
+    while( 1 ) {
+//         CurrentPlaneIndex = (CurrentPlane - GOffset) / sizeof(TSPCollisionG_t);
+        printf("Node Index %i\n",CurrentNode);
+        Node = &CollisionData->BVH[CurrentNode];
+        if( Node->Child0 < 0 ) {
+            printf("Done...found a leaf...node %i FaceIndex:%i Child0:%i NumFaces:%i Child1:%i MaxZ:%i\n",CurrentNode,
+                   CollisionData->FaceIndexList[Node->Child1],
+                   Node->Child0,~Node->Child0,Node->Child1,Node->MaxZ);
+            return TSPCheckCollisionFaceIntersection(CollisionData,Point,Node->Child1,~Node->Child0,OutY);
+        }
+        if( Node->Child1 < 0 ) {
+            MinValue = WorldBoundMinZ + Node->MaxX;
+            if (Point.z < MinValue) {
+                CurrentNode = Node->Child0;
+            } else {
+                CurrentNode = ~Node->Child1;
+                WorldBoundMinZ = MinValue;
+            }
+        } else {
+            MinValue = WorldBoundMinX + Node->MaxX;
+            if( Point.x < MinValue ) {
+                CurrentNode = Node->Child0;
+            } else {
+                CurrentNode = Node->Child1;
+                WorldBoundMinX = MinValue;
+            }
+        }
+    }
+    return -1;
 }
 
 TSP_t *TSPLoad(char *FName,int TSPNumber)

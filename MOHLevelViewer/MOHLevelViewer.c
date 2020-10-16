@@ -993,6 +993,8 @@ void LevelLateInit()
     BSDVAOTexturedObjectList(Level->BSD);
     BSDSpawnNodes(Level->BSD);
     BSDSpawnShowCase(Level->BSD);
+        BSDFixRenderObjectPosition(Level);
+
 }
 void LevelCleanUp()
 {
