@@ -39,12 +39,13 @@ void BSDFixRenderObjectPosition(Level_t *Level)
         Point.x = RenderObjectIterator->Position.x;
         Point.y = RenderObjectIterator->Position.y;
         Point.z = RenderObjectIterator->Position.z;
-        Result = TSPGetPointYComponentFromBVH(Point,Level->TSPList,&OutY);
+        Result = TSPGetPointYComponentFromKDTree(Point,Level->TSPList,&OutY);
         if( Result == -1 ) {
-            DPrintf("BSDFixRenderObjectPosition:Not found in BVH!\n");
+            DPrintf("BSDFixRenderObjectPosition:Not found in KD Tree!\n");
             continue;
         }
         Delta = abs(Point.y - OutY);
+        DPrintf("Delta is %i (Limit 55)\n",Delta);
         if( Delta < 55 ) {
             RenderObjectIterator->Position.y = OutY;
         }

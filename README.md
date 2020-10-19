@@ -11,8 +11,14 @@
   * [Vertex](#vertex)
   * [Color](#color)
   * [Faces](#faces)
-      - [UV Coordinates(UV)](#uv-coordinates-uv-)
-      - [Face Data](#face-data)
+     + [UV Coordinates(UV)](#uv-coordinates-uv-)
+     + [Face Data](#face-data)
+   * [Collision Data](#collision-data)
+     + [KDTree Nodes](#kdtree-nodes)
+     + [Face Index Array](#face-index-array)
+     + [Collision Vertices](#collision-vertices)
+     + [Collision Normals](#collision-normals)
+     + [Collision Faces](#collision-faces)
 - [BSD Files](#bsd-files)
   * [File Format](#file-format)
     + [TSP Info Block](#tsp-info-block)
@@ -154,11 +160,12 @@ E.G: TSP Node offset is 64, Child1 Offset is 24 then the child node will be at *
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| [Vector3](#Vector3) | 6 byte  | Vertex coordinate |
-| short | 2 byte  | Pad |
+| [Vector3](#Vector3) | 6 bytes  | Vertex coordinate |
+| short | 2 bytes  | Pad |
 
 ### Color
 This is used by each face in order to simulate lights.
+
 | Type | Size | Description |
 | ---- | ---- | ----------- |
 | unsigned byte | 1 byte  | Red |
@@ -167,7 +174,8 @@ This is used by each face in order to simulate lights.
 | unsigned byte | 1 byte  | Pad |
 
 ### Faces
-##### UV Coordinates(UV)
+
+#### UV Coordinates(UV)
 Used for texture coordinates.
 
 | Type | Size | Description |
@@ -175,22 +183,86 @@ Used for texture coordinates.
 | unsigned char | 1 byte  | u coordinate |
 | unsigned char | 1 byte  | v coordinate |
 
-##### Face Data
+#### Face Data
 
 Each face is made by 3 vertices that forms a triangle.
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| unsigned short | 2 byte  | V0 First vertex and color index in array |
-| unsigned short | 2 byte  | V1 Second vertex and color index in array |
-| unsigned short | 2 byte  | V2 Third vertex and color index in array |
+| unsigned short | 2 bytes  | V0 First vertex and color index in array |
+| unsigned short | 2 bytes  | V1 Second vertex and color index in array |
+| unsigned short | 2 bytes  | V2 Third vertex and color index in array |
 | [UV](#uv-coordinatesuv) | 2 byte  | UV0 Texture coordinate for vertex 0  |
-| short | 2 byte  | Unknown  |
-| [UV](#uv-coordinatesuv) | 2 byte  | UV1 Texture coordinate for vertex 1  |
-| short | 2 byte  | TSB that contains info about the used texture ( read [TSB](#TSB) for more information)|
-| [UV](#uv-coordinatesuv) | 2 byte  | UV2 Texture coordinate for vertex 2  |
+| short | 2 bytes  | Unknown  |
+| [UV](#uv-coordinatesuv) | 2 bytes  | UV1 Texture coordinate for vertex 1  |
+| short | 2 bytes  | TSB that contains info about the used texture ( read [TSB](#TSB) for more information)|
+| [UV](#uv-coordinatesuv) | 2 bytes  | UV2 Texture coordinate for vertex 2  |
 
+### Collision Data
 
+Collision data is found after the face block and has the following header:
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| short | 2 bytes  | World Bound Min X |
+| short | 2 bytes  | World Bound Min Z |
+| short | 2 bytes  | World Bound Max X |
+| short | 2 bytes  | World Bound Max Z  |
+| unsigned short | 2 bytes  | Number of KDTree Nodes  |
+| unsigned short | 2 bytes  | Number of Face Index array element  |
+| unsigned short | 2 bytes  | Number of Vertices  |
+| unsigned short | 2 bytes  | Number of Normals  |
+| unsigned short | 2 bytes  | Number of Faces  |
+
+WorldBoundMinX/Z are used to iterate over the KDTree.
+
+#### KDTree Nodes
+
+Each Node has the following data:
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| short | 2 bytes  | Child0 |
+| short | 2 bytes  | Child1 |
+| short | 2 bytes  | Middle Split Value |
+| short | 2 bytes  | Unknown  |
+
+If Child0 is less than 0 then the current node is a leaf and contains
+(-Child0 - 1) faces starting from the index Child1 that is mapped to the Face Index array.
+
+#### Face Index Array
+
+Face Index Array is a list of shorts that map to the face array that is found in the header.
+
+#### Collision Vertices
+
+Collision Vertex is a list that contains all the vertices used by the collision faces.
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| [Vector3](#Vector3) | 6 bytes  | Vertex coordinate |
+| short | 2 bytes  | Pad |
+
+#### Collision Normals
+
+Collision Normal is a list that contains all the normals used by the collision faces.
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| [Vector3](#Vector3) | 6 bytes  | Normal |
+| short | 2 bytes  | Pad |
+
+#### Collision Faces
+
+Every collision face has the following structure:
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| unsigned short | 2 bytes  | Vertex0 |
+| unsigned short | 2 bytes  | Vertex1 |
+| unsigned short | 2 bytes  | Vertex2 |
+| unsigned short | 2 bytes  | Normal Index  |
+| short | 2 bytes | Plane Distance |
 
 
 ## BSD Files

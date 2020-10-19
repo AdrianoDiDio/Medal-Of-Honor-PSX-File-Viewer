@@ -38,7 +38,7 @@ void TSPFree(TSP_t *TSP)
     free(TSP->Vertex);
     free(TSP->Color);
     
-    free(TSP->CollisionData->BVH);
+    free(TSP->CollisionData->KDTree);
     free(TSP->CollisionData->FaceIndexList);
     free(TSP->CollisionData->Vertex);
     free(TSP->CollisionData->Normal);
@@ -938,17 +938,17 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     printf("CollisionBoundMinZ:%i\n",TSP->CollisionData->Header.CollisionBoundMinZ);
     printf("CollisionBoundMaxX:%i\n",TSP->CollisionData->Header.CollisionBoundMaxX);
     printf("CollisionBoundMaxZ:%i\n",TSP->CollisionData->Header.CollisionBoundMaxZ);
-    printf("Num Collision BVH Nodes:%u\n",TSP->CollisionData->Header.NumCollisionBVHNodes);
+    printf("Num Collision KDTree Nodes:%u\n",TSP->CollisionData->Header.NumCollisionKDTreeNodes);
     printf("Num Collision Face Index:%u\n",TSP->CollisionData->Header.NumCollisionFaceIndex);
     printf("NumVertices:%u\n",TSP->CollisionData->Header.NumVertices);
     printf("NumNormals:%u\n",TSP->CollisionData->Header.NumNormals);
     printf("NumFaces:%u\n",TSP->CollisionData->Header.NumFaces);
 
-    TSP->CollisionData->BVH = malloc(TSP->CollisionData->Header.NumCollisionBVHNodes * sizeof(TSPCollisionBVH_t));
-    for( i = 0; i < TSP->CollisionData->Header.NumCollisionBVHNodes; i++ ) {
-        Ret = fread(&TSP->CollisionData->BVH[i],sizeof(TSP->CollisionData->BVH[i]),1,InFile);
+    TSP->CollisionData->KDTree = malloc(TSP->CollisionData->Header.NumCollisionKDTreeNodes * sizeof(TSPCollisionKDTreeNode_t));
+    for( i = 0; i < TSP->CollisionData->Header.NumCollisionKDTreeNodes; i++ ) {
+        Ret = fread(&TSP->CollisionData->KDTree[i],sizeof(TSP->CollisionData->KDTree[i]),1,InFile);
         if( Ret != 1 ) {
-            printf("TSPReadCollisionChunk:Early failure when reading BVH nodes.\n");
+            printf("TSPReadCollisionChunk:Early failure when reading KDTree nodes.\n");
             return;
         }
     }
@@ -1079,7 +1079,7 @@ float TSPSign (vec2 p1, vec2 p2, vec2 p3)
 bool TSPPointInTriangle (TSPCollision_t *CollisionData,TSPVec3_t Point,TSPCollisionFace_t *Face)
 {
     float d1, d2, d3;
-    bool has_neg, has_pos;
+    bool HasNegative, HasPositive;
     vec2 v1;
     vec2 v2;
     vec2 v3;
@@ -1089,7 +1089,7 @@ bool TSPPointInTriangle (TSPCollision_t *CollisionData,TSPVec3_t Point,TSPCollis
     TSPVec3ToVec2(CollisionData->Vertex[Face->V0].Position,v1);
     TSPVec3ToVec2(CollisionData->Vertex[Face->V1].Position,v2);
     TSPVec3ToVec2(CollisionData->Vertex[Face->V2].Position,v3);
-        
+    
     if( CollisionData->Normal[Face->NormalIndex].Position.y > 0 ) {
         return false;
     }
@@ -1098,10 +1098,10 @@ bool TSPPointInTriangle (TSPCollision_t *CollisionData,TSPVec3_t Point,TSPCollis
     d2 = TSPSign(pt, v2, v3);
     d3 = TSPSign(pt, v3, v1);
 
-    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+    HasNegative = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    HasPositive = (d1 > 0) || (d2 > 0) || (d3 > 0);
 
-    return !(has_neg && has_pos);
+    return !(HasNegative && HasPositive);
 }
 
 int TSPCheckCollisionFaceIntersection(TSPCollision_t *CollisionData,TSPVec3_t Point,int StartingFaceListIndex,int NumFaces,int *OutY)
@@ -1119,7 +1119,7 @@ int TSPCheckCollisionFaceIntersection(TSPCollision_t *CollisionData,TSPVec3_t Po
     i = 0;
 
     while( i < NumFaces ) {
-        //First fetch the face index from H array...
+        //First fetch the face index from Face Index array...
         FaceIndex = CollisionData->FaceIndexList[FaceListIndex];
         //Then grab the corresponding face from the face array...
         CurrentFace = &CollisionData->Face[FaceIndex];
@@ -1128,11 +1128,11 @@ int TSPCheckCollisionFaceIntersection(TSPCollision_t *CollisionData,TSPVec3_t Po
             printf("Point is in face %i...grabbing Y value\n",FaceIndex);
             Y = TSPGetYFromCollisionFace(CollisionData,Point,CurrentFace);
             printf("Got %i as Y PointY was:%i\n",Y,Point.y);
+            if( Y < MinY ) {
+                MinY = Y;
+            }
         } else {
             printf("Missed face %i...\n",FaceIndex);
-        }
-        if( Y < MinY ) {
-            MinY = Y;
         }
         //Make sure to increment it in order to fetch the next face.
         FaceListIndex++;
@@ -1145,10 +1145,10 @@ int TSPCheckCollisionFaceIntersection(TSPCollision_t *CollisionData,TSPVec3_t Po
     return -1;
 }
 
-int TSPGetPointYComponentFromBVH(TSPVec3_t Point,TSP_t *TSPList,int *OutY)
+int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *OutY)
 {
     TSPCollision_t *CollisionData;
-    TSPCollisionBVH_t *Node;
+    TSPCollisionKDTreeNode_t *Node;
     int WorldBoundMinX;
     int WorldBoundMinZ;
     int MinValue;
@@ -1157,7 +1157,7 @@ int TSPGetPointYComponentFromBVH(TSPVec3_t Point,TSP_t *TSPList,int *OutY)
     CollisionData = TSPGetCollisionDataFromPoint(TSPList,Point);
     
     if( CollisionData == NULL ) {
-        DPrintf("TSPGetPointYComponentFromBVH:Point wasn't in any collision data...\n");
+        DPrintf("TSPGetPointYComponentFromKDTree:Point wasn't in any collision data...\n");
         return -1;
     }
     
@@ -1169,7 +1169,7 @@ int TSPGetPointYComponentFromBVH(TSPVec3_t Point,TSP_t *TSPList,int *OutY)
     while( 1 ) {
 //         CurrentPlaneIndex = (CurrentPlane - GOffset) / sizeof(TSPCollisionG_t);
         printf("Node Index %i\n",CurrentNode);
-        Node = &CollisionData->BVH[CurrentNode];
+        Node = &CollisionData->KDTree[CurrentNode];
         if( Node->Child0 < 0 ) {
             printf("Done...found a leaf...node %i FaceIndex:%i Child0:%i NumFaces:%i Child1:%i MaxZ:%i\n",CurrentNode,
                    CollisionData->FaceIndexList[Node->Child1],

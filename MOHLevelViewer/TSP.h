@@ -104,7 +104,7 @@ typedef struct TSPCollisionHeader_s {
     short CollisionBoundMinZ;
     short CollisionBoundMaxX;
     short CollisionBoundMaxZ;
-    unsigned short NumCollisionBVHNodes;
+    unsigned short NumCollisionKDTreeNodes;
     unsigned short NumCollisionFaceIndex;
     unsigned short NumVertices;
     unsigned short NumNormals;
@@ -113,24 +113,24 @@ typedef struct TSPCollisionHeader_s {
 
 
 //Bounding Volume Hierarchy
-typedef struct TSPCollisionBVH_s {
+typedef struct TSPCollisionKDTreeNode_s {
     short Child0; // If Child0 < 0 => Leaf and it represents ~NumFaces, Else Child Plane Index Number
     short Child1; // Child Plane Index Number
     short MaxX; // Axis extent, If Child1 < 0 Z axis else XAxis
     short MaxZ; // Unknown
-} TSPCollisionBVH_t;
+} TSPCollisionKDTreeNode_t;
 
 typedef struct TSPCollisionFace_s {
     unsigned short V0;
     unsigned short V1;
     unsigned short V2;
     unsigned short NormalIndex;
-    unsigned short PlaneDistance;
+    short PlaneDistance;
 } TSPCollisionFace_t;
 
 typedef struct TSPCollision_s {
     TSPCollisionHeader_t Header;
-    TSPCollisionBVH_t *BVH;
+    TSPCollisionKDTreeNode_t *KDTree;
     short *FaceIndexList; // Index to the collided face...
     TSPVert_t *Vertex;
     TSPVert_t *Normal;
@@ -191,7 +191,7 @@ void    DrawTSPList(Level_t *Level);
 void    TSPCreateVAO(TSP_t *TSP);
 void TSPCreateNodeBBoxVAO(TSP_t *TSPList);
 void TSPCreateCollisionVAO(TSP_t *TSPList);
-int TSPGetPointYComponentFromBVH(TSPVec3_t Point,TSP_t *TSPList,int *OutY);
+int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *OutY);
 void TSPFree(TSP_t *TSP);
 void TSPFreeList(TSP_t *List);
 #endif //__TSPVIEWER_H_
