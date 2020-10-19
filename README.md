@@ -232,7 +232,7 @@ If Child0 is less than 0 then the current node is a leaf and contains
 
 #### Face Index Array
 
-Face Index Array is a list of shorts that map to the face array that is found in the header.
+Face Index Array is a list of shorts that maps from the KDTree index to the collision face array.
 
 #### Collision Vertices
 
