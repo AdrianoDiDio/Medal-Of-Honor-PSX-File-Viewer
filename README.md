@@ -230,6 +230,12 @@ Each Node has the following data:
 If Child0 is less than 0 then the current node is a leaf and contains
 (-Child0 - 1) faces starting from the index Child1 that is mapped to the Face Index array.
 
+If the node is not a leaf one then Child0 and Child1 are used to iterate over the KDTree
+Child1 has two function It represents the next node in the KDTree and also the split axis:  
+If Child1 < 0 => Z-Axis and the next node could be either Child0 or (-Child1 - 1)
+Else X-Axis => Next node could be either Child0 or Child1.
+
+
 #### Face Index Array
 
 Face Index Array is a list of shorts that maps from the KDTree index to the collision face array.
