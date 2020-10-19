@@ -117,7 +117,7 @@ typedef struct TSPCollisionKDTreeNode_s {
     short Child0; // If Child0 < 0 => Leaf and it represents ~NumFaces, Else Child Plane Index Number
     short Child1; // Child Plane Index Number
     short MaxX; // Axis extent, If Child1 < 0 Z axis else XAxis
-    short MaxZ; // Unknown
+    short MaxZ; // Unknown, this should be a pointer to the Property-Set-File
 } TSPCollisionKDTreeNode_t;
 
 typedef struct TSPCollisionFace_s {
