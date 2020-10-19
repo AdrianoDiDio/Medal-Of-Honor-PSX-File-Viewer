@@ -232,7 +232,7 @@ If Child0 is less than 0 then the current node is a leaf and contains
 
 If the node is not a leaf one then Child0 and Child1 are used to iterate over the KDTree
 Child1 has two function It represents the next node in the KDTree and also the split axis:  
-If Child1 < 0 => Z-Axis and the next node could be either Child0 or (-Child1 - 1)
+If Child1 < 0 => Z-Axis and the next node could be either Child0 or (-Child1 - 1)  
 Else X-Axis => Next node could be either Child0 or Child1.
 
 
