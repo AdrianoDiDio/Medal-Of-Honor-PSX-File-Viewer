@@ -1185,7 +1185,7 @@ void BSDDraw(Level_t *Level)
     
     if( 1 ) {
         for( int i = 0; i < Level->BSD->NodeData.Header.NumNodes; i++ ) {
-            if( Level->BSD->NodeData.Node[i].MessageData == 0 ) {
+            if( Level->BSD->NodeData.Node[i].MessageData == -1 ) {
                 continue;
             }
 //             if( Level->BSD->NodeData.Node[i].CollisionVolumeType != 2 ) {
@@ -1561,7 +1561,6 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
     int MemEnd;
     int NodeFilePosition;
     int Offset;
-    int Delta;
     int NodeNumReferencedRenderObjectIDOffset;
     int NumReferencedRenderObjectID;
     BSDTableElement_t *Element;
@@ -1569,6 +1568,7 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
     Vec3_t NodePosition;
     Vec3_t NodeRotation;
     int PrevPos;
+    int NextNodeOffset;
     
     DPrintf("Loading file %s...\n",FName);
     
@@ -1714,12 +1714,26 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
     DPrintf("Nodetable ends at %i\n",NodeTableEnd);
     //All the node offset are calculated from the 0 node...
     //So all the offset inside a node are Offset+AddressOfFirstNode.
+    //TODO:Load each node entry one by one (not using a single fread) since
+    //     there are many types of node that contains different data...
     BSD->NodeData.Node = malloc(BSD->NodeData.Header.NumNodes * sizeof(BSDNode_t));
     for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
         NodeFilePosition = GetCurrentFilePosition(BSDFile);
         DPrintf(" -- NODE %i (Pos %i PosNoHeader %i)-- \n",i,NodeFilePosition,NodeFilePosition - 2048);
         assert(GetCurrentFilePosition(BSDFile) == (BSD->NodeData.Table[i].Offset + NodeTableEnd));
-        fread(&BSD->NodeData.Node[i],sizeof(BSDNode_t),1,BSDFile);
+        
+        fread(&BSD->NodeData.Node[i].Id,sizeof(BSD->NodeData.Node[i].Id),1,BSDFile);
+        fread(&BSD->NodeData.Node[i].Size,sizeof(BSD->NodeData.Node[i].Size),1,BSDFile);
+        fread(&BSD->NodeData.Node[i].u2,sizeof(BSD->NodeData.Node[i].u2),1,BSDFile);
+        fread(&BSD->NodeData.Node[i].Type,sizeof(BSD->NodeData.Node[i].Type),1,BSDFile);
+        fread(&BSD->NodeData.Node[i].Position,sizeof(BSD->NodeData.Node[i].Position),1,BSDFile);
+        fread(&BSD->NodeData.Node[i].Rotation,sizeof(BSD->NodeData.Node[i].Rotation),1,BSDFile);
+        fread(&BSD->NodeData.Node[i].Pad,sizeof(BSD->NodeData.Node[i].Pad),1,BSDFile);
+        fread(&BSD->NodeData.Node[i].CollisionVolumeType,sizeof(BSD->NodeData.Node[i].CollisionVolumeType),1,BSDFile);
+        fread(&BSD->NodeData.Node[i].CollisionInfo0,sizeof(BSD->NodeData.Node[i].CollisionInfo0),1,BSDFile);
+        fread(&BSD->NodeData.Node[i].CollisionInfo1,sizeof(BSD->NodeData.Node[i].CollisionInfo1),1,BSDFile);
+        fread(&BSD->NodeData.Node[i].CollisionInfo2,sizeof(BSD->NodeData.Node[i].CollisionInfo2),1,BSDFile);
+        
         DPrintf("ID:%u | ID:%s\n",BSD->NodeData.Node[i].Id,BSDNodeGetEnumStringFromNodeID(BSD->NodeData.Node[i].Id));
         DPrintf("Size:%i\n",BSD->NodeData.Node[i].Size);
         DPrintf("U2:%i\n",BSD->NodeData.Node[i].u2);
@@ -1744,7 +1758,6 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
                             BSD->NodeData.Node[i].CollisionInfo2);
         }
 
-        DPrintf("MessageData at %i\n",BSD->NodeData.Node[i].MessageData);
         assert(BSD->NodeData.Node[i].Position.Pad == 0);
         assert(BSD->NodeData.Node[i].Rotation.Pad == 0);
                 
@@ -1755,12 +1768,13 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
         NodeRotation.y = BSD->NodeData.Node[i].Rotation.y;
         NodeRotation.z = BSD->NodeData.Node[i].Rotation.z;
         
-        PrevPos = GetCurrentFilePosition(BSDFile);
-        int MessageRegIndex;
-        fseek(BSDFile,PrevPos + 52,SEEK_SET);
-        fread(&MessageRegIndex,sizeof(MessageRegIndex),1,BSDFile);
-        DPrintf("Node has message reg index %i\n",MessageRegIndex);
-        fseek(BSDFile,PrevPos,SEEK_SET);
+        if( BSD->NodeData.Node[i].Id != BSD_TSP_LOAD_TRIGGER && BSD->NodeData.Node[i].Size > 48 ) {
+            PrevPos = GetCurrentFilePosition(BSDFile);
+            fseek(BSDFile,NodeFilePosition + 84,SEEK_SET);
+            fread(&BSD->NodeData.Node[i].MessageData,sizeof(BSD->NodeData.Node[i].MessageData),1,BSDFile);
+            DPrintf("Node has message reg index %i\n",BSD->NodeData.Node[i].MessageData);
+            fseek(BSDFile,PrevPos,SEEK_SET);
+        }
         
         if( BSD->NodeData.Node[i].Type == 2 || BSD->NodeData.Node[i].Type == 4 || BSD->NodeData.Node[i].Type == 6 ) {
             //0x74
@@ -1775,9 +1789,8 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
         }
         if( Offset != 0 ) {
             PrevPos = GetCurrentFilePosition(BSDFile);
-            Delta = Offset - sizeof(BSDNode_t);
-            DPrintf("Node type %i has offset at %i.\n",BSD->NodeData.Node[i].Type,Offset);
-            fseek(BSDFile,GetCurrentFilePosition(BSDFile) + Delta,SEEK_SET);
+            DPrintf("Node type %i has offset at %i Position:%i.\n",BSD->NodeData.Node[i].Type,Offset,NodeFilePosition + Offset);
+            fseek(BSDFile,NodeFilePosition + Offset,SEEK_SET);
             if( BSD->NodeData.Node[i].Id == BSD_TSP_LOAD_TRIGGER ) {
                 DPrintf("Node is a BSD_TSP_LOAD_TRIGGER.\n");
                 StreamNode = malloc(sizeof(BSDTSPStreamNode_t));
@@ -1815,35 +1828,8 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
         } else {
             DPrintf("Zero Offset.\n");
         }
-//         int Delta;
-//         int Offset;
-//             if( BSD->NodeData.Node[i].Size > 116  ) {
-//                 if( BSD->NodeData.Node[i].Size <= 124 ) {
-//                     Offset = 120;
-//                 } else {
-//                     Offset = 124;
-//                 }
-//             } else {
-//                 if( BSD->NodeData.Node[i].Type == 3 ) {
-//                     //Fread 116
-//                     Offset = 116;
-//                 } else {
-//                     Offset = 96;
-//                     //FRead 96
-//                 }
-//             }
-// //         }
-//         fseek(BSDFile,GetCurrentFilePosition(BSDFile) + Delta,SEEK_SET);
-//         fread(&BSD->NodeData.Node[i].NodeID,sizeof(BSD->NodeData.Node[i].NodeID),1,BSDFile);
-//         unsigned int UBlockID;
-//         UBlockID = BSDNodeIDToUBlockID(BSD,BSD->NodeData.Node[i].NodeID);
-//         if( UBlockID == -1 ) {
-//             DPrintf("NodeID %u has not a corresponding UBlock.\n",BSD->NodeData.Node[i].NodeID);
-//             MissingNodeID++;
-//         }
-        Jump = BSD->NodeData.Node[i].Size - sizeof(BSDNode_t);
-        DPrintf("Skipping %i bytes of data from %i.\n",Jump,GetCurrentFilePosition(BSDFile));
-        SkipFileSection(BSDFile,Jump);
+        NextNodeOffset = NodeFilePosition + BSD->NodeData.Node[i].Size;
+        fseek(BSDFile,NextNodeOffset,SEEK_SET);
     }
     DPrintf("NodeList ends at %i\n",GetCurrentFilePosition(BSDFile));
     BSDReadPropertySetFile(BSD,BSDFile);

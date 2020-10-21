@@ -91,12 +91,12 @@ typedef struct BSDNode_s {
     short CollisionInfo0; // Radius or BoxWidth
     short CollisionInfo1; // CylinderBottom or BoxHeight
     short CollisionInfo2; // CylinderTop or BoxDepth
-    char Pad2[8];
+//     char Pad2[8];
     int MessageData; //Offset to a list of Message IDs
 } BSDNode_t;
 
 typedef struct BSDTSPStreamNode_s {
-    int TSPNumberRenderList[4];
+    short TSPNumberRenderList[4];
     Vec3_t Position;
     struct BSDTSPStreamNode_s *Next;
 } BSDTSPStreamNode_t;
