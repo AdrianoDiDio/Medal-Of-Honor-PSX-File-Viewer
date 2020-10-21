@@ -219,7 +219,7 @@ void BSDVAORenderObjectPointList(BSD_t *BSD)
             RenderObjectData[RenderObjectDataPointer+3] = 0.54f;
             RenderObjectData[RenderObjectDataPointer+4] = 0.27f;
             RenderObjectData[RenderObjectDataPointer+5] = 0.07f;
-        } else if( Iterator->Type == BSD_RENDER_OBJECT_UNKNOWN3 ) {
+        } else if( Iterator->Type == BSD_RENDER_OBJECT_VALVE ) {
             // White -- 
             RenderObjectData[RenderObjectDataPointer+3] = 1.f;
             RenderObjectData[RenderObjectDataPointer+4] = 1.f;
@@ -1037,8 +1037,8 @@ char *BSDRenderObjectGetEnumStringFromType(int RenderObjectType)
             return "Unknown1";
         case BSD_RENDER_OBJECT_DESTRUCTIBLE_WINDOW:
             return "Destructible Window";
-        case BSD_RENDER_OBJECT_UNKNOWN3:
-            return "Unknown3";
+        case BSD_RENDER_OBJECT_VALVE:
+            return "Valve";
         case BSD_RENDER_OBJECT_EXPLOSIVE_CHARGE:
             return "Explosive Charge";
         default:
@@ -1774,6 +1774,8 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
             fread(&BSD->NodeData.Node[i].MessageData,sizeof(BSD->NodeData.Node[i].MessageData),1,BSDFile);
             DPrintf("Node has message reg index %i\n",BSD->NodeData.Node[i].MessageData);
             fseek(BSDFile,PrevPos,SEEK_SET);
+        } else {
+            BSD->NodeData.Node[i].MessageData = 0;
         }
         
         if( BSD->NodeData.Node[i].Type == 2 || BSD->NodeData.Node[i].Type == 4 || BSD->NodeData.Node[i].Type == 6 ) {

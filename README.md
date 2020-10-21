@@ -366,7 +366,7 @@ By trial and error I've discovered the following RenderObject Types:
 | 6006 | Doors |
 | 5125 | Unknown|
 | 6007 | Destructible Windows |
-| 6005 | Unknown |
+| 6005 | Valve |
 | 6008 | Explosive Charges |
 | 6004 | V2 Rocket |
 
