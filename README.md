@@ -226,7 +226,7 @@ Each Node has the following data:
 | short | 2 bytes  | Child0 |
 | short | 2 bytes  | Child1 |
 | short | 2 bytes  | Middle Split Value |
-| short | 2 bytes  | Index to the [Property Set File](##property-set-file) as found in the BSD  |
+| short | 2 bytes  | Index to the [Property Set File](#property-set-file) as found in the BSD  |
 
 If Child0 is less than 0 then the current node is a leaf and contains
 (-Child0 - 1) faces starting from the index Child1 that is mapped to the Face Index array.
