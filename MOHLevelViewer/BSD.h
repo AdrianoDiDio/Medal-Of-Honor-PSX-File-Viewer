@@ -149,7 +149,9 @@ unsigned short NumVertex;
     char    Pad2[36];
 //     int     UOffset1;
     int     MatrixOffset;
-    char    LastU[52];
+    char    LastU[32];
+    unsigned int     ReferencedRenderObject;
+    char    Pad3[16];
     int     Type;
 } BSDRenderObjectElement_t;
 
@@ -255,8 +257,8 @@ typedef struct BSDRenderObject_s {
 } BSDRenderObject_t;
 
 typedef struct BSDProperty_s {
-    Byte Size;
-    unsigned short *Data;
+    Byte NumNodes;
+    unsigned short *NodeList;
 } BSDProperty_t;
 typedef struct BSDPropertySetFile_s {
     int  NumProperties;

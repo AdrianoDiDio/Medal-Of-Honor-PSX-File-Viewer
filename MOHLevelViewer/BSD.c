@@ -25,6 +25,20 @@
     
     FIXME:RenderObjectList,RenderObjectRealList,RenderObjectShowCaseList CLEANUP!
 */
+void BSDDumpProperty(BSD_t *BSD,int PropertyIndex)
+{
+    int i;
+    if( BSD == NULL ) {
+        DPrintf("BSDDumpProperty:Invalid BSD File\n");
+        return;
+    }
+    
+    DPrintf("BSDDumpProperty:Property %i has %i nodes\n",PropertyIndex,BSD->PropertySetFile.Property[PropertyIndex].NumNodes);
+    for( i = 0; i <  BSD->PropertySetFile.Property[PropertyIndex].NumNodes; i++ ) {
+        DPrintf("BSDDumpProperty Property Node %i\n", BSD->PropertySetFile.Property[PropertyIndex].NodeList[i]);
+//            assert(BSD->PropertySetFile.Property[i].Data[j] < 158);
+    }
+}
 
 void BSDFixRenderObjectPosition(Level_t *Level)
 {
@@ -33,19 +47,21 @@ void BSDFixRenderObjectPosition(Level_t *Level)
     int Result;
     int OutY;
     int Delta;
+    int PropertySetIndex;
     
     for( RenderObjectIterator = Level->BSD->RenderObjectRealList; RenderObjectIterator; 
         RenderObjectIterator = RenderObjectIterator->Next ) {
         Point.x = RenderObjectIterator->Position.x;
         Point.y = RenderObjectIterator->Position.y;
         Point.z = RenderObjectIterator->Position.z;
-        Result = TSPGetPointYComponentFromKDTree(Point,Level->TSPList,&OutY);
+        Result = TSPGetPointYComponentFromKDTree(Point,Level->TSPList,&PropertySetIndex,&OutY);
         if( Result == -1 ) {
             DPrintf("BSDFixRenderObjectPosition:Not found in KD Tree!\n");
             continue;
         }
         Delta = abs(Point.y - OutY);
-        DPrintf("Delta is %i (Limit 55)\n",Delta);
+        DPrintf("Delta is %i (Limit 55) PropertySetIndex:%i\n",Delta,PropertySetIndex);
+        BSDDumpProperty(Level->BSD,PropertySetIndex);
         if( Delta < 55 ) {
             RenderObjectIterator->Position.y = OutY;
         }
@@ -81,7 +97,7 @@ void BSDFree(BSD_t *BSD)
     free(BSD->NodeData.Node);
 
     for( i = 0; i < BSD->PropertySetFile.NumProperties; i++ ) {
-        free(BSD->PropertySetFile.Property[i].Data);
+        free(BSD->PropertySetFile.Property[i].NodeList);
     }
     free(BSD->PropertySetFile.Property);
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
@@ -1526,20 +1542,16 @@ void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
         DPrintf("BSDReadPropertySetFile:Reading property %i at %i (%i)\n",i,GetCurrentFilePosition(BSDFile),
             GetCurrentFilePosition(BSDFile) - 2048
         );
-        fread(&BSD->PropertySetFile.Property[i].Size,sizeof(BSD->PropertySetFile.Property[i].Size),1,BSDFile);
-        DPrintf("Property Size: %u\n",BSD->PropertySetFile.Property[i].Size);
-        BSD->PropertySetFile.Property[i].Size = (255 - BSD->PropertySetFile.Property[i].Size) /*<< 1*/;
-        DPrintf("Property Real size: %u %i shorts\n",BSD->PropertySetFile.Property[i].Size,BSD->PropertySetFile.Property[i].Size /*/ 2*/);
+        fread(&BSD->PropertySetFile.Property[i].NumNodes,sizeof(BSD->PropertySetFile.Property[i].NumNodes),1,BSDFile);
+        BSD->PropertySetFile.Property[i].NumNodes = (255 - BSD->PropertySetFile.Property[i].NumNodes) /*<< 1*/;
+        DPrintf("Property contains %i nodes\n",BSD->PropertySetFile.Property[i].NumNodes);
         
         SkipFileSection(BSDFile,1);
-        DPrintf("BSDReadPropertySetFile:Reading short list at %i (%i)\n",GetCurrentFilePosition(BSDFile),
-            GetCurrentFilePosition(BSDFile) - 2048
-        );
-        BSD->PropertySetFile.Property[i].Data = malloc(BSD->PropertySetFile.Property[i].Size * sizeof(unsigned short));
-        DPrintf("BSDReadPropertySetFile:Reading %li bytes.\n",BSD->PropertySetFile.Property[i].Size * sizeof(unsigned short));
-        for( j = 0; j <  BSD->PropertySetFile.Property[i].Size; j++ ) {
-            fread(&BSD->PropertySetFile.Property[i].Data[j],sizeof(BSD->PropertySetFile.Property[i].Data[j]),1,BSDFile);
-            DPrintf("Short %u\n", BSD->PropertySetFile.Property[i].Data[j]);
+        BSD->PropertySetFile.Property[i].NodeList = malloc(BSD->PropertySetFile.Property[i].NumNodes * sizeof(unsigned short));
+        DPrintf("BSDReadPropertySetFile:Reading %li bytes.\n",BSD->PropertySetFile.Property[i].NumNodes * sizeof(unsigned short));
+        for( j = 0; j <  BSD->PropertySetFile.Property[i].NumNodes; j++ ) {
+            fread(&BSD->PropertySetFile.Property[i].NodeList[j],sizeof(BSD->PropertySetFile.Property[i].NodeList[j]),1,BSDFile);
+            DPrintf("Short %u\n", BSD->PropertySetFile.Property[i].NodeList[j]);
 //             assert(BSD->PropertySetFile.Property[i].Data[j] < 158);
         }
     }
@@ -1676,6 +1688,11 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
                 BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset3 + 2048);
         DPrintf("RenderObject FaceOffset: %i (%i)\n",BSD->RenderObjectTable.RenderObjectList[i].FaceOffset,
                 BSD->RenderObjectTable.RenderObjectList[i].FaceOffset + 2048);
+        if( BSD->RenderObjectTable.RenderObjectList[i].ReferencedRenderObject != -1 ) {
+            DPrintf("RenderObject References RenderObject ID:%u\n",BSD->RenderObjectTable.RenderObjectList[i].ReferencedRenderObject);
+        } else {
+            DPrintf("RenderObject No Reference set...\n");
+        }
         //Grab the UnknownOffset value (Fread(UnknownOffset) Seek_set
         //UnknownOffset1 + ValueFrom(0x564) => Face Table.
         //UnknownOffset2 + ValueFrom(0x574) => Vertex Data

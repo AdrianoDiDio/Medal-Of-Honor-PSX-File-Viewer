@@ -117,7 +117,7 @@ typedef struct TSPCollisionKDTreeNode_s {
     short Child0; // If Child0 < 0 => Leaf and it represents ~NumFaces, Else Child Plane Index Number
     short Child1; // Child Plane Index Number
     short MaxX; // Axis extent, If Child1 < 0 Z axis else XAxis
-    short MaxZ; // Unknown, this should be a pointer to the Property-Set-File
+    short PropertySetFileIndex; // Unknown, this should be a pointer to the Property-Set-File
 } TSPCollisionKDTreeNode_t;
 
 typedef struct TSPCollisionFace_s {
@@ -191,7 +191,7 @@ void    DrawTSPList(Level_t *Level);
 void    TSPCreateVAO(TSP_t *TSP);
 void TSPCreateNodeBBoxVAO(TSP_t *TSPList);
 void TSPCreateCollisionVAO(TSP_t *TSPList);
-int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *OutY);
+int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY);
 void TSPFree(TSP_t *TSP);
 void TSPFreeList(TSP_t *List);
 #endif //__TSPVIEWER_H_

@@ -30,13 +30,14 @@
         * [Vertex 0](#vertex-0)
         * [Vertex 1](#vertex-1)
         * [Vertex 2](#vertex-2)
-  * [Node Table](#node-table)
-    + [Node Table Data](#node-table-data)
-    + [Node Table Entry](#node-table-entry)
-  * [Node](#node)
-    + [Node Position](#node-position)
-    + [Node Data](#node-data)
-      - [Node Type](#node-type)
+    + [Node Table](#node-table)
+        - [Node Table Data](#node-table-data)
+        - [Node Table Entry](#node-table-entry)
+    + [Node](#node)
+        - [Node Position](#node-position)
+        - [Node Data](#node-data)
+        - [Node Type](#node-type)
+    + [Property Set File](#property-set-file)
   * [Build](#build)
   * [Usage](#usage)
     + [Controls](#controls)
@@ -225,7 +226,7 @@ Each Node has the following data:
 | short | 2 bytes  | Child0 |
 | short | 2 bytes  | Child1 |
 | short | 2 bytes  | Middle Split Value |
-| short | 2 bytes  | Unknown  |
+| short | 2 bytes  | Index to the [Property Set File](##property-set-file) as found in the BSD  |
 
 If Child0 is less than 0 then the current node is a leaf and contains
 (-Child0 - 1) faces starting from the index Child1 that is mapped to the Face Index array.
@@ -318,7 +319,10 @@ This block is found at position 1340 (excluding the header) or 3388 (including t
 | int  | 4 bytes  | Number of elements at Offset8 |
 | int  | 4 bytes  | Unknown Offset9 |
 | int  | 4 bytes  | Number of elements at Offset9 |
-| char | 24 bytes | More unknown offsets |
+| char | 12 bytes | More unknown offsets |
+| int  | 4 bytes | Property Set File |
+| char  | 8 bytes | More unknown offsets  |
+
 
 #### RenderObject Block
 After the entry block we find the number of RenderObject stored as an int (4 bytes).
@@ -403,11 +407,11 @@ Vertex Data contains the information about the indices used to create the triang
 ###### Vertex 2
 > (VertexData & 0xFF00000) >> 20
 
-### Node Table
+#### Node Table
 This section of the BSD files contains the list of all the nodes along with their offset contained inside the level.
 The position can be found thanks to the [Entry Table](#entry-table-block) and contains the following data:
 
-#### Node Table Data
+##### Node Table Data
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -417,7 +421,7 @@ The position can be found thanks to the [Entry Table](#entry-table-block) and co
 
 After this header we find the table entry containing the position for all the nodes inside the BSD file:
 
-#### Node Table Entry
+##### Node Table Entry
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -426,11 +430,11 @@ After this header we find the table entry containing the position for all the no
 
 **Note that the Node offset refers to the position after the table entry list.**
 
-### Node
+#### Node
 After having loaded the table and all the table entries, we find the actual node data (First node position should be the same as the first offset inside the node table entry list).
 Each Node represents either a phisical object (referencing a RenderObject ID) or logical such as spawn point which are not rendered.
 Each node has the following structure:
-#### Node Position
+##### Node Position
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -439,7 +443,7 @@ Each node has the following structure:
 | short  | 2 bytes | z position |
 | short  | 2 bytes | Pad |
 
-#### Node Data
+##### Node Data
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -460,7 +464,7 @@ Each node has the following structure:
 
 **Note that Collision Volume starts from Node Position and uses Half extent to construct a bounding box.**
 
-##### Node Type
+###### Node Type
 
 Node Type is used to understand what kind of data the node represents and at which offset it is found.
 
@@ -474,6 +478,22 @@ All the offset starts from the node position in file.
 **Note that If the Node has ID equals to 1292341027 and the type is 0 then It represents a TSP load node which contains information about the next TSP file that needs to be loaded and the information is found at 48 bytes.**
 
 In all other cases the offset represents the information about the attached RenderObject that this node represents and can be read as a series of integers.
+
+#### Property Set File
+
+This data contains a list of nodes that are used to glue the TSP collision data to the node structure in the BSD file.
+Each leaf of the [KD-Tree](#collision-data) found in the TSP file contains an index to this property array that is used to check
+which node has to be checked in order to fire some event (Load the next TSP,Spawn an Object etc...).  
+
+At the start of the section there is a 4 bytes number that tells how many property we need to load.  
+Each Property contains the following data:  
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| Byte  | 1 byte  | Number of Nodes |
+| short  | n bytes | Node List |
+
+**IMPORTANT: The actual number of nodes is found by subtracting the value 255 to the one that was loaded.**  
 
 
 ### Build

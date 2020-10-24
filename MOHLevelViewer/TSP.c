@@ -1145,7 +1145,7 @@ int TSPCheckCollisionFaceIntersection(TSPCollision_t *CollisionData,TSPVec3_t Po
     return -1;
 }
 
-int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *OutY)
+int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY)
 {
     TSPCollision_t *CollisionData;
     TSPCollisionKDTreeNode_t *Node;
@@ -1171,9 +1171,12 @@ int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *OutY)
         printf("Node Index %i\n",CurrentNode);
         Node = &CollisionData->KDTree[CurrentNode];
         if( Node->Child0 < 0 ) {
-            printf("Done...found a leaf...node %i FaceIndex:%i Child0:%i NumFaces:%i Child1:%i MaxZ:%i\n",CurrentNode,
+            printf("Done...found a leaf...node %i FaceIndex:%i Child0:%i NumFaces:%i Child1:%i PropertySetFileIndex:%i\n",CurrentNode,
                    CollisionData->FaceIndexList[Node->Child1],
-                   Node->Child0,~Node->Child0,Node->Child1,Node->MaxZ);
+                   Node->Child0,~Node->Child0,Node->Child1,Node->PropertySetFileIndex);
+            if( PropertySetFileIndex != NULL ) {
+                *PropertySetFileIndex = Node->PropertySetFileIndex;
+            }
             return TSPCheckCollisionFaceIntersection(CollisionData,Point,Node->Child1,~Node->Child0,OutY);
         }
         if( Node->Child1 < 0 ) {
