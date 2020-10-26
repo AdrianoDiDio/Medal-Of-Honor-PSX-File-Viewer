@@ -232,8 +232,8 @@ If Child0 is less than 0 then the current node is a leaf and contains
 (-Child0 - 1) faces starting from the index Child1 that is mapped to the Face Index array.
 
 If the node is not a leaf one then Child0 and Child1 are used to iterate over the KDTree
-Child1 has two function It represents the next node in the KDTree and also the split axis:  
-If Child1 < 0 => Z-Axis and the next node could be either Child0 or (-Child1 - 1)  
+Child1 has two function It represents the next node in the KDTree and also the split axis:
+If Child1 < 0 => Z-Axis and the next node could be either Child0 or (-Child1 - 1)
 Else X-Axis => Next node could be either Child0 or Child1.
 
 
@@ -350,13 +350,19 @@ Each RenderObject has a fixed size of 256 bytes containing several fields that d
 | int  | 4 bytes  | Unknown Data Offset |
 | char  | 8 bytes  | Unknown Data |
 | int  | 4 bytes  | Root Bone Offset (Valid if != -1) (Used for animated objects) |
-| char  | 20 bytes  | Unknown Data |
+| int  | 4 bytes  | Unknown Data |
+| int  | 4 bytes  | Scale X |
+| int  | 4 bytes  | Scale Y |
+| int  | 4 bytes  | Scale Z |
+| char  | 4 bytes  | Unknown Data |
 | int  | 4 bytes  | Unknown Data Offset |
 | char  | 8 bytes  | Unknown Data |
 | int  | 4 bytes  | Unknown Data Offset |
 | int  | 4 bytes  | Unknown Data Offset (Probably an offset to a Matrix stored in the file that represent the model rotation) |
 | char  | 52 bytes  | Unknown Data |
 | int  | 4 bytes  | Type |
+
+**NOTE that ScaleX/Y/Z Values must be divided by 4 and the value found is in fixed point format where 4096 is equal to 1.**
 
 By trial and error I've discovered the following RenderObject Types:
 
@@ -483,17 +489,17 @@ In all other cases the offset represents the information about the attached Rend
 
 This data contains a list of nodes that are used to glue the TSP collision data to the node structure in the BSD file.
 Each leaf of the [KD-Tree](#collision-data) found in the TSP file contains an index to this property array that is used to check
-which node has to be checked in order to fire some event (Load the next TSP,Spawn an Object etc...).  
+which node has to be checked in order to fire some event (Load the next TSP,Spawn an Object etc...).
 
-At the start of the section there is a 4 bytes number that tells how many property we need to load.  
-Each Property contains the following data:  
+At the start of the section there is a 4 bytes number that tells how many property we need to load.
+Each Property contains the following data:
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
 | Byte  | 1 byte  | Number of Nodes |
 | short  | n bytes | Node List |
 
-**IMPORTANT: The actual number of nodes is found by subtracting the value 255 to the one that was loaded.**  
+**IMPORTANT: The actual number of nodes is found by subtracting the value 255 to the one that was loaded.**
 
 
 ### Build

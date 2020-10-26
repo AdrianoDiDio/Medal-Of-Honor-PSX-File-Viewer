@@ -145,8 +145,12 @@ unsigned int ID;
     int     VertOffset;
 unsigned short NumVertex;
     char    RemainingU[14];
-    int     UnknownOffset3; // => References 0x55C BSDFile/EntryTable.
-    char    Pad2[36];
+    int     RootBoneOffset; // => References 0x55C BSDFile/EntryTable.
+    int     Unknown;
+    int     ScaleX;
+    int     ScaleY;
+    int     ScaleZ;
+    char    Pad2[20];
 //     int     UOffset1;
     int     MatrixOffset;
     char    LastU[32];

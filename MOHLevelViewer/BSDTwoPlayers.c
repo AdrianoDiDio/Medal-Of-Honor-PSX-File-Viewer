@@ -120,9 +120,9 @@ void BSD2PReadRenderObjectChunk(BSD2P_t *BSD,FILE *InFile)
         DPrintf("BSD2PReadRenderObjectChunk: RenderObject Element UnknownOffset2: %i (%i)\n",
                 BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset2,
                 BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset2 + 2048);
-        DPrintf("BSD2PReadRenderObjectChunk: RenderObject Element UnknownOffset3: %i (%i)\n",
-                BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset3,
-                BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset3 + 2048);
+        DPrintf("BSD2PReadRenderObjectChunk: RenderObject Element RootBoneOffset: %i (%i)\n",
+                BSD->RenderObjectTable.RenderObjectList[i].RootBoneOffset,
+                BSD->RenderObjectTable.RenderObjectList[i].RootBoneOffset + 2048);
         DPrintf("BSD2PReadRenderObjectChunk: RenderObject Element FaceOffset: %i (%i)\n",
                 BSD->RenderObjectTable.RenderObjectList[i].FaceOffset,
                 BSD->RenderObjectTable.RenderObjectList[i].FaceOffset + 2048);

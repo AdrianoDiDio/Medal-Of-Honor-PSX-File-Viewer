@@ -1402,7 +1402,7 @@ void BSDDraw(Level_t *Level)
     glUseProgram(0);
 }
 
-void ParseUVertexData(BSD_t *BSD,FILE *BSDFile)
+void ParseRenderObjectVertexData(BSD_t *BSD,FILE *BSDFile)
 {
     int i;
     int j;
@@ -1414,10 +1414,10 @@ void ParseUVertexData(BSD_t *BSD,FILE *BSDFile)
             continue;
         }
 
-        int UVertSize = sizeof(BSDPosition_t) * BSD->RenderObjectTable.RenderObjectList[i].NumVertex;
-//         DPrintf("Element Size is %i\n",UVertSize); 
-        BSD->RenderObjectList[i].Vertex = malloc(UVertSize);
-        memset(BSD->RenderObjectList[i].Vertex,0,UVertSize);
+        int RenderObjectVertSize = sizeof(BSDPosition_t) * BSD->RenderObjectTable.RenderObjectList[i].NumVertex;
+//         DPrintf("Element Size is %i\n",RenderObjectVertSize); 
+        BSD->RenderObjectList[i].Vertex = malloc(RenderObjectVertSize);
+        memset(BSD->RenderObjectList[i].Vertex,0,RenderObjectVertSize);
         fseek(BSDFile,BSD->RenderObjectTable.RenderObjectList[i].VertOffset + 2048,SEEK_SET);
         DPrintf("Reading Vertex definition at %i (Current:%i)\n",
                 BSD->RenderObjectTable.RenderObjectList[i].VertOffset + 2048,GetCurrentFilePosition(BSDFile)); 
@@ -1684,10 +1684,12 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
                 BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset1 + 2048);
         DPrintf("RenderObject UnknownOffset2: %i (%i)\n",BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset2,
                 BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset2 + 2048);
-        DPrintf("RenderObject UnknownOffset3: %i (%i)\n",BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset3,
-                BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset3 + 2048);
+        DPrintf("RenderObject Root Bone Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObjectList[i].RootBoneOffset,
+                BSD->RenderObjectTable.RenderObjectList[i].RootBoneOffset + 2048);
         DPrintf("RenderObject FaceOffset: %i (%i)\n",BSD->RenderObjectTable.RenderObjectList[i].FaceOffset,
                 BSD->RenderObjectTable.RenderObjectList[i].FaceOffset + 2048);
+        DPrintf("RenderObject Scale: %i;%i;%i (4096 is 1 meaning no scale)\n",BSD->RenderObjectTable.RenderObjectList[i].ScaleX / 4,
+                BSD->RenderObjectTable.RenderObjectList[i].ScaleY / 4,BSD->RenderObjectTable.RenderObjectList[i].ScaleZ / 4);
         if( BSD->RenderObjectTable.RenderObjectList[i].ReferencedRenderObject != -1 ) {
             DPrintf("RenderObject References RenderObject ID:%u\n",BSD->RenderObjectTable.RenderObjectList[i].ReferencedRenderObject);
         } else {
@@ -1853,7 +1855,7 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
     DPrintf("NodeList ends at %i\n",GetCurrentFilePosition(BSDFile));
     BSDReadPropertySetFile(BSD,BSDFile);
     // Prepare vertices to be rendered!
-    ParseUVertexData(BSD,BSDFile);
+    ParseRenderObjectVertexData(BSD,BSDFile);
     ParseRenderObjectFaceData(BSD,BSDFile);
     BSDShowCaseRenderObject(BSD);
     fclose(BSDFile);
