@@ -481,7 +481,7 @@ Node Type is used to understand what kind of data the node represents and at whi
 | 3  | 116 bytes |
 | 0 | 0 bytes (no Data) |
 
-All the offset starts from the node position in file.
+All the offset starts from the node position in file.  
 **Note that If the Node has ID equals to 1292341027 and the type is 0 then It represents a TSP load node which contains information about the next TSP file that needs to be loaded and the information is found at 48 bytes.**
 
 In all other cases the offset represents the information about the attached RenderObject that this node represents and can be read as a series of integers.

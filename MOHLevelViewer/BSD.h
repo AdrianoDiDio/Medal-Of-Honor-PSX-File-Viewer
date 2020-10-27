@@ -42,7 +42,7 @@ typedef enum  {
 } BSDNodeID;
 
 typedef enum {
-    BSD_RENDER_OBJECT_CARRY_AUX_ELEMENTS = 0, //Contains all the RenderObject that can be carried such as enemy hat,grenade,rocket, etc.
+    BSD_RENDER_OBJECT_CARRY_AUX_ELEMENTS = 0, //Contains all the RenderObject that can be carried such as enemy helmet,grenade,rocket, etc.
     BSD_RENDER_OBJECT_ENEMY = 5122,
     BSD_RENDER_OBJECT_PICKUP_AND_EXPLOSIVE = 6000, //Contains Barrels,Boxes and also MedPacks!
     BSD_RENDER_OBJECT_PLANE = 6001,
