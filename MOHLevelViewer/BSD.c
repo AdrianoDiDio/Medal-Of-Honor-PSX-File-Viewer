@@ -201,7 +201,6 @@ void BSDVAORenderObjectPointList(BSD_t *BSD)
     NumSkip = 0;
     i = 0;
     for( Iterator = BSD->RenderObjectRealList; Iterator; Iterator = Iterator->Next ) {
-
         RenderObjectData[RenderObjectDataPointer] =   Iterator->Position.x;
         RenderObjectData[RenderObjectDataPointer+1] = Iterator->Position.y;
         RenderObjectData[RenderObjectDataPointer+2] = Iterator->Position.z;
@@ -1055,6 +1054,8 @@ char *BSDRenderObjectGetEnumStringFromType(int RenderObjectType)
             return "Destructible Window";
         case BSD_RENDER_OBJECT_VALVE:
             return "Valve";
+        case BSD_RENDER_OBJECT_RADIO:
+            return "Radio";
         case BSD_RENDER_OBJECT_EXPLOSIVE_CHARGE:
             return "Explosive Charge";
         default:
