@@ -521,6 +521,8 @@ Each Property contains the following data:
 | p  | Press to show/hide the BSD Render Objects |
 | r  | Press to show/hide the BSD Render Objects as points |
 | q  | Press to toggle between wireframe and Normal mode |
+| f  | Press to toggle Frustum Culling using TSP BSP Tree |
+| g  | Press to enable/disable Lighting |
 | w,a,s,d | Press to move the camera anywhere on the loaded level|
 
 ## RSC Files
