@@ -1033,6 +1033,41 @@ char *BSDNodeGetEnumStringFromNodeID(unsigned int NodeID)
     }
 }
 
+char *BSDRenderObjectGetWeaponNameFromID(int RenderObjectID)
+{
+    switch( RenderObjectID ) {
+        case BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_1:
+            return "Pistol Type 1";
+        case BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_1:
+            return "SubMachineGun Type 1";
+        case BSD_RENDER_OBJECT_WEAPON_BAZOOKA:
+            return "Bazooka";
+        case BSD_RENDER_OBJECT_WEAPON_AMERICAN_GRENADE:
+            return "American Grenade";
+        case BSD_RENDER_OBJECT_WEAPON_SHOTGUN:
+            return "Shotgun";
+        case BSD_RENDER_OBJECT_WEAPON_SNIPER_RIFLE:
+            return "Sniper Rifle";
+        case BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_2:
+            return "SubMachineGun Type 2";
+        case BSD_RENDER_OBJECT_WEAPON_DOCUMENT_PAPERS:
+            return "Document Papers";
+        case BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_2:
+            return "Pistol Type 2";
+        case BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_3:
+            return "Pistol Type 3";
+        case BSD_RENDER_OBJECT_WEAPON_GERMAN_GRENADE:
+            return "German Grenade";
+        case BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_3:
+            return "SubMachineGun Type 3";
+        case BSD_RENDER_OBJECT_WEAPON_GARAND_M1:
+            return "Garand M1";
+        default:
+            //Should never happens!
+            return "Unknown";
+    }
+}
+
 char *BSDRenderObjectGetEnumStringFromType(int RenderObjectType)
 {
     switch( RenderObjectType ) {
@@ -1675,8 +1710,13 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
         DPrintf("Reading RenderObject %i at %i\n",i,GetCurrentFilePosition(BSDFile));
         fread(&BSD->RenderObjectTable.RenderObjectList[i],sizeof(BSD->RenderObjectTable.RenderObjectList[i]),1,BSDFile);
         DPrintf("RenderObject ID:%u\n",BSD->RenderObjectTable.RenderObjectList[i].ID);
-        DPrintf("RenderObject Type:%i | %s\n",BSD->RenderObjectTable.RenderObjectList[i].Type,
-                BSDRenderObjectGetEnumStringFromType(BSD->RenderObjectTable.RenderObjectList[i].Type));
+        if( BSD->RenderObjectTable.RenderObjectList[i].Type == 1 ) {
+            DPrintf("RenderObject Type:%i | %s\n",BSD->RenderObjectTable.RenderObjectList[i].Type,
+                    BSDRenderObjectGetWeaponNameFromID(BSD->RenderObjectTable.RenderObjectList[i].ID));
+        } else {
+            DPrintf("RenderObject Type:%i | %s\n",BSD->RenderObjectTable.RenderObjectList[i].Type,
+                    BSDRenderObjectGetEnumStringFromType(BSD->RenderObjectTable.RenderObjectList[i].Type));
+        }
         DPrintf("RenderObject Element Vertex Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObjectList[i].VertOffset,
                 BSD->RenderObjectTable.RenderObjectList[i].VertOffset + 2048);
         DPrintf("RenderObject Element NumVertex: %i\n",BSD->RenderObjectTable.RenderObjectList[i].NumVertex);

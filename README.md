@@ -381,6 +381,24 @@ By trial and error I've discovered the following RenderObject Types:
 | 6009 | Radio |
 | 6004 | V2 Rocket |
 
+There are 13 available weapons that can be used in game and are identified using specific IDs:  
+
+| ID  | Weapon Name |
+| ---- | ----------- |
+| 1878462241 | Pistol Type 1 |
+| 1631105660 | SubMachineGun Type 1 |
+| 509069799  | Bazooka |
+| 424281247  | American Grenade |
+| 2634331343 | Shotgun |
+| 4284575011 | Sniper Rifle |
+| 2621329551 | SubMachineGun Type 2 |
+| 3147228851 | Document Papers (Used in stealth missions) |
+| 860498661  | Pistol Type 2 |
+| 1609048829 | Pistol Type 3 |
+| 3097846808 | German Grenade |
+| 2691923848 | SubMachineGun Type 3 |
+| 1326598003 | Garand M1 Rifle |
+
 If the Face Data Offset is not zero then the RenderObject can be rendered using the following face structure:
 
 | Type | Size | Description |
