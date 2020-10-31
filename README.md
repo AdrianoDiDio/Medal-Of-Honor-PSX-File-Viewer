@@ -397,7 +397,7 @@ There are 13 available weapons that can be used in game and are identified using
 | 1609048829 | Pistol Type 3 |
 | 3097846808 | German Grenade |
 | 2691923848 | SubMachineGun Type 3 |
-| 1326598003 | M1 Garand (Rifle) |
+| 1326598003 | M1 Garand \(Rifle\) |
 
 If the Face Data Offset is not zero then the RenderObject can be rendered using the following face structure:
 
