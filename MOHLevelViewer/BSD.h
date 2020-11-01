@@ -272,6 +272,7 @@ typedef struct BSDRenderObject_s {
     Vao_t          *FaceVao;
     Vec3_t          Position;
     Vec3_t          Rotation;
+    Vec3_t          Scale;
 
     unsigned int    RenderObjectID;
     struct BSDRenderObject_s *Next;

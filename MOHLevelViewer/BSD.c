@@ -582,6 +582,10 @@ void BSDAddNodeToRenderObjectList(BSD_t *BSD,int MissionNumber,unsigned int Node
     Object->Rotation.y = (Rotation.y  / 4096) * 360.f;
     Object->Rotation.z = (Rotation.z  / 4096) * 360.f;
     
+    Object->Scale.x = (BSD->RenderObjectTable.RenderObjectList[RenderObjectIndex].ScaleX  / 16 ) / 4096;
+    Object->Scale.y = (BSD->RenderObjectTable.RenderObjectList[RenderObjectIndex].ScaleY  / 16 ) / 4096;
+    Object->Scale.z = (BSD->RenderObjectTable.RenderObjectList[RenderObjectIndex].ScaleZ  / 16 ) / 4096;
+    
     Object->RenderObjectID = RenderObjectID;
     Object->FaceVao = NULL;
     Object->Vao = NULL;
@@ -1350,6 +1354,12 @@ void BSDDraw(Level_t *Level)
             temp[1] = 0;
             temp[2] = 1;
             glm_rotate(VidConf.ModelViewMatrix,glm_rad(RenderObjectIterator->Rotation.z), temp);
+            
+            temp[0] = RenderObjectIterator->Scale.x;
+            temp[1] = RenderObjectIterator->Scale.y;
+            temp[2] = RenderObjectIterator->Scale.z;
+            glm_scale(VidConf.ModelViewMatrix,temp);
+
             glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
             
 //             Emulate PSX Coordinate system...
@@ -1357,7 +1367,7 @@ void BSDDraw(Level_t *Level)
             glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
 
             for( VaoIterator = RenderObjectIterator->FaceVao; VaoIterator; VaoIterator = VaoIterator->Next ) {
-                int VRamPage = VaoIterator->TSB & 0x3F;
+                int VRamPage = VaoIterator->TSB & 0x1F;
                 int ColorMode = (VaoIterator->TSB & 0xC0) >> 7;
                 
                 if( ColorMode == 1 ) {
@@ -1418,7 +1428,7 @@ void BSDDraw(Level_t *Level)
             glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
 
             for( VaoIterator = RenderObjectIterator->FaceVao; VaoIterator; VaoIterator = VaoIterator->Next ) {
-                int VRamPage = VaoIterator->TSB & 0x3F;
+                int VRamPage = VaoIterator->TSB & 0x1F;
                 int ColorMode = (VaoIterator->TSB & 0xC0) >> 7;
                 
                 if( ColorMode == 1 ) {
@@ -1511,7 +1521,7 @@ void ParseRenderObjectFaceData(BSD_t *BSD,FILE *BSDFile)
             fread(&BSD->RenderObjectList[i].Face[j],sizeof(BSDFace_t),1,BSDFile);
             DPrintf(" -- FACE %i --\n",j);
             DPrintf("Tex info %i | Color mode %i | Texture Page %i\n",BSD->RenderObjectList[i].Face[j].TexInfo,
-                    (BSD->RenderObjectList[i].Face[j].TexInfo & 0xC0) >> 7,BSD->RenderObjectList[i].Face[j].TexInfo & 0x3f);
+                    (BSD->RenderObjectList[i].Face[j].TexInfo & 0xC0) >> 7,BSD->RenderObjectList[i].Face[j].TexInfo & 0x1f);
             DPrintf("TSB is %i %ix%i\n",BSD->RenderObjectList[i].Face[j].TSB,
                     ((BSD->RenderObjectList[i].Face[j].TSB  & 0x3F ) << 4),((BSD->RenderObjectList[i].Face[j].TSB & 0x7FC0) >> 6));
             DPrintf("UV0:(%i;%i)\n",BSD->RenderObjectList[i].Face[j].UV0.u,BSD->RenderObjectList[i].Face[j].UV0.v);
@@ -1729,8 +1739,10 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
                 BSD->RenderObjectTable.RenderObjectList[i].RootBoneOffset + 2048);
         DPrintf("RenderObject FaceOffset: %i (%i)\n",BSD->RenderObjectTable.RenderObjectList[i].FaceOffset,
                 BSD->RenderObjectTable.RenderObjectList[i].FaceOffset + 2048);
-        DPrintf("RenderObject Scale: %i;%i;%i (4096 is 1 meaning no scale)\n",BSD->RenderObjectTable.RenderObjectList[i].ScaleX / 4,
-                BSD->RenderObjectTable.RenderObjectList[i].ScaleY / 4,BSD->RenderObjectTable.RenderObjectList[i].ScaleZ / 4);
+        DPrintf("RenderObject Scale: %i;%i;%i (4096 is 1 meaning no scale)\n",
+                BSD->RenderObjectTable.RenderObjectList[i].ScaleX / 4,
+                BSD->RenderObjectTable.RenderObjectList[i].ScaleY / 4,
+                BSD->RenderObjectTable.RenderObjectList[i].ScaleZ / 4);
         if( BSD->RenderObjectTable.RenderObjectList[i].ReferencedRenderObject != -1 ) {
             DPrintf("RenderObject References RenderObject ID:%u\n",BSD->RenderObjectTable.RenderObjectList[i].ReferencedRenderObject);
         } else {
