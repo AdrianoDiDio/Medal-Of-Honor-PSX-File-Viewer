@@ -869,7 +869,6 @@ void GLFrame()
      // 2D Drawing
      
      glDisable (GL_DEPTH_TEST);
-     glDisable (GL_CULL_FACE);
      
      glm_mat4_identity(VidConf.PMatrixM4);
      glm_ortho(0,VidConf.Width,VidConf.Height,0,-1,1,VidConf.PMatrixM4);
@@ -905,7 +904,6 @@ void GLFrame()
 //   FontDrawString(Level,"0 1 2 3 4 5 6 7 8 9 10",0,(VidConf.Height / 2 ) + 20);
 //   FontDrawString(Level,"? ! \" ' ",0,(VidConf.Height / 2 ) + 30);
      glEnable(GL_DEPTH_TEST);
-     glEnable(GL_CULL_FACE);
 }
 
 void SetDefaultSettings(Level_t *Level)
