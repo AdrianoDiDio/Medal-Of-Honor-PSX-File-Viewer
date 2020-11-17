@@ -866,40 +866,46 @@ void GLFrame()
      
      glm_mat4_identity(VidConf.MVPMatrix);
     
-    // 2D Drawing
-    glm_mat4_identity(VidConf.PMatrixM4);
-    glm_ortho(0,VidConf.Width,VidConf.Height,0,-1,1,VidConf.PMatrixM4);
-    glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-    y = 100;
-    FontDrawString(Level,ComTime->FpsSimpleString,10,y,c_White);
-    y += VerticalSpacing;
-    FontDrawString(Level,"Press ESC to exit",10,y,c_White);
-    y += VerticalSpacing;
-    FontDrawString(Level,"Press c to show or hide collision data",10,y,Level->Settings.ShowCollisionData ? c_Yellow : c_Red);
-    y += VerticalSpacing;
-    FontDrawString(Level,"Press b to show or hide BSP tree data",10,y,Level->Settings.ShowAABBTree ? c_Yellow : c_Red);
-    y += VerticalSpacing;
-    FontDrawString(Level,"Press i to show or hide BSD showcase",10,y,Level->Settings.DrawBSDShowCaseRenderObject ? c_Yellow : c_Red);
-    y += VerticalSpacing;
-    FontDrawString(Level,"Press l to show or hide the level",10,y,Level->Settings.ShowMap ? c_Yellow : c_Red);
-    y += VerticalSpacing;
-    FontDrawString(Level,"Press n to show or hide BSD nodes as points",10,y,Level->Settings.ShowBSDNodes ? c_Yellow : c_Red);
-    y += VerticalSpacing;
-    FontDrawString(Level,"Press p to show or hide BSD RenderObject",10,y,Level->Settings.DrawBSDRenderObjects ? c_Yellow : c_Red);
-    y += VerticalSpacing;
-    FontDrawString(Level,"Press r to show or hide BSD RenderObject as points",10,y,Level->Settings.ShowBSDRenderObject ? c_Yellow : c_Red);
-    y += VerticalSpacing;
-    FontDrawString(Level,"Press q to enable or disable wireframe mode",10,y,Level->Settings.WireFrame ? c_Yellow : c_Red);
-    y += VerticalSpacing;
-    FontDrawString(Level,"Press f to enable or disable frustum culling",10,y,Level->Settings.EnableFrustumCulling ? c_Yellow : c_Red);
-    y += VerticalSpacing;
-    FontDrawString(Level,"Press g to enable or disable level Lighting",10,y,Level->Settings.EnableLighting ? c_Yellow : c_Red);
-    y += VerticalSpacing;
-    FontDrawString(Level,"Press w a s d to move camera around",10,y,c_White);
-//     FontDrawString(Level,"a b c d e f g h i j k l m n o p q r s t u v w x y z",0,VidConf.Height / 2);
-//     FontDrawString(Level,"A B C D E F G H I J K L M N O P Q R S T U V W X Y Z",0,(VidConf.Height / 2 ) + 10);
-//     FontDrawString(Level,"0 1 2 3 4 5 6 7 8 9 10",0,(VidConf.Height / 2 ) + 20);
-//     FontDrawString(Level,"? ! \" ' ",0,(VidConf.Height / 2 ) + 30);
+     // 2D Drawing
+     
+     glDisable (GL_DEPTH_TEST);
+     glDisable (GL_CULL_FACE);
+     
+     glm_mat4_identity(VidConf.PMatrixM4);
+     glm_ortho(0,VidConf.Width,VidConf.Height,0,-1,1,VidConf.PMatrixM4);
+     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
+     y = 100;
+     FontDrawString(Level,ComTime->FpsSimpleString,10,y,c_White);
+     y += VerticalSpacing;
+     FontDrawString(Level,"Press ESC to exit",10,y,c_White);
+     y += VerticalSpacing;
+     FontDrawString(Level,"Press c to show or hide collision data",10,y,Level->Settings.ShowCollisionData ? c_Yellow : c_Red);
+     y += VerticalSpacing;
+     FontDrawString(Level,"Press b to show or hide BSP tree data",10,y,Level->Settings.ShowAABBTree ? c_Yellow : c_Red);
+     y += VerticalSpacing;
+     FontDrawString(Level,"Press i to show or hide BSD showcase",10,y,Level->Settings.DrawBSDShowCaseRenderObject ? c_Yellow : c_Red);
+     y += VerticalSpacing;
+     FontDrawString(Level,"Press l to show or hide the level",10,y,Level->Settings.ShowMap ? c_Yellow : c_Red);
+     y += VerticalSpacing;
+     FontDrawString(Level,"Press n to show or hide BSD nodes as points",10,y,Level->Settings.ShowBSDNodes ? c_Yellow : c_Red);
+     y += VerticalSpacing;
+     FontDrawString(Level,"Press p to show or hide BSD RenderObject",10,y,Level->Settings.DrawBSDRenderObjects ? c_Yellow : c_Red);
+     y += VerticalSpacing;
+     FontDrawString(Level,"Press r to show or hide BSD RenderObject as points",10,y,Level->Settings.ShowBSDRenderObject ? c_Yellow : c_Red);
+     y += VerticalSpacing;
+     FontDrawString(Level,"Press q to enable or disable wireframe mode",10,y,Level->Settings.WireFrame ? c_Yellow : c_Red);
+     y += VerticalSpacing;
+     FontDrawString(Level,"Press f to enable or disable frustum culling",10,y,Level->Settings.EnableFrustumCulling ? c_Yellow : c_Red);
+     y += VerticalSpacing;
+     FontDrawString(Level,"Press g to enable or disable level Lighting",10,y,Level->Settings.EnableLighting ? c_Yellow : c_Red);
+     y += VerticalSpacing;
+     FontDrawString(Level,"Press w a s d to move camera around",10,y,c_White);
+//   FontDrawString(Level,"a b c d e f g h i j k l m n o p q r s t u v w x y z",0,VidConf.Height / 2);
+//   FontDrawString(Level,"A B C D E F G H I J K L M N O P Q R S T U V W X Y Z",0,(VidConf.Height / 2 ) + 10);
+//   FontDrawString(Level,"0 1 2 3 4 5 6 7 8 9 10",0,(VidConf.Height / 2 ) + 20);
+//   FontDrawString(Level,"? ! \" ' ",0,(VidConf.Height / 2 ) + 30);
+     glEnable(GL_DEPTH_TEST);
+     glEnable(GL_CULL_FACE);
 }
 
 void SetDefaultSettings(Level_t *Level)
