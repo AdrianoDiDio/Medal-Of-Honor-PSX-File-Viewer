@@ -199,7 +199,7 @@ Each face is made by 3 vertices that forms a triangle.
 | unsigned short | 2 bytes  | V1 Second vertex and color index in array |
 | unsigned short | 2 bytes  | V2 Third vertex and color index in array |
 | [UV](#uv-coordinatesuv) | 2 byte  | UV0 Texture coordinate for vertex 0  |
-| short | 2 bytes  | Unknown  |
+| short | 2 bytes  | CBA (Contains CLUT Data for TIM Images, Not Used)  |
 | [UV](#uv-coordinatesuv) | 2 bytes  | UV1 Texture coordinate for vertex 1  |
 | short | 2 bytes  | TSB that contains info about the used texture ( read [TSB](#TSB) for more information)|
 | [UV](#uv-coordinatesuv) | 2 bytes  | UV2 Texture coordinate for vertex 2  |
