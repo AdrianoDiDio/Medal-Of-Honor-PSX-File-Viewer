@@ -1,66 +1,71 @@
 # Medal Of Honor PSX File Viewer
 
-- [Introduction](#introduction)
-- [Common Formats](#common-formats)
-  * [TSB](#tsb)
-- [TSP Files](#tsp-files)
-  * [BSP Nodes](#bsp-nodes)
-    + [Vector3](#vector3)
-    + [Bounding Box](#bounding-box)
-    + [BSP Node](#bsp-node)
-  * [Vertex](#vertex)
-  * [Color](#color)
-  * [Faces](#faces)
-     + [UV Coordinates(UV)](#uv-coordinates-uv-)
-     + [Face Data](#face-data)
-   * [Collision Data](#collision-data)
-     + [KDTree Nodes](#kdtree-nodes)
-     + [Face Index Array](#face-index-array)
-     + [Collision Vertices](#collision-vertices)
-     + [Collision Normals](#collision-normals)
-     + [Collision Faces](#collision-faces)
-- [BSD Files](#bsd-files)
-  * [File Format](#file-format)
-    + [TSP Info Block](#tsp-info-block)
-    + [Entry Table Block](#entry-table-block)
-    + [RenderObject Block](#renderobject-block)
-      - [Color Mode](#color-mode)
-      - [Texture Page](#texture-page)
-      - [Vertex Data](#vertex-data)
-        * [Vertex 0](#vertex-0)
-        * [Vertex 1](#vertex-1)
-        * [Vertex 2](#vertex-2)
-    + [Node Table](#node-table)
-        - [Node Table Data](#node-table-data)
-        - [Node Table Entry](#node-table-entry)
-    + [Node](#node)
-        - [Node Position](#node-position)
-        - [Node Data](#node-data)
-        - [Node Type](#node-type)
-    + [Property Set File](#property-set-file)
-  * [Build](#build)
-  * [Usage](#usage)
-    + [Controls](#controls)
-- [RSC Files](#rsc-files)
-  * [File Format](#file-format-1)
-      - [RSC Header](#rsc-header)
-      - [RSC Entry](#rsc-entry)
-  * [Usage](#usage-1)
-    + [Build](#build-1)
-    + [Run](#run)
-- [TAF Files](#taf-files)
-- [TIM Files](#tim-files)
-  * [File Format](#file-format-2)
-      - [TIM Header](#tim-header)
-      - [TIM CLUT Color](#tim-clut-color)
-      - [TIM Content](#tim-content)
-  * [Usage](#usage-2)
-    + [Build](#build-2)
-    + [Run](#run-1)
-- [VAB Extractor](#vab-extractor)
-  * [Usage](#usage-3)
-    + [Build](#build-3)
-    + [Run](#run-2)
+* [Medal Of Honor PSX File Viewer](#medal-of-honor-psx-file-viewer)
+   * [Introduction](#introduction)
+   * [Common Formats](#common-formats)
+      * [TSB](#tsb)
+   * [TSP Files](#tsp-files)
+      * [BSP Nodes](#bsp-nodes)
+         * [Vector3](#vector3)
+         * [Bounding Box](#bounding-box)
+         * [BSP Node](#bsp-node)
+      * [Vertex](#vertex)
+      * [Color](#color)
+      * [Faces](#faces)
+         * [UV Coordinates(UV)](#uv-coordinatesuv)
+         * [Face Data](#face-data)
+      * [Dynamic Data](#dynamic-data)
+         * [Dynamic Face Data](#dynamic-face-data)
+      * [Collision Data](#collision-data)
+         * [KDTree Nodes](#kdtree-nodes)
+         * [Face Index Array](#face-index-array)
+         * [Collision Vertices](#collision-vertices)
+         * [Collision Normals](#collision-normals)
+         * [Collision Faces](#collision-faces)
+   * [BSD Files](#bsd-files)
+      * [File Format](#file-format)
+         * [TSP Info Block](#tsp-info-block)
+         * [Entry Table Block](#entry-table-block)
+         * [RenderObject Block](#renderobject-block)
+            * [Color Mode](#color-mode)
+            * [Texture Page](#texture-page)
+            * [Vertex Data](#vertex-data)
+               * [Vertex 0](#vertex-0)
+               * [Vertex 1](#vertex-1)
+               * [Vertex 2](#vertex-2)
+         * [Node Table](#node-table)
+            * [Node Table Data](#node-table-data)
+            * [Node Table Entry](#node-table-entry)
+         * [Node](#node)
+            * [Node Position](#node-position)
+            * [Node Data](#node-data)
+               * [Node Type](#node-type)
+         * [Property Set File](#property-set-file)
+      * [Build](#build)
+      * [Usage](#usage)
+         * [Controls](#controls)
+   * [RSC Files](#rsc-files)
+      * [File Format](#file-format-1)
+            * [RSC Header](#rsc-header)
+            * [RSC Entry](#rsc-entry)
+      * [Usage](#usage-1)
+         * [Build](#build-1)
+         * [Run](#run)
+   * [TAF Files](#taf-files)
+   * [TIM Files](#tim-files)
+      * [File Format](#file-format-2)
+            * [TIM Header](#tim-header)
+            * [TIM CLUT Color](#tim-clut-color)
+            * [TIM Content](#tim-content)
+      * [Usage](#usage-2)
+         * [Build](#build-2)
+         * [Run](#run-1)
+   * [VAB Extractor](#vab-extractor)
+      * [Usage](#usage-3)
+         * [Build](#build-3)
+         * [Run](#run-2)
+
+
 
 ## Introduction
 This project contains a set of tools that can be used to view Medal Of Honor for PSX Level files and images.
@@ -109,8 +114,8 @@ All TSP files starts with an header which contains the following data:
 | int  | 4 bytes  | Colors Data Offset |
 | int  | 4 bytes  | Number of Unknown Data |
 | int  | 4 bytes  | Unknown Data Offset |
-| int  | 4 bytes  | Number of Unknown Data |
-| int  | 4 bytes  | Unknown Data Offset |
+| int  | 4 bytes  | Dynamic Data Number |
+| int  | 4 bytes  | Dynamic Data Offset |
 | int  | 4 bytes  | Collision Data Offset |
 
 **Note that all the offset starts from the beginning of the file.**
@@ -198,6 +203,41 @@ Each face is made by 3 vertices that forms a triangle.
 | [UV](#uv-coordinatesuv) | 2 bytes  | UV1 Texture coordinate for vertex 1  |
 | short | 2 bytes  | TSB that contains info about the used texture ( read [TSB](#TSB) for more information)|
 | [UV](#uv-coordinatesuv) | 2 bytes  | UV2 Texture coordinate for vertex 2  |
+
+### Dynamic Data
+
+Dynamic data is used to swap textures from existing face in order to simulate different effects like when a window is hit by a bullet and explodes...
+Every TSP can contain any number of dynamic blocks (even 0 if not used)
+and each block has the following data:
+
+Every block starts with an header that contains the following fields:
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| int | 4 bytes  | Dynamic Block Size |
+| int | 4 bytes  | Unknown |
+| int | 4 bytes  | Unknown |
+| int | 4 bytes  | Dynamic Data Index  |
+| short | 2 bytes  | Face Data Multiplier  |
+| short | 2 bytes  | Number of Faces Index  |
+| short | 2 bytes  | Face Index Offset  |
+| short | 2 bytes  | Face Data Offset  |
+| short | n bytes  | Array of Faces Index |
+
+**Note that Face Index is an index to the TSP face index**
+Face data multiplier is used to indicate that we need to load at FaceDataOffset n faces where n=NumberofFacesIndex * FaceDataMultiplier.
+
+#### Dynamic Face Data
+After the index list we have the actual face data that can be used to
+swap the original texture from the TSP face and contains the following data:
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| [UV](#uv-coordinatesuv) | 2 bytes  | UV0 |
+| short | 2 bytes  | CBA (Clut Data)  |
+| [UV](#uv-coordinatesuv) | 2 bytes  | UV1 |
+| short | 2 bytes  | TSB (Texture Data) |
+| [UV](#uv-coordinatesuv) | 2 bytes  | UV2 |
 
 ### Collision Data
 
@@ -381,7 +421,7 @@ By trial and error I've discovered the following RenderObject Types:
 | 6009 | Radio |
 | 6004 | V2 Rocket |
 
-There are 13 available weapons that can be used in game and are identified using specific IDs:  
+There are 13 available weapons that can be used in game and are identified using specific IDs:
 
 | ID  | Weapon Name |
 | ---- | ----------- |
@@ -499,7 +539,7 @@ Node Type is used to understand what kind of data the node represents and at whi
 | 3  | 116 bytes |
 | 0 | 0 bytes (no Data) |
 
-All the offset starts from the node position in file.  
+All the offset starts from the node position in file.
 **Note that If the Node has ID equals to 1292341027 and the type is 0 then It represents a TSP load node which contains information about the next TSP file that needs to be loaded and the information is found at 48 bytes.**
 
 In all other cases the offset represents the information about the attached RenderObject that this node represents and can be read as a series of integers.

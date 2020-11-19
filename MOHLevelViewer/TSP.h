@@ -89,15 +89,34 @@ typedef struct TSPNode_s {
 //     IntShortUnion Child2Offset;
 } TSPNode_t;
 
-typedef struct TSPD_s {
+
+
+typedef struct TSPDynamicFaceData_s
+{
+    TSPUv_t UV0;
+    short   CBA;
+    TSPUv_t UV1;
+    short   TSB;
+    TSPUv_t UV2;
+} TSPDynamicFaceData_t;
+
+typedef struct TSPDynamicDataHeader_s
+{
     int Size;
-    char Pad[8];
-    int U4;
-    short NumData;
-    short U5;
-    short U6;
-    short *Data;
-} TSPD_t;
+    int Unk0;
+    int Unk1;
+    int DynamicDataIndex;
+    short FaceDataSizeMultiplier; //Maybe it tells how many face data we have (2*NumFaces)?
+    short NumFacesIndex;
+    short FaceIndexOffset;
+    short FaceDataOffset;
+} TSPDynamicDataHeader_t;
+
+typedef struct TSPDynamicData_s {
+    TSPDynamicDataHeader_t Header;
+    short *FaceIndexList;
+    TSPDynamicFaceData_t *FaceDataList;
+} TSPDynamicData_t;
 
 typedef struct TSPCollisionHeader_s {
     short CollisionBoundMinX;
@@ -159,8 +178,8 @@ typedef struct TSPHeader_s {
     int NumC;
     int COffset;
     
-    int NumD;
-    int DOffset;
+    int NumDynamicDataBlock;
+    int DynamicDataOffset;
     
     int CollisionOffset;
 } TSPHeader_t;
@@ -174,7 +193,7 @@ typedef struct TSP_s {
     TSPFace_t   *Face;
     TSPVert_t   *Vertex;
     TSPColor_t  *Color;
-    TSPD_t      *DBlock;
+    TSPDynamicData_t  *DynamicData;
     TSPCollision_t *CollisionData;
     //
     int          Number;

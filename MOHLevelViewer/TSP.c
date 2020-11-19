@@ -38,6 +38,14 @@ void TSPFree(TSP_t *TSP)
     free(TSP->Vertex);
     free(TSP->Color);
     
+    if( TSP->Header.NumDynamicDataBlock != 0 ) {
+        for( i = 0; i < TSP->Header.NumDynamicDataBlock; i++ ) {
+            free(TSP->DynamicData[i].FaceIndexList);
+            free(TSP->DynamicData[i].FaceDataList);
+
+        }
+        free(TSP->DynamicData);
+    }
     free(TSP->CollisionData->KDTree);
     free(TSP->CollisionData->FaceIndexList);
     free(TSP->CollisionData->Vertex);
@@ -862,55 +870,64 @@ void TSPReadColorChunk(TSP_t *TSP,FILE *InFile)
     }
 }
 
-void TSPReadDChunk(TSP_t *TSP,FILE *InFile)
+void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
 {
-    printf("TSPReadDChunk:Stub moving file offset to the next block.\n");
-    if( TSP->Header.NumD != 0 ) {
-        fseek(InFile,TSP->Header.CollisionOffset,SEEK_SET);
-    }
-#if 0
     int i;
     int j;
+    int DynamicBlockStart;
+    int DynamicBlockEnd;
+    int Delta;
     
     if( !TSP || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
-        printf("TSPReadDChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        printf("TSPReadDynamicDataChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        fseek(InFile,TSP->Header.CollisionOffset,SEEK_SET);
         return;
     }
-    if( TSP->Header.NumD == 0 ) {
-        printf("TSPReadDChunk:No D block found in file %s.\n",TSP->FName);
+    if( TSP->Header.NumDynamicDataBlock == 0 ) {
+        DPrintf("TSPReadDynamicDataChunk:TSP has no Dynamic Data set.\n");
+        fseek(InFile,TSP->Header.CollisionOffset,SEEK_SET);
         return;
     }
-    
-    TSP->DBlock = malloc(TSP->Header.NumD * sizeof(TSPD_t));
-    printf("TSPReadDChunk:Loading %i D\n",TSP->Header.NumD);
-    for( i = 0; i < 1/*TSP->Header.NumD*/; i++ ) {
-        printf("-- BLOCK %i --\n",i);
-        printf("File offset is %li\n",ftell(InFile));
-        fread(&TSP->DBlock[i].Size,sizeof(TSP->DBlock[i].Size),1,InFile);
-        fread(&TSP->DBlock[i].Pad,sizeof(TSP->DBlock[i].Pad),1,InFile);
-        fread(&TSP->DBlock[i].U4,sizeof(TSP->DBlock[i].U4),1,InFile);
-        fread(&TSP->DBlock[i].NumData,sizeof(TSP->DBlock[i].NumData),1,InFile);
-        fread(&TSP->DBlock[i].U5,sizeof(TSP->DBlock[i].U5),1,InFile);
-        fread(&TSP->DBlock[i].U6,sizeof(TSP->DBlock[i].U6),1,InFile);
-        printf("TSPReadDChunk:Size %i\n",TSP->DBlock[i].Size);
-        printf("TSPReadDChunk:U4 %i\n",TSP->DBlock[i].U4);
-        printf("TSPReadDChunk:NumData %i\n",TSP->DBlock[i].NumData);
-        printf("TSPReadDChunk:U5 %i\n",TSP->DBlock[i].U5);
-        printf("TSPReadDChunk:U6 %u\n",TSP->DBlock[i].U6);
-        int NumElements = (TSP->DBlock[i].Size - 24) / sizeof(short);
-        TSP->DBlock[i].Data = malloc((TSP->DBlock[i].Size - 24) /** sizeof(short)*/);
-        printf("TSPReadDChunk:NumElements are %i\n",NumElements);
-        //Skip datasection for now...
-        for( j = 0; j < NumElements; j++ ) {
-            fread(&TSP->DBlock[i].Data[j],sizeof(short),1,InFile);
-            printf("TSPReadDChunk:TSP DBlock %i Data %i is %u\n",i,j,TSP->DBlock[i].Data[j]);
+    DPrintf("TSPReadDynamicDataChunk:TSP has %i Dynamic Data Block.\n",TSP->Header.NumDynamicDataBlock);
+    TSP->DynamicData = malloc(TSP->Header.NumDynamicDataBlock * sizeof(TSPDynamicData_t));
+    for( i = 0; i < TSP->Header.NumDynamicDataBlock; i++ ) {
+        DPrintf("-- Dynamic Data Block %i --\n",i);
+        DPrintf("File offset is %li\n",ftell(InFile));
+        DynamicBlockStart = ftell(InFile);
+        fread(&TSP->DynamicData[i].Header.Size,sizeof(TSP->DynamicData[i].Header.Size),1,InFile);
+        fread(&TSP->DynamicData[i].Header.Unk0,sizeof(TSP->DynamicData[i].Header.Unk0),1,InFile);
+        fread(&TSP->DynamicData[i].Header.Unk1,sizeof(TSP->DynamicData[i].Header.Unk1),1,InFile);
+        fread(&TSP->DynamicData[i].Header.DynamicDataIndex,sizeof(TSP->DynamicData[i].Header.DynamicDataIndex),1,InFile);
+        fread(&TSP->DynamicData[i].Header.FaceDataSizeMultiplier,sizeof(TSP->DynamicData[i].Header.FaceDataSizeMultiplier),1,InFile);
+        fread(&TSP->DynamicData[i].Header.NumFacesIndex,sizeof(TSP->DynamicData[i].Header.NumFacesIndex),1,InFile);
+        fread(&TSP->DynamicData[i].Header.FaceIndexOffset,sizeof(TSP->DynamicData[i].Header.FaceIndexOffset),1,InFile);
+        fread(&TSP->DynamicData[i].Header.FaceDataOffset,sizeof(TSP->DynamicData[i].Header.FaceDataOffset),1,InFile);
+        DPrintf("Size:%i\n",TSP->DynamicData[i].Header.Size);
+        DPrintf("Unk0:%i || Unk1:%i\n",TSP->DynamicData[i].Header.Unk0,TSP->DynamicData[i].Header.Unk1);
+        DPrintf("Dynamic Data Index:%i\n",TSP->DynamicData[i].Header.DynamicDataIndex);
+        DPrintf("FaceDataSizeMultiplier:%i\n",TSP->DynamicData[i].Header.FaceDataSizeMultiplier);
+        DPrintf("NumFacesIndex:%i\n",TSP->DynamicData[i].Header.NumFacesIndex);
+        DPrintf("Face Index Offset:%i\n",TSP->DynamicData[i].Header.FaceIndexOffset);
+        DPrintf("Face Data Offset:%i\n",TSP->DynamicData[i].Header.FaceDataOffset);
+        TSP->DynamicData[i].FaceIndexList = malloc(TSP->DynamicData[i].Header.NumFacesIndex * sizeof(short));
+        for( j = 0; j < TSP->DynamicData[i].Header.NumFacesIndex; j++ ) {
+            fread(&TSP->DynamicData[i].FaceIndexList[j],sizeof(TSP->DynamicData[i].FaceIndexList[j]),1,InFile);
         }
-//         printf(" -- Color %i --\n",i);
-//         PrintTSPColor(TSP->Color[i]);
+        DPrintf("Position after face index list is %li\n",ftell(InFile));
+        TSP->DynamicData[i].FaceDataList = malloc(TSP->DynamicData[i].Header.NumFacesIndex * sizeof(TSPDynamicFaceData_t)  * 
+            TSP->DynamicData[i].Header.FaceDataSizeMultiplier);
+        for( j = 0; j < TSP->DynamicData[i].Header.NumFacesIndex * TSP->DynamicData[i].Header.FaceDataSizeMultiplier; j++ ) {
+            fread(&TSP->DynamicData[i].FaceDataList[j],sizeof(TSP->DynamicData[i].FaceDataList[j]),1,InFile);
+        }
+        DynamicBlockEnd = ftell(InFile);
+        Delta = DynamicBlockEnd - DynamicBlockStart;
+        DPrintf("Position after face data list is %i\n",DynamicBlockEnd);
+        if( Delta != TSP->DynamicData[i].Header.Size ) {
+            DPrintf("Fixing unaligned block (Missing %i bytes)...\n",TSP->DynamicData[i].Header.Size - Delta);
+            fseek(InFile,TSP->DynamicData[i].Header.Size - Delta,SEEK_CUR);
+        }
     }
-    printf("TSPReadDChunk:File offset at the end is %li\n",ftell(InFile));
-#endif
 }
 
 void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
@@ -1230,7 +1247,7 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
     DPrintf("NumB:%i BOffset:%i\n",TSP->Header.NumB,TSP->Header.BOffset);
     DPrintf("NumColors:%i ColorOffset:%i\n",TSP->Header.NumColors,TSP->Header.ColorOffset);
     DPrintf("NumC:%i COffset:%i\n",TSP->Header.NumC,TSP->Header.COffset);
-    DPrintf("NumD:%i DOffset:%i\n",TSP->Header.NumD,TSP->Header.DOffset);
+    DPrintf("NumDynamicDataBlock:%i DynamicDataOffset:%i\n",TSP->Header.NumDynamicDataBlock,TSP->Header.DynamicDataOffset);
     DPrintf("CollisionOffset:%i\n",TSP->Header.CollisionOffset);
 
     assert(ftell(TSPFile) == TSP->Header.NodeOffset);
@@ -1243,7 +1260,7 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
     assert(ftell(TSPFile) == TSP->Header.ColorOffset);
     TSPReadColorChunk(TSP,TSPFile);
     assert(TSP->Header.NumC == 0);
-    TSPReadDChunk(TSP,TSPFile);
+    TSPReadDynamicDataChunk(TSP,TSPFile);
     assert(ftell(TSPFile) == TSP->Header.CollisionOffset);
     TSPReadCollisionChunk(TSP,TSPFile);
     fclose(TSPFile);
