@@ -224,7 +224,7 @@ Every block starts with an header that contains the following fields:
 | short | 2 bytes  | Face Data Offset  |
 | short | n bytes  | Array of Faces Index |
 
-**Note that Face Index is an index to the TSP face index**
+**Note that Face Index is an index to the TSP face index**  
 Face data multiplier is used to indicate that we need to load at FaceDataOffset n faces where n=NumberofFacesIndex * FaceDataMultiplier.
 
 #### Dynamic Face Data
