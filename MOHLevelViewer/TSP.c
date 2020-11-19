@@ -42,10 +42,10 @@ void TSPFree(TSP_t *TSP)
         for( i = 0; i < TSP->Header.NumDynamicDataBlock; i++ ) {
             free(TSP->DynamicData[i].FaceIndexList);
             free(TSP->DynamicData[i].FaceDataList);
-
         }
         free(TSP->DynamicData);
     }
+    
     free(TSP->CollisionData->KDTree);
     free(TSP->CollisionData->FaceIndexList);
     free(TSP->CollisionData->Vertex);
@@ -105,7 +105,28 @@ bool TSPBoxInFrustum(ViewParm_t Camera,TSPBBox_t BBox)
     }
     return true;
 }
-
+TSPDynamicFaceData_t *GetDynamicDataByFaceIndex(TSP_t *TSP,int FaceIndex,int Stride)
+{
+    int i;
+    int j;
+    int FaceDataStride;
+    if( TSP->Header.NumDynamicDataBlock == 0 ) {
+        return NULL;
+    }
+    for( i = 0; i < TSP->Header.NumDynamicDataBlock; i++ ) {
+        for( j = 0; j < TSP->DynamicData[i].Header.NumFacesIndex; j++ ) {
+            if( TSP->DynamicData[i].FaceIndexList[j] == FaceIndex ) {
+//                 if( Stride < TSP->DynamicData[i].Header.FaceDataSizeMultiplier ) {
+//                     FaceDataStride = Stride;
+//                 } else {
+                    FaceDataStride = Stride - 1;
+//                 }
+                return &TSP->DynamicData[i].FaceDataList[j + (TSP->DynamicData[i].Header.NumFacesIndex * FaceDataStride)];
+            }
+        }
+    }
+    return NULL;
+}
 void TSPCreateVAO(TSP_t *TSPList)
 {
     TSP_t *Iterator;
@@ -204,6 +225,12 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
     int Vert0;
     int Vert1;
     int Vert2;
+    float U0,V0;
+    float U1,V1;
+    float U2,V2;
+    short TSB;
+    short CBA;
+    TSPDynamicFaceData_t *DynamicData;
     Vao_t *Vao;
     
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
@@ -226,13 +253,28 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                     Vert0 = Iterator->Face[j].V0;
                     Vert1 = Iterator->Face[j].V1;
                     Vert2 = Iterator->Face[j].V2;
+
+//                     DynamicData = GetDynamicDataByFaceIndex(Iterator,j,2);
+//                     if( DynamicData != NULL ) {
+//                         U0 = (((float)DynamicData->UV0.u)/Width);
+//                         V0 = /*255 -*/(((float)DynamicData->UV0.v) / Height);
+//                         U1 = (((float)DynamicData->UV1.u) / Width);
+//                         V1 = /*255 -*/(((float)DynamicData->UV1.v) /Height);
+//                         U2 = (((float)DynamicData->UV2.u) /Width);
+//                         V2 = /*255 -*/(((float)DynamicData->UV2.v) / Height);
+//                         TSB = DynamicData->TSB;
+//                         CBA = DynamicData->CBA;
+//                     } else {
+                        U0 = (((float)Iterator->Face[j].UV0.u)/Width);
+                        V0 = /*255 -*/(((float)Iterator->Face[j].UV0.v) / Height);
+                        U1 = (((float)Iterator->Face[j].UV1.u) / Width);
+                        V1 = /*255 -*/(((float)Iterator->Face[j].UV1.v) /Height);
+                        U2 = (((float)Iterator->Face[j].UV2.u) /Width);
+                        V2 = /*255 -*/(((float)Iterator->Face[j].UV2.v) / Height);
+                        TSB = Iterator->Face[j].TSB.AsShort;
+                        CBA = Iterator->Face[j].CBA.AsShort;
+//                     }
                     
-                    float U0 = (((float)Iterator->Face[j].UV0.u)/Width);
-                    float V0 = /*255 -*/(((float)Iterator->Face[j].UV0.v) / Height);
-                    float U1 = (((float)Iterator->Face[j].UV1.u) / Width);
-                    float V1 = /*255 -*/(((float)Iterator->Face[j].UV1.v) /Height);
-                    float U2 = (((float)Iterator->Face[j].UV2.u) /Width);
-                    float V2 = /*255 -*/(((float)Iterator->Face[j].UV2.v) / Height);
                     
                     DPrintf("Tex Coords are %i;%i %i;%i %i;%i\n",
                             Iterator->Face[j].UV0.u,Iterator->Face[j].UV0.v,
@@ -280,7 +322,7 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                     VertexPointer += 8;
                     
                     Vao = VaoInitXYZUVRGB(VertexData,VertexSize * 3,Stride,VertexOffset,TextureOffset,ColorOffset,
-                                          Iterator->Face[j].TSB.AsShort,Iterator->Face[j].Unk0.AsShort);            
+                                          TSB,CBA);            
                     Vao->Next = Iterator->Node[i].LeafFaceListVao;
                     Iterator->Node[i].LeafFaceListVao = Vao;
                     free(VertexData);                    
@@ -808,7 +850,7 @@ void TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
         printf("V0:%u\n",TSP->Face[i].V0);
         printf("V1:%u\n",TSP->Face[i].V1);
         printf("V2:%u\n",TSP->Face[i].V2);
-        printf("Unk0:%u\n",TSP->Face[i].Unk0.AsShort);
+        printf("CBA:%u\n",TSP->Face[i].CBA.AsShort);
         printf("TSB:%u\n",TSP->Face[i].TSB.AsShort);
 //     }
 #endif
@@ -923,6 +965,7 @@ void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
         DynamicBlockEnd = ftell(InFile);
         Delta = DynamicBlockEnd - DynamicBlockStart;
         DPrintf("Position after face data list is %i\n",DynamicBlockEnd);
+        //Some blocks may not be aligned to the size 10 boundaries...
         if( Delta != TSP->DynamicData[i].Header.Size ) {
             DPrintf("Fixing unaligned block (Missing %i bytes)...\n",TSP->DynamicData[i].Header.Size - Delta);
             fseek(InFile,TSP->DynamicData[i].Header.Size - Delta,SEEK_CUR);

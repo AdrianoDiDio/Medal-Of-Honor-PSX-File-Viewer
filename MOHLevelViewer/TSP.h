@@ -57,7 +57,7 @@ typedef struct TSPFace_s {
     unsigned short V1;
     unsigned short V2;
     TSPUv_t UV0;
-    ShortByteUnion Unk0;
+    ShortByteUnion CBA;
     TSPUv_t UV1;
     ShortByteUnion TSB;
     TSPUv_t UV2;
