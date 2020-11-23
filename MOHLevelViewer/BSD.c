@@ -1605,6 +1605,18 @@ void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
     fseek(BSDFile,PreviousFilePosition,SEEK_SET);
 }
 
+int BSDGetTSPDynamicIndexOffsetFromNodeType(int Type)
+{
+    switch( Type ) {
+        case 3:
+            return 90;
+        case 6:
+            return 108;
+        default:
+            return -1;
+    }
+}
+
 BSD_t *BSDLoad(char *FName,int MissionNumber)
 {
     FILE *BSDFile;
@@ -1627,6 +1639,7 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
     Vec3_t NodeRotation;
     int PrevPos;
     int NextNodeOffset;
+    int DynamicIndexOffset;
     
     DPrintf("Loading file %s...\n",FName);
     
@@ -1832,6 +1845,17 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
 
         assert(BSD->NodeData.Node[i].Position.Pad == 0);
         assert(BSD->NodeData.Node[i].Rotation.Pad == 0);
+        
+        if( (DynamicIndexOffset = BSDGetTSPDynamicIndexOffsetFromNodeType(BSD->NodeData.Node[i].Type)) != -1 ) {
+            PrevPos = GetCurrentFilePosition(BSDFile);
+            fseek(BSDFile,NodeFilePosition + DynamicIndexOffset,SEEK_SET);
+            fread(&BSD->NodeData.Node[i].DynamicBlockIndex,sizeof(BSD->NodeData.Node[i].DynamicBlockIndex),1,BSDFile);
+            fseek(BSDFile,PrevPos,SEEK_SET);
+            DPrintf("Node has Dynamic Index %i\n",BSD->NodeData.Node[i].DynamicBlockIndex);
+        } else {
+            BSD->NodeData.Node[i].DynamicBlockIndex = -1;
+        }
+        
                 
         NodePosition.x = BSD->NodeData.Node[i].Position.x;
         NodePosition.y = BSD->NodeData.Node[i].Position.y;

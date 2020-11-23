@@ -110,6 +110,7 @@ typedef struct BSDNode_s {
     short CollisionInfo2; // CylinderTop or BoxDepth
 //     char Pad2[8];
     int MessageData; //Offset to a list of Message IDs
+    Byte DynamicBlockIndex;
     //TODO:At 0x5c in every pickup object is stored the amount of ammo...
 } BSDNode_t;
 
