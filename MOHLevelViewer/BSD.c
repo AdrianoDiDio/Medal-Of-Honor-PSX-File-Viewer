@@ -1064,8 +1064,8 @@ char *BSDRenderObjectGetWeaponNameFromID(int RenderObjectID)
             return "German Grenade";
         case BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_3:
             return "SubMachineGun Type 3";
-        case BSD_RENDER_OBJECT_WEAPON_GARAND_M1:
-            return "Garand M1";
+        case BSD_RENDER_OBJECT_WEAPON_M1_GARAND:
+            return "M1 Garand";
         default:
             //Should never happens!
             return "Unknown";
