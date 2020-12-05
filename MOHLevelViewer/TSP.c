@@ -1067,7 +1067,7 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
 //         printf("Normal Index:%u\n",TSP->CollisionData->Face[i].NormalIndex);
 
     }
-    assert(ftell(InFile) == GetFileLength(InFile));
+//     assert(ftell(InFile) == GetFileLength(InFile));
 }
 
 TSPCollision_t *TSPGetCollisionDataFromPoint(TSP_t *TSPList,TSPVec3_t Point)
