@@ -40,6 +40,62 @@ void BSDDumpProperty(BSD_t *BSD,int PropertyIndex)
     }
 }
 
+void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
+{
+    char Buffer[256];
+    BSDRenderObject_t *RenderObjectIterator;
+    BSDRenderObjectElement_t *RenderObjectElement;
+    int RenderObjectIndex;
+    int j;
+    float Width = 256.f;
+    float Height = 256.f;
+    Vec3_t NewPos;
+    if( !BSD || !OutFile ) {
+        bool InvalidFile = (OutFile == NULL ? true : false);
+        printf("BSDDumpDataToFile: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
+        return;
+    }
+    for( RenderObjectIterator = Level->BSD->RenderObjectRealList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
+        RenderObjectIndex = BSDGetRenderObjectIndexByID(BSD,RenderObjectIterator->RenderObjectID);
+        RenderObjectElement = &BSD->RenderObjectTable.RenderObjectList[RenderObjectIndex];
+        sprintf(Buffer,"o BSD%i\n",RenderObjectElement->ID);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+        for( j = RenderObjectElement->NumVertex - 1; j >= 0; j-- ) {
+            NewPos = Vec3_Build(BSD->RenderObjectList[RenderObjectIndex].Vertex[j].x,
+                                BSD->RenderObjectList[RenderObjectIndex].Vertex[j].y,BSD->RenderObjectList[RenderObjectIndex].Vertex[j].z);
+            Vec_RotateXAxis(DEGTORAD(180.f),&NewPos);
+            sprintf(Buffer,"v %f %f %f\n",
+                    (NewPos.x + RenderObjectIterator->Position.x),
+                    (NewPos.y - RenderObjectIterator->Position.y),
+                    (NewPos.z + RenderObjectIterator->Position.z)
+            );
+            fwrite(Buffer,strlen(Buffer),1,OutFile); 
+        }
+        for( j = 0; j < BSD->RenderObjectList[RenderObjectIndex].NumFaces; j++ ) {
+            float U0 = (((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV0.u)/Width);
+            float V0 = /*255 -*/(((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV0.v) / Height);
+            float U1 = (((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV1.u) / Width);
+            float V1 = /*255 -*/(((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV1.v) /Height);
+            float U2 = (((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV2.u) /Width);
+            float V2 = /*255 -*/(((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV2.v) / Height);
+            sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
+            fwrite(Buffer,strlen(Buffer),1,OutFile);
+        }
+        for( j = 0; j < BSD->RenderObjectList[RenderObjectIndex].NumFaces; j++ ) {
+            unsigned short Vert0;
+            unsigned short Vert1;
+            unsigned short Vert2;
+            int BaseFaceUV;
+            Vert0 = (BSD->RenderObjectList[RenderObjectIndex].Face[j].VData & 0xFF);
+            Vert1 = (BSD->RenderObjectList[RenderObjectIndex].Face[j].VData & 0x3fc00) >> 10;
+            Vert2 = (BSD->RenderObjectList[RenderObjectIndex].Face[j].VData & 0xFF00000 ) >> 20;
+            BaseFaceUV = j * 3;
+            sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),BaseFaceUV+1,-(Vert1+1),BaseFaceUV+2,-(Vert2+1),BaseFaceUV+3);
+            fwrite(Buffer,strlen(Buffer),1,OutFile);
+        }
+    }
+}
+
 void BSDFixRenderObjectPosition(Level_t *Level)
 {
     BSDRenderObject_t *RenderObjectIterator;

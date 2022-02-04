@@ -331,6 +331,7 @@ unsigned int BSDMPNodeIDToRenderObjectID(unsigned int NodeID);
 int     BSDGetRenderObjectIndexByID(BSD_t *BSD,int ID);
 bool    BSDIsRenderObjectPresent(BSD_t *BSD,unsigned int RenderObjectID);
 void    BSDFixRenderObjectPosition(Level_t *Level);
+void    BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile);
 void    BSDFree(BSD_t *BSD);
 
 #endif //__BSDVIEWER_H_

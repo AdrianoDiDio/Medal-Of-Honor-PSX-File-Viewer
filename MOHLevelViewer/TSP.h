@@ -211,6 +211,7 @@ void    TSPCreateVAO(TSP_t *TSP);
 void TSPCreateNodeBBoxVAO(TSP_t *TSPList);
 void TSPCreateCollisionVAO(TSP_t *TSPList);
 int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY);
+void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile);
 void TSPFree(TSP_t *TSP);
 void TSPFreeList(TSP_t *List);
 #endif //__TSPVIEWER_H_

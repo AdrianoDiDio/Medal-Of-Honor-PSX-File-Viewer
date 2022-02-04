@@ -76,6 +76,51 @@ void Vec4FromXYZ(float x,float y,float z,vec4 Out)
     Out[3] = 1;
 }
 
+void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
+{
+    TSP_t *Iterator;
+    char Buffer[256];
+    int i;
+    int t;
+    float Width = 256.f;
+    float Height = 256.f;
+    
+    if( !TSPList || !OutFile ) {
+        bool InvalidFile = (OutFile == NULL ? true : false);
+        printf("TSPDumpDataToFile: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        return;
+    }
+    t = 1;
+    for( Iterator = TSPList; Iterator; Iterator = Iterator->Next, t++ ) {
+        sprintf(Buffer,"o TSP%i\n",t);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+        for( i = Iterator->Header.NumVertices - 1; i >= 0 ; i-- ) {;
+            sprintf(Buffer,"v %i %i %i %f %f %f\n",Iterator->Vertex[i].Position.x,-Iterator->Vertex[i].Position.y,Iterator->Vertex[i].Position.z,
+                Iterator->Color[i].r / 255.f,Iterator->Color[i].g / 255.f,Iterator->Color[i].b / 255.f
+            );
+            fwrite(Buffer,strlen(Buffer),1,OutFile);            
+        }
+        for( i = 0; i < Iterator->Header.NumFaces; i++ ) {
+            float U0 = (((float)Iterator->Face[i].UV0.u)/Width);
+            float V0 = /*255 -*/(((float)Iterator->Face[i].UV0.v) / Height);
+            float U1 = (((float)Iterator->Face[i].UV1.u) / Width);
+            float V1 = /*255 -*/(((float)Iterator->Face[i].UV1.v) /Height);
+            float U2 = (((float)Iterator->Face[i].UV2.u) /Width);
+            float V2 = /*255 -*/(((float)Iterator->Face[i].UV2.v) / Height);
+            sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
+            fwrite(Buffer,strlen(Buffer),1,OutFile);    
+        }
+        for( i = 0; i < Iterator->Header.NumFaces; i++ ) {
+            int Vert0 = Iterator->Face[i].V0;
+            int Vert1 = Iterator->Face[i].V1;
+            int Vert2 = Iterator->Face[i].V2;
+            int BaseFaceUV = i * 3;
+            sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),BaseFaceUV+1,-(Vert1+1),BaseFaceUV+2,-(Vert2+1),BaseFaceUV+3);
+            fwrite(Buffer,strlen(Buffer),1,OutFile);
+        }
+    }
+}
+
 bool TSPBoxInFrustum(ViewParm_t Camera,TSPBBox_t BBox)
 {
     vec4 BoxCornerList[8];

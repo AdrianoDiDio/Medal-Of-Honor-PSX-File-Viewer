@@ -179,7 +179,7 @@ Level_t *Level;
 SDL_Window *VideoSurface;
 SDL_Renderer *SDLRenderer;
 
-
+void    DumpLevel(Level_t* Level);
 void    DPrintf(char *Fmt, ...) Attribute((format(printf,1,2)));
 char   *String_Copy(const char *From);
 int     GetFileLength(FILE *Fp);

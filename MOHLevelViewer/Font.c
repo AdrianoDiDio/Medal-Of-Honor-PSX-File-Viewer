@@ -174,6 +174,8 @@ void FontDrawString(Level_t *Level,char *String,float x,float y,Color_t Color)
     
     currentX = x;
     
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
     while( *String ) {
         if( *String == ' ' ) {
             currentX += Spacing;
