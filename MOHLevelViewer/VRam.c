@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-    Copyright (C) 2018-2020 Adriano Di Dio.
+    Copyright (C) 2018-2022 Adriano Di Dio.
     
     MOHLevelViewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -71,10 +71,10 @@ void VRamWritePNG(SDL_Surface *ImageSurface,char *OutName)
     fclose(PNGImage);
 }
 
-void VRamDump(VRam_t *VRam,int VRamSize)
+void VRamDump(VRam_t *VRam)
 {
     int i;
-    for( i = 0; i < VRamSize; i++ ) {
+    for( i = 0; i < VRam->Size; i++ ) {
         char OutName[256];
         CreateDirIfNotExists("VRAM");
         
@@ -86,6 +86,30 @@ void VRamDump(VRam_t *VRam,int VRamSize)
         sprintf(OutName,"VRAM/VRAM8/VRAM%i.png",i);
         VRamWritePNG(VRam->Page8Bit[i].Surface,OutName);
     }
+}
+
+void VRAMDumpDataToFile(VRam_t *VRam,char *OutBaseDir)
+{
+    
+    char OutName[1024];
+    char Buffer[256];
+    FILE *MaterialFile;
+    int i;
+    
+    sprintf(OutName,"%svram_4_8_bit.mtl",OutBaseDir);
+    MaterialFile = fopen(OutName,"w");
+    for( i = 0; i < VRam->Size; i++ ) {
+        sprintf(OutName,"%svram_4_bit_page_%i.png",OutBaseDir,i);
+        VRamWritePNG(VRam->Page4Bit[i].Surface,OutName);
+        sprintf(Buffer,"newmtl vram_4_page_%i\nKa 1.000 1.000 1.000\nKd 1.000 1.000 1.000\nKs 1.000 1.000 1.000\nmap_Kd vram_4_bit_page_%i.png\n", i,i);
+        fwrite(Buffer,strlen(Buffer),1,MaterialFile);
+        
+        sprintf(OutName,"%svram_8_bit_page_%i.png",OutBaseDir,i);
+        VRamWritePNG(VRam->Page8Bit[i].Surface,OutName);
+        sprintf(Buffer,"newmtl vram_8_page_%i\nKa 1.000 1.000 1.000\nKd 1.000 1.000 1.000\nKs 1.000 1.000 1.000\nmap_Kd vram_8_bit_page_%i.png\n", i,i );
+        fwrite(Buffer,strlen(Buffer),1,MaterialFile);
+    }
+    fclose(MaterialFile);
 }
 
 void VRamPutTexture(VRam_t *VRam,TIMImage_t *Image)
@@ -140,15 +164,14 @@ VRam_t *VRamInit(TIMImage_t *ImageList)
     TIMImage_t *Iterator;
     int i;
 
-    int VRAMSize;
     
     VRam = malloc(sizeof(VRam_t));
-    VRAMSize = sizeof(VRam->Page4Bit) / sizeof(VRam->Page4Bit[0]);
+    VRam->Size = sizeof(VRam->Page4Bit) / sizeof(VRam->Page4Bit[0]);
     
     //Set 32 256x256 texture pages and fill them with the image.
     //To debug dump the vram texture to file.
     //3 since it is an RGB image.
-    for( i = 0; i < VRAMSize; i++ ) {
+    for( i = 0; i < VRam->Size; i++ ) {
         VRam->Page4Bit[i].Surface = SDL_CreateRGBSurface(0,256,256,32, 0x000000FF,0x0000FF00,0x00FF0000, 0xFF000000);
         VRam->Page4Bit[i].ID = i + 1;
         VRam->Page8Bit[i].Surface = SDL_CreateRGBSurface(0,256,256,32, 0x000000FF,0x0000FF00,0x00FF0000, 0xFF000000);
@@ -159,9 +182,9 @@ VRam_t *VRamInit(TIMImage_t *ImageList)
         VRamPutTexture(VRam,Iterator);
     }
 #ifdef _DEBUG
-    VRamDump(VRam,VRAMSize);
+    VRamDump(VRam);
 #endif
-    for( i = 0; i < VRAMSize; i++ ) {
+    for( i = 0; i < VRam->Size; i++ ) {
         glGenTextures(1,&VRam->Page4Bit[i].TextureID);
         glBindTexture(GL_TEXTURE_2D,VRam->Page4Bit[i].TextureID);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-    Copyright (C) 2018-2020 Adriano Di Dio.
+    Copyright (C) 2018-2022 Adriano Di Dio.
     
     MOHLevelViewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -47,9 +47,16 @@ void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
     BSDRenderObjectElement_t *RenderObjectElement;
     int RenderObjectIndex;
     int j;
-    float Width = 256.f;
-    float Height = 256.f;
-    Vec3_t NewPos;
+    float Width = 255.f;
+    float Height = 255.f;
+    vec3 RotationAxis;
+    mat4 RotationMatrix;
+    mat4 ScaleMatrix;
+    mat4 ModelMatrix;
+    vec3 ScaleVector;
+    vec3 VertPos;
+    vec3 OutVector;
+    
     if( !BSD || !OutFile ) {
         bool InvalidFile = (OutFile == NULL ? true : false);
         printf("BSDDumpDataToFile: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
@@ -60,24 +67,51 @@ void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
         RenderObjectElement = &BSD->RenderObjectTable.RenderObjectList[RenderObjectIndex];
         sprintf(Buffer,"o BSD%i\n",RenderObjectElement->ID);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
+        glm_mat4_identity(RotationMatrix);
+        
+        RotationAxis[0] = 1;
+        RotationAxis[1] = 0;
+        RotationAxis[2] = 0;
+        glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);
+        RotationAxis[0] = 0;
+        RotationAxis[1] = -1;
+        RotationAxis[2] = 0;
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation.y), RotationAxis);
+        RotationAxis[0] = 1;
+        RotationAxis[1] = 0;
+        RotationAxis[2] = 0;
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation.x), RotationAxis);
+        RotationAxis[0] = 0;
+        RotationAxis[1] = 0;
+        RotationAxis[2] = 1;
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation.z), RotationAxis);
+        
+        ScaleVector[0] = RenderObjectIterator->Scale.x;
+        ScaleVector[1] = RenderObjectIterator->Scale.y;
+        ScaleVector[2] = RenderObjectIterator->Scale.z;
+        glm_scale_make(ScaleMatrix,ScaleVector);
+
+        glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
         for( j = RenderObjectElement->NumVertex - 1; j >= 0; j-- ) {
-            NewPos = Vec3_Build(BSD->RenderObjectList[RenderObjectIndex].Vertex[j].x,
-                                BSD->RenderObjectList[RenderObjectIndex].Vertex[j].y,BSD->RenderObjectList[RenderObjectIndex].Vertex[j].z);
-            Vec_RotateXAxis(DEGTORAD(180.f),&NewPos);
+            
+            VertPos[0] = BSD->RenderObjectList[RenderObjectIndex].Vertex[j].x;
+            VertPos[1] = BSD->RenderObjectList[RenderObjectIndex].Vertex[j].y;
+            VertPos[2] = BSD->RenderObjectList[RenderObjectIndex].Vertex[j].z;
+            glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
             sprintf(Buffer,"v %f %f %f\n",
-                    (NewPos.x + RenderObjectIterator->Position.x),
-                    (NewPos.y - RenderObjectIterator->Position.y),
-                    (NewPos.z + RenderObjectIterator->Position.z)
+                    (OutVector[0] + RenderObjectIterator->Position.x),
+                    (OutVector[1] - RenderObjectIterator->Position.y),
+                    (OutVector[2] - RenderObjectIterator->Position.z)
             );
             fwrite(Buffer,strlen(Buffer),1,OutFile); 
         }
-        for( j = 0; j < BSD->RenderObjectList[RenderObjectIndex].NumFaces; j++ ) {
+        for( j = BSD->RenderObjectList[RenderObjectIndex].NumFaces - 1; j >= 0 ; j-- ) {
             float U0 = (((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV0.u)/Width);
-            float V0 = /*255 -*/(((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV0.v) / Height);
+            float V0 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV0.v) / Height);
             float U1 = (((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV1.u) / Width);
-            float V1 = /*255 -*/(((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV1.v) /Height);
+            float V1 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV1.v) /Height);
             float U2 = (((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV2.u) /Width);
-            float V2 = /*255 -*/(((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV2.v) / Height);
+            float V2 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectIndex].Face[j].UV2.v) / Height);
             sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
             fwrite(Buffer,strlen(Buffer),1,OutFile);
         }
@@ -89,12 +123,22 @@ void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
             Vert0 = (BSD->RenderObjectList[RenderObjectIndex].Face[j].VData & 0xFF);
             Vert1 = (BSD->RenderObjectList[RenderObjectIndex].Face[j].VData & 0x3fc00) >> 10;
             Vert2 = (BSD->RenderObjectList[RenderObjectIndex].Face[j].VData & 0xFF00000 ) >> 20;
+            int VRamPage = BSD->RenderObjectList[RenderObjectIndex].Face[j].TexInfo & 0x1F;
+            int ColorMode = (BSD->RenderObjectList[RenderObjectIndex].Face[j].TexInfo & 0xC0) >> 7;
+            if( ColorMode == 1 ) {
+                sprintf(Buffer,"usemtl vram_8_page_%i\n",VRamPage);
+            } else {
+                sprintf(Buffer,"usemtl vram_4_page_%i\n",VRamPage);
+            }
+            fwrite(Buffer,strlen(Buffer),1,OutFile);
             BaseFaceUV = j * 3;
-            sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),BaseFaceUV+1,-(Vert1+1),BaseFaceUV+2,-(Vert2+1),BaseFaceUV+3);
+            sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),-(BaseFaceUV+3),-(Vert1+1),-(BaseFaceUV+2),-(Vert2+1),-(BaseFaceUV+1));
             fwrite(Buffer,strlen(Buffer),1,OutFile);
         }
     }
+
 }
+
 
 void BSDFixRenderObjectPosition(Level_t *Level)
 {

@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-    Copyright (C) 2018-2020 Adriano Di Dio.
+    Copyright (C) 2018-2022 Adriano Di Dio.
     
     MOHLevelViewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -931,22 +931,31 @@ void SetDefaultSettings(Level_t *Level)
 
 void DumpLevel(Level_t* Level)
 {
-    char BaseOutDir[64];
-    char MissionDir[256];
+    char MissionDir[64];
+    char ExportDir[256];
+    char OutDir[512];
     char FileName[256];
+    char ObjectFile[1024];
+    char MaterialNameTag[64];
     FILE *OutFile;
-    
-    sprintf(FileName,"%cMSN%iLVL%i.obj",PATHSEPARATOR,Level->MissionNumber,Level->LevelNumber);
+    int i;
+    sprintf(FileName,"MSN%iLVL%i.obj",Level->MissionNumber,Level->LevelNumber);
     sprintf(MissionDir,"MSN%iLVL%i",Level->MissionNumber,Level->LevelNumber);
-    sprintf(BaseOutDir,"Export%c",PATHSEPARATOR);
-    strncat(BaseOutDir,MissionDir,strlen(MissionDir));
-    CreateDirIfNotExists("Export");
-    CreateDirIfNotExists(BaseOutDir);
-    strncat(BaseOutDir,FileName,strlen(FileName));
-    DPrintf("Dumping it...%s\n",BaseOutDir);
-    OutFile = fopen(BaseOutDir,"w");
+    sprintf(ExportDir,"Export");
+    sprintf(OutDir,"%s%c%s%c",ExportDir,PATHSEPARATOR,MissionDir,PATHSEPARATOR);
+    CreateDirIfNotExists(ExportDir);
+    CreateDirIfNotExists(OutDir);
+// strncat(BaseOutDir,FileName,strlen(FileName));
+//     
+    sprintf(ObjectFile,"%s%s", OutDir,FileName);
+    DPrintf("Dumping it...%s\n",ObjectFile);
+    OutFile = fopen(ObjectFile,"w");
+    sprintf(MaterialNameTag,"mtllib vram_4_8_bit.mtl\n");
+    fwrite(MaterialNameTag,strlen(MaterialNameTag),1,OutFile);
     TSPDumpDataToFile(Level->TSPList,OutFile);
     BSDDumpDataToFile(Level->BSD,OutFile);
+    VRAMDumpDataToFile(Level->VRam,OutDir);
+//     VRAMDumpDataToFile(Level->VRam,"foo",OutFile);
     fclose(OutFile);
 }
 

@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-    Copyright (C) 2018-2020 Adriano Di Dio.
+    Copyright (C) 2018-2022 Adriano Di Dio.
     
     MOHLevelViewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -84,6 +84,7 @@ void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
     int t;
     float Width = 256.f;
     float Height = 256.f;
+    Vec3_t NewPos;
     
     if( !TSPList || !OutFile ) {
         bool InvalidFile = (OutFile == NULL ? true : false);
@@ -94,19 +95,21 @@ void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next, t++ ) {
         sprintf(Buffer,"o TSP%i\n",t);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
-        for( i = Iterator->Header.NumVertices - 1; i >= 0 ; i-- ) {;
-            sprintf(Buffer,"v %i %i %i %f %f %f\n",Iterator->Vertex[i].Position.x,-Iterator->Vertex[i].Position.y,Iterator->Vertex[i].Position.z,
+        for( i = Iterator->Header.NumVertices - 1; i >= 0 ; i-- ) {
+            NewPos = Vec3_Build(Iterator->Vertex[i].Position.x,Iterator->Vertex[i].Position.y,Iterator->Vertex[i].Position.z);
+            Vec_RotateXAxis(DEGTORAD(180.f),&NewPos);
+            sprintf(Buffer,"v %f %f %f %f %f %f\n",NewPos.x,NewPos.y,NewPos.z,
                 Iterator->Color[i].r / 255.f,Iterator->Color[i].g / 255.f,Iterator->Color[i].b / 255.f
             );
             fwrite(Buffer,strlen(Buffer),1,OutFile);            
         }
-        for( i = 0; i < Iterator->Header.NumFaces; i++ ) {
+        for( i = Iterator->Header.NumFaces - 1; i >= 0 ; i-- ) {
             float U0 = (((float)Iterator->Face[i].UV0.u)/Width);
-            float V0 = /*255 -*/(((float)Iterator->Face[i].UV0.v) / Height);
+            float V0 = /*255 -*/1.f-(((float)Iterator->Face[i].UV0.v) / Height);
             float U1 = (((float)Iterator->Face[i].UV1.u) / Width);
-            float V1 = /*255 -*/(((float)Iterator->Face[i].UV1.v) /Height);
+            float V1 = /*255 -*/1.f-(((float)Iterator->Face[i].UV1.v) /Height);
             float U2 = (((float)Iterator->Face[i].UV2.u) /Width);
-            float V2 = /*255 -*/(((float)Iterator->Face[i].UV2.v) / Height);
+            float V2 = /*255 -*/1.f-(((float)Iterator->Face[i].UV2.v) / Height);
             sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
             fwrite(Buffer,strlen(Buffer),1,OutFile);    
         }
@@ -115,11 +118,22 @@ void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
             int Vert1 = Iterator->Face[i].V1;
             int Vert2 = Iterator->Face[i].V2;
             int BaseFaceUV = i * 3;
-            sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),BaseFaceUV+1,-(Vert1+1),BaseFaceUV+2,-(Vert2+1),BaseFaceUV+3);
+            int ColorMode = (Iterator->Face[i].TSB.AsShort & 0x80) >> 7;
+            int VRamPage = Iterator->Face[i].TSB.AsShort & 0x1F;
+            if( ColorMode == 1 ) {
+                sprintf(Buffer,"usemtl vram_8_page_%i\n",VRamPage);
+            } else {
+                sprintf(Buffer,"usemtl vram_4_page_%i\n",VRamPage);
+            }
+            fwrite(Buffer,strlen(Buffer),1,OutFile);
+            sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),-(BaseFaceUV+3),-(Vert1+1),-(BaseFaceUV+2),-(Vert2+1),-(BaseFaceUV+1));
             fwrite(Buffer,strlen(Buffer),1,OutFile);
         }
+//         fwrite(Buffer,strlen(Buffer),1,OutFile);
+//         break;
     }
 }
+
 
 bool TSPBoxInFrustum(ViewParm_t Camera,TSPBBox_t BBox)
 {
