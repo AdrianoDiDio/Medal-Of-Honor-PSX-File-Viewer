@@ -938,15 +938,15 @@ void DumpLevel(Level_t* Level)
     char ObjectFile[1024];
     char MaterialNameTag[64];
     FILE *OutFile;
-    int i;
+
     sprintf(FileName,"MSN%iLVL%i.obj",Level->MissionNumber,Level->LevelNumber);
     sprintf(MissionDir,"MSN%iLVL%i",Level->MissionNumber,Level->LevelNumber);
     sprintf(ExportDir,"Export");
     sprintf(OutDir,"%s%c%s%c",ExportDir,PATHSEPARATOR,MissionDir,PATHSEPARATOR);
+    
     CreateDirIfNotExists(ExportDir);
     CreateDirIfNotExists(OutDir);
-// strncat(BaseOutDir,FileName,strlen(FileName));
-//     
+    
     sprintf(ObjectFile,"%s%s", OutDir,FileName);
     DPrintf("Dumping it...%s\n",ObjectFile);
     OutFile = fopen(ObjectFile,"w");
@@ -955,7 +955,6 @@ void DumpLevel(Level_t* Level)
     TSPDumpDataToFile(Level->TSPList,OutFile);
     BSDDumpDataToFile(Level->BSD,OutFile);
     VRAMDumpDataToFile(Level->VRam,OutDir);
-//     VRAMDumpDataToFile(Level->VRam,"foo",OutFile);
     fclose(OutFile);
 }
 
@@ -1041,7 +1040,6 @@ void LevelLateInit()
     BSDSpawnNodes(Level->BSD);
     BSDSpawnShowCase(Level->BSD);
     BSDFixRenderObjectPosition(Level);
-
 }
 void LevelCleanUp()
 {

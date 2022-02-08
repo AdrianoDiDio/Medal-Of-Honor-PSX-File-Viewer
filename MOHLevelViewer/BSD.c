@@ -99,9 +99,9 @@ void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
             VertPos[2] = BSD->RenderObjectList[RenderObjectIndex].Vertex[j].z;
             glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
             sprintf(Buffer,"v %f %f %f\n",
-                    (OutVector[0] + RenderObjectIterator->Position.x),
-                    (OutVector[1] - RenderObjectIterator->Position.y),
-                    (OutVector[2] - RenderObjectIterator->Position.z)
+                    (OutVector[0] + RenderObjectIterator->Position.x) / 4096.f,
+                    (OutVector[1] - RenderObjectIterator->Position.y) / 4096.f,
+                    (OutVector[2] - RenderObjectIterator->Position.z) / 4096.f
             );
             fwrite(Buffer,strlen(Buffer),1,OutFile); 
         }

@@ -98,7 +98,7 @@ void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
         for( i = Iterator->Header.NumVertices - 1; i >= 0 ; i-- ) {
             NewPos = Vec3_Build(Iterator->Vertex[i].Position.x,Iterator->Vertex[i].Position.y,Iterator->Vertex[i].Position.z);
             Vec_RotateXAxis(DEGTORAD(180.f),&NewPos);
-            sprintf(Buffer,"v %f %f %f %f %f %f\n",NewPos.x,NewPos.y,NewPos.z,
+            sprintf(Buffer,"v %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
                 Iterator->Color[i].r / 255.f,Iterator->Color[i].g / 255.f,Iterator->Color[i].b / 255.f
             );
             fwrite(Buffer,strlen(Buffer),1,OutFile);            
