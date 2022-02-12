@@ -65,11 +65,12 @@ int GetAlphaValue(CLUTColor_t Color)
     int Result;    
     
     if( Color.STP ) {
-        if( IsClutColorZero(Color) ) {
-            Result = 255;
-        } else {
-            Result = 200;
-        }
+        Result = 255;
+//         if( IsClutColorZero(Color) ) {
+//             Result = 255;
+//         } else {
+//             Result = 200;
+//         }
     } else {
         if( IsClutColorZero(Color) ) {
             Result = 0;
