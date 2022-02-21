@@ -186,91 +186,12 @@ TSPDynamicFaceData_t *GetDynamicDataByFaceIndex(TSP_t *TSP,int FaceIndex,int Str
     }
     return NULL;
 }
-void TSPCreateVAO(TSP_t *TSPList)
-{
-    TSP_t *Iterator;
-    float Width = 256.f;
-    float Height = 256.f;
-    int i;
-    float *VertexData;
-    int VertexSize;
-    int VertexPointer;
-    int Stride;
-    int VertexOffset;
-    int TextureOffset;
-    int ColorOffset;
-
-    for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
-        for( i = 0; i < Iterator->Header.NumFaces; i++ ) {
-            Vao_t *Vao;
-            int Vert0 = Iterator->Face[i].V0;
-            int Vert1 = Iterator->Face[i].V1;
-            int Vert2 = Iterator->Face[i].V2;
-
-            float U0 = (((float)Iterator->Face[i].UV0.u)/Width);
-            float V0 = /*255 -*/(((float)Iterator->Face[i].UV0.v) / Height);
-            float U1 = (((float)Iterator->Face[i].UV1.u) / Width);
-            float V1 = /*255 -*/(((float)Iterator->Face[i].UV1.v) /Height);
-            float U2 = (((float)Iterator->Face[i].UV2.u) /Width);
-            float V2 = /*255 -*/(((float)Iterator->Face[i].UV2.v) / Height);
-
-//             int TexturePage = Iterator->Face[i].TSB.AsShort & 0x1F;
-
-            //            XYZ UV RGB
-            Stride = (3 + 2 + 3) * sizeof(float);
-        
-            VertexOffset = 0;
-            TextureOffset = 3;
-            ColorOffset = 5;
-        
-            VertexSize = Stride;
-            VertexData = malloc(VertexSize * 3/** sizeof(float)*/);
-            VertexPointer = 0;
-                    
-            VertexData[VertexPointer] =   Iterator->Vertex[Vert0].Position.x;
-            VertexData[VertexPointer+1] = Iterator->Vertex[Vert0].Position.y;
-            VertexData[VertexPointer+2] = Iterator->Vertex[Vert0].Position.z;
-            VertexData[VertexPointer+3] = U0;
-            VertexData[VertexPointer+4] = V0;
-            VertexData[VertexPointer+5] = Iterator->Color[Vert0].r / 255.f;
-            VertexData[VertexPointer+6] = Iterator->Color[Vert0].g / 255.f;
-            VertexData[VertexPointer+7] = Iterator->Color[Vert0].b / 255.f;
-            VertexPointer += 8;
-            
-            VertexData[VertexPointer] =   Iterator->Vertex[Vert1].Position.x;
-            VertexData[VertexPointer+1] = Iterator->Vertex[Vert1].Position.y;
-            VertexData[VertexPointer+2] = Iterator->Vertex[Vert1].Position.z;
-            VertexData[VertexPointer+3] = U1;
-            VertexData[VertexPointer+4] = V1;
-            VertexData[VertexPointer+5] = Iterator->Color[Vert1].r / 255.f;
-            VertexData[VertexPointer+6] = Iterator->Color[Vert1].g / 255.f;
-            VertexData[VertexPointer+7] = Iterator->Color[Vert1].b / 255.f;
-            VertexPointer += 8;
-            
-            VertexData[VertexPointer] =   Iterator->Vertex[Vert2].Position.x;
-            VertexData[VertexPointer+1] = Iterator->Vertex[Vert2].Position.y;
-            VertexData[VertexPointer+2] = Iterator->Vertex[Vert2].Position.z;
-            VertexData[VertexPointer+3] = U2;
-            VertexData[VertexPointer+4] = V2;
-            VertexData[VertexPointer+5] = Iterator->Color[Vert2].r / 255.f;
-            VertexData[VertexPointer+6] = Iterator->Color[Vert2].g / 255.f;
-            VertexData[VertexPointer+7] = Iterator->Color[Vert2].b / 255.f;
-            VertexPointer += 8;
-            
-            Vao = VaoInitXYZUVRGB(VertexData,VertexSize * 3,Stride,VertexOffset,TextureOffset,ColorOffset,Iterator->Face[i].TSB.AsShort,-1);            
-            Vao->Next = Iterator->VaoList;
-            Iterator->VaoList = Vao;
-            free(VertexData);
-        }
-    }
-
-}
 
 void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
 {
     TSP_t *Iterator;
-    float Width = 256.f;
-    float Height = 256.f;
+    float Width;
+    float Height;
     int VertexOffset;
     int TextureOffset;
     int ColorOffset;
@@ -291,6 +212,8 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
     short CBA;
     TSPDynamicFaceData_t *DynamicData;
     Vao_t *Vao;
+    Width = Level->VRAM->Page.Width;
+    Height = Level->VRAM->Page.Height;
     
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
@@ -298,13 +221,21 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                 TotalFaceCount += Iterator->Node[i].NumFaces;
                 int Base = Iterator->Node[i].BaseData / sizeof(TSPFace_t);
                 int Target = Base + Iterator->Node[i].NumFaces;
+               //            XYZ UV RGB
+                Stride = (3 + 2 + 3) * sizeof(float);
+                
+                VertexOffset = 0;
+                TextureOffset = 3;
+                ColorOffset = 5;
+                
+                VertexSize = Stride * 3 * Target;
+                VertexData = malloc(VertexSize);
+                VertexPointer = 0;
+                
                 for( j = Base; j < Target; j++ ) {
                     int ColorMode = (Iterator->Face[j].TSB.AsShort & 0x80) >> 7;
                     int VRAMPage = Iterator->Face[j].TSB.AsShort & 0x1F;
                     int ABRRate = (Iterator->Face[j].TSB.AsShort & 0x60) >> 5;
-                    if( VRAMPage != 8 || ColorMode != 1 ) {
-//                         continue;
-                    }
                     DPrintf("TSB is %u\n",Iterator->Face[j].TSB.AsShort);
                     DPrintf("Expected VRam Page:%i\n",VRAMPage);
                     DPrintf("Expected Color Mode:%i\n",ColorMode);
@@ -324,12 +255,12 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
 //                         TSB = DynamicData->TSB;
 //                         CBA = DynamicData->CBA;
 //                     } else {
-                        U0 = (((float)Iterator->Face[j].UV0.u)/Width);
-                        V0 = /*255 -*/(((float)Iterator->Face[j].UV0.v) / Height);
-                        U1 = (((float)Iterator->Face[j].UV1.u) / Width);
-                        V1 = /*255 -*/(((float)Iterator->Face[j].UV1.v) /Height);
-                        U2 = (((float)Iterator->Face[j].UV2.u) /Width);
-                        V2 = /*255 -*/(((float)Iterator->Face[j].UV2.v) / Height);
+                        U0 = (((float)Iterator->Face[j].UV0.u + VRAMGetTexturePageX(VRAMPage))/Width);
+                        V0 = /*255 -*/(((float)Iterator->Face[j].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / Height);
+                        U1 = (((float)Iterator->Face[j].UV1.u + VRAMGetTexturePageX(VRAMPage)) / Width);
+                        V1 = /*255 -*/(((float)Iterator->Face[j].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) /Height);
+                        U2 = (((float)Iterator->Face[j].UV2.u + VRAMGetTexturePageX(VRAMPage)) /Width);
+                        V2 = /*255 -*/(((float)Iterator->Face[j].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / Height);
                         TSB = Iterator->Face[j].TSB.AsShort;
                         CBA = Iterator->Face[j].CBA.AsShort;
 //                     }
@@ -339,16 +270,7 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                             Iterator->Face[j].UV0.u,Iterator->Face[j].UV0.v,
                             Iterator->Face[j].UV1.u,Iterator->Face[j].UV1.v,
                             Iterator->Face[j].UV2.u,Iterator->Face[j].UV2.v);
-            //            XYZ UV RGB
-                    Stride = (3 + 2 + 3) * sizeof(float);
-                
-                    VertexOffset = 0;
-                    TextureOffset = 3;
-                    ColorOffset = 5;
-                
-                    VertexSize = Stride;
-                    VertexData = malloc(VertexSize * 3/** sizeof(float)*/);
-                    VertexPointer = 0;
+
                             
                     VertexData[VertexPointer] =   Iterator->Vertex[Vert0].Position.x;
                     VertexData[VertexPointer+1] = Iterator->Vertex[Vert0].Position.y;
@@ -380,12 +302,12 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                     VertexData[VertexPointer+7] = Iterator->Color[Vert2].b / 255.f;
                     VertexPointer += 8;
                     
-                    Vao = VaoInitXYZUVRGB(VertexData,VertexSize * 3,Stride,VertexOffset,TextureOffset,ColorOffset,
-                                          TSB,CBA);            
-                    Vao->Next = Iterator->Node[i].LeafFaceListVao;
-                    Iterator->Node[i].LeafFaceListVao = Vao;
-                    free(VertexData);                    
                 }
+                Vao = VaoInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,
+                                          TSB,CBA,Target * 3);
+                Vao->Next = Iterator->Node[i].LeafFaceListVao;
+                Iterator->Node[i].LeafFaceListVao = Vao;
+                free(VertexData);                    
             }
             
             //       XYZ
@@ -494,80 +416,6 @@ void TSPCreateCollisionVAO(TSP_t *TSPList)
         }
     }
 
-}
-
-void DrawTSP(TSP_t *TSP)
-{
-#if 1
-    GL_Shader_t *Shader;
-    Vao_t *Iterator;
-    int MVPMatrixID;
-    
-    Shader = Shader_Cache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
-    glUseProgram(Shader->ProgramID);
-
-    MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-    glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-    
-    if( Level->Settings.WireFrame ) {
-       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    } else {
-       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
-
-    for( Iterator = TSP->VaoList; Iterator; Iterator = Iterator->Next ) {
-//         int VRamPage = Iterator->TSB & 0x1F;
-        int ColorMode = (Iterator->TSB & 0x80) >> 7;
-        int VRAMPage = Iterator->TSB & 0x1F;
-//         int ABRRate = (Iterator->TSB & 0x60) >> 5;
-#if 1
-        //DO THIS ONLY IF ABE IS ENABLED...
-//         int Trans = (Iterator->TSB & 0x30) >> 4;
-//         glEnable(GL_BLEND);
-//         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//         if( ABRRate == 0 ) {
-//             glBlendEquation(GL_FUNC_ADD);
-//             glBlendColor(1.0, 1.0, 1.0, 0.5);
-//             glBlendFunc(GL_CONSTANT_ALPHA, GL_CONSTANT_ALPHA);
-//         } else if( ABRRate == 1 ) {
-//             glBlendEquation(GL_FUNC_ADD);
-//             glBlendFunc(GL_ONE, GL_ONE);
-//         } else if( ABRRate == 2 ) {
-//             glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
-//             glBlendFunc(GL_ONE, GL_ONE);
-//         } else if ( ABRRate == 3 ) {
-//             glBlendEquation(GL_FUNC_ADD);
-//             glBlendColor(1.0, 1.0, 1.0, 0.25);
-//             glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE);
-//         } else {
-//             glDisable(GL_BLEND);
-//         }
-#endif
-        
-        if( ColorMode == 1) {
-            glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page8Bit[VRAMPage].TextureID);
-        } else {
-            glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page4Bit[VRAMPage].TextureID);
-        }
-        glBindVertexArray(Iterator->VaoID[0]);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
-        glBindTexture(GL_TEXTURE_2D,0);
-        glDisable(GL_BLEND);
-    }
-    glUseProgram(0);
-#endif
-
-/*
-    glBindBuffer(GL_ARRAY_BUFFER, VboID);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 5*sizeof(GLfloat), NULL);
-    glClientActiveTexture(GL_TEXTURE0);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glTexCoordPointer(2, GL_FLOAT, 5*sizeof(GLfloat), ((char*)NULL)+3*sizeof(GLfloat) );
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);*/
 }
 
 Vec3_t Vec3_FromTSPVec3(TSPVec3_t In)
@@ -697,22 +545,22 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
             } else {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
+            glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page.TextureID);
 
             for( Iterator = Node->LeafFaceListVao; Iterator; Iterator = Iterator->Next ) {
-                int VRAMPage = Iterator->TSB & 0x1F;
                 
 //         int Trans = (Iterator->TextureID & 0x30) >> 4;
 //         if( Trans == 0 ) {
-                if( (Iterator->TSB & 0xC0) >> 7 == 1) {
-                    glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page8Bit[VRAMPage].TextureID);
-                } else {
-                    glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page4Bit[VRAMPage].TextureID);
-                }
+//                 if( (Iterator->TSB & 0xC0) >> 7 == 1) {
+//                     glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page8Bit[VRAMPage].TextureID);
+//                 } else {
+//                     glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page4Bit[VRAMPage].TextureID);
+//                 }
                 glBindVertexArray(Iterator->VaoID[0]);
-                glDrawArrays(GL_TRIANGLES, 0, 3);
+                glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
                 glBindVertexArray(0);
-                glBindTexture(GL_TEXTURE_2D,0);
             }
+            glBindTexture(GL_TEXTURE_2D,0);
             glDisable(GL_BLEND);
             glUseProgram(0);
         }

@@ -29,13 +29,13 @@ typedef struct Vao_s
     int          TextureID;
     short        TSB;
 //     float       *Data;
-    
+    int          Count;
     struct Vao_s *Next;
 } Vao_t;
 
 // 3D
-Vao_t *VaoInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID);
-Vao_t *VaoInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID);
+Vao_t *VaoInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,int Count);
+Vao_t *VaoInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID,int Count);
 Vao_t *VaoInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset);
 Vao_t *VaoInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset);
 // 3D Indexed

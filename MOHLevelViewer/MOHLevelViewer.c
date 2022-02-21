@@ -1030,7 +1030,6 @@ void LevelLateInit()
 //     DPrintf("OpenGL Version:%s\n",glGetString(GL_VERSION));
     /* TEMP! */
     
-    TSPCreateVAO(Level->TSPList);
     TSPCreateNodeBBoxVAO(Level->TSPList);
     TSPCreateCollisionVAO(Level->TSPList);
     BSDVAOPointList(Level->BSD);

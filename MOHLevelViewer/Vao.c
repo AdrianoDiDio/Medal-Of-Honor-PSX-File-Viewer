@@ -28,7 +28,7 @@ void VaoFree(Vao_t *Vao)
     }
 }
 
-Vao_t *VaoInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID)
+Vao_t *VaoInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,int Count)
 {
     Vao_t *Vao;
     
@@ -52,7 +52,7 @@ Vao_t *VaoInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int 
     Vao->TSB = TSB;
     Vao->TextureID = TextureID;
     Vao->Next = NULL;
-    
+    Vao->Count = Count;
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
     glBindVertexArray(0);
@@ -153,7 +153,7 @@ Vao_t *VaoInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int Text
     return Vao;
 }
 
-Vao_t *VaoInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID)
+Vao_t *VaoInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID,int Count)
 {
     Vao_t *Vao;
     
@@ -174,6 +174,7 @@ Vao_t *VaoInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int Tex
 
     Vao->TSB = TSB;
     Vao->TextureID = TextureID;
+    Vao->Count = Count;
     Vao->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);

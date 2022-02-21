@@ -556,7 +556,7 @@ void BSDVAOTexturedObjectList(BSD_t *BSD)
             VertexData[VertexPointer+4] = V2;
             VertexPointer += 5;
             
-            Vao = VaoInitXYZUV(VertexData,VertexSize * 3,Stride,VertexOffset,TextureOffset,BSD->RenderObjectList[i].Face[j].TexInfo,-1);
+            Vao = VaoInitXYZUV(VertexData,VertexSize * 3,Stride,VertexOffset,TextureOffset,BSD->RenderObjectList[i].Face[j].TexInfo,-1,-1);
             Vao->Next = BSD->RenderObjectList[i].FaceVao;
             BSD->RenderObjectList[i].FaceVao = Vao;
             free(VertexData);
@@ -731,8 +731,8 @@ void BSDShowCaseRenderObject(BSD_t *BSD)
 
 void BSDSetNodeVao(BSD_t *BSD,BSDRenderObject_t *Object)
 {
-    float Width = 255.f;
-    float Height = 255.f;
+    float Width;
+    float Height;
     BSDRenderObject_t *RenderObjectData;
     int RenderObjectIndex;
     float *VertexData;
@@ -742,7 +742,8 @@ void BSDSetNodeVao(BSD_t *BSD,BSDRenderObject_t *Object)
     int VertexOffset;
     int TextureOffset;
     int i;
-    
+    Vao_t *Vao;
+
 
     RenderObjectIndex = BSDGetRenderObjectIndexByID(BSD,Object->RenderObjectID);
     if( RenderObjectIndex == -1 ) {
@@ -755,8 +756,17 @@ void BSDSetNodeVao(BSD_t *BSD,BSDRenderObject_t *Object)
         DPrintf("Failed setting vao...Invalid NumFace %i\n",RenderObjectData->NumFaces);
         return;
     }
+    
+    Width = Level->VRAM->Page.Width;
+    Height = Level->VRAM->Page.Height;
+    
+    Stride = (3 + 2) * sizeof(float);
+    VertexSize = Stride * 3 * RenderObjectData->NumFaces;
+    VertexData = malloc(VertexSize);
+    VertexPointer = 0;
+    VertexOffset = 0;
+    TextureOffset = 3;
     for( i = 0; i < RenderObjectData->NumFaces; i++ ) {
-        Vao_t *Vao;
         unsigned short Vert0;
         unsigned short Vert1;
         unsigned short Vert2;
@@ -765,21 +775,15 @@ void BSDSetNodeVao(BSD_t *BSD,BSDRenderObject_t *Object)
         Vert1 = (RenderObjectData->Face[i].VData & 0x3fc00) >> 10;
         Vert2 = (RenderObjectData->Face[i].VData & 0xFF00000 ) >> 20;
 
-        float U0 = (((float)RenderObjectData->Face[i].UV0.u)/Width);
-        float V0 = /*255 -*/(((float)RenderObjectData->Face[i].UV0.v) / Height);
-        float U1 = (((float)RenderObjectData->Face[i].UV1.u) / Width);
-        float V1 = /*255 -*/(((float)RenderObjectData->Face[i].UV1.v) /Height);
-        float U2 = (((float)RenderObjectData->Face[i].UV2.u) /Width);
-        float V2 = /*255 -*/(((float)RenderObjectData->Face[i].UV2.v) / Height);
-            
-        Stride = (3 + 2) * sizeof(float);
-    
-        VertexOffset = 0;
-        TextureOffset = 3;
-    
-        VertexSize = Stride;
-        VertexData = malloc(VertexSize * 3/** sizeof(float)*/);
-        VertexPointer = 0;
+        int VRAMPage = RenderObjectData->Face[i].TexInfo & 0x1F;
+        int ColorMode = (RenderObjectData->Face[i].TexInfo & 0xC0) >> 7;
+        float U0 = (((float)RenderObjectData->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/Width);
+        float V0 = /*255 -*/(((float)RenderObjectData->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / Height);
+        float U1 = (((float)RenderObjectData->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / Width);
+        float V1 = /*255 -*/(((float)RenderObjectData->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) /Height);
+        float U2 = (((float)RenderObjectData->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /Width);
+        float V2 = /*255 -*/(((float)RenderObjectData->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / Height);
+
                     
         VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert0].x;
         VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert0].y;
@@ -801,11 +805,11 @@ void BSDSetNodeVao(BSD_t *BSD,BSDRenderObject_t *Object)
         VertexData[VertexPointer+3] = U2;
         VertexData[VertexPointer+4] = V2;
         VertexPointer += 5;
-        Vao = VaoInitXYZUV(VertexData,VertexSize * 3,Stride,VertexOffset,TextureOffset,RenderObjectData->Face[i].TexInfo,-1);
-        Vao->Next = Object->FaceVao;
-        Object->FaceVao = Vao;
-        free(VertexData);
     }
+    Vao = VaoInitXYZUV(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,RenderObjectData->Face[i].TexInfo,-1,RenderObjectData->NumFaces * 3);
+    Vao->Next = Object->FaceVao;
+    Object->FaceVao = Vao;
+    free(VertexData);
 }
 
 void BSDSpawnNodes(BSD_t *BSD)
@@ -1417,9 +1421,11 @@ void BSDDraw(Level_t *Level)
     
     
     if( Level->Settings.DrawBSDRenderObjects ) {
-            Shader = Shader_Cache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
-            glUseProgram(Shader->ProgramID);
-            MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+        Shader = Shader_Cache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
+        glUseProgram(Shader->ProgramID);
+        MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+        glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page.TextureID);
+
         for( RenderObjectIterator = Level->BSD->RenderObjectRealList; RenderObjectIterator; 
             RenderObjectIterator = RenderObjectIterator->Next ) {
             vec3 temp;
@@ -1467,20 +1473,12 @@ void BSDDraw(Level_t *Level)
             glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
 
             for( VaoIterator = RenderObjectIterator->FaceVao; VaoIterator; VaoIterator = VaoIterator->Next ) {
-                int VRAMPage = VaoIterator->TSB & 0x1F;
-                int ColorMode = (VaoIterator->TSB & 0xC0) >> 7;
-                
-                if( ColorMode == 1 ) {
-                    glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page8Bit[VRAMPage].TextureID);
-                } else {
-                    glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page4Bit[VRAMPage].TextureID);
-                }
                 glBindVertexArray(VaoIterator->VaoID[0]);
-                glDrawArrays(GL_TRIANGLES, 0, 3);
+                glDrawArrays(GL_TRIANGLES, 0, VaoIterator->Count);
                 glBindVertexArray(0);
-                glBindTexture(GL_TEXTURE_2D,0);
             }
         }
+        glBindTexture(GL_TEXTURE_2D,0);
         glUseProgram(0);
     }
     
