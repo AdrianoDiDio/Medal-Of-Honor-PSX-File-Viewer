@@ -180,7 +180,7 @@ unsigned short NumVertex;
 
 typedef struct BSDRenderObjectBlock_s {
     int NumRenderObject;
-    BSDRenderObjectElement_t *RenderObjectList;
+    BSDRenderObjectElement_t *RenderObject;
 } BSDRenderObjectBlock_t;
 
 typedef struct BSDEntry_s {
@@ -266,19 +266,28 @@ typedef struct BSDFace_s {
 
 //TODO: CLEANUP
 typedef struct BSDRenderObject_s {
-    int             Type;
+    BSDRenderObjectElement_t *Data;
+//     int             Type;
     BSDPosition_t  *Vertex;
     BSDFace_t      *Face;
     int             NumFaces;
-    Vao_t          *Vao;
-    Vao_t          *FaceVao;
+    Vao_t          *VAO;
+//     Vao_t          *FaceVao;
     Vec3_t          Position;
-    Vec3_t          Rotation;
-    Vec3_t          Scale;
-
-    unsigned int    RenderObjectID;
-    struct BSDRenderObject_s *Next;
+//     Vec3_t          Rotation;
+//     Vec3_t          Scale;
+// 
+//     unsigned int    RenderObjectID;
+//     struct BSDRenderObject_s *Next;
 } BSDRenderObject_t;
+
+typedef struct BSDRenderObjectDrawable_s {
+    int RenderObjectIndex;
+    Vec3_t Position;
+    Vec3_t Rotation;
+    Vec3_t Scale;
+    struct BSDRenderObjectDrawable_s *Next;
+} BSDRenderObjectDrawable_t;
 
 typedef struct BSDProperty_s {
     Byte NumNodes;
@@ -298,10 +307,11 @@ typedef struct BSD_s {
     BSDRenderObjectBlock_t RenderObjectTable;
     BSDNodeInfo_t NodeData;
     BSDPropertySetFile_t PropertySetFile;
-    BSDRenderObject_t *RenderObjectList;
     
-    BSDRenderObject_t *RenderObjectRealList;
-    BSDRenderObject_t *RenderObjectShowCaseList;
+    BSDRenderObject_t *RenderObjectList;
+    BSDRenderObjectDrawable_t *RenderObjectDrawableList;
+//     BSDRenderObject_t *RenderObjectRealList;
+//     BSDRenderObject_t *RenderObjectShowCaseList;
     //
     Vao_t       *NodeVao;
     Vao_t       *RenderObjectPointVao;
@@ -319,12 +329,7 @@ void    BSDCheckCompartmentTrigger(Level_t *Level,Vec3_t CameraPosition);
 char   *BSDNodeGetEnumStringFromNodeID(unsigned int NodeID);
 char   *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
 Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD);
-void    BSDVAOBoxList(BSD_t *BSD);
-void    BSDVAOPointList(BSD_t *BSD);
-void    BSDVAOObjectList(BSD_t *BSD);
-void    BSDVAOTexturedObjectList(BSD_t *BSD);
-void    BSDSpawnNodes(BSD_t *BSD);
-void    BSDSpawnShowCase(BSD_t *BSD);
+void    BSDCreateVAOs(BSD_t *BSD);
 void    BSDDraw(Level_t *Level);
 unsigned int BSDNodeIDToRenderObjectID(unsigned int NodeID);
 unsigned int BSDMPNodeIDToRenderObjectID(unsigned int NodeID);

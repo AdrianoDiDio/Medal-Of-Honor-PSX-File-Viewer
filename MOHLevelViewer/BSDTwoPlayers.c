@@ -23,7 +23,7 @@ void BSD2PFree(BSD2P_t *BSD)
 {
     free(BSD->NodeData.Table);
     free(BSD->NodeData.Node);
-    free(BSD->RenderObjectTable.RenderObjectList);
+    free(BSD->RenderObjectTable.RenderObject);
     VaoFree(BSD->NodeVao);
     free(BSD);
 }
@@ -100,32 +100,32 @@ void BSD2PReadRenderObjectChunk(BSD2P_t *BSD,FILE *InFile)
     StartinUAt = GetCurrentFilePosition(InFile);
     DPrintf("BSD2PReadRenderObjectChunk: Reading %i RenderObject Elements...\n",BSD->RenderObjectTable.NumRenderObject);
     assert(sizeof(BSDRenderObjectElement_t) == 256);
-    BSD->RenderObjectTable.RenderObjectList = malloc(BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObjectElement_t));
+    BSD->RenderObjectTable.RenderObject = malloc(BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObjectElement_t));
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
         assert(GetCurrentFilePosition(InFile) == StartinUAt + (i * 256));
         DPrintf("BSD2PReadRenderObjectChunk: Reading RenderObject Element %i at %i\n",i,GetCurrentFilePosition(InFile));
-        fread(&BSD->RenderObjectTable.RenderObjectList[i],sizeof(BSD->RenderObjectTable.RenderObjectList[i]),1,InFile);
-        DPrintf("BSD2PReadRenderObjectChunk: RenderObject ID:%u\n",BSD->RenderObjectTable.RenderObjectList[i].ID);
-        DPrintf("BSD2PReadRenderObjectChunk: RenderObject Type:%i | %s\n",BSD->RenderObjectTable.RenderObjectList[i].Type,
-            BSDRenderObjectGetEnumStringFromType(BSD->RenderObjectTable.RenderObjectList[i].Type)
+        fread(&BSD->RenderObjectTable.RenderObject[i],sizeof(BSD->RenderObjectTable.RenderObject[i]),1,InFile);
+        DPrintf("BSD2PReadRenderObjectChunk: RenderObject ID:%u\n",BSD->RenderObjectTable.RenderObject[i].ID);
+        DPrintf("BSD2PReadRenderObjectChunk: RenderObject Type:%i | %s\n",BSD->RenderObjectTable.RenderObject[i].Type,
+            BSDRenderObjectGetEnumStringFromType(BSD->RenderObjectTable.RenderObject[i].Type)
         );
         DPrintf("BSD2PReadRenderObjectChunk: RenderObject Element Vertex Offset: %i (%i)\n",
-                BSD->RenderObjectTable.RenderObjectList[i].VertOffset,
-                BSD->RenderObjectTable.RenderObjectList[i].VertOffset + 2048);
-        DPrintf("BSD2PReadRenderObjectChunk: RenderObject Element NumVertex: %i\n",BSD->RenderObjectTable.RenderObjectList[i].NumVertex);
+                BSD->RenderObjectTable.RenderObject[i].VertOffset,
+                BSD->RenderObjectTable.RenderObject[i].VertOffset + 2048);
+        DPrintf("BSD2PReadRenderObjectChunk: RenderObject Element NumVertex: %i\n",BSD->RenderObjectTable.RenderObject[i].NumVertex);
         //Those offset are relative to the EntryTable.
         DPrintf("BSD2PReadRenderObjectChunk: RenderObject Element UnknownOffset1: %i (%i)\n",
-                BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset1,
-                BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset1 + 2048);
+                BSD->RenderObjectTable.RenderObject[i].UnknownOffset1,
+                BSD->RenderObjectTable.RenderObject[i].UnknownOffset1 + 2048);
         DPrintf("BSD2PReadRenderObjectChunk: RenderObject Element UnknownOffset2: %i (%i)\n",
-                BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset2,
-                BSD->RenderObjectTable.RenderObjectList[i].UnknownOffset2 + 2048);
+                BSD->RenderObjectTable.RenderObject[i].UnknownOffset2,
+                BSD->RenderObjectTable.RenderObject[i].UnknownOffset2 + 2048);
         DPrintf("BSD2PReadRenderObjectChunk: RenderObject Element RootBoneOffset: %i (%i)\n",
-                BSD->RenderObjectTable.RenderObjectList[i].RootBoneOffset,
-                BSD->RenderObjectTable.RenderObjectList[i].RootBoneOffset + 2048);
+                BSD->RenderObjectTable.RenderObject[i].RootBoneOffset,
+                BSD->RenderObjectTable.RenderObject[i].RootBoneOffset + 2048);
         DPrintf("BSD2PReadRenderObjectChunk: RenderObject Element FaceOffset: %i (%i)\n",
-                BSD->RenderObjectTable.RenderObjectList[i].FaceOffset,
-                BSD->RenderObjectTable.RenderObjectList[i].FaceOffset + 2048);
+                BSD->RenderObjectTable.RenderObject[i].FaceOffset,
+                BSD->RenderObjectTable.RenderObject[i].FaceOffset + 2048);
     }
     return;
 }

@@ -1032,12 +1032,8 @@ void LevelLateInit()
     
     TSPCreateNodeBBoxVAO(Level->TSPList);
     TSPCreateCollisionVAO(Level->TSPList);
-    BSDVAOPointList(Level->BSD);
+    BSDCreateVAOs(Level->BSD);
     BSD2PVAOPointList(Level->BSDTwoP);
-    BSDVAOObjectList(Level->BSD);
-    BSDVAOTexturedObjectList(Level->BSD);
-    BSDSpawnNodes(Level->BSD);
-    BSDSpawnShowCase(Level->BSD);
     BSDFixRenderObjectPosition(Level);
 }
 void LevelCleanUp()
