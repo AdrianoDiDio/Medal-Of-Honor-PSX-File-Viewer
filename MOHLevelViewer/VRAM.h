@@ -22,7 +22,6 @@
 
 
 typedef struct VRamPage_s {
-    int ID;
     unsigned int TextureID;
     SDL_Surface *Surface;
     Byte *Data; //RGB Pixel value.
@@ -31,10 +30,7 @@ typedef struct VRamPage_s {
 } VRAMPage_t;
 
 typedef struct VRam_s {
-    VRAMPage_t Page4Bit[32];
-    VRAMPage_t Page8Bit[32];
     VRAMPage_t Page;
-    int Size;
 } VRAM_t;
 
 VRAM_t *VRAMInit(TIMImage_t *ImageList);

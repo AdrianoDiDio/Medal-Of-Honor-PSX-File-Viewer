@@ -485,7 +485,7 @@ void Sys_VidInit(int Width, int Height, bool Fullscreen)
 void Sys_CheckKeyEvents()
 {
     SDL_Event Event;
-    float CamSpeed = 40.f;
+    float CamSpeed = 80.f;
     while( SDL_PollEvent(&Event) ) {
         switch( Event.type ) {
             case SDL_MOUSEMOTION:
@@ -950,7 +950,7 @@ void DumpLevel(Level_t* Level)
     sprintf(ObjectFile,"%s%s", OutDir,FileName);
     DPrintf("Dumping it...%s\n",ObjectFile);
     OutFile = fopen(ObjectFile,"w");
-    sprintf(MaterialNameTag,"mtllib vram_4_8_bit.mtl\n");
+    sprintf(MaterialNameTag,"mtllib vram.mtl\n");
     fwrite(MaterialNameTag,strlen(MaterialNameTag),1,OutFile);
     TSPDumpDataToFile(Level->TSPList,OutFile);
     BSDDumpDataToFile(Level->BSD,OutFile);

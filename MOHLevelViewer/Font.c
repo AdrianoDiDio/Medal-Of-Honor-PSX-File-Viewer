@@ -70,6 +70,8 @@ void FontLoadChar(Font_t *Font,int CharIndex,float RowX,float RowY)
     float v0;
     float TexWidth;
     float TexHeight;
+    float ImageWidth;
+    float ImageHeight;
     float *VertexData;
     int Stride;
     int DataSize;
@@ -79,10 +81,14 @@ void FontLoadChar(Font_t *Font,int CharIndex,float RowX,float RowY)
     //We need 6 vertices to describe a quad...
     DataSize = Stride * 6;
     
-    u0 = ((float)RowX) / 256.f;
-    v0 = ((float)RowY) / 256.f;
-    TexWidth = ((float)MOH_FONT_CHAR_WIDTH) / 256.f;
-    TexHeight = ((float)MOH_FONT_CHAR_HEIGHT) / 256.f;
+    ImageWidth = Level->VRAM->Page.Width;
+    ImageHeight = Level->VRAM->Page.Height;
+    
+    u0 = ((float)RowX + VRAMGetTexturePageX(MOH_FONT_TEXTURE_VRAM_PAGE)) / ImageWidth;
+    //Color Mode 0 => 4 BPP texture
+    v0 = ((float)RowY + VRAMGetTexturePageY(MOH_FONT_TEXTURE_VRAM_PAGE,0)) / ImageHeight;
+    TexWidth = ((float)MOH_FONT_CHAR_WIDTH) / ImageWidth;
+    TexHeight = ((float)MOH_FONT_CHAR_HEIGHT) / ImageHeight;
     
     VertexData = malloc(FontGetStride() * 6/** sizeof(float)*/);
     VertexPointer = 0;
@@ -159,7 +165,6 @@ void FontDrawChar(char c,float x,float y,Color_t Color)
     glm_translate(VidConf.ModelViewMatrix,temp);
     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
     glUniformMatrix4fv(OrthoMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-    glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page4Bit[MOH_FONT_TEXTURE_VRAM_PAGE].TextureID);
     CharIndex = (int) c;
     glBindVertexArray(Level->Font->Characters[ASCII_To_MOH_Table[CharIndex]]->VaoID[0]);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -175,7 +180,7 @@ void FontDrawString(Level_t *Level,char *String,float x,float y,Color_t Color)
     currentX = x;
     
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
+    glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page.TextureID);
     while( *String ) {
         if( *String == ' ' ) {
             currentX += Spacing;
@@ -186,6 +191,7 @@ void FontDrawString(Level_t *Level,char *String,float x,float y,Color_t Color)
         currentX += Spacing;
         String++;
     }
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void FontLoad(Font_t *Font)
