@@ -119,11 +119,11 @@ void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
             int Vert2 = Iterator->Face[i].V2;
             int BaseFaceUV = i * 3;
             int ColorMode = (Iterator->Face[i].TSB.AsShort & 0x80) >> 7;
-            int VRamPage = Iterator->Face[i].TSB.AsShort & 0x1F;
+            int VRAMPage = Iterator->Face[i].TSB.AsShort & 0x1F;
             if( ColorMode == 1 ) {
-                sprintf(Buffer,"usemtl vram_8_page_%i\n",VRamPage);
+                sprintf(Buffer,"usemtl vram_8_page_%i\n",VRAMPage);
             } else {
-                sprintf(Buffer,"usemtl vram_4_page_%i\n",VRamPage);
+                sprintf(Buffer,"usemtl vram_4_page_%i\n",VRAMPage);
             }
             fwrite(Buffer,strlen(Buffer),1,OutFile);
             sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),-(BaseFaceUV+3),-(Vert1+1),-(BaseFaceUV+2),-(Vert2+1),-(BaseFaceUV+1));
@@ -300,13 +300,13 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                 int Target = Base + Iterator->Node[i].NumFaces;
                 for( j = Base; j < Target; j++ ) {
                     int ColorMode = (Iterator->Face[j].TSB.AsShort & 0x80) >> 7;
-                    int VRamPage = Iterator->Face[j].TSB.AsShort & 0x1F;
+                    int VRAMPage = Iterator->Face[j].TSB.AsShort & 0x1F;
                     int ABRRate = (Iterator->Face[j].TSB.AsShort & 0x60) >> 5;
-                    if( VRamPage != 8 || ColorMode != 1 ) {
+                    if( VRAMPage != 8 || ColorMode != 1 ) {
 //                         continue;
                     }
                     DPrintf("TSB is %u\n",Iterator->Face[j].TSB.AsShort);
-                    DPrintf("Expected VRam Page:%i\n",VRamPage);
+                    DPrintf("Expected VRam Page:%i\n",VRAMPage);
                     DPrintf("Expected Color Mode:%i\n",ColorMode);
                     DPrintf("Expected ABR rate:%i\n",ABRRate);
                     Vert0 = Iterator->Face[j].V0;
@@ -518,7 +518,7 @@ void DrawTSP(TSP_t *TSP)
     for( Iterator = TSP->VaoList; Iterator; Iterator = Iterator->Next ) {
 //         int VRamPage = Iterator->TSB & 0x1F;
         int ColorMode = (Iterator->TSB & 0x80) >> 7;
-        int VRamPage = Iterator->TSB & 0x1F;
+        int VRAMPage = Iterator->TSB & 0x1F;
 //         int ABRRate = (Iterator->TSB & 0x60) >> 5;
 #if 1
         //DO THIS ONLY IF ABE IS ENABLED...
@@ -545,9 +545,9 @@ void DrawTSP(TSP_t *TSP)
 #endif
         
         if( ColorMode == 1) {
-            glBindTexture(GL_TEXTURE_2D, Level->VRam->Page8Bit[VRamPage].TextureID);
+            glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page8Bit[VRAMPage].TextureID);
         } else {
-            glBindTexture(GL_TEXTURE_2D, Level->VRam->Page4Bit[VRamPage].TextureID);
+            glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page4Bit[VRAMPage].TextureID);
         }
         glBindVertexArray(Iterator->VaoID[0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -699,14 +699,14 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
             }
 
             for( Iterator = Node->LeafFaceListVao; Iterator; Iterator = Iterator->Next ) {
-                int VRamPage = Iterator->TSB & 0x1F;
+                int VRAMPage = Iterator->TSB & 0x1F;
                 
 //         int Trans = (Iterator->TextureID & 0x30) >> 4;
 //         if( Trans == 0 ) {
                 if( (Iterator->TSB & 0xC0) >> 7 == 1) {
-                    glBindTexture(GL_TEXTURE_2D, Level->VRam->Page8Bit[VRamPage].TextureID);
+                    glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page8Bit[VRAMPage].TextureID);
                 } else {
-                    glBindTexture(GL_TEXTURE_2D, Level->VRam->Page4Bit[VRamPage].TextureID);
+                    glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page4Bit[VRAMPage].TextureID);
                 }
                 glBindVertexArray(Iterator->VaoID[0]);
                 glDrawArrays(GL_TRIANGLES, 0, 3);

@@ -123,12 +123,12 @@ void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
             Vert0 = (BSD->RenderObjectList[RenderObjectIndex].Face[j].VData & 0xFF);
             Vert1 = (BSD->RenderObjectList[RenderObjectIndex].Face[j].VData & 0x3fc00) >> 10;
             Vert2 = (BSD->RenderObjectList[RenderObjectIndex].Face[j].VData & 0xFF00000 ) >> 20;
-            int VRamPage = BSD->RenderObjectList[RenderObjectIndex].Face[j].TexInfo & 0x1F;
+            int VRAMPage = BSD->RenderObjectList[RenderObjectIndex].Face[j].TexInfo & 0x1F;
             int ColorMode = (BSD->RenderObjectList[RenderObjectIndex].Face[j].TexInfo & 0xC0) >> 7;
             if( ColorMode == 1 ) {
-                sprintf(Buffer,"usemtl vram_8_page_%i\n",VRamPage);
+                sprintf(Buffer,"usemtl vram_8_page_%i\n",VRAMPage);
             } else {
-                sprintf(Buffer,"usemtl vram_4_page_%i\n",VRamPage);
+                sprintf(Buffer,"usemtl vram_4_page_%i\n",VRAMPage);
             }
             fwrite(Buffer,strlen(Buffer),1,OutFile);
             BaseFaceUV = j * 3;
@@ -1467,13 +1467,13 @@ void BSDDraw(Level_t *Level)
             glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
 
             for( VaoIterator = RenderObjectIterator->FaceVao; VaoIterator; VaoIterator = VaoIterator->Next ) {
-                int VRamPage = VaoIterator->TSB & 0x1F;
+                int VRAMPage = VaoIterator->TSB & 0x1F;
                 int ColorMode = (VaoIterator->TSB & 0xC0) >> 7;
                 
                 if( ColorMode == 1 ) {
-                    glBindTexture(GL_TEXTURE_2D,Level->VRam->Page8Bit[VRamPage].TextureID);
+                    glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page8Bit[VRAMPage].TextureID);
                 } else {
-                    glBindTexture(GL_TEXTURE_2D,Level->VRam->Page4Bit[VRamPage].TextureID);
+                    glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page4Bit[VRAMPage].TextureID);
                 }
                 glBindVertexArray(VaoIterator->VaoID[0]);
                 glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -1528,13 +1528,13 @@ void BSDDraw(Level_t *Level)
             glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
 
             for( VaoIterator = RenderObjectIterator->FaceVao; VaoIterator; VaoIterator = VaoIterator->Next ) {
-                int VRamPage = VaoIterator->TSB & 0x1F;
+                int VRAMPage = VaoIterator->TSB & 0x1F;
                 int ColorMode = (VaoIterator->TSB & 0xC0) >> 7;
                 
                 if( ColorMode == 1 ) {
-                    glBindTexture(GL_TEXTURE_2D,Level->VRam->Page8Bit[VRamPage].TextureID);
+                    glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page8Bit[VRAMPage].TextureID);
                 } else {
-                    glBindTexture(GL_TEXTURE_2D,Level->VRam->Page4Bit[VRamPage].TextureID);
+                    glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page4Bit[VRAMPage].TextureID);
                 }
                 glBindVertexArray(VaoIterator->VaoID[0]);
                 glDrawArrays(GL_TRIANGLES, 0, 3);

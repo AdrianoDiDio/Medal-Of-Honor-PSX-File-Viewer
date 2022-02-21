@@ -954,7 +954,7 @@ void DumpLevel(Level_t* Level)
     fwrite(MaterialNameTag,strlen(MaterialNameTag),1,OutFile);
     TSPDumpDataToFile(Level->TSPList,OutFile);
     BSDDumpDataToFile(Level->BSD,OutFile);
-    VRAMDumpDataToFile(Level->VRam,OutDir);
+    VRAMDumpDataToFile(Level->VRAM,OutDir);
     fclose(OutFile);
 }
 
@@ -969,7 +969,7 @@ bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
     }
     Level = malloc(sizeof(Level_t));
     Level->Font = NULL;
-    Level->VRam = NULL;
+    Level->VRAM = NULL;
     Level->TSPList = NULL;
     Level->ImageList = NULL;
     SetDefaultSettings(Level);
@@ -1025,7 +1025,7 @@ bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
 void LevelLateInit()
 {
     ShaderManagerInit();
-    Level->VRam = VRamInit(Level->ImageList);
+    Level->VRAM = VRAMInit(Level->ImageList);
     Level->Font = FontInit();
 //     DPrintf("OpenGL Version:%s\n",glGetString(GL_VERSION));
     /* TEMP! */
@@ -1047,7 +1047,7 @@ void LevelCleanUp()
     BSD2PFree(Level->BSDTwoP);
     TSPFreeList(Level->TSPList);
     TimImageListFree(Level->ImageList);
-    free(Level->VRam);
+    free(Level->VRAM);
     FontFree(Level->Font);
     free(Level);
 }

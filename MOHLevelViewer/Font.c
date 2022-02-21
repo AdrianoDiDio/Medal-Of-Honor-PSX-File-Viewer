@@ -159,7 +159,7 @@ void FontDrawChar(char c,float x,float y,Color_t Color)
     glm_translate(VidConf.ModelViewMatrix,temp);
     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
     glUniformMatrix4fv(OrthoMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-    glBindTexture(GL_TEXTURE_2D, Level->VRam->Page4Bit[MOH_FONT_TEXTURE_VRAM_PAGE].TextureID);
+    glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page4Bit[MOH_FONT_TEXTURE_VRAM_PAGE].TextureID);
     CharIndex = (int) c;
     glBindVertexArray(Level->Font->Characters[ASCII_To_MOH_Table[CharIndex]]->VaoID[0]);
     glDrawArrays(GL_TRIANGLES, 0, 6);

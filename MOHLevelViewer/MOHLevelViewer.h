@@ -40,7 +40,7 @@
 #include "ShaderManager.h"
 #include "Vao.h"
 #include "Tim.h"
-#include "VRam.h"
+#include "VRAM.h"
 #include "Font.h"
 #include "TSP.h"
 #include "BSD.h"
@@ -164,7 +164,7 @@ typedef struct Level_s {
     BSD2P_t *BSDTwoP;
     TSP_t  *TSPList;
     TIMImage_t *ImageList;
-    VRam_t *VRam;
+    VRAM_t *VRAM;
     Font_t *Font;
     LevelSettings_t Settings;
     // At any time there can only be 4 tsp to be rendered.

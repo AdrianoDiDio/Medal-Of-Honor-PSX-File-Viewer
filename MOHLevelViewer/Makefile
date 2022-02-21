@@ -2,7 +2,7 @@
 CC= gcc
 CFLAGS=-Wall
 
-Obj = ShaderManager.o Vao.o TSP.o Tim.o Font.o BSD.o BSDTwoPlayers.o VRam.o MOHLevelViewer.o
+Obj = ShaderManager.o Vao.o TSP.o Tim.o Font.o BSD.o BSDTwoPlayers.o VRAM.o MOHLevelViewer.o
 
 
 ifeq ($(OS),Windows_NT)
