@@ -19,6 +19,11 @@
 #ifndef __TSPVIEWER_H_
 #define __TSPVIEWER_H_
 
+typedef enum {
+    TSP_VERSION_MOH = 1,
+    TSP_VERSION_MOH_UNDERGROUND = 3
+} TSPVersion;
+
 typedef struct TSPVec3_s {
     short x;
     short y;

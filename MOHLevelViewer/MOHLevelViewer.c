@@ -960,9 +960,7 @@ void DumpLevel(Level_t* Level)
 
 bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
 {
-    TSP_t *TSP;
     char Buffer[512];
-    int i;
     
     if( Level != NULL ) {
         free(Level);
@@ -988,25 +986,17 @@ bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
     snprintf(Buffer,sizeof(Buffer),"%s/%i_%i0.TAF",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 //     snprintf(Buffer,sizeof(Buffer),"%s/DATA/TWOPLAYR/PLAYERS/B/GI_P1.TAF",Level->BasePath);
     Level->ImageList = GetAllTimImages(Buffer);
-    //Step.2 Load the BSD file.
-    snprintf(Buffer,sizeof(Buffer),"%s/%i_%i.BSD",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
-    Level->BSD = BSDLoad(Buffer,Level->MissionNumber);
-    if( !Level->BSD ) {
-        DPrintf("Couldn't load BSD...aborting.\n");
+    //Step.2 Load the BSD file and also load the TSP one.
+    if( LoadLevel(Level) == -1 ) {
+        DPrintf("Failed to LoadLevel\n");
         return false;
     }
-    //Step.3 Load all the TSP file based on the data read from the BSD file.
-    //Note that we are going to load all the tsp file since we do not know 
-    //where in the bsd file it signals to stream/load the next tsp.
-    for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.TargetInitialCompartment; i++ ) {
-       Level->TSPNumberRenderList[i] = i;
-    }
-    for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.NumTSP; i++ ) {
-        snprintf(Buffer,sizeof(Buffer),"%s/TSP0/%i_%i_C%i.TSP",Level->MissionPath,Level->MissionNumber,Level->LevelNumber,i);
-        TSP = TSPLoad(Buffer,i);
-        TSP->Next = Level->TSPList;
-        Level->TSPList = TSP;
-    }
+//     snprintf(Buffer,sizeof(Buffer),"%s/%i_%i.BSD",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
+//     BSDLoad(Buffer,Level);
+//     if( !Level->BSD ) {
+//         DPrintf("Couldn't load BSD...aborting.\n");
+//         return false;
+//     }
     //TESTING PURPOSES ONLY!
     snprintf(Buffer,sizeof(Buffer),"%s/DATA/TWOPLAYR/PLAYERS/B/GI_P1.BSD",Level->BasePath);
     Level->BSDTwoP = BSD2PLoad(Buffer,Level->MissionNumber);
@@ -1017,7 +1007,10 @@ bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
     return true;
     
 }
-
+bool IsLevelMOHUnderground()
+{
+    return Level->TSPList->Header.Version == TSP_VERSION_MOH_UNDERGROUND;
+}
 /*
     Late level initialization for all the subsystems that
     requires a valid OpenGL context.

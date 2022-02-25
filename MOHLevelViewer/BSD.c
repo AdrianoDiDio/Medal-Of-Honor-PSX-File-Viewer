@@ -1424,10 +1424,8 @@ int BSDGetTSPDynamicIndexOffsetFromNodeType(int Type)
     }
 }
 
-BSD_t *BSDLoad(char *FName,int MissionNumber)
+int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
 {
-    FILE *BSDFile;
-    BSD_t *BSD;
     BSDTSPStreamNode_t *StreamNode;
     int i;
     int j;
@@ -1448,42 +1446,7 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
     int NextNodeOffset;
     int DynamicIndexOffset;
     
-    DPrintf("Loading file %s...\n",FName);
-    
-    BSDFile = fopen(FName,"rb");
-    
-    if( BSDFile == NULL ) {
-        DPrintf("Failed opening BSD File.\n");
-        return NULL;
-    }
-    BSD = malloc(sizeof(BSD_t));
-    
-    BSD->TSPStreamNodeList = NULL;
-//     BSD->RenderObjectRealList = NULL;
-    BSD->RenderObjectList = NULL;
-    BSD->RenderObjectDrawableList = NULL;
-//     BSD->RenderObjectShowCaseList = NULL;
-    
-    BSD->NodeVao = NULL;
-    BSD->RenderObjectPointVao = NULL;
-    BSD->NumRenderObjectPoint = 0;
-    
-    assert(sizeof(BSD->Header) == 2048);
-    fread(&BSD->Header,sizeof(BSD->Header),1,BSDFile);
-    DPrintf("Header contains %i(%#02x) element.\n",BSD->Header.NumHeadElements,BSD->Header.NumHeadElements);
-    for( i = 0; i < BSD->Header.NumHeadElements; i++ ) {
-        printf("Got %i(%#02x)(%i)\n",BSD->Header.Sector[i],BSD->Header.Sector[i],BSD->Header.Sector[i] >> 0xb);
-    }
-    //At position 152 after the header we have the SPRITE definitions...
-    //Maybe hud/ammo...
-    fread(&BSD->TSPInfo,sizeof(BSD->TSPInfo),1,BSDFile);
-    DPrintf("Compartment pattern: %s\n",BSD->TSPInfo.TSPPattern);
-    DPrintf("Number of compartments: %i\n",BSD->TSPInfo.NumTSP);
-    DPrintf("TargetInitialCompartment: %i\n",BSD->TSPInfo.TargetInitialCompartment);
-    DPrintf("Starting Compartment: %i\n",BSD->TSPInfo.StartingComparment);
-    DPrintf("u3: %i\n",BSD->TSPInfo.u3);
-    DPrintf("TSP Block ends at %i\n",GetCurrentFilePosition(BSDFile));
-    assert(BSD->TSPInfo.u3 == 0);
+
     fread(&BSD->Unknown,sizeof(BSD->Unknown),1,BSDFile);
     fread(&BSD->PTable.NumElements,sizeof(BSD->PTable.NumElements),1,BSDFile);
     DPrintf("PTable:Reading %i elements\n",BSD->PTable.NumElements);
@@ -1743,9 +1706,78 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
     ParseRenderObjectVertexData(BSD,BSDFile);
     ParseRenderObjectFaceData(BSD,BSDFile);
     fclose(BSDFile);
-    return BSD;
+    return 1;
 }
 
+int LoadLevel(Level_t *Level)
+{
+    TSP_t *TSP;
+    FILE *BSDFile;
+    char Buffer[512];
+    int i;
+    
+    if( !Level ) {
+        DPrintf("LoadLevel:Invalid Level data\n");
+        return -1;
+    }
+    snprintf(Buffer,sizeof(Buffer),"%s/%i_%i.BSD",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
+
+    DPrintf("LoadLevel:Loading BSD file %s...\n",Buffer);
+    
+    BSDFile = fopen(Buffer,"rb");
+    
+    if( BSDFile == NULL ) {
+        DPrintf("LoadLevel:Failed opening BSD File.\n");
+        return -1;
+    }
+    Level->BSD = malloc(sizeof(BSD_t));
+    
+    Level->BSD->TSPStreamNodeList = NULL;
+//     BSD->RenderObjectRealList = NULL;
+    Level->BSD->RenderObjectList = NULL;
+    Level->BSD->RenderObjectDrawableList = NULL;
+//     BSD->RenderObjectShowCaseList = NULL;
+    
+    Level->BSD->NodeVao = NULL;
+    Level->BSD->RenderObjectPointVao = NULL;
+    Level->BSD->NumRenderObjectPoint = 0;
+    
+    assert(sizeof(Level->BSD->Header) == 2048);
+    fread(&Level->BSD->Header,sizeof(Level->BSD->Header),1,BSDFile);
+    DPrintf("LoadLevel: BSD Header contains %i(%#02x) element.\n",Level->BSD->Header.NumHeadElements,Level->BSD->Header.NumHeadElements);
+    for( i = 0; i < Level->BSD->Header.NumHeadElements; i++ ) {
+        printf("LoadLevel:Got %i(%#02x)(%i)\n",Level->BSD->Header.Sector[i],Level->BSD->Header.Sector[i],Level->BSD->Header.Sector[i] >> 0xb);
+    }
+    //At position 152 after the header we have the SPRITE definitions...
+    //Maybe hud/ammo...
+    fread(&Level->BSD->TSPInfo,sizeof(Level->BSD->TSPInfo),1,BSDFile);
+    DPrintf("LoadLevel:Reading TSP info.\n");
+    DPrintf("Compartment pattern: %s\n",Level->BSD->TSPInfo.TSPPattern);
+    DPrintf("Number of compartments: %i\n",Level->BSD->TSPInfo.NumTSP);
+    DPrintf("TargetInitialCompartment: %i\n",Level->BSD->TSPInfo.TargetInitialCompartment);
+    DPrintf("Starting Compartment: %i\n",Level->BSD->TSPInfo.StartingComparment);
+    DPrintf("u3: %i\n",Level->BSD->TSPInfo.u3);
+    DPrintf("TSP Block ends at %i\n",GetCurrentFilePosition(BSDFile));
+    assert(Level->BSD->TSPInfo.u3 == 0);
+    
+    //Read the TSP FILES
+    //Step.3 Load all the TSP file based on the data read from the BSD file.
+    //Note that we are going to load all the tsp file since we do not know 
+    //where in the bsd file it signals to stream/load the next tsp.
+    for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.TargetInitialCompartment; i++ ) {
+       Level->TSPNumberRenderList[i] = i;
+    }
+    for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.NumTSP; i++ ) {
+        snprintf(Buffer,sizeof(Buffer),"%s/TSP0/%i_%i_C%i.TSP",Level->MissionPath,Level->MissionNumber,Level->LevelNumber,i);
+        TSP = TSPLoad(Buffer,i);
+        TSP->Next = Level->TSPList;
+        Level->TSPList = TSP;
+    }
+    //Keep on reading BSD
+    DPrintf("LoadLevel: Detected game %s\n",IsLevelMOHUnderground() ? "MOH:Underground" : "MOH");
+    BSDLoad(Level->BSD,Level->MissionNumber,BSDFile);
+    return 1;
+}
 #ifdef __STANDALONE
 int main(int argc,char **argv) {
     FILE *BSDFile;
