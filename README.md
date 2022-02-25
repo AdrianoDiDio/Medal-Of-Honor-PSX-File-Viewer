@@ -13,6 +13,7 @@
       * [Color](#color)
       * [Faces](#faces)
          * [UV Coordinates(UV)](#uv-coordinatesuv)
+         * [Texture Info](#texture-info)
          * [Face Data](#face-data)
       * [Dynamic Data](#dynamic-data)
          * [Dynamic Face Data](#dynamic-face-data)
@@ -96,7 +97,8 @@ Finally last 5 bits represent the VRam page number (11 in this specific case).
 
 
 ## TSP Files
-All TSP files starts with an header which contains the following data:
+All TSP files starts with an header which contains the following data:  
+If Version is 1:
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -117,6 +119,31 @@ All TSP files starts with an header which contains the following data:
 | int  | 4 bytes  | Dynamic Data Number |
 | int  | 4 bytes  | Dynamic Data Offset |
 | int  | 4 bytes  | Collision Data Offset |
+
+Otherwise two new fields are added:
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| short | 2 bytes  | ID |
+| short  | 2 bytes  | Version |
+| int  | 4 bytes  | Number of BSP Nodes|
+| int  | 4 bytes  | BSP Nodes Data Offset |
+| int  | 4 bytes  | Number of Faces|
+| int  | 4 bytes  | Faces Data Offset |
+| int  | 4 bytes  | Number of Vertices|
+| int  | 4 bytes  | Vertices Offset |
+| int  | 4 bytes  | Number of Unknown Data |
+| int  | 4 bytes  | Unknown Data Offset |
+| int  | 4 bytes  | Number of Colors|
+| int  | 4 bytes  | Colors Data Offset |
+| int  | 4 bytes  | Number of Unknown Data |
+| int  | 4 bytes  | Unknown Data Offset |
+| int  | 4 bytes  | Dynamic Data Number |
+| int  | 4 bytes  | Dynamic Data Offset |
+| int  | 4 bytes  | Collision Data Offset |
+| int  | 4 bytes  | Texture Info Number |
+| int  | 4 bytes  | Texture Info Offset |
+
 
 **Note that all the offset starts from the beginning of the file.**
 Thanks to this format we can read each chunk separetely by moving the file position to the wanted offset.
@@ -156,6 +183,9 @@ Offset Field has two purposes:
 If NumFaces != 0 then Offset represents the starting position where to load the face array that goes from
 > [Offset;Offset + (NumFaces * sizeof(Face))]
 
+**Note that this is valid only in TSP version 1, TSP version 2 uses a different algorithm based on what is described on
+the [Face Section](#faces).**
+
 Otherwise it represents the next node offset in the array that needs to be loaded.
 
 
@@ -189,6 +219,20 @@ Used for texture coordinates.
 | unsigned char | 1 byte  | u coordinate |
 | unsigned char | 1 byte  | v coordinate |
 
+
+### Texture Info
+
+Starting from version 3 texture data is stored in a separate structure:  
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| [UV](#uv) | 2 byte  | UV0 |
+| short | 2 byte  | CBA |
+| [UV](#uv) | 2 byte  | UV1|
+| short | 2 byte  | [TSB](#tsb) (Texture Info) |
+| [UV](#uv) | 2 byte  | UV2|
+| short | 2 byte  | Pad |
+
 #### Face Data
 
 Each face is made by 3 vertices that forms a triangle.
@@ -201,8 +245,32 @@ Each face is made by 3 vertices that forms a triangle.
 | [UV](#uv-coordinatesuv) | 2 byte  | UV0 Texture coordinate for vertex 0  |
 | short | 2 bytes  | CBA (Contains CLUT Data for TIM Images, Not Used)  |
 | [UV](#uv-coordinatesuv) | 2 bytes  | UV1 Texture coordinate for vertex 1  |
-| short | 2 bytes  | TSB that contains info about the used texture ( read [TSB](#TSB) for more information)|
+| short | 2 bytes  | TSB that contains info about the used texture ( read [TSB](#tsb) for more information)|
 | [UV](#uv-coordinatesuv) | 2 bytes  | UV2 Texture coordinate for vertex 2  |
+
+Starting from Version 3 a different type of face format is used:
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| unsigned int | 4 bytes  | V0,V1 First and Second vertex/color index in array |
+| unsigned short | 2 bytes  | V2 Third vertex and color index in array |
+| unsigned short | 2 bytes  | Texture Index in texture array |
+
+this format is not meant to be loaded directly but rather the [BSP Node struct](#bsp-node) must be used to load it.  
+The way it works it's based on the offset found in the Node data that signals the beginning of the face definition.  
+After reading the data and storing it into an array, we need to iterate and read the next 4-bytes that contains a vertex and a new face index.  
+Note that unlike V2, that it is not encoded, V0 and V1 can be extracted using bit shifting: (V0V1 & 0x1FFF) and (V0V1 >> 16 ) & 0X1FFF  
+There are three possible cases that we can find when reading this int.  
+If it is equal to 0x1fff1fff than this is the last data that we need to read for that node.  
+If, instead, is equal to 0x1FFF then we need to read a new face struct and read the next int until one of the two markers is found.  
+Otherwise it is a valid int and can be used to build a new face.  
+The new face is made from the main face struct that we read at the beginning where the vertex are updated based on the current integer.  
+If the integer has the left-most bit set then we need to swap Vertex0 and Vertex2, otherwise we need to set V0 equals to V1 and  
+V1 equals to V2.  
+Finally we update Vertex2 with the new value taken from the int.  
+Note that the Value read is an int that contains two informations: Vertex Number  (Value & 0x1FFF) and Texture Index (Value >> 16 ).  
+At the end of all the iterations we should find that the number of loaded faces is equals to the one declared in the node.  
+
 
 ### Dynamic Data
 
