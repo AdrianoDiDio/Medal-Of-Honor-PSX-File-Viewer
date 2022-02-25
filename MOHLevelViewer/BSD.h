@@ -267,18 +267,11 @@ typedef struct BSDFace_s {
 //TODO: CLEANUP
 typedef struct BSDRenderObject_s {
     BSDRenderObjectElement_t *Data;
-//     int             Type;
     BSDPosition_t  *Vertex;
     BSDFace_t      *Face;
     int             NumFaces;
     Vao_t          *VAO;
-//     Vao_t          *FaceVao;
     Vec3_t          Position;
-//     Vec3_t          Rotation;
-//     Vec3_t          Scale;
-// 
-//     unsigned int    RenderObjectID;
-//     struct BSDRenderObject_s *Next;
 } BSDRenderObject_t;
 
 typedef struct BSDRenderObjectDrawable_s {

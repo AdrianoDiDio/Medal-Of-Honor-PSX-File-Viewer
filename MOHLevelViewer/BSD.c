@@ -467,7 +467,7 @@ void BSDVAOObjectList(BSD_t *BSD)
 }
 
 
-void BSDAddNodeToRenderObjectList(BSD_t *BSD,int MissionNumber,unsigned int NodeID,Vec3_t Position,Vec3_t Rotation)
+void BSDAddNodeToRenderObjecDrawabletList(BSD_t *BSD,int MissionNumber,unsigned int NodeID,Vec3_t Position,Vec3_t Rotation)
 {
     BSDRenderObjectDrawable_t *Object;
     unsigned int RenderObjectID;
@@ -504,117 +504,6 @@ void BSDAddNodeToRenderObjectList(BSD_t *BSD,int MissionNumber,unsigned int Node
     Object->Next = BSD->RenderObjectDrawableList;
     BSD->RenderObjectDrawableList = Object;
     BSD->NumRenderObjectPoint++;
-}
-
-void BSDShowCaseRenderObject(BSD_t *BSD)
-{
-//     BSDRenderObject_t *Object;
-//     int i;
-//     Vec3_t PSpawn;
-//     
-//     PSpawn = BSDGetPlayerSpawn(BSD);
-//     
-//     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-//         Object = malloc(sizeof(BSDRenderObject_t));
-//         Object->Type = BSD->RenderObjectTable.RenderObject[i].Type;
-//         Object->Position.x = PSpawn.x - (i * 200.f);
-//         Object->Position.y = PSpawn.y;
-//         Object->Position.z = -PSpawn.z;
-//         PSX GTE Uses 4096 as unit value only when dealing with fixed math operation.
-//         When dealing with rotation then 4096 = 360 degrees.
-//         We need to map it back to OpenGL standard format [0;360]. 
-//         Object->Rotation.x = 0;
-//         Object->Rotation.y = 0;
-//         Object->Rotation.z = 0;
-// 
-//         Object->RenderObjectID = BSD->RenderObjectTable.RenderObject[i].ID;
-//         Object->Vertex = NULL;
-//         Object->Face = NULL;
-//         Object->FaceVao = NULL;
-//         Object->Vao = NULL;
-//         Object->Next = BSD->RenderObjectShowCaseList;
-//         BSD->RenderObjectShowCaseList = Object;
-//     }
-}
-/*
- Add a new drawable to the list
- **/
-void BSDSpawnDrawable(BSD_t *BSD,BSDRenderObject_t *RenderObject)
-{
-//     float Width;
-//     float Height;
-//     BSDRenderObject_t *RenderObjectData;
-//     int RenderObjectIndex;
-//     float *VertexData;
-//     int VertexSize;
-//     int VertexPointer;
-//     int Stride;
-//     int VertexOffset;
-//     int TextureOffset;
-//     int i;
-//     Vao_t *VAO;
-// 
-//   
-//     RenderObjectData = RenderObject->Data;
-// 
-//     if( RenderObjectData->NumFaces == 0 ) {
-//         DPrintf("Failed setting vao...Invalid NumFace %i\n",RenderObjectData->NumFaces);
-//         return;
-//     }
-//     
-//     Width = Level->VRAM->Page.Width;
-//     Height = Level->VRAM->Page.Height;
-//     
-//     Stride = (3 + 2) * sizeof(float);
-//     VertexSize = Stride * 3 * RenderObjectData->NumFaces;
-//     VertexData = malloc(VertexSize);
-//     VertexPointer = 0;
-//     VertexOffset = 0;
-//     TextureOffset = 3;
-//     for( i = 0; i < RenderObjectData->NumFaces; i++ ) {
-//         unsigned short Vert0;
-//         unsigned short Vert1;
-//         unsigned short Vert2;
-// 
-//         Vert0 = (RenderObjectData->Face[i].VData & 0xFF);
-//         Vert1 = (RenderObjectData->Face[i].VData & 0x3fc00) >> 10;
-//         Vert2 = (RenderObjectData->Face[i].VData & 0xFF00000 ) >> 20;
-// 
-//         int VRAMPage = RenderObjectData->Face[i].TexInfo & 0x1F;
-//         int ColorMode = (RenderObjectData->Face[i].TexInfo & 0xC0) >> 7;
-//         float U0 = (((float)RenderObjectData->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/Width);
-//         float V0 = /*255 -*/(((float)RenderObjectData->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / Height);
-//         float U1 = (((float)RenderObjectData->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / Width);
-//         float V1 = /*255 -*/(((float)RenderObjectData->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) /Height);
-//         float U2 = (((float)RenderObjectData->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /Width);
-//         float V2 = /*255 -*/(((float)RenderObjectData->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / Height);
-// 
-//                     
-//         VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert0].x;
-//         VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert0].y;
-//         VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert0].z;
-//         VertexData[VertexPointer+3] = U0;
-//         VertexData[VertexPointer+4] = V0;
-//         VertexPointer += 5;
-//             
-//         VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert1].x;
-//         VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert1].y;
-//         VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert1].z;
-//         VertexData[VertexPointer+3] = U1;
-//         VertexData[VertexPointer+4] = V1;
-//         VertexPointer += 5;
-//             
-//         VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert2].x;
-//         VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert2].y;
-//         VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert2].z;
-//         VertexData[VertexPointer+3] = U2;
-//         VertexData[VertexPointer+4] = V2;
-//         VertexPointer += 5;
-//     }
-//     VAO = VaoInitXYZUV(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,RenderObjectData->Face[i].TexInfo,-1,RenderObjectData->NumFaces * 3);
-//     VAO->Next = Object->FaceVAO;
-//     Object->FaceVAO = VAO;
-//     free(VertexData);
 }
 
 void BSDCreateVAOs(BSD_t *BSD)
@@ -1329,7 +1218,7 @@ void BSDDraw(Level_t *Level)
             temp[2] = 1;
             glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
             
-            temp[0] = -(Camera.Position.x - PSpawn.x - (i * 200.f));
+            temp[0] = -(Camera.Position.x - (PSpawn.x - (i * 200.f)));
             temp[1] = -(Camera.Position.y + PSpawn.y);
             temp[2] = -(Camera.Position.z - PSpawn.z);
 
@@ -1826,7 +1715,7 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
                 if( NodeNumReferencedRenderObjectIDOffset != 0 ) {
                     if( BSD->NodeData.Node[i].Type == 4 ) {
                         DPrintf("Node has Type 4 so the RenderObject ID is %u.\n",NodeNumReferencedRenderObjectIDOffset);
-                        BSDAddNodeToRenderObjectList(BSD,MissionNumber,NodeNumReferencedRenderObjectIDOffset,NodePosition,NodeRotation);
+                        BSDAddNodeToRenderObjecDrawabletList(BSD,MissionNumber,NodeNumReferencedRenderObjectIDOffset,NodePosition,NodeRotation);
                     } else {
                         fseek(BSDFile,NodeFilePosition + NodeNumReferencedRenderObjectIDOffset,SEEK_SET);
                         fread(&NumReferencedRenderObjectID,sizeof(NumReferencedRenderObjectID),1,BSDFile);
@@ -1836,7 +1725,7 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
                             if( BSD->NodeData.Node[i].Id == BSD_ENEMY_SPAWN && NodeRenderObjectID != 3817496448 && j == 0 ) {
                                 DPrintf("We have a different RenderObject for this enemy spawn...\n");
                             }
-                            BSDAddNodeToRenderObjectList(BSD,MissionNumber,NodeRenderObjectID,NodePosition,NodeRotation);
+                            BSDAddNodeToRenderObjecDrawabletList(BSD,MissionNumber,NodeRenderObjectID,NodePosition,NodeRotation);
                         }
                     }
                 }
@@ -1853,7 +1742,6 @@ BSD_t *BSDLoad(char *FName,int MissionNumber)
     // Prepare vertices to be rendered!
     ParseRenderObjectVertexData(BSD,BSDFile);
     ParseRenderObjectFaceData(BSD,BSDFile);
-    BSDShowCaseRenderObject(BSD);
     fclose(BSDFile);
     return BSD;
 }
