@@ -19,11 +19,6 @@
 #ifndef __TSPVIEWER_H_
 #define __TSPVIEWER_H_
 
-typedef enum {
-    TSP_VERSION_MOH = 1,
-    TSP_VERSION_MOH_UNDERGROUND = 3
-} TSPVersion;
-
 typedef struct TSPVec3_s {
     short x;
     short y;
@@ -56,6 +51,16 @@ typedef struct BBox_s {
     Vec3_t Min;
     Vec3_t Max;
 } BBox_t;
+
+typedef struct TSPTextureInfo_s {
+    TSPUv_t UV0;
+    short   CBA;
+    TSPUv_t UV1;
+    short   TSB;
+    TSPUv_t UV2;
+    short   Padding;
+} TSPTextureInfo_t;
+
 //16 Bytes.
 typedef struct TSPFace_s {
     unsigned short V0;
@@ -67,6 +72,17 @@ typedef struct TSPFace_s {
     ShortByteUnion TSB;
     TSPUv_t UV2;
 } TSPFace_t;
+
+typedef struct TSPFaceV3_s {
+    int V0V1;
+    unsigned short V2;
+    unsigned short TextureDataIndex;
+    
+    unsigned int Vert0;
+    unsigned int Vert1;
+    unsigned int Vert2;
+} TSPFaceV3_t;
+
 //36 Bytes.
 typedef struct TSPNodeFileLookUp_s {
     int Offset;
@@ -75,16 +91,14 @@ typedef struct TSPNodeFileLookUp_s {
 } TSPNodeFileLookUp_t;
 
 typedef struct TSPNode_s {
-    //Mine
-    
-    TSPNodeFileLookUp_t FileOffset;
-    //
-    TSPBBox_t BBox; // 12
-    /*unsigned */int NumFaces; // 16 This should be an offset relative to the face offset...
+    TSPBBox_t BBox;
+    int NumFaces; // 16 This should be an offset relative to the face offset...
     IntShortUnion U2; // 20 //Starting index
     IntShortUnion U3; // 24
     int BaseData; // This is the Node Dimension...BaseData / sizeof(TSPFace_t) If NumFaces != 0 or BaseData / sizeof(TSPNode_t) If NumFaces == 0
     
+    TSPNodeFileLookUp_t FileOffset;
+    TSPFaceV3_t *FaceList;
     Vao_t *BBoxVao;
     Vao_t *LeafFaceListVao;
     Vao_t *LeafCollisionFaceListVao;
@@ -187,6 +201,9 @@ typedef struct TSPHeader_s {
     int DynamicDataOffset;
     
     int CollisionOffset;
+    
+    int NumTextureInfo;
+    int TextureInfoOffset;
 } TSPHeader_t;
 
 
@@ -199,6 +216,7 @@ typedef struct TSP_s {
     TSPVert_t   *Vertex;
     TSPColor_t  *Color;
     TSPDynamicData_t  *DynamicData;
+    TSPTextureInfo_t *TextureData;
     TSPCollision_t *CollisionData;
     //
     int          Number;
@@ -216,6 +234,7 @@ void    TSPCreateVAO(TSP_t *TSP);
 void TSPCreateNodeBBoxVAO(TSP_t *TSPList);
 void TSPCreateCollisionVAO(TSP_t *TSPList);
 int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY);
+bool TSPIsVersion3(TSP_t *TSP);
 void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile);
 void TSPFree(TSP_t *TSP);
 void TSPFreeList(TSP_t *List);

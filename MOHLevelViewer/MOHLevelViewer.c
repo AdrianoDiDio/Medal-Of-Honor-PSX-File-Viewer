@@ -167,7 +167,7 @@ int GetCurrentFilePosition(FILE *Fp)
     return ftell(Fp);
 }
 
-void SkipFileSection(FILE *InFile,int SectionSize)
+void SkipFileSection(int SectionSize,FILE *InFile)
 {
     if( !InFile ) {
         printf("SkipFileSection: Invalid file.\n");
@@ -868,7 +868,7 @@ void GLFrame()
      /* TEMP! */
      BSDCheckCompartmentTrigger(Level,Camera.Position);
      DrawTSPList(Level);
-     BSD2PDraw(Level);
+//      BSD2PDraw(Level);
      BSDDraw(Level);
      
      glm_mat4_identity(VidConf.MVPMatrix);
@@ -881,6 +881,8 @@ void GLFrame()
      glm_ortho(0,VidConf.Width,VidConf.Height,0,-1,1,VidConf.PMatrixM4);
      glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
      y = 100;
+     FontDrawString(Level,Level->EngineName,10,y,c_White);
+     y += VerticalSpacing;
      FontDrawString(Level,ComTime->FpsSimpleString,10,y,c_White);
      y += VerticalSpacing;
      FontDrawString(Level,"Press ESC to exit",10,y,c_White);
@@ -933,18 +935,21 @@ void DumpLevel(Level_t* Level)
 {
     char MissionDir[64];
     char ExportDir[256];
-    char OutDir[512];
+    char EngineDir[512];
+    char OutDir[1024];
     char FileName[256];
-    char ObjectFile[1024];
+    char ObjectFile[2048];
     char MaterialNameTag[64];
     FILE *OutFile;
 
     sprintf(FileName,"MSN%iLVL%i.obj",Level->MissionNumber,Level->LevelNumber);
     sprintf(MissionDir,"MSN%iLVL%i",Level->MissionNumber,Level->LevelNumber);
     sprintf(ExportDir,"Export");
-    sprintf(OutDir,"%s%c%s%c",ExportDir,PATHSEPARATOR,MissionDir,PATHSEPARATOR);
+    sprintf(EngineDir,"%s%c%s",ExportDir,PATHSEPARATOR,LevelGetGameEngine() == MOH_GAME_STANDARD ? "MOH" : "MOHUndergound");
+    sprintf(OutDir,"%s%c%s%c",EngineDir,PATHSEPARATOR,MissionDir,PATHSEPARATOR);
     
     CreateDirIfNotExists(ExportDir);
+    CreateDirIfNotExists(EngineDir);
     CreateDirIfNotExists(OutDir);
     
     sprintf(ObjectFile,"%s%s", OutDir,FileName);
@@ -999,17 +1004,18 @@ bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
 //     }
     //TESTING PURPOSES ONLY!
     snprintf(Buffer,sizeof(Buffer),"%s/DATA/TWOPLAYR/PLAYERS/B/GI_P1.BSD",Level->BasePath);
-    Level->BSDTwoP = BSD2PLoad(Buffer,Level->MissionNumber);
-    if( !Level->BSDTwoP ) {
-        DPrintf("Couldn't load BSD2P...aborting.\n");
-        return false;
-    }
+//     Level->BSDTwoP = BSD2PLoad(Buffer,Level->MissionNumber);
+//     if( !Level->BSDTwoP ) {
+//         DPrintf("Couldn't load BSD2P...aborting.\n");
+//         return false;
+//     }
+    sprintf(Level->EngineName,"Engine %s",LevelGetGameEngine() == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
     return true;
     
 }
-bool IsLevelMOHUnderground()
+int LevelGetGameEngine()
 {
-    return Level->TSPList->Header.Version == TSP_VERSION_MOH_UNDERGROUND;
+    return TSPIsVersion3(Level->TSPList) ? MOH_GAME_UNDERGROUND : MOH_GAME_STANDARD;
 }
 /*
     Late level initialization for all the subsystems that
@@ -1026,13 +1032,13 @@ void LevelLateInit()
     TSPCreateNodeBBoxVAO(Level->TSPList);
     TSPCreateCollisionVAO(Level->TSPList);
     BSDCreateVAOs(Level->BSD);
-    BSD2PVAOPointList(Level->BSDTwoP);
+//     BSD2PVAOPointList(Level->BSDTwoP);
     BSDFixRenderObjectPosition(Level);
 }
 void LevelCleanUp()
 {
     BSDFree(Level->BSD);
-    BSD2PFree(Level->BSDTwoP);
+//     BSD2PFree(Level->BSDTwoP);
     TSPFreeList(Level->TSPList);
     TimImageListFree(Level->ImageList);
     free(Level->VRAM);

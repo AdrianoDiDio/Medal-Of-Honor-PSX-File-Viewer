@@ -28,13 +28,21 @@ void TSPFree(TSP_t *TSP)
         VaoFree(TSP->Node[i].BBoxVao);
         VaoFree(TSP->Node[i].LeafFaceListVao);
         VaoFree(TSP->Node[i].LeafCollisionFaceListVao);
+        if( TSP->Node[i].FaceList ) {
+            free(TSP->Node[i].FaceList);
+        }
         //Don't bother traversing the tree since we can walk the whole array and free all the pointers...
         TSP->Node[i].Child[0] = NULL;
         TSP->Node[i].Child[1] = NULL;
         TSP->Node[i].Next = NULL;
     }
     free(TSP->Node);
-    free(TSP->Face);
+    if( TSP->Face ) {
+        free(TSP->Face);
+    }
+    if( TSP->TextureData ) {
+        free(TSP->TextureData);
+    }
     free(TSP->Vertex);
     free(TSP->Color);
     
@@ -68,6 +76,11 @@ void TSPFreeList(TSP_t *List)
     }
 }
 
+bool TSPIsVersion3(TSP_t *TSP)
+{
+    return TSP->Header.Version == 3;
+}
+
 void Vec4FromXYZ(float x,float y,float z,vec4 Out)
 {
     Out[0] = x;
@@ -75,15 +88,102 @@ void Vec4FromXYZ(float x,float y,float z,vec4 Out)
     Out[2] = z;
     Out[3] = 1;
 }
+void TSPDumpFaceDataToFile(TSP_t *TSP,FILE *OutFile)
+{
+    char Buffer[256];
+    float TextureWidth;
+    float TextureHeight;
+    int i;
+    
+    if( !TSP || !OutFile ) {
+        bool InvalidFile = (OutFile == NULL ? true : false);
+        printf("TSPDumpFaceDataToFile: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        return;
+    }
+    
+    TextureWidth = Level->VRAM->Page.Width;
+    TextureHeight = Level->VRAM->Page.Height;
 
+    for( i = TSP->Header.NumFaces - 1; i >= 0 ; i-- ) {
+        int ColorMode = (TSP->Face[i].TSB.AsShort & 0x80) >> 7;
+        int VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
+        float U0 = (((float)TSP->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+        float V0 = /*255 -*/1.f-(((float)TSP->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+        float U1 = (((float)TSP->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        float V1 = /*255 -*/1.f-(((float)TSP->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
+        float U2 = (((float)TSP->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
+        float V2 = /*255 -*/1.f-(((float)TSP->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+        sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);    
+    }
+    for( i = 0; i < TSP->Header.NumFaces; i++ ) {
+        int Vert0 = TSP->Face[i].V0;
+        int Vert1 = TSP->Face[i].V1;
+        int Vert2 = TSP->Face[i].V2;
+        int BaseFaceUV = i * 3;
+        int ColorMode = (TSP->Face[i].TSB.AsShort & 0x80) >> 7;
+        int VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
+        sprintf(Buffer,"usemtl vram\n");
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+        sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),-(BaseFaceUV+3),-(Vert1+1),-(BaseFaceUV+2),-(Vert2+1),-(BaseFaceUV+1));
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+    }
+}
+void TSPDumpFaceV3DataToFile(TSP_t *TSP,FILE *OutFile)
+{
+    char Buffer[256];
+    TSPTextureInfo_t TextureInfo;
+    float TextureWidth;
+    float TextureHeight;
+    int i;
+    int j;
+    
+    if( !TSP || !OutFile ) {
+        bool InvalidFile = (OutFile == NULL ? true : false);
+        printf("TSPDumpFaceV3DataToFile: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        return;
+    }
+    
+    TextureWidth = Level->VRAM->Page.Width;
+    TextureHeight = Level->VRAM->Page.Height;
+
+    
+    for( i = 0; i < TSP->Header.NumNodes; i++ ) {
+        if( TSP->Node[i].NumFaces == 0 ) {
+            continue;
+        }
+        for( j = TSP->Node[i].NumFaces - 1; j >= 0 ; j-- ) {
+            TextureInfo = TSP->TextureData[TSP->Node[i].FaceList[j].TextureDataIndex];
+            int ColorMode = (TextureInfo.TSB & 0x80) >> 7;
+            int VRAMPage = TextureInfo.TSB & 0x1F;
+            float U0 = (((float)TextureInfo.UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+            float V0 = /*255 -*/1.f-(((float)TextureInfo.UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+            float U1 = (((float)TextureInfo.UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+            float V1 = /*255 -*/1.f-(((float)TextureInfo.UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
+            float U2 = (((float)TextureInfo.UV2.u + VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
+            float V2 = /*255 -*/1.f-(((float)TextureInfo.UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+            sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
+            fwrite(Buffer,strlen(Buffer),1,OutFile);
+        }
+        for( j = 0; j < TSP->Node[i].NumFaces; j++ ) {
+
+            int Vert0 = TSP->Node[i].FaceList[j].Vert0;
+            int Vert1 = TSP->Node[i].FaceList[j].Vert1;
+            int Vert2 = TSP->Node[i].FaceList[j].Vert2;
+            int BaseFaceUV = j * 3;
+            sprintf(Buffer,"usemtl vram\n");
+            fwrite(Buffer,strlen(Buffer),1,OutFile);
+            sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),-(BaseFaceUV+3),-(Vert1+1),-(BaseFaceUV+2),-(Vert2+1),-(BaseFaceUV+1));
+            fwrite(Buffer,strlen(Buffer),1,OutFile);
+        }
+    }
+}
 void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
 {
     TSP_t *Iterator;
     char Buffer[256];
     int i;
     int t;
-    float Width;
-    float Height;
     Vec3_t NewPos;
     
     if( !TSPList || !OutFile ) {
@@ -92,8 +192,6 @@ void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
         return;
     }
     t = 1;
-    Width = Level->VRAM->Page.Width;
-    Height = Level->VRAM->Page.Height;
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next, t++ ) {
         sprintf(Buffer,"o TSP%i\n",t);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
@@ -105,29 +203,10 @@ void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
             );
             fwrite(Buffer,strlen(Buffer),1,OutFile);            
         }
-        for( i = Iterator->Header.NumFaces - 1; i >= 0 ; i-- ) {
-            int ColorMode = (Iterator->Face[i].TSB.AsShort & 0x80) >> 7;
-            int VRAMPage = Iterator->Face[i].TSB.AsShort & 0x1F;
-            float U0 = (((float)Iterator->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/Width);
-            float V0 = /*255 -*/1.f-(((float)Iterator->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / Height);
-            float U1 = (((float)Iterator->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / Width);
-            float V1 = /*255 -*/1.f-(((float)Iterator->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) /Height);
-            float U2 = (((float)Iterator->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /Width);
-            float V2 = /*255 -*/1.f-(((float)Iterator->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / Height);
-            sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
-            fwrite(Buffer,strlen(Buffer),1,OutFile);    
-        }
-        for( i = 0; i < Iterator->Header.NumFaces; i++ ) {
-            int Vert0 = Iterator->Face[i].V0;
-            int Vert1 = Iterator->Face[i].V1;
-            int Vert2 = Iterator->Face[i].V2;
-            int BaseFaceUV = i * 3;
-            int ColorMode = (Iterator->Face[i].TSB.AsShort & 0x80) >> 7;
-            int VRAMPage = Iterator->Face[i].TSB.AsShort & 0x1F;
-            sprintf(Buffer,"usemtl vram\n");
-            fwrite(Buffer,strlen(Buffer),1,OutFile);
-            sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),-(BaseFaceUV+3),-(Vert1+1),-(BaseFaceUV+2),-(Vert2+1),-(BaseFaceUV+1));
-            fwrite(Buffer,strlen(Buffer),1,OutFile);
+        if( TSPIsVersion3(Iterator) ) {
+            TSPDumpFaceV3DataToFile(Iterator,OutFile);
+        } else {
+            TSPDumpFaceDataToFile(Iterator,OutFile);
         }
 //         fwrite(Buffer,strlen(Buffer),1,OutFile);
 //         break;
@@ -186,22 +265,11 @@ TSPDynamicFaceData_t *GetDynamicDataByFaceIndex(TSP_t *TSP,int FaceIndex,int Str
     }
     return NULL;
 }
-
-void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
+void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
 {
-    TSP_t *Iterator;
-    float Width;
-    float Height;
-    int VertexOffset;
-    int TextureOffset;
-    int ColorOffset;
-    int i;
-    int j;
-    float *VertexData;
-    int VertexSize;
-    int VertexPointer;
+    int Base;
+    int Target;
     int Stride;
-    int TotalFaceCount = 0;
     int Vert0;
     int Vert1;
     int Vert2;
@@ -210,104 +278,248 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
     float U2,V2;
     short TSB;
     short CBA;
+    float *VertexData;
+    int VertexSize;
+    int VertexPointer;
+    int VertexOffset;
+    int TextureOffset;
+    int ColorOffset;
+    float TextureWidth;
+    float TextureHeight;
     TSPDynamicFaceData_t *DynamicData;
     Vao_t *Vao;
-    Width = Level->VRAM->Page.Width;
-    Height = Level->VRAM->Page.Height;
+    int i;
+    
+    Base = Node->BaseData / sizeof(TSPFace_t);
+    Target = Base + Node->NumFaces;
+//            XYZ UV RGB
+    Stride = (3 + 2 + 3) * sizeof(float);
+                
+    VertexOffset = 0;
+    TextureOffset = 3;
+    ColorOffset = 5;
+                
+    VertexSize = Stride * 3 * Target;
+    VertexData = malloc(VertexSize);
+    VertexPointer = 0;
+    
+    TextureWidth = Level->VRAM->Page.Width;
+    TextureHeight = Level->VRAM->Page.Height;
+    
+    for( i = Base; i < Target; i++ ) {
+        int ColorMode = (TSP->Face[i].TSB.AsShort & 0x80) >> 7;
+        int VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
+        int ABRRate = (TSP->Face[i].TSB.AsShort & 0x60) >> 5;
+        DPrintf("TSB is %u\n",TSP->Face[i].TSB.AsShort);
+        DPrintf("Expected VRam Page:%i\n",VRAMPage);
+        DPrintf("Expected Color Mode:%i\n",ColorMode);
+        DPrintf("Expected ABR rate:%i\n",ABRRate);
+        
+        Vert0 = TSP->Face[i].V0;
+        Vert1 = TSP->Face[i].V1;
+        Vert2 = TSP->Face[i].V2;
+        
+//         DynamicData = GetDynamicDataByFaceIndex(TSP,j,2);
+//         if( DynamicData != NULL ) {
+//             U0 = (((float)DynamicData->UV0.u)/Width);
+//             V0 = /*255 -*/(((float)DynamicData->UV0.v) / Height);
+//             U1 = (((float)DynamicData->UV1.u) / Width);
+//             V1 = /*255 -*/(((float)DynamicData->UV1.v) /Height);
+//             U2 = (((float)DynamicData->UV2.u) /Width);
+//             V2 = /*255 -*/(((float)DynamicData->UV2.v) / Height);
+//             TSB = DynamicData->TSB;
+//             CBA = DynamicData->CBA;
+//         } else {
+            U0 = (((float)TSP->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+            V0 = /*255 -*/(((float)TSP->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+            U1 = (((float)TSP->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+            V1 = /*255 -*/(((float)TSP->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+            U2 = (((float)TSP->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+            V2 = /*255 -*/(((float)TSP->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+            TSB = TSP->Face[i].TSB.AsShort;
+            CBA = TSP->Face[i].CBA.AsShort;
+//         }
+                    
+                    
+        DPrintf("Tex Coords are %i;%i %i;%i %i;%i\n",
+                    TSP->Face[i].UV0.u,TSP->Face[i].UV0.v,
+                    TSP->Face[i].UV1.u,TSP->Face[i].UV1.v,
+                    TSP->Face[i].UV2.u,TSP->Face[i].UV2.v);
+
+        VertexData[VertexPointer] =   TSP->Vertex[Vert0].Position.x;
+        VertexData[VertexPointer+1] = TSP->Vertex[Vert0].Position.y;
+        VertexData[VertexPointer+2] = TSP->Vertex[Vert0].Position.z;
+        VertexData[VertexPointer+3] = U0;
+        VertexData[VertexPointer+4] = V0;
+        VertexData[VertexPointer+5] = TSP->Color[Vert0].r / 255.f;
+        VertexData[VertexPointer+6] = TSP->Color[Vert0].g / 255.f;
+        VertexData[VertexPointer+7] = TSP->Color[Vert0].b / 255.f;
+        VertexPointer += 8;
+                    
+        VertexData[VertexPointer] =   TSP->Vertex[Vert1].Position.x;
+        VertexData[VertexPointer+1] = TSP->Vertex[Vert1].Position.y;
+        VertexData[VertexPointer+2] = TSP->Vertex[Vert1].Position.z;
+        VertexData[VertexPointer+3] = U1;
+        VertexData[VertexPointer+4] = V1;
+        VertexData[VertexPointer+5] = TSP->Color[Vert1].r / 255.f;
+        VertexData[VertexPointer+6] = TSP->Color[Vert1].g / 255.f;
+        VertexData[VertexPointer+7] = TSP->Color[Vert1].b / 255.f;
+        VertexPointer += 8;
+                    
+        VertexData[VertexPointer] =   TSP->Vertex[Vert2].Position.x;
+        VertexData[VertexPointer+1] = TSP->Vertex[Vert2].Position.y;
+        VertexData[VertexPointer+2] = TSP->Vertex[Vert2].Position.z;
+        VertexData[VertexPointer+3] = U2;
+        VertexData[VertexPointer+4] = V2;
+        VertexData[VertexPointer+5] = TSP->Color[Vert2].r / 255.f;
+        VertexData[VertexPointer+6] = TSP->Color[Vert2].g / 255.f;
+        VertexData[VertexPointer+7] = TSP->Color[Vert2].b / 255.f;
+        VertexPointer += 8;
+    }
+    Vao = VaoInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,
+                        TSB,CBA,Target * 3);
+    Vao->Next = Node->LeafFaceListVao;
+    Node->LeafFaceListVao = Vao;
+    free(VertexData);
+}
+
+void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
+{
+        int Base;
+    int Target;
+    int Stride;
+    int Vert0;
+    int Vert1;
+    int Vert2;
+    float U0,V0;
+    float U1,V1;
+    float U2,V2;
+    short TSB;
+    short CBA;
+    float *VertexData;
+    int VertexSize;
+    int VertexPointer;
+    int VertexOffset;
+    int TextureOffset;
+    int ColorOffset;
+    float TextureWidth;
+    float TextureHeight;
+    TSPDynamicFaceData_t *DynamicData;
+    TSPTextureInfo_t TextureInfo;
+    Vao_t *Vao;
+    int i;
+    
+    Base = Node->BaseData / sizeof(TSPFace_t);
+    Target = Base + Node->NumFaces;
+//            XYZ UV RGB
+    Stride = (3 + 2 + 3) * sizeof(float);
+                
+    VertexOffset = 0;
+    TextureOffset = 3;
+    ColorOffset = 5;
+                
+    VertexSize = Stride * 3 * Target;
+    VertexData = malloc(VertexSize);
+    VertexPointer = 0;
+    
+    TextureWidth = Level->VRAM->Page.Width;
+    TextureHeight = Level->VRAM->Page.Height;
+    
+    for( i = 0; i < Node->NumFaces; i++ ) {
+        TextureInfo = TSP->TextureData[Node->FaceList[i].TextureDataIndex];
+        int ColorMode = (TextureInfo.TSB & 0x80) >> 7;
+        int VRAMPage = TextureInfo.TSB & 0x1F;
+        int ABRRate = (TextureInfo.TSB & 0x60) >> 5;
+        DPrintf("TSB is %u\n",TextureInfo.TSB);
+        DPrintf("Expected VRam Page:%i\n",VRAMPage);
+        DPrintf("Expected Color Mode:%i\n",ColorMode);
+        DPrintf("Expected ABR rate:%i\n",ABRRate);
+        
+        Vert0 = Node->FaceList[i].Vert0;
+        Vert1 = Node->FaceList[i].Vert1;
+        Vert2 = Node->FaceList[i].Vert2;
+        
+//         DynamicData = GetDynamicDataByFaceIndex(TSP,j,2);
+//         if( DynamicData != NULL ) {
+//             U0 = (((float)DynamicData->UV0.u)/Width);
+//             V0 = /*255 -*/(((float)DynamicData->UV0.v) / Height);
+//             U1 = (((float)DynamicData->UV1.u) / Width);
+//             V1 = /*255 -*/(((float)DynamicData->UV1.v) /Height);
+//             U2 = (((float)DynamicData->UV2.u) /Width);
+//             V2 = /*255 -*/(((float)DynamicData->UV2.v) / Height);
+//             TSB = DynamicData->TSB;
+//             CBA = DynamicData->CBA;
+//         } else {
+            U0 = (((float)TextureInfo.UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+            V0 = /*255 -*/(((float)TextureInfo.UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+            U1 = (((float)TextureInfo.UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+            V1 = /*255 -*/(((float)TextureInfo.UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+            U2 = (((float)TextureInfo.UV2.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+            V2 = /*255 -*/(((float)TextureInfo.UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+            TSB = TextureInfo.TSB;
+            CBA = TextureInfo.CBA;
+//         }
+                    
+                    
+        DPrintf("Tex Coords are %i;%i %i;%i %i;%i\n",
+                TextureInfo.UV0.u,TextureInfo.UV0.v,
+                TextureInfo.UV1.u,TextureInfo.UV1.v,
+                TextureInfo.UV2.u,TextureInfo.UV2.v);
+
+        VertexData[VertexPointer] =   TSP->Vertex[Vert0].Position.x;
+        VertexData[VertexPointer+1] = TSP->Vertex[Vert0].Position.y;
+        VertexData[VertexPointer+2] = TSP->Vertex[Vert0].Position.z;
+        VertexData[VertexPointer+3] = U0;
+        VertexData[VertexPointer+4] = V0;
+        VertexData[VertexPointer+5] = TSP->Color[Vert0].r / 255.f;
+        VertexData[VertexPointer+6] = TSP->Color[Vert0].g / 255.f;
+        VertexData[VertexPointer+7] = TSP->Color[Vert0].b / 255.f;
+        VertexPointer += 8;
+                    
+        VertexData[VertexPointer] =   TSP->Vertex[Vert1].Position.x;
+        VertexData[VertexPointer+1] = TSP->Vertex[Vert1].Position.y;
+        VertexData[VertexPointer+2] = TSP->Vertex[Vert1].Position.z;
+        VertexData[VertexPointer+3] = U1;
+        VertexData[VertexPointer+4] = V1;
+        VertexData[VertexPointer+5] = TSP->Color[Vert1].r / 255.f;
+        VertexData[VertexPointer+6] = TSP->Color[Vert1].g / 255.f;
+        VertexData[VertexPointer+7] = TSP->Color[Vert1].b / 255.f;
+        VertexPointer += 8;
+                    
+        VertexData[VertexPointer] =   TSP->Vertex[Vert2].Position.x;
+        VertexData[VertexPointer+1] = TSP->Vertex[Vert2].Position.y;
+        VertexData[VertexPointer+2] = TSP->Vertex[Vert2].Position.z;
+        VertexData[VertexPointer+3] = U2;
+        VertexData[VertexPointer+4] = V2;
+        VertexData[VertexPointer+5] = TSP->Color[Vert2].r / 255.f;
+        VertexData[VertexPointer+6] = TSP->Color[Vert2].g / 255.f;
+        VertexData[VertexPointer+7] = TSP->Color[Vert2].b / 255.f;
+        VertexPointer += 8;
+    }
+    Vao = VaoInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,
+                        TSB,CBA,Node->NumFaces * 3);
+    Vao->Next = Node->LeafFaceListVao;
+    Node->LeafFaceListVao = Vao;
+    free(VertexData);
+}
+void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
+{
+    TSP_t *Iterator;
+    int i;
+    float *VertexData;
+    int VertexSize;
+    int VertexPointer;
+    int Stride;
+    int TotalFaceCount = 0;
     
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
             if( Iterator->Node[i].NumFaces != 0 ) {
-                TotalFaceCount += Iterator->Node[i].NumFaces;
-                int Base = Iterator->Node[i].BaseData / sizeof(TSPFace_t);
-                int Target = Base + Iterator->Node[i].NumFaces;
-               //            XYZ UV RGB
-                Stride = (3 + 2 + 3) * sizeof(float);
-                
-                VertexOffset = 0;
-                TextureOffset = 3;
-                ColorOffset = 5;
-                
-                VertexSize = Stride * 3 * Target;
-                VertexData = malloc(VertexSize);
-                VertexPointer = 0;
-                
-                for( j = Base; j < Target; j++ ) {
-                    int ColorMode = (Iterator->Face[j].TSB.AsShort & 0x80) >> 7;
-                    int VRAMPage = Iterator->Face[j].TSB.AsShort & 0x1F;
-                    int ABRRate = (Iterator->Face[j].TSB.AsShort & 0x60) >> 5;
-                    DPrintf("TSB is %u\n",Iterator->Face[j].TSB.AsShort);
-                    DPrintf("Expected VRam Page:%i\n",VRAMPage);
-                    DPrintf("Expected Color Mode:%i\n",ColorMode);
-                    DPrintf("Expected ABR rate:%i\n",ABRRate);
-                    Vert0 = Iterator->Face[j].V0;
-                    Vert1 = Iterator->Face[j].V1;
-                    Vert2 = Iterator->Face[j].V2;
-
-//                     DynamicData = GetDynamicDataByFaceIndex(Iterator,j,2);
-//                     if( DynamicData != NULL ) {
-//                         U0 = (((float)DynamicData->UV0.u)/Width);
-//                         V0 = /*255 -*/(((float)DynamicData->UV0.v) / Height);
-//                         U1 = (((float)DynamicData->UV1.u) / Width);
-//                         V1 = /*255 -*/(((float)DynamicData->UV1.v) /Height);
-//                         U2 = (((float)DynamicData->UV2.u) /Width);
-//                         V2 = /*255 -*/(((float)DynamicData->UV2.v) / Height);
-//                         TSB = DynamicData->TSB;
-//                         CBA = DynamicData->CBA;
-//                     } else {
-                        U0 = (((float)Iterator->Face[j].UV0.u + VRAMGetTexturePageX(VRAMPage))/Width);
-                        V0 = /*255 -*/(((float)Iterator->Face[j].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / Height);
-                        U1 = (((float)Iterator->Face[j].UV1.u + VRAMGetTexturePageX(VRAMPage)) / Width);
-                        V1 = /*255 -*/(((float)Iterator->Face[j].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) /Height);
-                        U2 = (((float)Iterator->Face[j].UV2.u + VRAMGetTexturePageX(VRAMPage)) /Width);
-                        V2 = /*255 -*/(((float)Iterator->Face[j].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / Height);
-                        TSB = Iterator->Face[j].TSB.AsShort;
-                        CBA = Iterator->Face[j].CBA.AsShort;
-//                     }
-                    
-                    
-                    DPrintf("Tex Coords are %i;%i %i;%i %i;%i\n",
-                            Iterator->Face[j].UV0.u,Iterator->Face[j].UV0.v,
-                            Iterator->Face[j].UV1.u,Iterator->Face[j].UV1.v,
-                            Iterator->Face[j].UV2.u,Iterator->Face[j].UV2.v);
-
-                            
-                    VertexData[VertexPointer] =   Iterator->Vertex[Vert0].Position.x;
-                    VertexData[VertexPointer+1] = Iterator->Vertex[Vert0].Position.y;
-                    VertexData[VertexPointer+2] = Iterator->Vertex[Vert0].Position.z;
-                    VertexData[VertexPointer+3] = U0;
-                    VertexData[VertexPointer+4] = V0;
-                    VertexData[VertexPointer+5] = Iterator->Color[Vert0].r / 255.f;
-                    VertexData[VertexPointer+6] = Iterator->Color[Vert0].g / 255.f;
-                    VertexData[VertexPointer+7] = Iterator->Color[Vert0].b / 255.f;
-                    VertexPointer += 8;
-                    
-                    VertexData[VertexPointer] =   Iterator->Vertex[Vert1].Position.x;
-                    VertexData[VertexPointer+1] = Iterator->Vertex[Vert1].Position.y;
-                    VertexData[VertexPointer+2] = Iterator->Vertex[Vert1].Position.z;
-                    VertexData[VertexPointer+3] = U1;
-                    VertexData[VertexPointer+4] = V1;
-                    VertexData[VertexPointer+5] = Iterator->Color[Vert1].r / 255.f;
-                    VertexData[VertexPointer+6] = Iterator->Color[Vert1].g / 255.f;
-                    VertexData[VertexPointer+7] = Iterator->Color[Vert1].b / 255.f;
-                    VertexPointer += 8;
-                    
-                    VertexData[VertexPointer] =   Iterator->Vertex[Vert2].Position.x;
-                    VertexData[VertexPointer+1] = Iterator->Vertex[Vert2].Position.y;
-                    VertexData[VertexPointer+2] = Iterator->Vertex[Vert2].Position.z;
-                    VertexData[VertexPointer+3] = U2;
-                    VertexData[VertexPointer+4] = V2;
-                    VertexData[VertexPointer+5] = Iterator->Color[Vert2].r / 255.f;
-                    VertexData[VertexPointer+6] = Iterator->Color[Vert2].g / 255.f;
-                    VertexData[VertexPointer+7] = Iterator->Color[Vert2].b / 255.f;
-                    VertexPointer += 8;
-                    
+                if( TSPIsVersion3(Iterator) ) {
+                    TSPCreateFaceV3VAO(Iterator,&Iterator->Node[i]);
+                } else {
+                    TSPCreateFaceVAO(Iterator,&Iterator->Node[i]);
                 }
-                Vao = VaoInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,
-                                          TSB,CBA,Target * 3);
-                Vao->Next = Iterator->Node[i].LeafFaceListVao;
-                Iterator->Node[i].LeafFaceListVao = Vao;
-                free(VertexData);                    
             }
             
             //       XYZ
@@ -670,6 +882,10 @@ void TSPLookUpChildNode(TSP_t *TSP,FILE *InFile)
 
 void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
 {
+    TSPFaceV3_t TempFace;
+    int CurrentFaceIndex;
+    int Marker;
+    int PrevFilePosition;
     int i;
     
     if( !TSP || !InFile ) {
@@ -692,6 +908,7 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
         fread(&TSP->Node[i].U2.AsInt,sizeof(TSP->Node[i].U2.AsInt),1,InFile);
         fread(&TSP->Node[i].U3.AsInt,sizeof(TSP->Node[i].U3.AsInt),1,InFile);
         fread(&TSP->Node[i].BaseData,sizeof(TSP->Node[i].BaseData),1,InFile);
+        TSP->Node[i].FaceList = NULL;
         DPrintf("TSPReadNodeChunk:Node has %i faces\n",TSP->Node[i].NumFaces);
         DPrintf("TSPReadNodeChunk:Node BaseData %i (References offset %i)\n",TSP->Node[i].BaseData,
                 TSP->Node[i].BaseData + TSP->Header.NodeOffset);
@@ -706,10 +923,70 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
             fread(&TSP->Node[i].FileOffset.Child2Offset,sizeof(TSP->Node[i].FileOffset.Child2Offset),1,InFile);
             DPrintf("TSPReadNodeChunk:Child1:%i\n",TSP->Node[i].FileOffset.Child1Offset + TSP->Header.NodeOffset);
             DPrintf("TSPReadNodeChunk:Child2:%i\n",TSP->Node[i].FileOffset.Child2Offset + TSP->Header.NodeOffset);
+        } else {
+            if( TSPIsVersion3(TSP) ) {
+                TSP->Node[i].FaceList = malloc(TSP->Node[i].NumFaces * sizeof(TSPFaceV3_t));
+                PrevFilePosition = ftell(InFile);
+                fseek(InFile,TSP->Node[i].BaseData + TSP->Header.FaceOffset,SEEK_SET);
+                CurrentFaceIndex = 0;
+                while( CurrentFaceIndex < TSP->Node[i].NumFaces ) {
+                    DPrintf("TSPReadNodeChunk:Reading face %i for node %i at %li\n",CurrentFaceIndex,i,ftell(InFile) - TSP->Header.FaceOffset);
+                    fread(&TempFace.V0V1,sizeof(TempFace.V0V1),1,InFile);
+                    fread(&TempFace.V2,sizeof(TempFace.V2),1,InFile);
+                    fread(&TempFace.TextureDataIndex,sizeof(TempFace.TextureDataIndex),1,InFile);
+                    
+                    TSP->Node[i].FaceList[CurrentFaceIndex].V0V1 = TempFace.V0V1;
+                    TSP->Node[i].FaceList[CurrentFaceIndex].V2 = TempFace.V2;
+                    TSP->Node[i].FaceList[CurrentFaceIndex].TextureDataIndex = TempFace.TextureDataIndex;
+
+                    TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 = TempFace.Vert0 = TSP->Node[i].FaceList[CurrentFaceIndex].V0V1 & 0x1FFF;
+                    TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 = TempFace.Vert1 = ( TSP->Node[i].FaceList[CurrentFaceIndex].V0V1 >> 16 ) & 0X1FFF;
+                    TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 = TempFace.Vert2 = TSP->Node[i].FaceList[CurrentFaceIndex].V2 & 0X1FFF;
+                    DPrintf("TSPReadNodeChunk:Got Vert0:%i %i %i\n",TSP->Node[i].FaceList[CurrentFaceIndex].Vert0,TSP->Node[i].FaceList[CurrentFaceIndex].Vert1,
+                        TSP->Node[i].FaceList[CurrentFaceIndex].Vert2
+                    );
+                    assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 < TSP->Header.NumVertices);
+                    assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 < TSP->Header.NumVertices);
+                    assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 < TSP->Header.NumVertices);
+                    CurrentFaceIndex++;
+                    while( 1 ) {
+                        DPrintf("TSPReadNodeChunk:Reading additional face %i for node %i\n",CurrentFaceIndex,i);
+                        fread(&Marker,sizeof(Marker),1,InFile);
+                        DPrintf("TSPReadNodeChunk:Found Marker %i (Vertex %i) Texture:%i Mask %i\n",Marker,Marker & 0x1FFF,Marker >> 16,0x1FFF);
+
+                        if( ( Marker & 0x1FFF ) == 0x1FFF || Marker == 0x1fff1fff ) {
+                            DPrintf("TSPReadNodeChunk:Aborting since a marker was found\n");
+                            break;
+                        }
+                        TSP->Node[i].FaceList[CurrentFaceIndex].TextureDataIndex = Marker >> 16;
+                        if( (Marker & 0x8000) != 0 ) {
+                            TempFace.Vert0 = TempFace.Vert2;
+                        } else {
+                            TempFace.Vert0 = TempFace.Vert1;
+                            TempFace.Vert1 = TempFace.Vert2;
+                        }
+                        TempFace.Vert2 = Marker & 0x1FFF;
+                        TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 = TempFace.Vert0;
+                        TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 = TempFace.Vert1;
+                        TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 = TempFace.Vert2;
+                        assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 < TSP->Header.NumVertices);
+                        assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 < TSP->Header.NumVertices);
+                        assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 < TSP->Header.NumVertices);
+                        CurrentFaceIndex++;
+                    }
+                    if( Marker == 0x1fff1fff ) {
+                        DPrintf("TSPReadNodeChunk:Sentinel Face found Done reading faces for node %i\n",i);
+                        DPrintf("TSPReadNodeChunk:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,TSP->Node[i].NumFaces);
+                        assert(CurrentFaceIndex == TSP->Node[i].NumFaces);
+                        break;
+                    }
+                }
+                fseek(InFile,PrevFilePosition,SEEK_SET);
+            }
         }
     }
     TSPLookUpChildNode(TSP,InFile);
-    printf("Current file offset is %li\n",ftell(InFile));
+    DPrintf("Current file offset is %li\n",ftell(InFile));
 }
 
 void TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
@@ -781,7 +1058,7 @@ void TSPReadVertexChunk(TSP_t *TSP,FILE *InFile)
         }
 //         printf(" -- Vertex %i --\n",i);
 //         PrintTSPVec3(TSP->Vertex[i].Position);
-        assert(TSP->Vertex[i].Pad == 104);
+        assert(TSP->Vertex[i].Pad == 104 || TSP->Vertex[i].Pad == 105);
     }
 }
 
@@ -827,7 +1104,11 @@ void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
     }
     if( TSP->Header.NumDynamicDataBlock == 0 ) {
         DPrintf("TSPReadDynamicDataChunk:TSP has no Dynamic Data set.\n");
-        fseek(InFile,TSP->Header.CollisionOffset,SEEK_SET);
+        if( TSPIsVersion3(TSP) ) {
+            fseek(InFile,TSP->Header.TextureInfoOffset,SEEK_SET);
+        } else {
+            fseek(InFile,TSP->Header.CollisionOffset,SEEK_SET);
+        }
         return;
     }
     DPrintf("TSPReadDynamicDataChunk:TSP has %i Dynamic Data Block.\n",TSP->Header.NumDynamicDataBlock);
@@ -870,6 +1151,40 @@ void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
             fseek(InFile,TSP->DynamicData[i].Header.Size - Delta,SEEK_CUR);
         }
     }
+}
+
+void TSPReadTextureInfoChunk(TSP_t *TSP,FILE *InFile)
+{
+    int i;
+    int Ret;
+    
+    if( !TSP || !InFile ) {
+        bool InvalidFile = (InFile == NULL ? true : false);
+        DPrintf("TSPReadTextureInfoChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        return;
+    }
+    if( TSP->Header.NumTextureInfo == 0 || TSP->Header.NumTextureInfo == -1 ) {
+        DPrintf("TSPReadTextureInfoChunk:0 textures found in file %s.\n",TSP->FName);
+        return;
+    }
+    assert(sizeof(TSPTextureInfo_t) == 12);
+    TSP->TextureData = malloc(TSP->Header.NumTextureInfo * sizeof(TSPTextureInfo_t));
+    for( i = 0; i < TSP->Header.NumTextureInfo; i++ ) {
+        DPrintf("Reading texture info at %li\n",ftell(InFile));
+        Ret = fread(&TSP->TextureData[i],sizeof(TSPTextureInfo_t),1,InFile);
+            if( Ret != 1 ) {
+                DPrintf("TSPReadTextureInfoChunk:Early failure when reading face texture data %i\n",i);
+                return;
+            }
+            DPrintf(" -- Texture for Face V3 %i --\n",i);
+            DPrintf("TSB:%u\n",TSP->TextureData[i].TSB);
+            DPrintf("TSB:%u\n",TSP->TextureData[i].CBA);
+            DPrintf("U0:V0:%i %i\n",TSP->TextureData[i].UV0.u,TSP->TextureData[i].UV0.v);
+            DPrintf("U1:V1:%i %i\n",TSP->TextureData[i].UV1.u,TSP->TextureData[i].UV1.v);
+            DPrintf("U2:V2:%i %i\n",TSP->TextureData[i].UV2.u,TSP->TextureData[i].UV2.v);
+            DPrintf("Padding:%i\n",TSP->TextureData[i].Padding);
+    }
+
 }
 
 void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
@@ -938,7 +1253,7 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
 //         printf("-- Vertex %i --\n",i);
 //         PrintTSPVec3(TSP->CollisionData->Vertex[i].Position);
 //         printf("Pad is %i\n",TSP->CollisionData->Vertex[i].Pad);
-        assert(TSP->CollisionData->Vertex[i].Pad == 104);
+        assert(TSP->CollisionData->Vertex[i].Pad == 104 || TSP->CollisionData->Vertex[i].Pad == 105);
     }
     DPrintf("TSPReadCollisionChunk:Normals at %li\n",ftell(InFile));
     TSP->CollisionData->Normal = malloc(TSP->CollisionData->Header.NumNormals * sizeof(TSPVert_t));
@@ -1175,8 +1490,36 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
     TSP->CollisionVaoList = NULL;
     TSP->Next = NULL;
     TSP->Number = TSPNumber;
+    TSP->Face = NULL;
     strcpy(TSP->FName,GetBaseName(FName));
-    fread(&TSP->Header,sizeof(TSPHeader_t),1,TSPFile);
+    
+    fread(&TSP->Header.ID,sizeof(TSP->Header.ID),1,TSPFile);
+    fread(&TSP->Header.Version,sizeof(TSP->Header.Version),1,TSPFile);
+    fread(&TSP->Header.NumNodes,sizeof(TSP->Header.NumNodes),1,TSPFile);
+    fread(&TSP->Header.NodeOffset,sizeof(TSP->Header.NodeOffset),1,TSPFile);
+    fread(&TSP->Header.NumFaces,sizeof(TSP->Header.NumFaces),1,TSPFile);
+    fread(&TSP->Header.FaceOffset,sizeof(TSP->Header.FaceOffset),1,TSPFile);
+    fread(&TSP->Header.NumVertices,sizeof(TSP->Header.NumVertices),1,TSPFile);
+    fread(&TSP->Header.VertexOffset,sizeof(TSP->Header.VertexOffset),1,TSPFile);
+    fread(&TSP->Header.NumB,sizeof(TSP->Header.NumB),1,TSPFile);
+    fread(&TSP->Header.BOffset,sizeof(TSP->Header.BOffset),1,TSPFile);
+    fread(&TSP->Header.NumColors,sizeof(TSP->Header.NumColors),1,TSPFile);
+    fread(&TSP->Header.ColorOffset,sizeof(TSP->Header.ColorOffset),1,TSPFile);
+    fread(&TSP->Header.NumC,sizeof(TSP->Header.NumC),1,TSPFile);
+    fread(&TSP->Header.COffset,sizeof(TSP->Header.COffset),1,TSPFile);
+    fread(&TSP->Header.NumDynamicDataBlock,sizeof(TSP->Header.NumDynamicDataBlock),1,TSPFile);
+    fread(&TSP->Header.DynamicDataOffset,sizeof(TSP->Header.DynamicDataOffset),1,TSPFile);
+    fread(&TSP->Header.CollisionOffset,sizeof(TSP->Header.CollisionOffset),1,TSPFile);
+    
+    if( TSPIsVersion3(TSP) ) {
+        fread(&TSP->Header.NumTextureInfo,sizeof(TSP->Header.NumTextureInfo),1,TSPFile);
+        fread(&TSP->Header.TextureInfoOffset,sizeof(TSP->Header.TextureInfoOffset),1,TSPFile);
+    } else {
+        TSP->Header.NumTextureInfo = -1;
+        TSP->Header.TextureInfoOffset = -1;
+        TSP->TextureData = NULL;
+    }
+    
     DPrintf("Sizeof TSPHeader is %li\n",sizeof(TSPHeader_t));
     DPrintf(" -- TSP HEADER --\n");
     DPrintf("TSP Number: %i\n",TSP->Number);
@@ -1191,11 +1534,16 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
     DPrintf("NumC:%i COffset:%i\n",TSP->Header.NumC,TSP->Header.COffset);
     DPrintf("NumDynamicDataBlock:%i DynamicDataOffset:%i\n",TSP->Header.NumDynamicDataBlock,TSP->Header.DynamicDataOffset);
     DPrintf("CollisionOffset:%i\n",TSP->Header.CollisionOffset);
+    DPrintf("NumTextureInfo:%i TextureInfoOffset:%i\n",TSP->Header.NumTextureInfo,TSP->Header.TextureInfoOffset);
 
     assert(ftell(TSPFile) == TSP->Header.NodeOffset);
     TSPReadNodeChunk(TSP,TSPFile);
-    assert(ftell(TSPFile) == TSP->Header.FaceOffset);
-    TSPReadFaceChunk(TSP,TSPFile);
+    if( TSPIsVersion3(TSP) ) {
+        fseek(TSPFile,TSP->Header.VertexOffset,SEEK_SET);
+    } else {
+        assert(ftell(TSPFile) == TSP->Header.FaceOffset);
+        TSPReadFaceChunk(TSP,TSPFile);
+    }
     assert(ftell(TSPFile) == TSP->Header.VertexOffset);
     TSPReadVertexChunk(TSP,TSPFile);
     assert(TSP->Header.NumB == 0);
@@ -1203,6 +1551,10 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
     TSPReadColorChunk(TSP,TSPFile);
     assert(TSP->Header.NumC == 0);
     TSPReadDynamicDataChunk(TSP,TSPFile);
+    if( TSPIsVersion3(TSP) ) {
+        assert(ftell(TSPFile) == TSP->Header.TextureInfoOffset);
+        TSPReadTextureInfoChunk(TSP,TSPFile);
+    }
     assert(ftell(TSPFile) == TSP->Header.CollisionOffset);
     TSPReadCollisionChunk(TSP,TSPFile);
     fclose(TSPFile);

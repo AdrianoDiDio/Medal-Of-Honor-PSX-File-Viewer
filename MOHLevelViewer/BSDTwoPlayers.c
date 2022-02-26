@@ -237,7 +237,7 @@ void BSD2PReadNodeChunk(BSD2P_t *BSD,FILE *InFile)
         }
         Jump = BSD->NodeData.Node[i].Size - sizeof(BSDNode_t);
         DPrintf("Skipping %i bytes of data from %i.\n",Jump,GetCurrentFilePosition(InFile));
-        SkipFileSection(InFile,Jump);
+        SkipFileSection(Jump,InFile);
     }
     DPrintf("NodeList ends at %i\n",GetCurrentFilePosition(InFile));
 }

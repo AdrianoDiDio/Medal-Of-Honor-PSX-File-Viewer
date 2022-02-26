@@ -1399,7 +1399,7 @@ void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
         BSD->PropertySetFile.Property[i].NumNodes = (255 - BSD->PropertySetFile.Property[i].NumNodes) /*<< 1*/;
         DPrintf("Property contains %i nodes\n",BSD->PropertySetFile.Property[i].NumNodes);
         
-        SkipFileSection(BSDFile,1);
+        SkipFileSection(1,BSDFile);
         BSD->PropertySetFile.Property[i].NodeList = malloc(BSD->PropertySetFile.Property[i].NumNodes * sizeof(unsigned short));
         DPrintf("BSDReadPropertySetFile:Reading %li bytes.\n",BSD->PropertySetFile.Property[i].NumNodes * sizeof(unsigned short));
         for( j = 0; j <  BSD->PropertySetFile.Property[i].NumNodes; j++ ) {
@@ -1466,7 +1466,7 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     MemBegin = GetCurrentFilePosition(BSDFile);
     fread(&Number,sizeof(Number),1,BSDFile);
     while( Number == -1 ) {
-        SkipFileSection(BSDFile,14);
+        SkipFileSection(14,BSDFile);
         fread(&Number,sizeof(Number),1,BSDFile);
     }
     fseek(BSDFile,-sizeof(Number),SEEK_CUR);
@@ -1492,7 +1492,9 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     DPrintf("Data6 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off6,BSD->EntryTable.Off6 + 2048,BSD->EntryTable.Num6);
     DPrintf("Data7 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off7,BSD->EntryTable.Off7 + 2048,BSD->EntryTable.Num7);
     DPrintf("Data8 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off8,BSD->EntryTable.Off8 + 2048,BSD->EntryTable.Num8);
-
+    if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
+        SkipFileSection(16,BSDFile);
+    }
     DPrintf("Current Position after entries is %i\n",GetCurrentFilePosition(BSDFile));
     fread(&BSD->RenderObjectTable.NumRenderObject,sizeof(BSD->RenderObjectTable.NumRenderObject),1,BSDFile);
     int StartinUAt = GetCurrentFilePosition(BSDFile);
@@ -1500,7 +1502,11 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     assert(sizeof(BSDRenderObjectElement_t) == 256);
     BSD->RenderObjectTable.RenderObject = malloc(BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObjectElement_t));
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        assert(GetCurrentFilePosition(BSDFile) == StartinUAt + (i * 256));
+        if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
+            assert(GetCurrentFilePosition(BSDFile) == StartinUAt + (i * 276));
+        } else {
+            assert(GetCurrentFilePosition(BSDFile) == StartinUAt + (i * 256));
+        }
         DPrintf("Reading RenderObject %i at %i\n",i,GetCurrentFilePosition(BSDFile));
         fread(&BSD->RenderObjectTable.RenderObject[i],sizeof(BSD->RenderObjectTable.RenderObject[i]),1,BSDFile);
         DPrintf("RenderObject ID:%u\n",BSD->RenderObjectTable.RenderObject[i].ID);
@@ -1532,6 +1538,9 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
         } else {
             DPrintf("RenderObject No Reference set...\n");
         }
+        if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
+            SkipFileSection(20,BSDFile);
+        }
         //Grab the UnknownOffset value (Fread(UnknownOffset) Seek_set
         //UnknownOffset1 + ValueFrom(0x564) => Face Table.
         //UnknownOffset2 + ValueFrom(0x574) => Vertex Data
@@ -1546,7 +1555,7 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
         Jump = ((Element->Offset + 2048) + (Element->Size * 4)) - GetCurrentFilePosition(BSDFile);
         DPrintf("Skipping %i Bytes...\n",Jump);
         assert(Jump > 0);
-        SkipFileSection(BSDFile,Jump);
+        SkipFileSection(Jump,BSDFile);
     }
     DPrintf("Current Position after Q Block is: %i\n",GetCurrentFilePosition(BSDFile));
     assert( GetCurrentFilePosition(BSDFile) == (BSD->EntryTable.NodeTableOffset + 2048));
@@ -1774,7 +1783,7 @@ int LoadLevel(Level_t *Level)
         Level->TSPList = TSP;
     }
     //Keep on reading BSD
-    DPrintf("LoadLevel: Detected game %s\n",IsLevelMOHUnderground() ? "MOH:Underground" : "MOH");
+    DPrintf("LoadLevel: Detected game %s\n",LevelGetGameEngine() == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
     BSDLoad(Level->BSD,Level->MissionNumber,BSDFile);
     return 1;
 }

@@ -76,6 +76,11 @@
 
 #define MAX_FPS 60
 
+typedef enum
+{
+    MOH_GAME_STANDARD,
+    MOH_GAME_UNDERGROUND
+} MOHGame;
 
 typedef struct VidDriver_s
 {
@@ -158,6 +163,7 @@ typedef struct LevelSettings_s {
 typedef struct Level_s {
     char    BasePath[256];
     char    MissionPath[256];
+    char    EngineName[256];
     int     MissionNumber;
     int     LevelNumber;
     BSD_t  *BSD;
@@ -185,7 +191,7 @@ char   *String_Copy(const char *From);
 int     GetFileLength(FILE *Fp);
 char   *ReadTextFile(char *File,int Length);
 int     GetCurrentFilePosition(FILE *Fp);
-void    SkipFileSection(FILE *InFile,int SectionSize);
+void    SkipFileSection(int SectionSize,FILE *InFile);
 void    CreateDirIfNotExists(char *DirName);
 char   *SwitchExt(const char *In, const char *Ext);
 char   *GetBaseName(char *Path);
@@ -195,7 +201,7 @@ void    Vec_RotateXAxis(float Theta,Vec3_t *Vector);
 void    GL_Set3D();
 void    Cam_Update(ViewParm_t *Camera,int Orientation, float Sensibility);
 void    Cam_UpdateVectors(ViewParm_t *Camera);
-bool    IsLevelMOHUnderground();
+int     LevelGetGameEngine();
 void    Quit();
 
 #endif //__MOHLEVELVIEWER_H_
