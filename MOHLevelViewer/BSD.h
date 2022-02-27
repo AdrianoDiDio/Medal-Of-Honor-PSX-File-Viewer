@@ -22,6 +22,8 @@
 
 #define MOH_BSD_NUM_ENTRY 26
 
+#define MOH_RENDER_OBJECT_SIZE 256
+#define MOH_UNDERGROUND_RENDER_OBJECT_SIZE 276
 //Position is defined as if the BSD header was removed.
 //Real file position is + sizeof(BSD_HEADER_t).
 #define BSD_HANDLER_REG_TABLE_POSITION 0x59C
@@ -264,11 +266,26 @@ typedef struct BSDFace_s {
     unsigned int VData;
 } BSDFace_t;
 
+typedef struct BSDFaceV2_s {
+    unsigned int V0V1;
+    unsigned short V2;
+    short TSB;
+    BSDUv_t UV0;
+    BSDUv_t UV1;
+    unsigned short TexInfo;
+    BSDUv_t UV2;
+    
+    unsigned int Vert0;
+    unsigned int Vert1;
+    unsigned int Vert2;
+} BSDFaceV2_t;
+
 //TODO: CLEANUP
 typedef struct BSDRenderObject_s {
     BSDRenderObjectElement_t *Data;
     BSDPosition_t  *Vertex;
     BSDFace_t      *Face;
+    BSDFaceV2_t    *FaceV2;
     int             NumFaces;
     Vao_t          *VAO;
     Vec3_t          Position;

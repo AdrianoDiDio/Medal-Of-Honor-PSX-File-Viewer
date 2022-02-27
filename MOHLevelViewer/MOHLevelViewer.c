@@ -1009,7 +1009,7 @@ bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
 //         DPrintf("Couldn't load BSD2P...aborting.\n");
 //         return false;
 //     }
-    sprintf(Level->EngineName,"Engine %s",LevelGetGameEngine() == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
+    sprintf(Level->EngineName,"Engine %s",LevelGetGameEngine() == MOH_GAME_STANDARD ? "MOH" : "MOH Underground");
     return true;
     
 }
