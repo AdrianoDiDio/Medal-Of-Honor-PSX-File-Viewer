@@ -433,9 +433,10 @@ This block is found at position 1340 (excluding the header) or 3388 (including t
 
 
 #### RenderObject Block
-After the entry block we find the number of RenderObject stored as an int (4 bytes).
-A RenderObject, as the name implies , are all the objects that can be seen inside the level like Windows,Doors,Enemies,Weapons,Boxes,MG42s, etc...
-Each RenderObject has a fixed size of 256 bytes containing several fields that depending by the type of the RenderObject can be NULL or contains an offset to the data stored inside the BSD file.
+After the entry block we find the number of RenderObject stored as an int (4 bytes).  
+A RenderObject, as the name implies , are all the objects that can be seen inside the level like Windows,Doors,Enemies,Weapons,Boxes,MG42s, etc...  
+Each RenderObject has a fixed size of 256 bytes (276 bytes for MOH:Underground) containing several fields that depending by the type of the RenderObject can be 
+NULL or contains an offset to the data stored inside the BSD file.    
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -469,6 +470,10 @@ Each RenderObject has a fixed size of 256 bytes containing several fields that d
 | int  | 4 bytes  | Unknown Data Offset (Probably an offset to a Matrix stored in the file that represent the model rotation) |
 | char  | 52 bytes  | Unknown Data |
 | int  | 4 bytes  | Type |
+
+Medal Of Honor:Underground adds different new fields to the RenderObject struct increasing the size to 276.  
+In order to load the faces from these objects in MOH:Underground we need to read both offset 256 and 260 in order to get the Face Offset and  
+the Number of faces that needs to be drawn.  
 
 **NOTE that ScaleX/Y/Z Values must be divided by 4 and the value found is in fixed point format where 4096 is equal to 1.**
 
@@ -518,13 +523,43 @@ If the Face Data Offset is not zero then the RenderObject can be rendered using 
 | [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 2 |
 | unsigned int  | 4 bytes  | Vertex Data |
 
-Texture info contains all the information about the used texture for the current face and can be extracted in this way:
+
+this structure is slighly changed in MOH:Underground that uses the following format:  
+
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| unsigned int | 4 bytes | Vertex 0 and Vertex 1 |
+| unsigned short | 2 bytes | Vertex 2 |
+| short  | 2 bytes  | [TSB](#TSB) Info |
+| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 0 |
+| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 1 |
+| short | 2 bytes | TexInfo (Texture page and Color Mode) |
+| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 2 |
+
+The algorithm for loading it is similar to what it is used on the TSP version 3 but using a different structure for the face data.  
+After reading the data and storing it into an array, we need to iterate and read the next 4-bytes that contains a vertex and a new UV coordinate.  
+Note that unlike V2, that it is not encoded, V0 and V1 can be extracted using bit shifting: (V0V1 & 0x1FFF) and (V0V1 >> 16 ) & 0X1FFF  
+There are three possible cases that we can find when reading this int.  
+If it is equal to 0x1fff1fff than this is the last data that we need to read for that node.  
+If, instead, is equal to 0x1FFF then we need to read a new face struct and read the next int until one of the two markers is found.  
+Otherwise it is a valid int and can be used to build a new face.  
+The new face is made from the main face struct that we read at the beginning where the vertex are updated based on the current integer.  
+If the integer has the left-most bit set then we need to swap Vertex0 and Vertex2 (and the corresponding texture coordinates UV0 and UV2),   
+otherwise we need to set V0 equals to V1 and  V1 equals to V2 (this means UV0 = UV1 and UV1 = UV2).  
+Finally we update Vertex2 and UV2 with the new value taken from the int.    
+Note that the Value read is an int that contains two informations: Vertex Number  (Value & 0x1FFF) and Texture Coordinates  
+(Value >> 16) >> 8 for the u coordinate while the v coordinate is equal to (Value >> 0x10) & 0xff.    
+At the end of all the iterations we should find that the number of loaded faces is equals to the one declared in the RenderObject.    
+
+
+Texture info contains all the information about the used texture for the current face and can be extracted in this way:  
 ##### Color Mode
 > (TexInfo & 0xC0) >> 7
 
 For the result value read about [TSB](#TSB) since it uses the same format.
 ##### Texture Page
-> TexInfo & 0x3f
+> TexInfo & 0x3f or TexInfo if loading FaceV2 (for MOH:Underground)
 
 For the result value read about [TSB](#TSB) since it uses the same format.
 
