@@ -1263,8 +1263,8 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
             printf("TSPReadCollisionChunk:Early failure when reading normal data.\n");
             return;
         }
-//         printf("-- Normal %i --\n",i);
-//         PrintTSPVec3(TSP->CollisionData->Normal[i].Position);
+        printf("-- Normal %i --\n",i);
+        printf("%i;%i;%i\n",TSP->CollisionData->Normal[i].Position.x,TSP->CollisionData->Normal[i].Position.y,TSP->CollisionData->Normal[i].Position.z);
 //         printf("Pad is %i\n",TSP->CollisionData->Normal[i].Pad);
         assert(TSP->CollisionData->Normal[i].Pad == 0);
     }
@@ -1278,7 +1278,11 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
         }
         printf("-- Face %i --\n",i);
 //         printf("V0|V1|V2:%u %u %u\n",TSP->CollisionData->Face[i].V0,TSP->CollisionData->Face[i].V1,TSP->CollisionData->Face[i].V2);
-//         printf("Normal Index:%u\n",TSP->CollisionData->Face[i].NormalIndex);
+        if( TSPIsVersion3(TSP) ) {
+            TSP->CollisionData->Face[i].NormalIndex = TSP->CollisionData->Face[i].NormalIndex & 0xFFF;
+        }
+        assert(TSP->CollisionData->Face[i].NormalIndex < TSP->CollisionData->Header.NumNormals);
+        printf("Normal Index:%u\n",TSP->CollisionData->Face[i].NormalIndex);
 
     }
 //     assert(ftell(InFile) == GetFileLength(InFile));
