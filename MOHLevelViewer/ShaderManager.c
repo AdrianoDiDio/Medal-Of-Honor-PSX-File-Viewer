@@ -80,7 +80,7 @@ GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *Fragment
     glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &ShaderTaskResult);
     glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
     
-    if ( InfoLogLength > 0 && ShaderTaskResult == 1 ){
+    if ( InfoLogLength > 0 && ShaderTaskResult == 0 ){
         ShaderInfoLog = malloc(InfoLogLength + 1);
         glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, ShaderInfoLog);
         ShaderInfoLog[InfoLogLength] = '\0';
@@ -95,7 +95,7 @@ GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *Fragment
     glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &ShaderTaskResult);
     glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
     
-    if ( InfoLogLength > 0 && ShaderTaskResult == 1){
+    if ( InfoLogLength > 0 && ShaderTaskResult == 0){
         ShaderInfoLog = malloc(InfoLogLength + 1);
         glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, ShaderInfoLog);
         ShaderInfoLog[InfoLogLength] = '\0';

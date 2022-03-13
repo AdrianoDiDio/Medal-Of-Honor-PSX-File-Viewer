@@ -400,6 +400,9 @@ bool Vid_OpenWindow()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#ifdef _DEBUG
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#endif
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
@@ -798,6 +801,86 @@ void GL_Set3D()
     glLoadIdentity( );
 #endif
 }
+void GLDebugOutput(GLenum Source, GLenum Type, unsigned int ID, GLenum Severity, GLsizei Length, const char *Message, const void *UserParam)
+{
+    DPrintf("---------------\n");
+    DPrintf("Debug message ID: %i\n",ID);
+
+
+    switch (Source) {
+        case GL_DEBUG_SOURCE_API:             
+            DPrintf("Source: API"); 
+            break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   
+            DPrintf("Source: Window System"); 
+            break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER: 
+            DPrintf("Source: Shader Compiler"); 
+            break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:     
+            DPrintf("Source: API"); 
+            break;
+        case GL_DEBUG_SOURCE_APPLICATION:     
+            DPrintf("Source: Application"); 
+            break;
+        case GL_DEBUG_SOURCE_OTHER:           
+            DPrintf("Source: Other"); 
+            break;
+    }
+    DPrintf("\n");
+
+    switch (Type) {
+        case GL_DEBUG_TYPE_ERROR:               
+            DPrintf("Type: Error");
+            break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: 
+            DPrintf("Type: Deprecated Behaviour");
+            break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  
+            DPrintf("Type: Undefined Behaviour"); 
+            break; 
+        case GL_DEBUG_TYPE_PORTABILITY:         
+            DPrintf("Type: Portability");
+            break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         
+            DPrintf("Type: Performance");
+            break;
+        case GL_DEBUG_TYPE_MARKER:              
+            DPrintf("Type: Marker");
+            break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:          
+            DPrintf("Type: Push Group");
+            break;
+        case GL_DEBUG_TYPE_POP_GROUP:           
+            DPrintf("Type: Pop Group"); 
+            break;
+        case GL_DEBUG_TYPE_OTHER:               
+            DPrintf("Type: Other"); 
+            break;
+    } 
+    DPrintf("\n");
+    
+    switch (Severity) {
+        case GL_DEBUG_SEVERITY_HIGH:         
+            DPrintf("Severity: High"); 
+            break;
+        case GL_DEBUG_SEVERITY_MEDIUM:       
+            DPrintf("Severity: Medium"); break;
+        case GL_DEBUG_SEVERITY_LOW:          
+            DPrintf("Severity: Low");
+            break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION:
+            DPrintf("Severity: Notification"); 
+            break;
+    } 
+    DPrintf("\n");
+    
+    DPrintf("Message:%s\n",Message);
+    DPrintf("---------------\n");
+    if( Severity == GL_DEBUG_SEVERITY_HIGH ) {
+        assert(1!=1);
+    }
+}
 
 void GL_SetDefaultState()
 {
@@ -810,6 +893,13 @@ void GL_SetDefaultState()
     glDepthFunc( GL_LEQUAL );
 
     glEnable( GL_DEPTH_TEST );
+    
+#ifdef _DEBUG
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
+    glDebugMessageCallback(GLDebugOutput, NULL);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+#endif
 
 //     glEnableClientState( GL_VERTEX_ARRAY );
 }

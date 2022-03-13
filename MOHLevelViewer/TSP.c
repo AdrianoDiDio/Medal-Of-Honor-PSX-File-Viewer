@@ -418,7 +418,7 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
     TextureOffset = 3;
     ColorOffset = 5;
                 
-    VertexSize = Stride * 3 * Target;
+    VertexSize = Stride * 3 * Node->NumFaces;
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
     
