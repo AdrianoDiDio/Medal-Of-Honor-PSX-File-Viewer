@@ -60,9 +60,10 @@ typedef struct TIMImage_s {
     struct TIMImage_s *Next;
 } TIMImage_t;
 
-TIMImage_t *LoadTIMImage(FILE *TIMImage,int NumImages);
-TIMImage_t *GetAllTimImages(char *File);
-Byte *TimToOpenGL24(TIMImage_t *Image);
-Byte *TimToOpenGL32(TIMImage_t *Image);
-void TimImageListFree(TIMImage_t *ImageList);
+TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages);
+TIMImage_t *TIMGetAllImages(char *File);
+Byte *TIMExpandCLUTImageData(TIMImage_t *Image);
+Byte *TIMToOpenGL24(TIMImage_t *Image);
+Byte *TIMToOpenGL32(TIMImage_t *Image);
+void TIMImageListFree(TIMImage_t *ImageList);
 #endif //__TIM_H_

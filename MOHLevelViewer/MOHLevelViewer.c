@@ -1080,7 +1080,7 @@ bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
     //but if we need to load all the level sounds then 0 means Standard Mode while 1 American (All voices are translated to english!).
     snprintf(Buffer,sizeof(Buffer),"%s/%i_%i0.TAF",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 //     snprintf(Buffer,sizeof(Buffer),"%s/DATA/TWOPLAYR/PLAYERS/B/GI_P1.TAF",Level->BasePath);
-    Level->ImageList = GetAllTimImages(Buffer);
+    Level->ImageList = TIMGetAllImages(Buffer);
     //Step.2 Load the BSD file and also load the TSP one.
     if( LoadLevel(Level) == -1 ) {
         DPrintf("Failed to LoadLevel\n");
@@ -1130,7 +1130,7 @@ void LevelCleanUp()
     BSDFree(Level->BSD);
 //     BSD2PFree(Level->BSDTwoP);
     TSPFreeList(Level->TSPList);
-    TimImageListFree(Level->ImageList);
+    TIMImageListFree(Level->ImageList);
     free(Level->VRAM);
     FontFree(Level->Font);
     free(Level);

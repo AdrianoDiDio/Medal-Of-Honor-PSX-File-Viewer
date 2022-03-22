@@ -19,7 +19,7 @@
 
 #include "MOHLevelViewer.h"
 
-void TimImageListFree(TIMImage_t *ImageList)
+void TIMImageListFree(TIMImage_t *ImageList)
 {
     TIMImage_t *Temp;
     
@@ -98,11 +98,52 @@ TIMImage_t *GetTIMByClutPage(TIMImage_t *List,int clutx,int cluty,int texpage)
     }
     return NULL;
 }
+/*
+    Given a valid TIM Image it returns a byte array containing all the indices
+    layed out as a regular image.
+*/
+Byte *TIMExpandCLUTImageData(TIMImage_t *Image)
+{
+    Byte *Data;
+    int x;
+    int y;
+    int WritePointer;
+    if( Image->Header.BPP != BPP_4 || Image->Header.BPP != BPP_8 ) {
+        printf("TIMExpandCLUTImageData:Cannot expand CLUT data on a non-paletted image.\n");
+        return NULL;
+    }
+    Data = malloc(Image->Width * Image->Height );
+    WritePointer = 0;
+    if( Image->Header.BPP == BPP_8  ) {
+        for (y = 0; y < Image->Height; y++) {
+            for (x = 0; x < Image->RowCount; x++) {
+                Byte ClutIndex0 = Image->Data[x+Image->RowCount*y] & 0xFF;
+                Byte ClutIndex1 = (Image->Data[x+Image->RowCount*y] & 0xFF00) >> 8;
+                Data[WritePointer++] = ClutIndex0;
+                Data[WritePointer++] = ClutIndex1;
+            }
+        }
+    } else if ( Image->Header.BPP == BPP_4 ) {
+        for( y = 0; y < Image->Height; y++ ) {
+            for( x = 0; x < Image->RowCount; x++ ) {
+                Byte ClutIndex0 = Image->Data[x+Image->RowCount*y] & 0xF;
+                Byte ClutIndex1 = (Image->Data[x+Image->RowCount*y] >> 4) & 0xF;
+                Byte ClutIndex2 = (Image->Data[x+Image->RowCount*y] >> 8) & 0xF;
+                Byte ClutIndex3 = (Image->Data[x+Image->RowCount*y] >> 12) & 0xF;
+                Data[WritePointer++] = ClutIndex0;
+                Data[WritePointer++] = ClutIndex1;
+                Data[WritePointer++] = ClutIndex2;
+                Data[WritePointer++] = ClutIndex3;
 
+            }
+        }
+    }
+    return Data;
+}
 /*
     Going RGBA now....
 */
-Byte *TimToOpenGL32(TIMImage_t *Image)
+Byte *TIMToOpenGL32(TIMImage_t *Image)
 {
     Byte *Data;
     int x;
@@ -169,7 +210,7 @@ Byte *TimToOpenGL32(TIMImage_t *Image)
     }
     return Data;
 }
-Byte *TimToOpenGL24(TIMImage_t *Image)
+Byte *TIMToOpenGL24(TIMImage_t *Image)
 {
     Byte *Data;
     int x;
@@ -417,7 +458,7 @@ void GetPalette(FILE *TIMIMage,TIMImage_t *Image)
 }
 
 
-TIMImage_t *LoadTIMImage(FILE *TIMImage,int NumImages)
+TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
 {
     TIMImage_t *ResultImage;
     float ImageSizeOffset;
@@ -527,7 +568,7 @@ TIMImage_t *LoadTIMImage(FILE *TIMImage,int NumImages)
     return ResultImage;
 }
 
-TIMImage_t *GetAllTimImages(char *File)
+TIMImage_t *TIMGetAllImages(char *File)
 {
     TIMImage_t *List;
     FILE *TIMFile;
@@ -544,7 +585,7 @@ TIMImage_t *GetAllTimImages(char *File)
     List = NULL;
     NumImages = 0;
     while( 1 ) {
-        TIMImage_t *Image = LoadTIMImage(TIMFile,NumImages);
+        TIMImage_t *Image = TIMLoadImage(TIMFile,NumImages);
         if( Image == NULL ) {
             break;
         }

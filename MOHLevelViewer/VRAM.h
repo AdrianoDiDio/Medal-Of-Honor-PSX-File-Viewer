@@ -31,6 +31,8 @@ typedef struct VRamPage_s {
 
 typedef struct VRam_s {
     VRAMPage_t Page;
+    VRAMPage_t PalettePage;
+    VRAMPage_t TextureIndexPage;
 } VRAM_t;
 
 VRAM_t *VRAMInit(TIMImage_t *ImageList);

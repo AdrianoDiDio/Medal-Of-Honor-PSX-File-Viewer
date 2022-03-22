@@ -111,7 +111,7 @@ float VRAMGetTexturePageY(int VRAMPage,int ColorMode)
         ModeOffset = 512.f;
     }
     PageY = ModeOffset;
-    if( VRAMPage > 16 ) {
+    if( VRAMPage >= 16 ) {
         PageY += 256.f;
     }
     return PageY;
@@ -145,9 +145,52 @@ void VRAMPutTexture(VRAM_t *VRAM,TIMImage_t *Image)
     SrcRect.y = VRAMGetTexturePageY(VRAMPage,Image->Header.BPP) + DestY;
     SrcRect.w = Image->Width;
     SrcRect.h = Image->Height;
-    Byte *Data = TimToOpenGL32(Image);
+    Byte *Data = TIMToOpenGL32(Image);
     Src = SDL_CreateRGBSurfaceFrom(Data,Image->Width,Image->Height,32,4 * Image->Width,0x000000FF,0x0000FF00,0x00FF0000, 0xFF000000);
     SDL_BlitScaled(Src,NULL,VRAM->Page.Surface,&SrcRect);
+}
+void VRAMPutRawTexture(VRAM_t *VRAM,TIMImage_t *Image)
+{
+    unsigned int TempTexture;
+    int VRAMPage;
+    SDL_Surface *Src;
+    SDL_Rect SrcRect;
+    int DestX;
+    int DestY;
+    float ColorOffsetMultiplier;
+    Byte *ImageData;
+    
+    VRAMPage = Image->TexturePage;
+    
+    if( Image->Header.BPP == BPP_4 ) {
+        ColorOffsetMultiplier = 4;
+    } else {
+        ColorOffsetMultiplier = 2;
+    }
+    
+    if( Image->FrameBufferY >= 256 ) {
+        DestX = (Image->FrameBufferX - ((Image->TexturePage - 16) * 64)) * ColorOffsetMultiplier;
+        DestY = Image->FrameBufferY - 256;
+    } else {
+        DestX = (Image->FrameBufferX - (Image->TexturePage * 64)) * ColorOffsetMultiplier;
+        DestY = Image->FrameBufferY;
+    }
+    SrcRect.x = VRAMGetTexturePageX(VRAMPage) + DestX;
+    SrcRect.y = VRAMGetTexturePageY(VRAMPage,Image->Header.BPP) + DestY;
+    SrcRect.w = Image->Width;
+    SrcRect.h = Image->Height;    
+    glCreateTextures(GL_TEXTURE_2D, 1, &TempTexture);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    ImageData = TIMExpandCLUTImageData(Image);
+    if( ImageData == NULL ) {
+        DPrintf("VRAMPutRAWTexture:Failed to expand image %s\n",Image->Name);
+        return;
+    }
+    glTextureStorage2D(TempTexture,1,GL_R8UI, SrcRect.w, SrcRect.h);
+    glTextureSubImage2D(TempTexture, 0, 0, 0, SrcRect.w, SrcRect.h, GL_RED_INTEGER, GL_UNSIGNED_BYTE, ImageData);
+    glCopyImageSubData(TempTexture, GL_TEXTURE_2D, 0, 0, 0, 0, VRAM->TextureIndexPage.TextureID, GL_TEXTURE_2D, 0, SrcRect.x, SrcRect.y, 0, 
+                       SrcRect.w, SrcRect.h, 1);
+    glDeleteTextures(1, &TempTexture);
 }
 
 VRAM_t *VRAMInit(TIMImage_t *ImageList)
@@ -162,9 +205,28 @@ VRAM_t *VRAMInit(TIMImage_t *ImageList)
     
     VRAM->Page.Surface = SDL_CreateRGBSurface(0,VRAM->Page.Width,VRAM->Page.Height,32, 0x000000FF,0x0000FF00,0x00FF0000, 0xFF000000);
 
+    glGenTextures(1,&VRAM->PalettePage.TextureID);
+    glBindTexture(GL_TEXTURE_2D,VRAM->PalettePage.TextureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+    glTexStorage2D(GL_TEXTURE_2D,1,GL_RGB5_A1,VRAM->Page.Width, VRAM->Page.Height);
+    glBindTexture(GL_TEXTURE_2D,0);
+
+    glGenTextures(1,&VRAM->TextureIndexPage.TextureID);
+    glBindTexture(GL_TEXTURE_2D,VRAM->TextureIndexPage.TextureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+    glTexStorage2D(GL_TEXTURE_2D,1,GL_R8UI,VRAM->Page.Width, VRAM->Page.Height);
+    glBindTexture(GL_TEXTURE_2D,0);
+
 
     for( Iterator = ImageList; Iterator; Iterator = Iterator->Next ) {
         VRAMPutTexture(VRAM,Iterator);
+        VRAMPutRawTexture(VRAM,Iterator);
     }
 #ifdef _DEBUG
     VRAMDump(VRAM);

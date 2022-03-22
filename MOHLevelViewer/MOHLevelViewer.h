@@ -39,7 +39,7 @@
 #include "Types.h"
 #include "ShaderManager.h"
 #include "Vao.h"
-#include "Tim.h"
+#include "TIM.h"
 #include "VRAM.h"
 #include "Font.h"
 #include "TSP.h"
