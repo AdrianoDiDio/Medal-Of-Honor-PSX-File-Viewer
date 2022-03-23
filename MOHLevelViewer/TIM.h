@@ -38,13 +38,6 @@ typedef struct TIMHeader_s {
     unsigned short NumCluts;
 } TIMHeader_t;
 
-typedef struct CLUTColor_s {
-    Byte R;
-    Byte G;
-    Byte B;
-    Byte STP; //Transparency - Not used at the moment.
-} CLUTColor_t;
-
 typedef struct TIMImage_s {
     char        Name[256];
     TIMHeader_t Header;
@@ -55,7 +48,8 @@ typedef struct TIMImage_s {
     unsigned short FrameBufferX; // Hard-Wired texture memory location.
     unsigned short FrameBufferY; // Hard-Wired texture memory location.
     unsigned int   TexturePage;
-    CLUTColor_t *CLUT;
+    unsigned int   CLUTTexturePage;
+    unsigned short *CLUT;
     unsigned short /*Byte*/ *Data;
     struct TIMImage_s *Next;
 } TIMImage_t;

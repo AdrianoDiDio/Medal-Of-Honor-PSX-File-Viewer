@@ -299,7 +299,7 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
     TextureOffset = 3;
     ColorOffset = 5;
                 
-    VertexSize = Stride * 3 * Target;
+    VertexSize = Stride * 3 * Node->NumFaces;
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
     
@@ -377,7 +377,7 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
         VertexPointer += 8;
     }
     Vao = VaoInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,
-                        TSB,CBA,Target * 3);
+                        TSB,CBA,Node->NumFaces * 3);
     Vao->Next = Node->LeafFaceListVao;
     Node->LeafFaceListVao = Vao;
     free(VertexData);

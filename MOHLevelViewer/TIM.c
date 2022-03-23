@@ -31,10 +31,6 @@ void TIMImageListFree(TIMImage_t *ImageList)
         free(Temp);
     }
 }
-void PrintClut(TIMImage_t *Image,int ClutIndex)
-{
-    printf("CLUT %i => (%i;%i;%i)\n",ClutIndex,Image->CLUT[ClutIndex].R,Image->CLUT[ClutIndex].G,Image->CLUT[ClutIndex].B);
-}
 
 Byte GetR(short Color)
 {
@@ -53,18 +49,19 @@ Byte GetSTP(short Color)
     return (Color & 0x8000) >> 15;
 }
 
-bool IsClutColorZero(CLUTColor_t Color)
+bool IsClutColorZero(unsigned short Color)
 {
-    return (Color.R == 0) &&
-           (Color.G == 0) && 
-           (Color.B == 0);
+    return (GetR(Color) == 0) &&
+           (GetG(Color) == 0) && 
+           (GetB(Color) == 0);
 }
 
-int GetAlphaValue(CLUTColor_t Color)
+int GetAlphaValue(unsigned short Color)
 {
+    int STP;
     int Result;    
-    
-    if( Color.STP ) {
+    STP = GetSTP(Color);
+    if( STP ) {
         Result = 255;
 //         if( IsClutColorZero(Color) ) {
 //             Result = 255;
@@ -108,7 +105,7 @@ Byte *TIMExpandCLUTImageData(TIMImage_t *Image)
     int x;
     int y;
     int WritePointer;
-    if( Image->Header.BPP != BPP_4 || Image->Header.BPP != BPP_8 ) {
+    if( Image->Header.BPP != BPP_4 && Image->Header.BPP != BPP_8 ) {
         printf("TIMExpandCLUTImageData:Cannot expand CLUT data on a non-paletted image.\n");
         return NULL;
     }
@@ -159,15 +156,15 @@ Byte *TIMToOpenGL32(TIMImage_t *Image)
                 Byte ClutIndex0 = Image->Data[x+Image->RowCount*y] & 0xFF;
                 Byte ClutIndex1 = (Image->Data[x+Image->RowCount*y] & 0xFF00) >> 8;
                 int BaseLocation0 = (xOffs + Image->Width * y) * 4;
-                Data[BaseLocation0 + 0] = Image->CLUT[ClutIndex0].R;
-                Data[BaseLocation0 + 1] = Image->CLUT[ClutIndex0].G;
-                Data[BaseLocation0 + 2] = Image->CLUT[ClutIndex0].B;
+                Data[BaseLocation0 + 0] = GetR(Image->CLUT[ClutIndex0]);
+                Data[BaseLocation0 + 1] = GetG(Image->CLUT[ClutIndex0]);
+                Data[BaseLocation0 + 2] = GetB(Image->CLUT[ClutIndex0]);
                 Data[BaseLocation0 + 3] = GetAlphaValue(Image->CLUT[ClutIndex0]);
                 xOffs++;
                 int BaseLocation1 = (xOffs + Image->Width * y) * 4;
-                Data[BaseLocation1 + 0] = Image->CLUT[ClutIndex1].R;
-                Data[BaseLocation1 + 1] = Image->CLUT[ClutIndex1].G;
-                Data[BaseLocation1 + 2] = Image->CLUT[ClutIndex1].B;
+                Data[BaseLocation1 + 0] = GetR(Image->CLUT[ClutIndex1]);
+                Data[BaseLocation1 + 1] = GetG(Image->CLUT[ClutIndex1]);
+                Data[BaseLocation1 + 2] = GetB(Image->CLUT[ClutIndex1]);
                 Data[BaseLocation1 + 3] = GetAlphaValue(Image->CLUT[ClutIndex1]);
                 xOffs++;
             }
@@ -182,27 +179,27 @@ Byte *TIMToOpenGL32(TIMImage_t *Image)
                 Byte ClutIndex3 = (Image->Data[x+Image->RowCount*y] >> 12) & 0xF;
 
                 int BaseLocation0 = (xOffs + Image->Width * y)*4;
-                Data[BaseLocation0 + 0] = Image->CLUT[ClutIndex0].R;
-                Data[BaseLocation0 + 1] = Image->CLUT[ClutIndex0].G;
-                Data[BaseLocation0 + 2] = Image->CLUT[ClutIndex0].B;
+                Data[BaseLocation0 + 0] = GetR(Image->CLUT[ClutIndex0]);
+                Data[BaseLocation0 + 1] = GetG(Image->CLUT[ClutIndex0]);
+                Data[BaseLocation0 + 2] = GetB(Image->CLUT[ClutIndex0]);
                 Data[BaseLocation0 + 3] = GetAlphaValue(Image->CLUT[ClutIndex0]);
                 xOffs++;
                 int BaseLocation1 = (xOffs + Image->Width * y) * 4;
-                Data[BaseLocation1 + 0] = Image->CLUT[ClutIndex1].R;
-                Data[BaseLocation1 + 1] = Image->CLUT[ClutIndex1].G;
-                Data[BaseLocation1 + 2] = Image->CLUT[ClutIndex1].B;
+                Data[BaseLocation1 + 0] = GetR(Image->CLUT[ClutIndex1]);
+                Data[BaseLocation1 + 1] = GetG(Image->CLUT[ClutIndex1]);
+                Data[BaseLocation1 + 2] = GetB(Image->CLUT[ClutIndex1]);
                 Data[BaseLocation1 + 3] = GetAlphaValue(Image->CLUT[ClutIndex1]);
                 xOffs++;
                 int BaseLocation2 = (xOffs + Image->Width * y) * 4;
-                Data[BaseLocation2 + 0] = Image->CLUT[ClutIndex2].R;
-                Data[BaseLocation2 + 1] = Image->CLUT[ClutIndex2].G;
-                Data[BaseLocation2 + 2] = Image->CLUT[ClutIndex2].B;
+                Data[BaseLocation2 + 0] = GetR(Image->CLUT[ClutIndex2]);
+                Data[BaseLocation2 + 1] = GetG(Image->CLUT[ClutIndex2]);
+                Data[BaseLocation2 + 2] = GetB(Image->CLUT[ClutIndex2]);
                 Data[BaseLocation2 + 3] = GetAlphaValue(Image->CLUT[ClutIndex2]);
                 xOffs++;
                 int BaseLocation3 = (xOffs + Image->Width * y) * 4;
-                Data[BaseLocation3 + 0] = Image->CLUT[ClutIndex3].R;
-                Data[BaseLocation3 + 1] = Image->CLUT[ClutIndex3].G;
-                Data[BaseLocation3 + 2] = Image->CLUT[ClutIndex3].B;
+                Data[BaseLocation3 + 0] = GetR(Image->CLUT[ClutIndex3]);
+                Data[BaseLocation3 + 1] = GetG(Image->CLUT[ClutIndex3]);
+                Data[BaseLocation3 + 2] = GetB(Image->CLUT[ClutIndex3]);
                 Data[BaseLocation3 + 3] = GetAlphaValue(Image->CLUT[ClutIndex3]);
                 xOffs++;
             }
@@ -226,14 +223,14 @@ Byte *TIMToOpenGL24(TIMImage_t *Image)
                 Byte ClutIndex0 = Image->Data[x+Image->RowCount*y] & 0xFF;
                 Byte ClutIndex1 = (Image->Data[x+Image->RowCount*y] & 0xFF00) >> 8;
                 int BaseLocation0 = (xOffs + Image->Width * y) * 3;
-                Data[BaseLocation0 + 0] = Image->CLUT[ClutIndex0].R;
-                Data[BaseLocation0 + 1] = Image->CLUT[ClutIndex0].G;
-                Data[BaseLocation0 + 2] = Image->CLUT[ClutIndex0].B;
+                Data[BaseLocation0 + 0] = GetR(Image->CLUT[ClutIndex0]);
+                Data[BaseLocation0 + 1] = GetG(Image->CLUT[ClutIndex0]);
+                Data[BaseLocation0 + 2] = GetB(Image->CLUT[ClutIndex0]);
                 xOffs++;
                 int BaseLocation1 = (xOffs + Image->Width * y) * 3;
-                Data[BaseLocation1 + 0] = Image->CLUT[ClutIndex1].R;
-                Data[BaseLocation1 + 1] = Image->CLUT[ClutIndex1].G;
-                Data[BaseLocation1 + 2] = Image->CLUT[ClutIndex1].B;
+                Data[BaseLocation1 + 0] = GetR(Image->CLUT[ClutIndex1]);
+                Data[BaseLocation1 + 1] = GetG(Image->CLUT[ClutIndex1]);
+                Data[BaseLocation1 + 2] = GetB(Image->CLUT[ClutIndex1]);
                 xOffs++;
             }
         }
@@ -247,24 +244,24 @@ Byte *TIMToOpenGL24(TIMImage_t *Image)
                 Byte ClutIndex3 = (Image->Data[x+Image->RowCount*y] >> 12) & 0xF;
 
                 int BaseLocation0 = (xOffs + Image->Width * y)*3;
-                Data[BaseLocation0 + 0] = Image->CLUT[ClutIndex0].R;
-                Data[BaseLocation0 + 1] = Image->CLUT[ClutIndex0].G;
-                Data[BaseLocation0 + 2] = Image->CLUT[ClutIndex0].B;
+                Data[BaseLocation0 + 0] = GetR(Image->CLUT[ClutIndex0]);
+                Data[BaseLocation0 + 1] = GetG(Image->CLUT[ClutIndex0]);
+                Data[BaseLocation0 + 2] = GetB(Image->CLUT[ClutIndex0]);
                 xOffs++;
                 int BaseLocation1 = (xOffs + Image->Width * y) * 3;
-                Data[BaseLocation1 + 0] = Image->CLUT[ClutIndex1].R;
-                Data[BaseLocation1 + 1] = Image->CLUT[ClutIndex1].G;
-                Data[BaseLocation1 + 2] = Image->CLUT[ClutIndex1].B;
+                Data[BaseLocation1 + 0] = GetR(Image->CLUT[ClutIndex1]);
+                Data[BaseLocation1 + 1] = GetG(Image->CLUT[ClutIndex1]);
+                Data[BaseLocation1 + 2] = GetB(Image->CLUT[ClutIndex1]);
                 xOffs++;
                 int BaseLocation2 = (xOffs + Image->Width * y) * 3;
-                Data[BaseLocation2 + 0] = Image->CLUT[ClutIndex2].R;
-                Data[BaseLocation2 + 1] = Image->CLUT[ClutIndex2].G;
-                Data[BaseLocation2 + 2] = Image->CLUT[ClutIndex2].B;
+                Data[BaseLocation2 + 0] = GetR(Image->CLUT[ClutIndex2]);
+                Data[BaseLocation2 + 1] = GetG(Image->CLUT[ClutIndex2]);
+                Data[BaseLocation2 + 2] = GetB(Image->CLUT[ClutIndex2]);
                 xOffs++;
                 int BaseLocation3 = (xOffs + Image->Width * y) * 3;
-                Data[BaseLocation3 + 0] = Image->CLUT[ClutIndex3].R;
-                Data[BaseLocation3 + 1] = Image->CLUT[ClutIndex3].G;
-                Data[BaseLocation3 + 2] = Image->CLUT[ClutIndex3].B;
+                Data[BaseLocation3 + 0] = GetR(Image->CLUT[ClutIndex3]);
+                Data[BaseLocation3 + 1] = GetG(Image->CLUT[ClutIndex3]);
+                Data[BaseLocation3 + 2] = GetB(Image->CLUT[ClutIndex3]);
                 xOffs++;
             }
         }
@@ -279,8 +276,13 @@ Byte **SetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
     int y;
     int NumComponent;
     //Used in 24BPP mode
-    CLUTColor_t RGB1;
-    CLUTColor_t RGB2;
+    Byte R1;
+    Byte G1;
+    Byte B1;
+    Byte R2;
+    Byte G2;
+    Byte B2;
+
     RowPointer = png_malloc  (PNGPtr, Image->Height * sizeof (Byte *));
     if( Image->Header.BPP == BPP_4  ) {
         for (y = 0; y < Image->Height; y++) {
@@ -292,18 +294,18 @@ Byte **SetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
                 Byte ClutIndex1 = (Image->Data[x+Image->RowCount*y] >> 4) & 0xF;
                 Byte ClutIndex2 = (Image->Data[x+Image->RowCount*y] >> 8) & 0xF;
                 Byte ClutIndex3 = (Image->Data[x+Image->RowCount*y] >> 12) & 0xF;
-                *Row++ = Image->CLUT[ClutIndex0].R;
-                *Row++ = Image->CLUT[ClutIndex0].G;
-                *Row++ = Image->CLUT[ClutIndex0].B;
-                *Row++ = Image->CLUT[ClutIndex1].R;
-                *Row++ = Image->CLUT[ClutIndex1].G;
-                *Row++ = Image->CLUT[ClutIndex1].B;
-                *Row++ = Image->CLUT[ClutIndex2].R;
-                *Row++ = Image->CLUT[ClutIndex2].G;
-                *Row++ = Image->CLUT[ClutIndex2].B;
-                *Row++ = Image->CLUT[ClutIndex3].R;
-                *Row++ = Image->CLUT[ClutIndex3].G;
-                *Row++ = Image->CLUT[ClutIndex3].B;
+                *Row++ = GetR(Image->CLUT[ClutIndex0]);
+                *Row++ = GetG(Image->CLUT[ClutIndex0]);
+                *Row++ = GetB(Image->CLUT[ClutIndex0]);
+                *Row++ = GetR(Image->CLUT[ClutIndex1]);
+                *Row++ = GetG(Image->CLUT[ClutIndex1]);
+                *Row++ = GetB(Image->CLUT[ClutIndex1]);
+                *Row++ = GetR(Image->CLUT[ClutIndex2]);
+                *Row++ = GetG(Image->CLUT[ClutIndex2]);
+                *Row++ = GetB(Image->CLUT[ClutIndex2]);
+                *Row++ = GetR(Image->CLUT[ClutIndex3]);
+                *Row++ = GetG(Image->CLUT[ClutIndex3]);
+                *Row++ = GetB(Image->CLUT[ClutIndex3]);
             }
         }
     }
@@ -315,12 +317,12 @@ Byte **SetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
 //             printf("Pixel is %u 0x%08x\n",Image->Data[x+Image->RowCount*y],Image->Data[x+Image->RowCount*y]);
                 Byte ClutIndex0 = Image->Data[x+Image->RowCount*y] & 0xFF;
                 Byte ClutIndex1 = (Image->Data[x+Image->RowCount*y] & 0xFF00) >> 8;
-                *Row++ = Image->CLUT[ClutIndex0].R;
-                *Row++ = Image->CLUT[ClutIndex0].G;
-                *Row++ = Image->CLUT[ClutIndex0].B;
-                *Row++ = Image->CLUT[ClutIndex1].R;
-                *Row++ = Image->CLUT[ClutIndex1].G;
-                *Row++ = Image->CLUT[ClutIndex1].B;
+                *Row++ = GetR(Image->CLUT[ClutIndex0]);
+                *Row++ = GetG(Image->CLUT[ClutIndex0]);
+                *Row++ = GetB(Image->CLUT[ClutIndex0]);
+                *Row++ = GetR(Image->CLUT[ClutIndex1]);
+                *Row++ = GetG(Image->CLUT[ClutIndex1]);
+                *Row++ = GetB(Image->CLUT[ClutIndex1]);
             }
         }
     }
@@ -348,25 +350,25 @@ Byte **SetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
             for (x = 0; x < Image->RowCount; x++) {
                 switch( NumComponent ) {
                     case 0:
-                        RGB1.R = Image->Data[x+Image->RowCount*y] & 0xFF;
-                        RGB1.G = (Image->Data[x+Image->RowCount*y] >> 8) & 0xFF;
+                        R1 = Image->Data[x+Image->RowCount*y] & 0xFF;
+                        G1 = (Image->Data[x+Image->RowCount*y] >> 8) & 0xFF;
                         NumComponent++;
                         break;
                     case 1:
-                        RGB1.B = Image->Data[x+Image->RowCount*y] & 0xFF;
-                        RGB2.R = (Image->Data[x+Image->RowCount*y] >> 8) & 0xFF;
+                        B1 = Image->Data[x+Image->RowCount*y] & 0xFF;
+                        R2 = (Image->Data[x+Image->RowCount*y] >> 8) & 0xFF;
                         NumComponent++;
                         break;
                     case 2:
-                        RGB2.G = Image->Data[x+Image->RowCount*y] & 0xFF;
-                        RGB2.B = (Image->Data[x+Image->RowCount*y] >> 8) & 0xFF;
+                        G2 = Image->Data[x+Image->RowCount*y] & 0xFF;
+                        B2 = (Image->Data[x+Image->RowCount*y] >> 8) & 0xFF;
                         NumComponent = 0;
-                        *Row++ = RGB1.R;
-                        *Row++ = RGB1.G;
-                        *Row++ = RGB1.B;
-                        *Row++ = RGB2.R;
-                        *Row++ = RGB2.G;
-                        *Row++ = RGB2.B;
+                        *Row++ = R1;
+                        *Row++ = G1;
+                        *Row++ = B1;
+                        *Row++ = R2;
+                        *Row++ = G2;
+                        *Row++ = B2;
                         break;
                     default:
                         printf("SetRowPointer: Uneven component count detected aborting....!\n");
@@ -445,15 +447,9 @@ void GetPalette(FILE *TIMIMage,TIMImage_t *Image)
     printf("ClutLocation is %ux%u\n",Image->Header.CLUTOrgX,Image->Header.CLUTOrgY);
     printf("NumClutColors is %u\n",Image->Header.NumClutColors);
     printf("NumCluts is %u\n",Image->Header.NumCluts);
-    Image->CLUT = malloc(Image->Header.NumClutColors * sizeof(CLUTColor_t));
+    Image->CLUT = malloc(Image->Header.NumClutColors * sizeof(unsigned short));
     for( i = 0; i < Image->Header.NumClutColors; i++ ) {
-        unsigned short Color;
-        fread(&Color,sizeof(Color),1,TIMIMage);
-        Image->CLUT[i].R = GetR(Color);
-        Image->CLUT[i].G = GetG(Color);
-        Image->CLUT[i].B = GetB(Color);
-        Image->CLUT[i].STP = GetSTP(Color);
-//         printf("Color is %u R G B A(%i;%i;%i;%i)\n",Color,Image->CLUT[i].R,Image->CLUT[i].G,Image->CLUT[i].B,Image->CLUT[i].STP);
+        fread(&Image->CLUT[i],sizeof(Image->CLUT[i]),1,TIMIMage);
     }
 }
 
@@ -542,6 +538,7 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
 //             break;
         default:
             ResultImage->TexturePage = (ResultImage->FrameBufferX / 64) /*+ 1*/;
+            ResultImage->CLUTTexturePage = (ResultImage->Header.CLUTOrgX / 64) /*+ 1*/;
             break;
     }
     printf("FrameBuffer Coordinates %ux%u page %i\n",ResultImage->FrameBufferX,ResultImage->FrameBufferY,ResultImage->TexturePage);
@@ -550,6 +547,9 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     //Next row.
     if( ResultImage->FrameBufferY >= 256 ) {
         ResultImage->TexturePage += 16;
+    }
+    if( ResultImage->Header.CLUTOrgY >= 256 ) {
+        ResultImage->CLUTTexturePage += 16;
     }
     //Width is stored in 16-pixels unit so we need to offset it based on the current BPP.
     ResultImage->Width *= ImageSizeOffset;

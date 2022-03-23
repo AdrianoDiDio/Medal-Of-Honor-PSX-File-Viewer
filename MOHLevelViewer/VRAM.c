@@ -192,6 +192,52 @@ void VRAMPutRawTexture(VRAM_t *VRAM,TIMImage_t *Image)
                        SrcRect.w, SrcRect.h, 1);
     glDeleteTextures(1, &TempTexture);
 }
+void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
+{
+    int VRAMPage;
+    SDL_Surface *Src;
+    SDL_Rect SrcRect;
+    int DestX;
+    int DestY;
+    float ColorOffsetMultiplier;
+    unsigned int TempTexture;
+    VRAMPage = Image->CLUTTexturePage;
+    
+    if( Image->Header.BPP == BPP_4 ) {
+        ColorOffsetMultiplier = 4;
+    } else {
+        ColorOffsetMultiplier = 2;
+    }
+    
+    if( Image->Header.CLUTOrgY >= 256 ) {
+        DestX = (Image->Header.CLUTOrgX - ((Image->CLUTTexturePage - 16) * 64)) /** ColorOffsetMultiplier*/;
+        DestY = Image->Header.CLUTOrgY/* - 256*/;
+    } else {
+        DestX = (Image->Header.CLUTOrgX - (Image->CLUTTexturePage * 64)) /** ColorOffsetMultiplier*/;
+        DestY = Image->Header.CLUTOrgY;
+    }
+    SrcRect.x = VRAMGetTexturePageX(VRAMPage) + DestX;
+    SrcRect.y = DestY;
+    SrcRect.w = Image->Header.NumClutColors;
+    SrcRect.h = Image->Header.NumCluts;
+    if( Image->Header.BPP == BPP_4 ) {
+        if( SrcRect.w > 16 ) {
+            SrcRect.w = 16;
+        }
+    } else {
+        if( SrcRect.w > 256 ) {
+            SrcRect.w = 256;
+        }
+        //Get to the next texture area (8-bit mode).
+        SrcRect.y += 512;
+    }
+    glCreateTextures(GL_TEXTURE_2D, 1, &TempTexture);
+    glTextureStorage2D(TempTexture,1,GL_RGB5_A1, SrcRect.w, SrcRect.h);
+    glTextureSubImage2D(TempTexture, 0, 0, 0, SrcRect.w, SrcRect.h, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, Image->CLUT);
+    glCopyImageSubData(TempTexture, GL_TEXTURE_2D, 0, 0, 0, 0, VRAM->PalettePage.TextureID, GL_TEXTURE_2D, 0, SrcRect.x, SrcRect.y, 0, 
+                       SrcRect.w, SrcRect.h, 1);
+    glDeleteTextures(1, &TempTexture);
+}
 
 VRAM_t *VRAMInit(TIMImage_t *ImageList)
 {
@@ -227,6 +273,7 @@ VRAM_t *VRAMInit(TIMImage_t *ImageList)
     for( Iterator = ImageList; Iterator; Iterator = Iterator->Next ) {
         VRAMPutTexture(VRAM,Iterator);
         VRAMPutRawTexture(VRAM,Iterator);
+        VRAMPutCLUT(VRAM,Iterator);
     }
 #ifdef _DEBUG
     VRAMDump(VRAM);
