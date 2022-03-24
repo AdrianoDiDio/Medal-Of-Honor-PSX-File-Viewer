@@ -119,7 +119,7 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
         DPrintf("Linking Error:%s\n", ShaderInfoLog);
     }
     
-    Result->Name = String_Copy(ShaderName);
+    Result->Name = StringCopy(ShaderName);
     Result->ProgramID = ProgramID;
     
     Result->Next = ShaderList;

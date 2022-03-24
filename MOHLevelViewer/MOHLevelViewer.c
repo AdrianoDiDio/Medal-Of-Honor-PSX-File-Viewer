@@ -189,7 +189,7 @@ Vec3_t Vec3Build(float x,float y,float z)
     return Temp;
 }
 
-float Vec_Length(Vec3_t Vector)
+float Vec3Length(Vec3_t Vector)
 {
     return sqrt (Vector.x*Vector.x + Vector.y*Vector.y + Vector.z*Vector.z);
 }
@@ -201,41 +201,41 @@ void Vec3RotateXAxis(float Theta,Vec3_t *Vector)
     Vector->z = Vector->y*sin(Theta) + Vector->z*cos(Theta);
 }
 
-void Vec_Normalize(Vec3_t *VOut)
+void Vec3Normalize(Vec3_t *VOut)
 {
-    VOut->x = VOut->x / Vec_Length(*VOut);
-    VOut->y = VOut->y / Vec_Length(*VOut);
-    VOut->z = VOut->z / Vec_Length(*VOut);
+    VOut->x = VOut->x / Vec3Length(*VOut);
+    VOut->y = VOut->y / Vec3Length(*VOut);
+    VOut->z = VOut->z / Vec3Length(*VOut);
 }
 
-void Vec_Add(Vec3_t A,Vec3_t B,Vec3_t *VOut)
+void Vec3Add(Vec3_t A,Vec3_t B,Vec3_t *VOut)
 {
     VOut->x = A.x + B.x;
     VOut->y = A.y + B.y;
     VOut->z = A.z + B.z;
 }
 
-void Vec_Subtract(Vec3_t A,Vec3_t B,Vec3_t *VOut)
+void Vec3Subtract(Vec3_t A,Vec3_t B,Vec3_t *VOut)
 {
     VOut->x = A.x - B.x;
     VOut->y = A.y - B.y;
     VOut->z = A.z - B.z;
 }
 
-void Vec_Cross( Vec3_t A, Vec3_t B, Vec3_t *Out ) {
+void Vec3Cross( Vec3_t A, Vec3_t B, Vec3_t *Out ) {
     Out->x = A.y*B.z - A.z*B.y;
     Out->y = A.z*B.x - A.x*B.z;
     Out->z = A.x*B.y - A.y*B.x;
 }
 
-void Vec_Scale(Vec3_t InVec,float Amount,Vec3_t *OutVec)
+void Vec3Scale(Vec3_t InVec,float Amount,Vec3_t *OutVec)
 {
     OutVec->x = InVec.x * Amount;
     OutVec->y = InVec.y * Amount;
     OutVec->z = InVec.z * Amount;
 }
 
-void Cam_Init(ViewParm_t *Camera)
+void CamInit(ViewParm_t *Camera)
 {
     Camera->Position = BSDGetPlayerSpawn(Level->BSD);
 
@@ -251,7 +251,7 @@ void Cam_Init(ViewParm_t *Camera)
     
 }
 
-void Cam_FixAngles(ViewParm_t *Camera)
+void CamFixAngles(ViewParm_t *Camera)
 {
     //If needed fix it.
     if ( Camera->Angle.x > 90.0f ) {
@@ -272,11 +272,11 @@ void Cam_FixAngles(ViewParm_t *Camera)
 
 }
 
-void Cam_MouseEvent(ViewParm_t *Camera,int Dx,int Dy)
+void CamMouseEvent(ViewParm_t *Camera,int Dx,int Dy)
 {
     Camera->Angle.x += ( Dy - (VidConf.Height/2) ) / 10.0f; // 0.001f;
     Camera->Angle.y += ( Dx - (VidConf.Width/2)) / 10.0f; // 0.001f;
-    Cam_FixAngles(Camera);
+    CamFixAngles(Camera);
 }
 
 void CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility)
@@ -286,15 +286,15 @@ void CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility)
             Camera->Forward.x = sin(DEGTORAD(Camera->Angle.y));
             Camera->Forward.z = -cos(DEGTORAD(Camera->Angle.y));
             Camera->Forward.y = -sin(DEGTORAD(Camera->Angle.x));
-            Vec_Scale(Camera->Forward,Sensibility,&Camera->Forward);
-            Vec_Add(Camera->Position,Camera->Forward,&Camera->Position);
+            Vec3Scale(Camera->Forward,Sensibility,&Camera->Forward);
+            Vec3Add(Camera->Position,Camera->Forward,&Camera->Position);
             break;
         case DIR_BACKWARD:
             Camera->Forward.x = -sin(DEGTORAD(Camera->Angle.y));
             Camera->Forward.z = cos(DEGTORAD(Camera->Angle.y));
             Camera->Forward.y = sin(DEGTORAD(Camera->Angle.x));
-            Vec_Scale(Camera->Forward,Sensibility,&Camera->Forward);
-            Vec_Add(Camera->Position,Camera->Forward,&Camera->Position);
+            Vec3Scale(Camera->Forward,Sensibility,&Camera->Forward);
+            Vec3Add(Camera->Position,Camera->Forward,&Camera->Position);
             break;
         case DIR_UPWARD:
             Camera->Position.y += Sensibility;
@@ -305,14 +305,14 @@ void CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility)
         case DIR_LEFTWARD:
             Camera->Right.x = -(float)(cos(DEGTORAD(Camera->Angle.y)));
             Camera->Right.z = -(float)(sin(DEGTORAD(Camera->Angle.y)));
-            Vec_Scale(Camera->Right,Sensibility,&Camera->Right);
-            Vec_Add(Camera->Position,Camera->Right,&Camera->Position);
+            Vec3Scale(Camera->Right,Sensibility,&Camera->Right);
+            Vec3Add(Camera->Position,Camera->Right,&Camera->Position);
             break;
         case DIR_RIGHTWARD:
             Camera->Right.x = (float)(cos(DEGTORAD(Camera->Angle.y)));
             Camera->Right.z = (float)(sin(DEGTORAD(Camera->Angle.y)));
-            Vec_Scale(Camera->Right,Sensibility,&Camera->Right);
-            Vec_Add(Camera->Position,Camera->Right,&Camera->Position);
+            Vec3Scale(Camera->Right,Sensibility,&Camera->Right);
+            Vec3Add(Camera->Position,Camera->Right,&Camera->Position);
             break;
          case LOOK_LEFT:
              Camera->Angle.y -= Sensibility;
@@ -337,7 +337,7 @@ void CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility)
     }
 }
 
-int Sys_Milliseconds()
+int SysMilliseconds()
 {
     struct timeval tp;
     int CTime;
@@ -367,23 +367,7 @@ void DPrintf(char *Fmt, ...)
     va_end(arglist);
 }
 
-char *String_Copy(const char *From)
-{
-    char *Dest;
-
-    Dest = malloc(strlen(From) + 1);
-
-    if ( !Dest ) {
-        return NULL;
-    }
-
-    strcpy(Dest, From);
-
-    return Dest;
-}
-
-
-bool Vid_InitSDL()
+bool VidInitSDL()
 {
     if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
         return false;
@@ -394,7 +378,7 @@ bool Vid_InitSDL()
     return false;
 }
 
-bool Vid_OpenWindow()
+bool VidOpenWindow()
 {
     //Make sure we have an OpenGL context.
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -420,22 +404,22 @@ bool Vid_OpenWindow()
     return true;
 }
 
-void Sys_HideCursor()
+void SysHideCursor()
 {
     SDL_ShowCursor(false);
 }
 
-void Sys_ShowCursor()
+void SysShowCursor()
 {
     SDL_ShowCursor(true);
 }
 
-void Sys_CenterCursor()
+void SysCenterCursor()
 {
     SDL_WarpMouseInWindow(VideoSurface,VidConf.Width/2,VidConf.Height/2);
 }
 
-void Sys_SwapBuffers()
+void SysSwapBuffers()
 {
     if( !VidConf.Initialized ){
         return;
@@ -457,11 +441,11 @@ void InitSDL(const char *Title,int Width,int Height,bool Fullscreen)
     VidConf.Fullscreen = Fullscreen;
     VidConf.Resizable = false;
 
-    if ( !Vid_InitSDL() ) {
+    if ( !VidInitSDL() ) {
         DPrintf("Failed on initializing SDL.\n");
     }
     
-    if ( !Vid_OpenWindow() ) {
+    if ( !VidOpenWindow() ) {
         DPrintf("Failed on opening a new window.\n");
     }
     //Needed in order to load the core 3.3 profile.
@@ -475,25 +459,25 @@ void InitSDL(const char *Title,int Width,int Height,bool Fullscreen)
     }
 
     
-    VidConf.Driver = String_Copy("SDL");
-    Sys_HideCursor();
+    VidConf.Driver = StringCopy("SDL");
+    SysHideCursor();
     return;
 }
 
-void Sys_VidInit(int Width, int Height, bool Fullscreen)
+void SysVidInit(int Width, int Height, bool Fullscreen)
 {
     InitSDL("MOH Level Viewer",Width,Height,Fullscreen);
 }
 
-void Sys_CheckKeyEvents()
+void SysCheckKeyEvents()
 {
     SDL_Event Event;
     float CamSpeed = 80.f;
     while( SDL_PollEvent(&Event) ) {
         switch( Event.type ) {
             case SDL_MOUSEMOTION:
-                Cam_MouseEvent(&Camera,Event.motion.x,Event.motion.y);
-                Sys_CenterCursor();
+                CamMouseEvent(&Camera,Event.motion.x,Event.motion.y);
+                SysCenterCursor();
                 break;
             case SDL_KEYDOWN:
                 if( Event.key.keysym.sym == SDLK_ESCAPE ) {
@@ -595,7 +579,7 @@ void Sys_CheckKeyEvents()
 //                 if( Event.key.keysym.sym == SDLK_DOWN ) {
 //                     CamUpdate(&Camera, LOOK_DOWN, CamSpeed * ComTime->Delta);
 //                 }
-                Cam_FixAngles(&Camera);
+                CamFixAngles(&Camera);
                 break;
             case SDL_QUIT:
                 Quit();
@@ -607,9 +591,9 @@ void Sys_CheckKeyEvents()
     
 }
 
-bool Com_UpdateDelta()
+bool ComUpdateDelta()
 {
-    long now = Sys_Milliseconds();
+    long now = SysMilliseconds();
     ComTime->UpdateLength = now - ComTime->LastLoopTime;
     int TimeSlice = /*floor*/((1/MAX_FPS) * 1000);
 
@@ -643,77 +627,6 @@ bool Com_UpdateDelta()
     return true;
 }
 
-void GL_DrawVec3Box(BBox_t Box)
-{
-#if 0
-    glBegin(GL_LINE_LOOP);
-    glVertex3f(Box.Min.x, Box.Min.y, Box.Min.z);
-    glVertex3f(Box.Min.x, Box.Min.y, Box.Max.z);
-    glVertex3f(Box.Max.x, Box.Min.y, Box.Max.z);
-    glVertex3f(Box.Max.x, Box.Min.y, Box.Min.z);
-    glEnd();
-    
-    glBegin(GL_LINE_LOOP);
-    glVertex3f(Box.Min.x, Box.Max.y, Box.Min.z);
-    glVertex3f(Box.Min.x, Box.Max.y, Box.Max.z);
-    glVertex3f(Box.Max.x, Box.Max.y, Box.Max.z);
-    glVertex3f(Box.Max.x, Box.Max.y, Box.Min.z);
-    glEnd();
-    
-    glBegin(GL_LINES);
-    glVertex3f(Box.Min.x, Box.Min.y, Box.Min.z);
-    glVertex3f(Box.Min.x, Box.Max.y, Box.Min.z);
-    glVertex3f(Box.Min.x, Box.Min.y, Box.Max.z);
-    glVertex3f(Box.Min.x, Box.Max.y, Box.Max.z);
-
-    glVertex3f(Box.Max.x, Box.Min.y, Box.Min.z);
-    glVertex3f(Box.Max.x, Box.Max.y, Box.Min.z);
-    glVertex3f(Box.Max.x, Box.Min.y, Box.Max.z);
-    glVertex3f(Box.Max.x, Box.Max.y, Box.Max.z);
-    glEnd();
-#endif
-}
-
-void GL_DrawPoint(Vec3_t Position,Color_t Color)
-{
-#if 0
-    glColor4f(Color.r,Color.g,Color.b,Color.a);
-    //DPrintf("Drawing at %f);%f\n",Position.x,Position.y);
-    glDisable( GL_TEXTURE_2D );
-    glPointSize(2);
-    glBegin(GL_POINTS);
-    glVertex2f(Position.x,Position.y/*,Position.z*/);
-    glEnd();
-    glColor3f(1,1,1);
-    glEnable(GL_TEXTURE_2D);
-#endif
-}
-
-
-
-/*
-    The coordinate system used by PSX was
-    (0,0) => Upper left corner
-    (Width,Height) => Lower right corner
-    or maybe not?
-*/
-void GL_Set2D()
-{
-#if 0
-   glViewport( 0, 0, VidConf.Width, VidConf.Height );
-   glScissor( 0, 0,  VidConf.Width, VidConf.Height );
-//    glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glOrtho(0, VidConf.Width,VidConf.Height,0,-1,1);
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
-   glDisable (GL_DEPTH_TEST);
-   glDisable (GL_CULL_FACE);
-   glDisable (GL_BLEND);
-   glEnable (GL_ALPHA_TEST);
-#endif
-
-}
 
 /*
 Projection Matrix.
@@ -735,7 +648,7 @@ H = 2 * arctan(tan(V/2)* ratio);
 V = 2 * arctan(tan(H/2)* 1/ratio);
 
 */
-void GL_SetProjectionMatrix()
+void GLSetProjectionMatrix()
 {
 
     //FIXME:Make those value adjustable.
@@ -776,30 +689,6 @@ void GL_SetProjectionMatrix()
     VidConf.PMatrix[13] = 0;
     VidConf.PMatrix[14] = -2 * (zFar * zNear) / Depth;
     VidConf.PMatrix[15] = 0;
-}
-
-void GLSet3D()
-{
-#if 0
-    glEnable (GL_DEPTH_TEST);
-    glEnable (GL_BLEND);
-    glDisable (GL_ALPHA_TEST);
-    glDisable(GL_TEXTURE_2D);
-
-    GL_SetProjectionMatrix();
-
-    //glLoadIdentity();
-    glDepthMask(GL_TRUE);
-    glMatrixMode( GL_PROJECTION );
-
-    glViewport(0,0,VidConf.Width,VidConf.Height);
-
-    glLoadMatrixf( VidConf.PMatrix );
-
-    glMatrixMode( GL_MODELVIEW );
-
-    glLoadIdentity( );
-#endif
 }
 
 /*
@@ -890,7 +779,7 @@ void GLDebugOutput(GLenum Source, GLenum Type, unsigned int ID, GLenum Severity,
     }
 }
 
-void GL_SetDefaultState()
+void GLSetDefaultState()
 {
 //     glShadeModel( GL_SMOOTH );
 
@@ -914,9 +803,7 @@ void GL_SetDefaultState()
 
 void InitGLView()
 {
-    GL_SetDefaultState();
-    //GL_Set2D();
-    GLSet3D();
+    GLSetDefaultState();
 }
 
 
@@ -1171,20 +1058,20 @@ int main(int argc,char **argv)
     }
 
 #if _ENABLEVIDEOOUT
-    Sys_VidInit(1366,768,false);
+    SysVidInit(1366,768,false);
     ComTime = malloc(sizeof(ComTimeInfo_t));
     memset(ComTime,0,sizeof(ComTimeInfo_t));
     InitGLView();
-    Cam_Init(&Camera);
+    CamInit(&Camera);
     LevelLateInit();
     /* TEMP! */
     while( 1 ) {
-        Sys_CheckKeyEvents();
+        SysCheckKeyEvents();
         do {
-        } while( !Com_UpdateDelta() );
+        } while( !ComUpdateDelta() );
         GLFrame();
         glFlush();
-        Sys_SwapBuffers();
+        SysSwapBuffers();
     }
 #else
     #ifdef _DEBUG
