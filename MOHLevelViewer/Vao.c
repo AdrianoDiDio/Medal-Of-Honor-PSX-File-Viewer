@@ -59,7 +59,39 @@ Vao_t *VaoInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int 
     
     return Vao;
 }
+Vao_t *VaoInitXYZUVRGBCLUTInteger(int *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,int CLUTOffset,int Count)
+{
+    Vao_t *Vao;
+    
+    Vao = malloc(sizeof(Vao_t));
+    
+    glGenVertexArrays(1, &Vao->VaoID[0]);
+    glBindVertexArray(Vao->VaoID[0]);
+        
+    glGenBuffers(1, Vao->VboID);
+    glBindBuffer(GL_ARRAY_BUFFER, Vao->VboID[0]);
+            
+    glBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
+        
+    glVertexAttribIPointer(0,3,GL_INT,Stride,BUFFER_INT_OFFSET(VertexOffset));
+    glEnableVertexAttribArray(0);
+    glVertexAttribIPointer(1,2,GL_INT,Stride,BUFFER_INT_OFFSET(TextureOffset));
+    glEnableVertexAttribArray(1);
+    glVertexAttribIPointer(2,3,GL_INT,Stride,BUFFER_INT_OFFSET(ColorOffset));
+    glEnableVertexAttribArray(2);
+    glVertexAttribIPointer(3,2,GL_INT,Stride,BUFFER_INT_OFFSET(CLUTOffset));
+    glEnableVertexAttribArray(3);
+    Vao->TSB = -1;
+    Vao->TextureID = -1;
+    Vao->Next = NULL;
+    Vao->Count = Count;
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
+    
+    return Vao;
 
+}
 Vao_t *VaoInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,
     bool StaticDraw)
 {

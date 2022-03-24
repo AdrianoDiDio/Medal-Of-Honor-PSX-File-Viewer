@@ -112,7 +112,7 @@ GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *Fragment
     glGetProgramiv(ProgramID, GL_LINK_STATUS, &ShaderTaskResult);
     glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
 
-    if ( InfoLogLength > 0  && ShaderTaskResult == 1){
+    if ( InfoLogLength > 0  && ShaderTaskResult == 0){
         ShaderInfoLog = malloc(InfoLogLength + 1);
         glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, ShaderInfoLog);
         ShaderInfoLog[InfoLogLength] = '\0';

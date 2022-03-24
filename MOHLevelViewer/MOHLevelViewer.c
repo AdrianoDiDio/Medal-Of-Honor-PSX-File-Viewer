@@ -801,8 +801,16 @@ void GL_Set3D()
     glLoadIdentity( );
 #endif
 }
+
+/*
+ Suppressed messages:
+ ID = 131204 => Message:Texture state usage warning
+ */
 void GLDebugOutput(GLenum Source, GLenum Type, unsigned int ID, GLenum Severity, GLsizei Length, const char *Message, const void *UserParam)
 {
+    if( ID == 131204 ) {
+        return;
+    }
     DPrintf("---------------\n");
     DPrintf("Debug message ID: %i\n",ID);
 

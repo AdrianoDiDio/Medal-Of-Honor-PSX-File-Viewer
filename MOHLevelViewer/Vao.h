@@ -20,6 +20,7 @@
 #define __VAO_H_ 
 
 #define BUFFER_OFFSET(i) ((GLvoid*)(i * sizeof(GL_FLOAT)))
+#define BUFFER_INT_OFFSET(i) ((GLvoid*)(i * sizeof(GL_INT)))
 
 typedef struct Vao_s
 {
@@ -35,6 +36,7 @@ typedef struct Vao_s
 
 // 3D
 Vao_t *VaoInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,int Count);
+Vao_t *VaoInitXYZUVRGBCLUTInteger(int *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,int CLUTOffset,int Count);
 Vao_t *VaoInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID,int Count);
 Vao_t *VaoInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset);
 Vao_t *VaoInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset);
