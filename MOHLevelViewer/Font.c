@@ -19,7 +19,6 @@
  
 #include "MOHLevelViewer.h"
 
-Vao_t *TestVao;
 /*
     FONT DESCRIPTION
 
@@ -134,7 +133,7 @@ void FontLoadChar(Font_t *Font,int CharIndex,float RowX,float RowY)
     VertexData[VertexPointer+2] = u0 + TexWidth;
     VertexData[VertexPointer+3] = v0;
     VertexPointer += 4;        
-    Font->Characters[CharIndex] = VaoInitXYUV(VertexData,DataSize,Stride,0,2,-1,-1,true);
+    Font->Characters[CharIndex] = VAOInitXYUV(VertexData,DataSize,Stride,0,2,-1,-1,true);
     free(VertexData);
 }
 
@@ -166,7 +165,7 @@ void FontDrawChar(char c,float x,float y,Color_t Color)
     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
     glUniformMatrix4fv(OrthoMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
     CharIndex = (int) c;
-    glBindVertexArray(Level->Font->Characters[ASCII_To_MOH_Table[CharIndex]]->VaoID[0]);
+    glBindVertexArray(Level->Font->Characters[ASCII_To_MOH_Table[CharIndex]]->VAOId[0]);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 }

@@ -25,11 +25,11 @@ void TSPFree(TSP_t *TSP)
 //     TSP->Node
 //     TSPRecursiveNodeFree(&TSP->Node[0]);
     for( i = 0; i < TSP->Header.NumNodes; i++ ) {
-        VaoFree(TSP->Node[i].BBoxVao);
-        VaoFree(TSP->Node[i].LeafFaceListVao);
-        VaoFree(TSP->Node[i].LeafOpaqueFaceListVAO);
-        VaoFree(TSP->Node[i].LeafTransparentFaceListVAO);
-        VaoFree(TSP->Node[i].LeafCollisionFaceListVao);
+        VAOFree(TSP->Node[i].BBoxVAO);
+        VAOFree(TSP->Node[i].LeafFaceListVAO);
+        VAOFree(TSP->Node[i].LeafOpaqueFaceListVAO);
+        VAOFree(TSP->Node[i].LeafTransparentFaceListVAO);
+        VAOFree(TSP->Node[i].LeafCollisionFaceListVAO);
         if( TSP->Node[i].FaceList ) {
             free(TSP->Node[i].FaceList);
         }
@@ -63,8 +63,8 @@ void TSPFree(TSP_t *TSP)
     free(TSP->CollisionData->Face);
     free(TSP->CollisionData);
     
-    VaoFree(TSP->VaoList);
-    VaoFree(TSP->CollisionVaoList);
+    VAOFree(TSP->VAOList);
+    VAOFree(TSP->CollisionVAOList);
     free(TSP);
 }
 
@@ -325,7 +325,7 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
     float TextureWidth;
     float TextureHeight;
     TSPDynamicFaceData_t *DynamicData;
-    Vao_t *Vao;
+    VAO_t *VAO;
     int i;
     
     Base = Node->BaseData / sizeof(TSPFace_t);
@@ -414,10 +414,10 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
         VertexData[VertexPointer+7] = TSP->Color[Vert2].b / 255.f;
         VertexPointer += 8;
     }
-    Vao = VaoInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,
+    VAO = VAOInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,
                         TSB,CBA,Node->NumFaces * 3);
-    Vao->Next = Node->LeafFaceListVao;
-    Node->LeafFaceListVao = Vao;
+    VAO->Next = Node->LeafFaceListVAO;
+    Node->LeafFaceListVAO = VAO;
     free(VertexData);
 }
 
@@ -450,8 +450,8 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
     int CLUTPage;
     TSPDynamicFaceData_t *DynamicData;
     TSPTextureInfo_t TextureInfo;
-    Vao_t *Vao;
-    Vao_t *TransparentVao;
+    VAO_t *VAO;
+    VAO_t *TransparentVAO;
 
     int i;
     
@@ -605,14 +605,14 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             VertexPointer += 10;
         }
     }
-    Vao = VaoInitXYZUVRGBCLUTInteger(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,
+    VAO = VAOInitXYZUVRGBCLUTInteger(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,
                                      (Node->NumFaces - NumTransparentFaces) * 3);
-    Vao->Next = Node->LeafOpaqueFaceListVAO;
-    Node->LeafOpaqueFaceListVAO = Vao;
-    TransparentVao = VaoInitXYZUVRGBCLUTInteger(TransparentVertexData,TransparentVertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,
+    VAO->Next = Node->LeafOpaqueFaceListVAO;
+    Node->LeafOpaqueFaceListVAO = VAO;
+    TransparentVAO = VAOInitXYZUVRGBCLUTInteger(TransparentVertexData,TransparentVertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,
                                      NumTransparentFaces * 3);
-    TransparentVao->Next = Node->LeafTransparentFaceListVAO;
-    Node->LeafTransparentFaceListVAO = TransparentVao;
+    TransparentVAO->Next = Node->LeafTransparentFaceListVAO;
+    Node->LeafTransparentFaceListVAO = TransparentVAO;
     free(VertexData);
     free(TransparentVertexData);
 }
@@ -690,7 +690,7 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                 0, 4, 1, 5, 2, 6, 3, 7
             };
             
-            Iterator->Node[i].BBoxVao = VaoInitXYZIBO(VertexData,VertexSize * 8,Stride,Index,sizeof(Index),0);            
+            Iterator->Node[i].BBoxVAO = VAOInitXYZIBO(VertexData,VertexSize * 8,Stride,Index,sizeof(Index),0);            
             free(VertexData);
         }
         DPrintf("Linearly we got to draw %i faces (%i NumFaces in header) for %s.\n",TotalFaceCount,Iterator->Header.NumFaces,Iterator->FName);
@@ -709,7 +709,7 @@ void TSPCreateCollisionVAO(TSP_t *TSPList)
 
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         for( i = 0; i < Iterator->CollisionData->Header.NumFaces; i++ ) {
-            Vao_t *Vao;
+            VAO_t *VAO;
             int Vert0 = Iterator->CollisionData->Face[i].V0;
             int Vert1 = Iterator->CollisionData->Face[i].V1;
             int Vert2 = Iterator->CollisionData->Face[i].V2;
@@ -735,9 +735,9 @@ void TSPCreateCollisionVAO(TSP_t *TSPList)
             VertexData[VertexPointer+2] = Iterator->CollisionData->Vertex[Vert2].Position.z;
             VertexPointer += 3;
             
-            Vao = VaoInitXYZ(VertexData,VertexSize * 3,Stride,0);            
-            Vao->Next = Iterator->CollisionVaoList;
-            Iterator->CollisionVaoList = Vao;
+            VAO = VAOInitXYZ(VertexData,VertexSize * 3,Stride,0);            
+            VAO->Next = Iterator->CollisionVAOList;
+            Iterator->CollisionVAOList = VAO;
             free(VertexData);
         }
     }
@@ -792,8 +792,8 @@ void DrawTSPBox(TSPNode_t Node)
     ColorID = glGetUniformLocation(Shader->ProgramID,"Color");
     glUniform4fv(ColorID,1,BoxColor);
     
-    glBindVertexArray(Node.BBoxVao->VaoID[0]);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Node.BBoxVao->IboID[0]);
+    glBindVertexArray(Node.BBoxVAO->VAOId[0]);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Node.BBoxVAO->IBOId[0]);
     glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, 0);
     glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, (GLvoid*)(4*sizeof(unsigned short)));
     glDrawElements(GL_LINES, 8, GL_UNSIGNED_SHORT, (GLvoid*)(8*sizeof(unsigned short)));
@@ -803,7 +803,7 @@ void DrawTSPBox(TSPNode_t Node)
 
 void DrawTSPCollisionData(TSP_t *TSP)
 {
-    Vao_t *Iterator;
+    VAO_t *Iterator;
     GL_Shader_t *Shader;
     int MVPMatrixID;
     
@@ -818,8 +818,8 @@ void DrawTSPCollisionData(TSP_t *TSP)
     MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
     glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
     
-    for( Iterator = TSP->CollisionVaoList; Iterator; Iterator = Iterator->Next ) {
-        glBindVertexArray(Iterator->VaoID[0]);
+    for( Iterator = TSP->CollisionVAOList; Iterator; Iterator = Iterator->Next ) {
+        glBindVertexArray(Iterator->VAOId[0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
     }
@@ -840,7 +840,7 @@ bool IsTSPInRenderArray(Level_t *Level,int TSPNumber)
 void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
 {
     GL_Shader_t *Shader;
-    Vao_t *Iterator;
+    VAO_t *Iterator;
     int MVPMatrixID;
     int EnableLightingID;
     int i;
@@ -873,8 +873,8 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
             }
             glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page.TextureID);
 
-            for( Iterator = Node->LeafFaceListVao; Iterator; Iterator = Iterator->Next ) {
-                glBindVertexArray(Iterator->VaoID[0]);
+            for( Iterator = Node->LeafFaceListVAO; Iterator; Iterator = Iterator->Next ) {
+                glBindVertexArray(Iterator->VAOId[0]);
                 glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
                 glBindVertexArray(0);
             }
@@ -892,7 +892,7 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
 void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings)
 {
     GL_Shader_t *Shader;
-    Vao_t *Iterator;
+    VAO_t *Iterator;
     int MVPMatrixID;
     int EnableLightingID;
     int ColorModeID;
@@ -940,7 +940,7 @@ void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings)
 
             glDisable(GL_BLEND);
             for( Iterator = Node->LeafOpaqueFaceListVAO; Iterator; Iterator = Iterator->Next ) {
-                glBindVertexArray(Iterator->VaoID[0]);
+                glBindVertexArray(Iterator->VAOId[0]);
                 glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
                 glBindVertexArray(0);
             }
@@ -957,7 +957,7 @@ void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings)
 //             glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
 //             glBlendFunc(GL_CONSTANT_COLOR, GL_SRC_ALPHA);
              for( Iterator = Node->LeafTransparentFaceListVAO; Iterator; Iterator = Iterator->Next ) {
-                 glBindVertexArray(Iterator->VaoID[0]);
+                 glBindVertexArray(Iterator->VAOId[0]);
                  glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
                  glBindVertexArray(0);
              }
@@ -1694,8 +1694,8 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
         return NULL;
     }
     TSP = malloc(sizeof(TSP_t));
-    TSP->VaoList = NULL;
-    TSP->CollisionVaoList = NULL;
+    TSP->VAOList = NULL;
+    TSP->CollisionVAOList = NULL;
     TSP->Next = NULL;
     TSP->Number = TSPNumber;
     TSP->Face = NULL;

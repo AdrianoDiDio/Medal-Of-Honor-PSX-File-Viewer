@@ -257,7 +257,7 @@ void BSDRenderObjectListCleanUp(BSD_t *BSD)
             free(BSD->RenderObjectList[i].Vertex);
         }
         if( BSD->RenderObjectList[i].VAO != NULL ) {
-            VaoFree(BSD->RenderObjectList[i].VAO);
+            VAOFree(BSD->RenderObjectList[i].VAO);
         }
     }
     free(BSD->RenderObjectList);
@@ -280,8 +280,8 @@ void BSDFree(BSD_t *BSD)
     free(BSD->RenderObjectTable.RenderObject);
     BSDRenderObjectListCleanUp(BSD);
 //     BSDRenderObjectListCleanUp(BSD->RenderObjectShowCaseList);
-    VaoFree(BSD->NodeVao);
-    VaoFree(BSD->RenderObjectPointVao);
+    VAOFree(BSD->NodeVAO);
+    VAOFree(BSD->RenderObjectPointVAO);
     
     while( BSD->RenderObjectDrawableList ) {
         Drawable = BSD->RenderObjectDrawableList;
@@ -360,7 +360,7 @@ void BSDVAOPointList(BSD_t *BSD)
         }
         NodeDataPointer += 6;
     }
-    BSD->NodeVao = VaoInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3);            
+    BSD->NodeVAO = VAOInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3);            
     free(NodeData);
 }
 void BSDVAORenderObjectPointList(BSD_t *BSD)
@@ -434,7 +434,7 @@ void BSDVAORenderObjectPointList(BSD_t *BSD)
         RenderObjectDataPointer += 6;
         i++;
     }
-    BSD->RenderObjectPointVao = VaoInitXYZRGB(RenderObjectData,RenderObjectDataSize - (Stride * NumSkip),Stride,0,3);            
+    BSD->RenderObjectPointVAO = VAOInitXYZRGB(RenderObjectData,RenderObjectDataSize - (Stride * NumSkip),Stride,0,3);            
     free(RenderObjectData);
 }
 #if 0
@@ -531,7 +531,7 @@ void BSDVAOBoxList(BSD_t *BSD)
         }
         NodeDataPointer += 3;
     }
-    BSD->NodeBoxVao = VaoInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3);            
+    BSD->NodeBoxVAO = VAOInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3);            
     free(NodeData);
 }
 #endif
@@ -595,7 +595,7 @@ void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData)
     int Stride;
     int VertexOffset;
     int TextureOffset;
-    Vao_t *VAO;
+    VAO_t *VAO;
     int i;
     
     TextureWidth = Level->VRAM->Page.Width;
@@ -644,7 +644,7 @@ void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData)
         VertexData[VertexPointer+4] = V2;
         VertexPointer += 5;
     }
-    VAO = VaoInitXYZUV(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,RenderObjectData->Face[i].TexInfo,-1,
+    VAO = VAOInitXYZUV(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,RenderObjectData->Face[i].TexInfo,-1,
                         RenderObjectData->NumFaces * 3);
     VAO->Next = RenderObjectData->VAO;
     RenderObjectData->VAO = VAO;
@@ -664,7 +664,7 @@ void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData)
     int Stride;
     int VertexOffset;
     int TextureOffset;
-    Vao_t *VAO;
+    VAO_t *VAO;
     int i;
     
     TextureWidth = Level->VRAM->Page.Width;
@@ -713,7 +713,7 @@ void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData)
         VertexData[VertexPointer+4] = V2;
         VertexPointer += 5;
     }
-    VAO = VaoInitXYZUV(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,RenderObjectData->FaceV2[i].TexInfo,-1,
+    VAO = VAOInitXYZUV(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,RenderObjectData->FaceV2[i].TexInfo,-1,
                         RenderObjectData->NumFaces * 3);
     VAO->Next = RenderObjectData->VAO;
     RenderObjectData->VAO = VAO;
@@ -1238,7 +1238,7 @@ void BSDDraw(Level_t *Level)
 {
     GL_Shader_t *Shader;
     BSDRenderObjectDrawable_t *RenderObjectIterator;
-    Vao_t *VaoIterator;
+    VAO_t *VAOIterator;
     int MVPMatrixID;
     int i;
     
@@ -1263,7 +1263,7 @@ void BSDDraw(Level_t *Level)
 
         MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
         glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-        glBindVertexArray(Level->BSD->NodeVao->VaoID[0]);
+        glBindVertexArray(Level->BSD->NodeVAO->VAOId[0]);
         glPointSize(10.f);
         glDrawArrays(GL_POINTS, 0, Level->BSD->NodeData.Header.NumNodes);
         glBindVertexArray(0);
@@ -1276,7 +1276,7 @@ void BSDDraw(Level_t *Level)
 
         MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
         glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-        glBindVertexArray(Level->BSD->RenderObjectPointVao->VaoID[0]);
+        glBindVertexArray(Level->BSD->RenderObjectPointVAO->VAOId[0]);
         glPointSize(10.f);
         glDrawArrays(GL_POINTS, 0, Level->BSD->NumRenderObjectPoint);
         glBindVertexArray(0);
@@ -1336,10 +1336,10 @@ void BSDDraw(Level_t *Level)
             glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
             glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
 
-            for( VaoIterator = Level->BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].VAO; VaoIterator; 
-                VaoIterator = VaoIterator->Next ) {
-                glBindVertexArray(VaoIterator->VaoID[0]);
-                glDrawArrays(GL_TRIANGLES, 0, VaoIterator->Count);
+            for( VAOIterator = Level->BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].VAO; VAOIterator; 
+                VAOIterator = VAOIterator->Next ) {
+                glBindVertexArray(VAOIterator->VAOId[0]);
+                glDrawArrays(GL_TRIANGLES, 0, VAOIterator->Count);
                 glBindVertexArray(0);
             }
         }
@@ -1395,9 +1395,9 @@ void BSDDraw(Level_t *Level)
             glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
             glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
 
-            for( VaoIterator = Level->BSD->RenderObjectList[i].VAO; VaoIterator; VaoIterator = VaoIterator->Next ) {
-                glBindVertexArray(VaoIterator->VaoID[0]);
-                glDrawArrays(GL_TRIANGLES, 0, VaoIterator->Count);
+            for( VAOIterator = Level->BSD->RenderObjectList[i].VAO; VAOIterator; VAOIterator = VAOIterator->Next ) {
+                glBindVertexArray(VAOIterator->VAOId[0]);
+                glDrawArrays(GL_TRIANGLES, 0, VAOIterator->Count);
                 glBindVertexArray(0);
             }
         }
@@ -2010,8 +2010,8 @@ int LoadLevel(Level_t *Level)
     Level->BSD->RenderObjectDrawableList = NULL;
 //     BSD->RenderObjectShowCaseList = NULL;
     
-    Level->BSD->NodeVao = NULL;
-    Level->BSD->RenderObjectPointVao = NULL;
+    Level->BSD->NodeVAO = NULL;
+    Level->BSD->RenderObjectPointVAO = NULL;
     Level->BSD->NumRenderObjectPoint = 0;
     
     assert(sizeof(Level->BSD->Header) == 2048);

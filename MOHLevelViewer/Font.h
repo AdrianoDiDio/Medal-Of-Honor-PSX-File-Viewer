@@ -32,7 +32,7 @@ struct Level_s;
 typedef struct Level_s Level_t;
 
 typedef struct Font_s {
-    Vao_t *Characters[NUM_MOH_FONT_CHARS];
+    VAO_t *Characters[NUM_MOH_FONT_CHARS];
 } Font_t;
 
 Font_t *FontInit();

@@ -30,7 +30,7 @@ typedef struct BSD2P_s {
     BSDRenderObjectBlock_t  RenderObjectTable;
     BSDNodeInfo_t NodeData;
     
-    Vao_t       *NodeVao;
+    VAO_t       *NodeVAO;
 //     BSDTSPInfo_t TSPInfo;
 //     char Unknown[72];
 //     BSDTable_t   PTable;
@@ -42,8 +42,8 @@ typedef struct BSD2P_s {
 //     
 //     BSDUObject_t *URealObjectList;
 //     //
-//     Vao_t       *NodeVao;
-//     Vao_t       *NodeBoxVao;
+//     VAO_t       *NodeVAO;
+//     VAO_t       *NodeBoxVAO;
 //     //Easy lookup to see if the camera is in that node position so that
 //     //we can update the TSPNumberRenderList.
 //     BSDTSPStreamNode_t *TSPStreamNodeList;

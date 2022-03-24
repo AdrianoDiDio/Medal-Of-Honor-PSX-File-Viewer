@@ -38,7 +38,7 @@
 
 #include "Types.h"
 #include "ShaderManager.h"
-#include "Vao.h"
+#include "VAO.h"
 #include "TIM.h"
 #include "VRAM.h"
 #include "Font.h"

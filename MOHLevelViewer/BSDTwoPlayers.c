@@ -24,7 +24,7 @@ void BSD2PFree(BSD2P_t *BSD)
     free(BSD->NodeData.Table);
     free(BSD->NodeData.Node);
     free(BSD->RenderObjectTable.RenderObject);
-    VaoFree(BSD->NodeVao);
+    VAOFree(BSD->NodeVAO);
     free(BSD);
 }
 
@@ -51,7 +51,7 @@ void BSD2PVAOPointList(BSD2P_t *BSD)
         NodeData[NodeDataPointer+5] = 0.30f;
         NodeDataPointer += 6;
     }
-    BSD->NodeVao = VaoInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3);            
+    BSD->NodeVAO = VAOInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3);            
     free(NodeData);
 }
 
@@ -66,7 +66,7 @@ void BSD2PDraw(Level_t *Level)
 
     MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
     glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-    glBindVertexArray(Level->BSDTwoP->NodeVao->VaoID[0]);
+    glBindVertexArray(Level->BSDTwoP->NodeVAO->VAOId[0]);
     glPointSize(10.f);
     glDrawArrays(GL_POINTS, 0, Level->BSDTwoP->NodeData.Header.NumNodes);
     glBindVertexArray(0);
@@ -256,7 +256,7 @@ BSD2P_t *BSD2PLoad(char *FName,int MissionNumber)
         return NULL;
     }
     BSD = malloc(sizeof(BSD2P_t));
-    BSD->NodeVao = NULL;
+    BSD->NodeVAO = NULL;
     assert(sizeof(BSD->Header) == 2048);
     fread(&BSD->Header,sizeof(BSD->Header),1,BSDFile);
     DPrintf("BSD2PLoad:Header contains %i(%#02x) element.\n",BSD->Header.NumHeadElements,BSD->Header.NumHeadElements);

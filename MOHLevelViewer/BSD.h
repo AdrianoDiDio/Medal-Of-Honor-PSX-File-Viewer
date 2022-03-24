@@ -287,7 +287,7 @@ typedef struct BSDRenderObject_s {
     BSDFace_t      *Face;
     BSDFaceV2_t    *FaceV2;
     int             NumFaces;
-    Vao_t          *VAO;
+    VAO_t          *VAO;
     Vec3_t          Position;
 } BSDRenderObject_t;
 
@@ -323,8 +323,8 @@ typedef struct BSD_s {
 //     BSDRenderObject_t *RenderObjectRealList;
 //     BSDRenderObject_t *RenderObjectShowCaseList;
     //
-    Vao_t       *NodeVao;
-    Vao_t       *RenderObjectPointVao;
+    VAO_t       *NodeVAO;
+    VAO_t       *RenderObjectPointVAO;
     int          NumRenderObjectPoint;
     //Easy lookup to see if the camera is in that node position so that
     //we can update the TSPNumberRenderList.

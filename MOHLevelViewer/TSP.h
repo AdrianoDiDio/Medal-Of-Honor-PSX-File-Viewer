@@ -99,13 +99,13 @@ typedef struct TSPNode_s {
     
     TSPNodeFileLookUp_t FileOffset;
     TSPFaceV3_t *FaceList;
-    Vao_t *BBoxVao;
+    VAO_t *BBoxVAO;
     //TODO:Remove once semi-transparency is working even in MOH.
-    Vao_t *LeafFaceListVao;
+    VAO_t *LeafFaceListVAO;
     //This will be the only VAO that will be used.
-    Vao_t *LeafOpaqueFaceListVAO;
-    Vao_t *LeafTransparentFaceListVAO;
-    Vao_t *LeafCollisionFaceListVao;
+    VAO_t *LeafOpaqueFaceListVAO;
+    VAO_t *LeafTransparentFaceListVAO;
+    VAO_t *LeafCollisionFaceListVAO;
     struct TSPNode_s *Child[2];
     struct TSPNode_s *Next;
 //     IntShortUnion Child1Offset;
@@ -224,8 +224,8 @@ typedef struct TSP_s {
     TSPCollision_t *CollisionData;
     //
     int          Number;
-    Vao_t       *VaoList;
-    Vao_t       *CollisionVaoList;
+    VAO_t       *VAOList;
+    VAO_t       *CollisionVAOList;
     struct TSP_s *Next;
 } TSP_t;
 

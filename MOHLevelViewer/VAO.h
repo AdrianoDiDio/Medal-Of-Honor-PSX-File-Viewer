@@ -22,32 +22,32 @@
 #define BUFFER_OFFSET(i) ((GLvoid*)(i * sizeof(GL_FLOAT)))
 #define BUFFER_INT_OFFSET(i) ((GLvoid*)(i * sizeof(GL_INT)))
 
-typedef struct Vao_s
+typedef struct VAO_s
 {
-    unsigned int VaoID[1];
-    unsigned int VboID[1];
-    unsigned int IboID[1];
+    unsigned int VAOId[1];
+    unsigned int VBOId[1];
+    unsigned int IBOId[1];
     int          TextureID;
     short        TSB;
 //     float       *Data;
     int          Count;
-    struct Vao_s *Next;
-} Vao_t;
+    struct VAO_s *Next;
+} VAO_t;
 
 // 3D
-Vao_t *VaoInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,int Count);
-Vao_t *VaoInitXYZUVRGBCLUTInteger(int *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,int CLUTOffset,int Count);
-Vao_t *VaoInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID,int Count);
-Vao_t *VaoInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset);
-Vao_t *VaoInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset);
+VAO_t *VAOInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,int Count);
+VAO_t *VAOInitXYZUVRGBCLUTInteger(int *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,int CLUTOffset,int Count);
+VAO_t *VAOInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID,int Count);
+VAO_t *VAOInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset);
+VAO_t *VAOInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset);
 // 3D Indexed
-Vao_t *VaoInitXYZIBO(float *Data,int DataSize,int Stride,unsigned short *Index,int IndexSize,int VertexOffset);
+VAO_t *VAOInitXYZIBO(float *Data,int DataSize,int Stride,unsigned short *Index,int IndexSize,int VertexOffset);
 // 2D
-Vao_t *VaoInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,
+VAO_t *VAOInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,
                       bool StaticDraw);
-Vao_t *VaoInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID,
+VAO_t *VAOInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID,
                       bool StaticDraw);
-Vao_t *VaoInitXYRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset,bool StaticDraw);
+VAO_t *VAOInitXYRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset,bool StaticDraw);
 
-void VaoFree(Vao_t *Vao);
+void VAOFree(VAO_t *VAO);
 #endif //__VAO_H_
