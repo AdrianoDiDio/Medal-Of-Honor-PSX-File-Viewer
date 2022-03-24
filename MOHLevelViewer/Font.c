@@ -139,7 +139,7 @@ void FontLoadChar(Font_t *Font,int CharIndex,float RowX,float RowY)
 
 void FontDrawChar(char c,float x,float y,Color_t Color)
 {
-    GL_Shader_t *Shader;
+    Shader_t *Shader;
     int OrthoMatrixID;
     int ColorID;
     vec3 temp;
@@ -152,7 +152,7 @@ void FontDrawChar(char c,float x,float y,Color_t Color)
     color[2] = Color.b;
     color[3] = Color.a;
     
-    Shader = Shader_Cache("FontShader","Shaders/FontVertexShader.glsl","Shaders/FontFragmentShader.glsl");
+    Shader = ShaderCache("FontShader","Shaders/FontVertexShader.glsl","Shaders/FontFragmentShader.glsl");
     glUseProgram(Shader->ProgramID);
     OrthoMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
     ColorID = glGetUniformLocation(Shader->ProgramID,"Color");

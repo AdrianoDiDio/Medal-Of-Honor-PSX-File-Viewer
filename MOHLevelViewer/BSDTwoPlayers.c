@@ -58,10 +58,10 @@ void BSD2PVAOPointList(BSD2P_t *BSD)
 
 void BSD2PDraw(Level_t *Level)
 {
-    GL_Shader_t *Shader;
+    Shader_t *Shader;
     int MVPMatrixID;
     
-    Shader = Shader_Cache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
+    Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
     glUseProgram(Shader->ProgramID);
 
     MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");

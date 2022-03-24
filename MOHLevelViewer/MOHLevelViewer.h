@@ -195,12 +195,12 @@ void    SkipFileSection(int SectionSize,FILE *InFile);
 void    CreateDirIfNotExists(char *DirName);
 char   *SwitchExt(const char *In, const char *Ext);
 char   *GetBaseName(char *Path);
-bool    GL_InitCompatibilityProfile(const char *Driver);
-Vec3_t  Vec3_Build(float x,float y,float z);
-void    Vec_RotateXAxis(float Theta,Vec3_t *Vector);
-void    GL_Set3D();
-void    Cam_Update(ViewParm_t *Camera,int Orientation, float Sensibility);
-void    Cam_UpdateVectors(ViewParm_t *Camera);
+bool    GLInitCompatibilityProfile(const char *Driver);
+Vec3_t  Vec3Build(float x,float y,float z);
+void    Vec3RotateXAxis(float Theta,Vec3_t *Vector);
+void    GLSet3D();
+void    CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility);
+void    CamUpdateVectors(ViewParm_t *Camera);
 int     LevelGetGameEngine();
 void    Quit();
 

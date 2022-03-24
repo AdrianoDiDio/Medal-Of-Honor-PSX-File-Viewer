@@ -20,7 +20,7 @@
 
 void ShaderManagerFree()
 {
-    GL_Shader_t *Temp;
+    Shader_t *Temp;
     
     while( ShaderList ) {
         Temp = ShaderList;
@@ -28,20 +28,20 @@ void ShaderManagerFree()
         free(Temp);
     }
 }
-char *Shader_Read(char *ShaderPath)
+char *ShaderRead(char *ShaderPath)
 {
     char *Result;
     Result = ReadTextFile(ShaderPath,0);
     if( Result == NULL ) {
-        DPrintf("Shader_Read:File error.\n");
+        DPrintf("ShaderRead:File error.\n");
         return NULL;
     }
     return Result;
 }
 
-GL_Shader_t *Shader_Get(const char *ShaderName)
+Shader_t *ShaderGet(const char *ShaderName)
 {
-    GL_Shader_t *Temp;
+    Shader_t *Temp;
 
     for( Temp = ShaderList; Temp ; Temp = Temp->Next ) {
         if( !strcmp(Temp->Name,ShaderName) ) {
@@ -52,9 +52,9 @@ GL_Shader_t *Shader_Get(const char *ShaderName)
 }
 
 
-GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *FragmentShaderFile)
+Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShaderFile)
 {
-    GL_Shader_t *Result;
+    Shader_t *Result;
     char *ShaderInfoLog;
     int VertexShaderID;
     int FragmentShaderID;
@@ -63,17 +63,17 @@ GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *Fragment
     int ShaderTaskResult;
     char *ShaderSource;
     
-    if( (Result = Shader_Get(ShaderName)) != NULL ) {
+    if( (Result = ShaderGet(ShaderName)) != NULL ) {
         return Result;
     }
     
-    Result = malloc(sizeof(GL_Shader_t));
+    Result = malloc(sizeof(Shader_t));
     
     VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
     FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
     
     DPrintf("Compiling Vertex Shader: %s\n", VertexShaderFile);
-    ShaderSource = Shader_Read(VertexShaderFile);
+    ShaderSource = ShaderRead(VertexShaderFile);
     glShaderSource(VertexShaderID, 1, (const GLchar**) &ShaderSource, NULL);
     glCompileShader(VertexShaderID);
 
@@ -88,7 +88,7 @@ GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *Fragment
     }
     
     DPrintf("Compiling Fragment Shader: %s\n", FragmentShaderFile);
-    ShaderSource = Shader_Read(FragmentShaderFile);
+    ShaderSource = ShaderRead(FragmentShaderFile);
     glShaderSource(FragmentShaderID, 1, (const GLchar**) &ShaderSource, NULL);
     glCompileShader(FragmentShaderID);
 

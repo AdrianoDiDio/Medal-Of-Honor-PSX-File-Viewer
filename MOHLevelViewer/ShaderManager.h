@@ -21,20 +21,19 @@
 #define __SHADERMANAGER_H_
 
 
-typedef struct GL_Shader_s
+typedef struct Shader_s
 {
     char   *Name;
     int     ProgramID;
-    struct GL_Shader_s *Next;
-} GL_Shader_t;
+    struct Shader_s *Next;
+} Shader_t;
 
-GL_Shader_t *ShaderList;
+Shader_t *ShaderList;
 int NumShaders;
 
-GL_Shader_t *Shader_Cache(char *ShaderName,char *VertexShaderFile,char *FragmentShaderFile);
-GL_Shader_t *Shader_Get(const char *ShaderName);
+Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShaderFile);
+Shader_t *ShaderGet(const char *ShaderName);
 void         ShaderManagerInit();
 void         ShaderManagerFree();
-
 
 #endif //__SHADERMANAGER_H_

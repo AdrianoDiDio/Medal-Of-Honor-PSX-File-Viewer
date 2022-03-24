@@ -21,8 +21,9 @@ void main()
     }
     //Water not visible in 1_1/1_2
     if( LightingEnabled > 0.5 ) {
-        FragColor = TexColor * vec4(ourColor.rgb,1);
-    } else {
-        FragColor = TexColor;
+        TexColor.r = clamp(TexColor.r * ourColor.r * 2.f, 0.f, 1.f);
+        TexColor.g = clamp(TexColor.g * ourColor.g * 2.f, 0.f, 1.f);
+        TexColor.b = clamp(TexColor.b * ourColor.b * 2.f, 0.f, 1.f);
     }
+    FragColor = TexColor;
 }

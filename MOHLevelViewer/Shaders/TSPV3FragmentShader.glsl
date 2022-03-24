@@ -41,8 +41,6 @@ void main()
         CLUTTexel.r = clamp(CLUTTexel.r * ourColor.r * 2.f, 0.f, 1.f);
         CLUTTexel.g = clamp(CLUTTexel.g * ourColor.g * 2.f, 0.f, 1.f);
         CLUTTexel.b = clamp(CLUTTexel.b * ourColor.b * 2.f, 0.f, 1.f);
-        FragColor = CLUTTexel;
-    } else {
-        FragColor = CLUTTexel;
     }
+    FragColor = CLUTTexel;
 }

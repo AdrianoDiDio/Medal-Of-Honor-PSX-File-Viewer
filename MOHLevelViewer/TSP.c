@@ -198,8 +198,8 @@ void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
         sprintf(Buffer,"o TSP%i\n",t);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
         for( i = Iterator->Header.NumVertices - 1; i >= 0 ; i-- ) {
-            NewPos = Vec3_Build(Iterator->Vertex[i].Position.x,Iterator->Vertex[i].Position.y,Iterator->Vertex[i].Position.z);
-            Vec_RotateXAxis(DEGTORAD(180.f),&NewPos);
+            NewPos = Vec3Build(Iterator->Vertex[i].Position.x,Iterator->Vertex[i].Position.y,Iterator->Vertex[i].Position.z);
+            Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
             sprintf(Buffer,"v %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
                 Iterator->Color[i].r / 255.f,Iterator->Color[i].g / 255.f,Iterator->Color[i].b / 255.f
             );
@@ -746,7 +746,7 @@ void TSPCreateCollisionVAO(TSP_t *TSPList)
 
 Vec3_t Vec3_FromTSPVec3(TSPVec3_t In)
 {
-    return Vec3_Build(In.x,In.y,In.z);
+    return Vec3Build(In.x,In.y,In.z);
 }
 
 void TSPPrintVec3(TSPVec3_t Vector)
@@ -761,7 +761,7 @@ void TSPPrintColor(TSPColor_t Color)
 
 void DrawTSPBox(TSPNode_t Node)
 {
-    GL_Shader_t *Shader;
+    Shader_t *Shader;
     vec4 BoxColor;
     int MVPMatrixID;
     int ColorID;
@@ -783,7 +783,7 @@ void DrawTSPBox(TSPNode_t Node)
     }
     
     
-    Shader = Shader_Cache("TSPBBoxShader","Shaders/TSPBBoxVertexShader.glsl","Shaders/TSPBBoxFragmentShader.glsl");
+    Shader = ShaderCache("TSPBBoxShader","Shaders/TSPBBoxVertexShader.glsl","Shaders/TSPBBoxFragmentShader.glsl");
     glUseProgram(Shader->ProgramID);
     
     MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
@@ -804,7 +804,7 @@ void DrawTSPBox(TSPNode_t Node)
 void DrawTSPCollisionData(TSP_t *TSP)
 {
     VAO_t *Iterator;
-    GL_Shader_t *Shader;
+    Shader_t *Shader;
     int MVPMatrixID;
     
     if( !TSP ) {
@@ -812,7 +812,7 @@ void DrawTSPCollisionData(TSP_t *TSP)
         return;
     }
     
-    Shader = Shader_Cache("TSPCollisionShader","Shaders/TSPCollisionVertexShader.glsl","Shaders/TSPCollisionFragmentShader.glsl");
+    Shader = ShaderCache("TSPCollisionShader","Shaders/TSPCollisionVertexShader.glsl","Shaders/TSPCollisionFragmentShader.glsl");
     glUseProgram(Shader->ProgramID);
 
     MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
@@ -839,7 +839,7 @@ bool IsTSPInRenderArray(Level_t *Level,int TSPNumber)
 
 void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
 {
-    GL_Shader_t *Shader;
+    Shader_t *Shader;
     VAO_t *Iterator;
     int MVPMatrixID;
     int EnableLightingID;
@@ -859,7 +859,7 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
 
     if( Node->NumFaces != 0 ) {
         if( Level->Settings.ShowMap ) {
-            Shader = Shader_Cache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
+            Shader = ShaderCache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
             glUseProgram(Shader->ProgramID);
 
             MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
@@ -891,7 +891,7 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
 }
 void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings)
 {
-    GL_Shader_t *Shader;
+    Shader_t *Shader;
     VAO_t *Iterator;
     int MVPMatrixID;
     int EnableLightingID;
@@ -914,7 +914,7 @@ void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings)
 
     if( Node->NumFaces != 0 ) {
         if( Level->Settings.ShowMap ) {
-            Shader = Shader_Cache("TSPShaderV3","Shaders/TSPV3VertexShader.glsl","Shaders/TSPV3FragmentShader.glsl");
+            Shader = ShaderCache("TSPShaderV3","Shaders/TSPV3VertexShader.glsl","Shaders/TSPV3FragmentShader.glsl");
             glUseProgram(Shader->ProgramID);
 
             MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");

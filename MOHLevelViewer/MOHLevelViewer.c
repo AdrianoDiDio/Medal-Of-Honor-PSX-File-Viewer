@@ -178,7 +178,7 @@ void SkipFileSection(int SectionSize,FILE *InFile)
     assert((ftell(InFile) - CurrentSection) == SectionSize);
 }
 
-Vec3_t Vec3_Build(float x,float y,float z)
+Vec3_t Vec3Build(float x,float y,float z)
 {
     Vec3_t Temp;
 
@@ -194,7 +194,7 @@ float Vec_Length(Vec3_t Vector)
     return sqrt (Vector.x*Vector.x + Vector.y*Vector.y + Vector.z*Vector.z);
 }
 
-void Vec_RotateXAxis(float Theta,Vec3_t *Vector)
+void Vec3RotateXAxis(float Theta,Vec3_t *Vector)
 {
     Vector->x = Vector->x;
     Vector->y = Vector->y*cos(Theta) - Vector->z*sin(Theta);
@@ -245,9 +245,9 @@ void Cam_Init(ViewParm_t *Camera)
     Camera->Angle.y = 0.0;
     Camera->Angle.z = 0.0;
 
-    Camera->Up = Vec3_Build(0.0f,1.0f,0.0f);
-    Camera->Right = Vec3_Build(1.0f,0.0f,0.0f);
-    Camera->Forward = Vec3_Build(0.0f,0.0f,1.0f);
+    Camera->Up = Vec3Build(0.0f,1.0f,0.0f);
+    Camera->Right = Vec3Build(1.0f,0.0f,0.0f);
+    Camera->Forward = Vec3Build(0.0f,0.0f,1.0f);
     
 }
 
@@ -279,7 +279,7 @@ void Cam_MouseEvent(ViewParm_t *Camera,int Dx,int Dy)
     Cam_FixAngles(Camera);
 }
 
-void Cam_Update(ViewParm_t *Camera,int Orientation, float Sensibility)
+void CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility)
 {
     switch ( Orientation ) {
         case DIR_FORWARD:
@@ -566,34 +566,34 @@ void Sys_CheckKeyEvents()
                     DumpLevel(Level);
                 }
                 if( Event.key.keysym.sym == SDLK_w ) {
-                    Cam_Update(&Camera, DIR_FORWARD, CamSpeed * ComTime->Delta);
+                    CamUpdate(&Camera, DIR_FORWARD, CamSpeed * ComTime->Delta);
                 }
                 if( Event.key.keysym.sym == SDLK_s ) {
-                    Cam_Update(&Camera, DIR_BACKWARD, CamSpeed * ComTime->Delta);
+                    CamUpdate(&Camera, DIR_BACKWARD, CamSpeed * ComTime->Delta);
                 }
                 if( Event.key.keysym.sym == SDLK_a ) {
-                    Cam_Update(&Camera, DIR_LEFTWARD, CamSpeed * ComTime->Delta);
+                    CamUpdate(&Camera, DIR_LEFTWARD, CamSpeed * ComTime->Delta);
                 }
                 if( Event.key.keysym.sym == SDLK_d ) {
-                    Cam_Update(&Camera, DIR_RIGHTWARD, CamSpeed * ComTime->Delta);
+                    CamUpdate(&Camera, DIR_RIGHTWARD, CamSpeed * ComTime->Delta);
                 }
                 if( Event.key.keysym.sym == SDLK_SPACE ) {
-                    Cam_Update(&Camera, DIR_UPWARD, CamSpeed * ComTime->Delta);
+                    CamUpdate(&Camera, DIR_UPWARD, CamSpeed * ComTime->Delta);
                 }
                 if( Event.key.keysym.sym == SDLK_z ) {
-                    Cam_Update(&Camera, DIR_DOWNWARD, CamSpeed * ComTime->Delta);
+                    CamUpdate(&Camera, DIR_DOWNWARD, CamSpeed * ComTime->Delta);
                 }
 //                 if( Event.key.keysym.sym == SDLK_LEFT ) {
-//                     Cam_Update(&Camera, LOOK_LEFT, CamSpeed * ComTime->Delta);
+//                     CamUpdate(&Camera, LOOK_LEFT, CamSpeed * ComTime->Delta);
 //                 }
 //                 if( Event.key.keysym.sym == SDLK_RIGHT ) {
-//                     Cam_Update(&Camera, LOOK_RIGHT, CamSpeed * ComTime->Delta);
+//                     CamUpdate(&Camera, LOOK_RIGHT, CamSpeed * ComTime->Delta);
 //                 }
 //                 if( Event.key.keysym.sym == SDLK_UP ) {
-//                     Cam_Update(&Camera, LOOK_UP, CamSpeed * ComTime->Delta);
+//                     CamUpdate(&Camera, LOOK_UP, CamSpeed * ComTime->Delta);
 //                 }
 //                 if( Event.key.keysym.sym == SDLK_DOWN ) {
-//                     Cam_Update(&Camera, LOOK_DOWN, CamSpeed * ComTime->Delta);
+//                     CamUpdate(&Camera, LOOK_DOWN, CamSpeed * ComTime->Delta);
 //                 }
                 Cam_FixAngles(&Camera);
                 break;
@@ -778,7 +778,7 @@ void GL_SetProjectionMatrix()
     VidConf.PMatrix[15] = 0;
 }
 
-void GL_Set3D()
+void GLSet3D()
 {
 #if 0
     glEnable (GL_DEPTH_TEST);
@@ -916,7 +916,7 @@ void InitGLView()
 {
     GL_SetDefaultState();
     //GL_Set2D();
-    GL_Set3D();
+    GLSet3D();
 }
 
 
@@ -930,7 +930,7 @@ void GLFrame()
     glm_perspective(glm_rad(110.f),(float) VidConf.Width/ (float) VidConf.Height,1.f, 4096.f,VidConf.PMatrixM4);
 // 
 // #if 0
-//     GL_Set3D();
+//     GLSet3D();
 //     glRotatef(Camera.Angle.x, 1.0f, 0.0f, 0.0f);
 //     glRotatef(Camera.Angle.y, 0.0f, 1.0f, 0.0f);
 //     glRotatef(Camera.Angle.z, 0.0f, 0.0f, 1.0f);

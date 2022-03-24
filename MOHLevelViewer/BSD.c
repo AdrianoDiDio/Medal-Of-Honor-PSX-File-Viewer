@@ -749,7 +749,7 @@ Vec3_t BSDGetPlayerSpawn(BSD_t *BSD)
     Vec3_t PlayerSpawn;
     int i;
     
-    PlayerSpawn = Vec3_Build(0,0,0);
+    PlayerSpawn = Vec3Build(0,0,0);
     
     if( !BSD ) {
         DPrintf("BSDGetPlayerSpawn:Invalid BSD\n");
@@ -760,10 +760,10 @@ Vec3_t BSDGetPlayerSpawn(BSD_t *BSD)
         if( BSD->NodeData.Node[i].Id != BSD_PLAYER_SPAWN ) {
             continue;
         }
-        PlayerSpawn = Vec3_Build(BSD->NodeData.Node[i].Position.x,BSD->NodeData.Node[i].Position.y,BSD->NodeData.Node[i].Position.z);
+        PlayerSpawn = Vec3Build(BSD->NodeData.Node[i].Position.x,BSD->NodeData.Node[i].Position.y,BSD->NodeData.Node[i].Position.z);
         break;
     }
-    Vec_RotateXAxis(DEGTORAD(180.f),&PlayerSpawn);
+    Vec3RotateXAxis(DEGTORAD(180.f),&PlayerSpawn);
 //     Vec3_t Temp;
 //     Temp.x = Temp.y = Temp.z = 0.f;
 //     return Temp;
@@ -1127,7 +1127,7 @@ bool BSDPointInSphere(Vec3_t Point,BSDPosition_t Center,float Radius)
     Node.x = Center.x;
     Node.y = Center.y;
     Node.z = Center.z;
-    Vec_RotateXAxis(DEGTORAD(180.f),&Node);
+    Vec3RotateXAxis(DEGTORAD(180.f),&Node);
     
     DeltaX = abs(Point.x - Node.x);
     DeltaY = abs(Point.y - Node.y);
@@ -1155,7 +1155,7 @@ bool BSDPointInCylinder(Vec3_t Point,BSDPosition_t Center,float Radius,float Min
     Node.x = Center.x;
     Node.y = Center.y;
     Node.z = Center.z;
-    Vec_RotateXAxis(DEGTORAD(180.f),&Node);
+    Vec3RotateXAxis(DEGTORAD(180.f),&Node);
 
     //Make sure Min/Max are not swapped out.
     if( MaxY < MinY ) {
@@ -1189,7 +1189,7 @@ bool BSDPointInBox(Vec3_t Point,BSDPosition_t Center,BSDPosition_t NodeRotation,
     Node.x = Center.x;
     Node.y = Center.y;
     Node.z = Center.z;
-    Vec_RotateXAxis(DEGTORAD(180.f),&Node);
+    Vec3RotateXAxis(DEGTORAD(180.f),&Node);
     
     HalfSizeX = abs(Width) / 2.f;
     HalfSizeY = abs(Height)/ 2.f;
@@ -1236,7 +1236,7 @@ bool BSDPointInNode(Vec3_t Position,BSDNode_t *Node)
 //     BSDSpawnEntity(int UBlockID,Vec3_t NodePos) => Store into a list and transform to vao.
 void BSDDraw(Level_t *Level)
 {
-    GL_Shader_t *Shader;
+    Shader_t *Shader;
     BSDRenderObjectDrawable_t *RenderObjectIterator;
     VAO_t *VAOIterator;
     int MVPMatrixID;
@@ -1258,7 +1258,7 @@ void BSDDraw(Level_t *Level)
         }
     }
     if( Level->Settings.ShowBSDNodes ) {    
-        Shader = Shader_Cache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
+        Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
         glUseProgram(Shader->ProgramID);
 
         MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
@@ -1271,7 +1271,7 @@ void BSDDraw(Level_t *Level)
     }
     
     if( Level->Settings.ShowBSDRenderObject ) {    
-        Shader = Shader_Cache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
+        Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
         glUseProgram(Shader->ProgramID);
 
         MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
@@ -1285,7 +1285,7 @@ void BSDDraw(Level_t *Level)
     
     
     if( Level->Settings.DrawBSDRenderObjects ) {
-        Shader = Shader_Cache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
+        Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
         glUseProgram(Shader->ProgramID);
         MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
         glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page.TextureID);
@@ -1348,7 +1348,7 @@ void BSDDraw(Level_t *Level)
     }
     
     if( Level->Settings.DrawBSDShowCaseRenderObject ) {
-        Shader = Shader_Cache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
+        Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
         glUseProgram(Shader->ProgramID);
         MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
         glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page.TextureID);
@@ -1473,7 +1473,7 @@ void ParseRenderObjectFaceData(BSD_t *BSD,int RenderObjectDataOffset,FILE *BSDFi
         BSD->RenderObjectList[i].Position.x = x;
         BSD->RenderObjectList[i].Position.y = y;
         BSD->RenderObjectList[i].Position.z = z;
-        Vec_RotateXAxis(DEGTORAD(180.f),&BSD->RenderObjectList[i].Position);
+        Vec3RotateXAxis(DEGTORAD(180.f),&BSD->RenderObjectList[i].Position);
         DPrintf("ParseRenderObjectFaceData:RenderObject ID %u\n",BSD->RenderObjectList[i].Data->ID);
         DPrintf("Face is at %u;%u;%u\n",x,y,z); 
         
