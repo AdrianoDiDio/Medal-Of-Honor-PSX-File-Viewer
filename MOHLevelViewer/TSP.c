@@ -156,7 +156,7 @@ void TSPDumpFaceV3DataToFile(TSP_t *TSP,FILE *OutFile)
         }
         for( j = TSP->Node[i].NumFaces - 1; j >= 0 ; j-- ) {
             TextureInfo = TSP->TextureData[TSP->Node[i].FaceList[j].TextureDataIndex];
-            int ColorMode = (TextureInfo.TSB & 0x80) >> 7;
+            int ColorMode = (TextureInfo.TSB >> 7) & 0x3;
             int VRAMPage = TextureInfo.TSB & 0x1F;
             float U0 = (((float)TextureInfo.UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
             float V0 = /*255 -*/1.f-(((float)TextureInfo.UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);

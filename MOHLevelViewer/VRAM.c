@@ -153,9 +153,7 @@ void VRAMPutTexture(VRAM_t *VRAM,TIMImage_t *Image)
 }
 void VRAMPutRawTexture(VRAM_t *VRAM,TIMImage_t *Image)
 {
-    unsigned int TempTexture;
     int VRAMPage;
-    SDL_Surface *Src;
     SDL_Rect SrcRect;
     int DestX;
     int DestY;
@@ -181,28 +179,22 @@ void VRAMPutRawTexture(VRAM_t *VRAM,TIMImage_t *Image)
     SrcRect.y = VRAMGetTexturePageY(VRAMPage,Image->Header.BPP) + DestY;
     SrcRect.w = Image->Width;
     SrcRect.h = Image->Height;    
-    glCreateTextures(GL_TEXTURE_2D, 1, &TempTexture);
+
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     ImageData = TIMExpandCLUTImageData(Image);
     if( ImageData == NULL ) {
         DPrintf("VRAMPutRAWTexture:Failed to expand image %s\n",Image->Name);
         return;
     }
-    glTextureStorage2D(TempTexture,1,GL_R8UI, SrcRect.w, SrcRect.h);
-    glTextureSubImage2D(TempTexture, 0, 0, 0, SrcRect.w, SrcRect.h, GL_RED_INTEGER, GL_UNSIGNED_BYTE, ImageData);
-    glCopyImageSubData(TempTexture, GL_TEXTURE_2D, 0, 0, 0, 0, VRAM->TextureIndexPage.TextureID, GL_TEXTURE_2D, 0, SrcRect.x, SrcRect.y, 0, 
-                       SrcRect.w, SrcRect.h, 1);
-    glDeleteTextures(1, &TempTexture);
+    glTextureSubImage2D(VRAM->TextureIndexPage.TextureID, 0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RED_INTEGER, GL_UNSIGNED_BYTE, ImageData);
 }
 void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
 {
     int VRAMPage;
-    SDL_Surface *Src;
     SDL_Rect SrcRect;
     int DestX;
     int DestY;
-    float ColorOffsetMultiplier;
-    unsigned int TempTexture;
+
     VRAMPage = Image->CLUTTexturePage;
     //TODO:Special case decide whether we want to blit image into CLUT or
     //     create a new storage for direct textures to be bind and passed to shaders.
@@ -211,17 +203,13 @@ void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
     if( Image->Header.BPP == BPP_16 ) {
         return;
     }
-    if( Image->Header.BPP == BPP_4 ) {
-        ColorOffsetMultiplier = 4;
-    } else {
-        ColorOffsetMultiplier = 2;
-    }
+
     
     if( Image->Header.CLUTOrgY >= 256 ) {
-        DestX = (Image->Header.CLUTOrgX - ((Image->CLUTTexturePage - 16) * 64)) /** ColorOffsetMultiplier*/;
+        DestX = (Image->Header.CLUTOrgX - ((Image->CLUTTexturePage - 16) * 64));
         DestY = Image->Header.CLUTOrgY/* - 256*/;
     } else {
-        DestX = (Image->Header.CLUTOrgX - (Image->CLUTTexturePage * 64)) /** ColorOffsetMultiplier*/;
+        DestX = (Image->Header.CLUTOrgX - (Image->CLUTTexturePage * 64));
         DestY = Image->Header.CLUTOrgY;
     }
     SrcRect.x = VRAMGetTexturePageX(VRAMPage) + DestX;
@@ -239,22 +227,15 @@ void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
         //Get to the next texture area (8-bit mode).
         SrcRect.y += 512;
     }
-    glCreateTextures(GL_TEXTURE_2D, 1, &TempTexture);
-    glTextureStorage2D(TempTexture,1,GL_RGB5_A1, SrcRect.w, SrcRect.h);
-    glTextureSubImage2D(TempTexture, 0, 0, 0, SrcRect.w, SrcRect.h, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, Image->CLUT);
-    glCopyImageSubData(TempTexture, GL_TEXTURE_2D, 0, 0, 0, 0, VRAM->PalettePage.TextureID, GL_TEXTURE_2D, 0, SrcRect.x, SrcRect.y, 0, 
-                       SrcRect.w, SrcRect.h, 1);
-    glDeleteTextures(1, &TempTexture);
+    glTextureSubImage2D(VRAM->PalettePage.TextureID, 0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, Image->CLUT);
 }
 
 void VRAMPutDirectModeIntoCLUT(VRAM_t *VRAM,TIMImage_t *Image)
 {
     int VRAMPage;
-    SDL_Surface *Src;
     SDL_Rect SrcRect;
     int DestX;
     int DestY;
-    Byte *ImageData;
     
     VRAMPage = Image->TexturePage;
     
