@@ -107,7 +107,7 @@ void TSPDumpFaceDataToFile(TSP_t *TSP,FILE *OutFile)
     TextureHeight = Level->VRAM->Page.Height;
 
     for( i = TSP->Header.NumFaces - 1; i >= 0 ; i-- ) {
-        int ColorMode = (TSP->Face[i].TSB.AsShort & 0x80) >> 7;
+        int ColorMode = (TSP->Face[i].TSB.AsShort >> 7) & 0x3;
         int VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
         float U0 = (((float)TSP->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
         float V0 = /*255 -*/1.f-(((float)TSP->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
@@ -345,7 +345,7 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
     TextureHeight = Level->VRAM->Page.Height;
     
     for( i = Base; i < Target; i++ ) {
-        int ColorMode = (TSP->Face[i].TSB.AsShort & 0x80) >> 7;
+        int ColorMode = (TSP->Face[i].TSB.AsShort >> 7) & 0x3;
         int VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
         int ABRRate = (TSP->Face[i].TSB.AsShort & 0x60) >> 5;
         DPrintf("TSB is %u\n",TSP->Face[i].TSB.AsShort);
@@ -474,7 +474,7 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
     
     for( i = 0; i < Node->NumFaces; i++ ) {
         TextureInfo = TSP->TextureData[Node->FaceList[i].TextureDataIndex];
-        int ColorMode = (TextureInfo.TSB & 0x80) >> 7;
+        int ColorMode = (TextureInfo.TSB >> 7) & 0x3;
         int VRAMPage = TextureInfo.TSB & 0x1F;
         int ABRRate = (TextureInfo.TSB & 0x60) >> 5;
         CLUTPosX = (TextureInfo.CBA << 4) & 0x3F0;
@@ -998,7 +998,7 @@ void DrawTSPList(Level_t *Level)
         printf("DrawTSP:Invalid TSP data\n");
         return;
     }
-    
+
     for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
 //             DrawNode(Iterator->BSDTree);
 //             DrawTSP(Iterator);
@@ -1006,15 +1006,16 @@ void DrawTSPList(Level_t *Level)
         if( TSPIsVersion3(Iterator) ) {
             DrawNodeV3(&Iterator->Node[0],Level->Settings);
         } else {
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT);  
             DrawNode(&Iterator->Node[0],Level->Settings);
+            glDisable(GL_CULL_FACE);
         }
 //                 DPrintf("Drawing %i faces for %s root %i\n",TotalFaceCount2,Iterator->FName,i);
 //                 TotalFaceCount2 = 0;
 //         }
 //             exit(0);
     }
-    
-    
     if( Level->Settings.ShowCollisionData ) {
         for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
             DrawTSPCollisionData(Iterator);

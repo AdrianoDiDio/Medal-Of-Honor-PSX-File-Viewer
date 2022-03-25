@@ -130,8 +130,10 @@ void VRAMPutTexture(VRAM_t *VRAM,TIMImage_t *Image)
     
     if( Image->Header.BPP == BPP_4 ) {
         ColorOffsetMultiplier = 4;
-    } else {
+    } else if( Image->Header.BPP == BPP_8) {
         ColorOffsetMultiplier = 2;
+    } else {
+        ColorOffsetMultiplier = 1;
     }
     
     if( Image->FrameBufferY >= 256 ) {
@@ -202,7 +204,13 @@ void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
     float ColorOffsetMultiplier;
     unsigned int TempTexture;
     VRAMPage = Image->CLUTTexturePage;
-    
+    //TODO:Special case decide whether we want to blit image into CLUT or
+    //     create a new storage for direct textures to be bind and passed to shaders.
+    //     Either way we need to pass ColorMode to shader in order to fetch the correct data!
+    //     (NOTE):An example of 16-bit texture can be found in MOH:Mission 7 Level 2!
+    if( Image->Header.BPP == BPP_16 ) {
+        return;
+    }
     if( Image->Header.BPP == BPP_4 ) {
         ColorOffsetMultiplier = 4;
     } else {
@@ -239,6 +247,35 @@ void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
     glDeleteTextures(1, &TempTexture);
 }
 
+void VRAMPutDirectModeIntoCLUT(VRAM_t *VRAM,TIMImage_t *Image)
+{
+    int VRAMPage;
+    SDL_Surface *Src;
+    SDL_Rect SrcRect;
+    int DestX;
+    int DestY;
+    Byte *ImageData;
+    
+    VRAMPage = Image->TexturePage;
+    
+    //NOTE:Guarding against 24-bpp images which are not tested yet.
+    assert(Image->Header.BPP == BPP_16);
+    
+    if( Image->FrameBufferY >= 256 ) {
+        DestX = (Image->FrameBufferX - ((Image->TexturePage - 16) * 64));
+        DestY = Image->FrameBufferY - 256;
+    } else {
+        DestX = (Image->FrameBufferX - (Image->TexturePage * 64));
+        DestY = Image->FrameBufferY;
+    }
+    SrcRect.x = VRAMGetTexturePageX(VRAMPage) + DestX;
+    SrcRect.y = VRAMGetTexturePageY(VRAMPage,Image->Header.BPP) + DestY;
+    SrcRect.w = Image->Width;
+    SrcRect.h = Image->Height;
+    glTextureSubImage2D(VRAM->PalettePage.TextureID, 0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, 
+                        Image->Data);
+}
+
 VRAM_t *VRAMInit(TIMImage_t *ImageList)
 {
     VRAM_t *VRAM;
@@ -271,9 +308,16 @@ VRAM_t *VRAMInit(TIMImage_t *ImageList)
 
 
     for( Iterator = ImageList; Iterator; Iterator = Iterator->Next ) {
+        //NOTE(Adriano):This guard it's used in case there are 24-bits textures that requires loading.
+        //At the moment only 16-BPP are used in MOH:MSN7LVL2.
+        assert(Iterator->Header.BPP != BPP_24);
         VRAMPutTexture(VRAM,Iterator);
-        VRAMPutRawTexture(VRAM,Iterator);
-        VRAMPutCLUT(VRAM,Iterator);
+        if( Iterator->Header.BPP == BPP_16 ) {
+            VRAMPutDirectModeIntoCLUT(VRAM,Iterator);
+        } else {
+            VRAMPutRawTexture(VRAM,Iterator);
+            VRAMPutCLUT(VRAM,Iterator);
+        }
     }
 #ifdef _DEBUG
     VRAMDump(VRAM);

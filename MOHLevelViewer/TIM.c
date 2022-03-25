@@ -204,6 +204,16 @@ Byte *TIMToOpenGL32(TIMImage_t *Image)
                 xOffs++;
             }
         }
+    } else if ( Image->Header.BPP == BPP_16 ) {
+        for( y = 0; y < Image->Height; y++ ) {
+            for( x = 0; x < Image->RowCount; x++ ) {
+                int BaseLocation0 = (x + Image->Width * y)*4;
+                Data[BaseLocation0 + 0] = GetR(Image->Data[x+Image->RowCount*y]);
+                Data[BaseLocation0 + 1] = GetG(Image->Data[x+Image->RowCount*y]);
+                Data[BaseLocation0 + 2] = GetB(Image->Data[x+Image->RowCount*y]);
+                Data[BaseLocation0 + 3] = GetAlphaValue(Image->Data[x+Image->RowCount*y]);
+            }
+        }
     }
     return Data;
 }
