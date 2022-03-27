@@ -289,7 +289,7 @@ VRAM_t *VRAMInit(TIMImage_t *ImageList)
 
 
     for( Iterator = ImageList; Iterator; Iterator = Iterator->Next ) {
-        //NOTE(Adriano):This guard it's used in case there are 24-bits textures that requires loading.
+        //NOTE(Adriano):This guard is used in case there are 24-bits textures that requires loading.
         //At the moment only 16-BPP are used in MOH:MSN7LVL2.
         assert(Iterator->Header.BPP != BPP_24);
         VRAMPutTexture(VRAM,Iterator);

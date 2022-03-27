@@ -889,7 +889,7 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
         DrawNode(Node->Next,LevelSettings);
     }
 }
-void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings)
+void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings,int AlphaPass)
 {
     Shader_t *Shader;
     VAO_t *Iterator;
@@ -937,31 +937,34 @@ void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings)
 //             glBindTexture(GL_TEXTURE_2D,Level->VRAM->TextureIndexPage.TextureID);
 //             glActiveTexture(GL_TEXTURE0 + 1);
 //             glBindTexture(GL_TEXTURE_2D,Level->VRAM->PalettePage.TextureID);
+            if( AlphaPass ) {
+                glDepthMask(0);
+                glBlendColor(0.25f, 0.25f, 0.25f, 1.f);
+                glEnable(GL_BLEND);
+                //Bby2plusFby2
+                glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+                glBlendFunc(GL_ONE, GL_SRC_ALPHA);
+                //BPlusF
+    //             glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+    //             glBlendFunc(GL_ONE, GL_SRC_ALPHA);
+                //BPlusFBy4
+    //             glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+    //             glBlendFunc(GL_CONSTANT_COLOR, GL_SRC_ALPHA);
+                for( Iterator = Node->LeafTransparentFaceListVAO; Iterator; Iterator = Iterator->Next ) {
+                    glBindVertexArray(Iterator->VAOId[0]);
+                    glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
+                    glBindVertexArray(0);
+                }
+                glDepthMask(1);
 
-            glDisable(GL_BLEND);
-            for( Iterator = Node->LeafOpaqueFaceListVAO; Iterator; Iterator = Iterator->Next ) {
-                glBindVertexArray(Iterator->VAOId[0]);
-                glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
-                glBindVertexArray(0);
+            } else {
+                glDisable(GL_BLEND);
+                for( Iterator = Node->LeafOpaqueFaceListVAO; Iterator; Iterator = Iterator->Next ) {
+                    glBindVertexArray(Iterator->VAOId[0]);
+                    glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
+                    glBindVertexArray(0);
+                }
             }
-            glDepthMask(0);
-            glBlendColor(0.25f, 0.25f, 0.25f, 1.f);
-            glEnable(GL_BLEND);
-            //Bby2plusFby2
-            glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-            glBlendFunc(GL_ONE, GL_SRC_ALPHA);
-            //BPlusF
-//             glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-//             glBlendFunc(GL_ONE, GL_SRC_ALPHA);
-            //BPlusFBy4
-//             glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-//             glBlendFunc(GL_CONSTANT_COLOR, GL_SRC_ALPHA);
-             for( Iterator = Node->LeafTransparentFaceListVAO; Iterator; Iterator = Iterator->Next ) {
-                 glBindVertexArray(Iterator->VAOId[0]);
-                 glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
-                 glBindVertexArray(0);
-             }
-            glDepthMask(1);
             glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D,0);
             glDisable(GL_BLEND);
@@ -969,9 +972,9 @@ void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings)
             glUseProgram(0);
         }
     } else {
-        DrawNodeV3(Node->Child[1],LevelSettings);
-        DrawNodeV3(Node->Next,LevelSettings);
-        DrawNodeV3(Node->Child[0],LevelSettings);
+        DrawNodeV3(Node->Child[1],LevelSettings,AlphaPass);
+        DrawNodeV3(Node->Next,LevelSettings,AlphaPass);
+        DrawNodeV3(Node->Child[0],LevelSettings,AlphaPass);
 
     }
 //     if( Node->Child[0] != NULL ) {
@@ -991,7 +994,7 @@ void DrawTSPList(Level_t *Level)
 {
     TSP_t *TSPData;
     TSP_t *Iterator;
-    
+    int i;
     TSPData = Level->TSPList;
     
     if( !TSPData ) {
@@ -1004,7 +1007,9 @@ void DrawTSPList(Level_t *Level)
 //             DrawTSP(Iterator);
 //         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
         if( TSPIsVersion3(Iterator) ) {
-            DrawNodeV3(&Iterator->Node[0],Level->Settings);
+            for( i = 0; i < 2; i++ ) {
+                DrawNodeV3(&Iterator->Node[0],Level->Settings,i);
+            }
         } else {
             glEnable(GL_CULL_FACE);
             glCullFace(GL_FRONT);  
