@@ -61,6 +61,12 @@ typedef struct TSPTextureInfo_s {
     short   Padding;
 } TSPTextureInfo_t;
 
+typedef struct TSPTransparentFace_s {
+    int VAOBufferOffset;
+    int BlendingMode;
+    struct TSPTransparentFace_s *Next;
+} TSPTransparentFace_t;
+
 //16 Bytes.
 typedef struct TSPFace_s {
     unsigned short V0;
@@ -225,6 +231,8 @@ typedef struct TSP_s {
     //
     int          Number;
     VAO_t       *VAOList;
+    VAO_t       *TransparentVAO;
+    TSPTransparentFace_t *TransparentFaceList;
     VAO_t       *CollisionVAOList;
     struct TSP_s *Next;
 } TSP_t;

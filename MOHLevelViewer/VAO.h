@@ -30,6 +30,9 @@ typedef struct VAO_s
     int          TextureID;
     short        TSB;
 //     float       *Data;
+    int          CurrentSize;
+    int          Stride;
+    int          Size;
     int          Count;
     struct VAO_s *Next;
 } VAO_t;
@@ -48,6 +51,6 @@ VAO_t *VAOInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int T
 VAO_t *VAOInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID,
                       bool StaticDraw);
 VAO_t *VAOInitXYRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset,bool StaticDraw);
-
+void VAOUpdate(VAO_t *VAO,int *Data,int DataSize,int NumElements);
 void VAOFree(VAO_t *VAO);
 #endif //__VAO_H_

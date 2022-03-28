@@ -21,6 +21,7 @@
 
 void TSPFree(TSP_t *TSP)
 {
+    TSPTransparentFace_t *Temp;
     int i;
 //     TSP->Node
 //     TSPRecursiveNodeFree(&TSP->Node[0]);
@@ -63,8 +64,14 @@ void TSPFree(TSP_t *TSP)
     free(TSP->CollisionData->Face);
     free(TSP->CollisionData);
     
+    while( TSP->TransparentFaceList ) {
+        Temp = TSP->TransparentFaceList;
+        TSP->TransparentFaceList = TSP->TransparentFaceList->Next;
+        free(Temp);
+    }
     VAOFree(TSP->VAOList);
     VAOFree(TSP->CollisionVAOList);
+    VAOFree(TSP->TransparentVAO);
     free(TSP);
 }
 
@@ -451,7 +458,6 @@ TSPDynamicFaceData_t *GetDynamicDataByFaceIndex(TSP_t *TSP,int FaceIndex,int Str
     }
     return NULL;
 }
-
 int TSPGetNodeTransparentFaceCount(TSP_t *TSP,TSPNode_t *Node)
 {
     TSPTextureInfo_t TextureInfo;
@@ -486,6 +492,7 @@ int TSPGetNodeTransparentFaceCount(TSP_t *TSP,TSPNode_t *Node)
     }
     return Result;
 }
+
 
 void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
 {
@@ -635,7 +642,6 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
     TSPDynamicFaceData_t *DynamicData;
     TSPTextureInfo_t TextureInfo;
     VAO_t *VAO;
-    VAO_t *TransparentVAO;
 
     int i;
     
@@ -652,7 +658,7 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
     VertexSize = Stride * 3 * (Node->NumFaces - NumTransparentFaces);
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
-    TransparentVertexSize = Stride * 3 * NumTransparentFaces;
+    TransparentVertexSize = Stride * 3;
     TransparentVertexData = malloc(TransparentVertexSize);
     TransparentVertexPointer = 0;
     
@@ -751,6 +757,13 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexData[TransparentVertexPointer+8] = CLUTDestX;
             TransparentVertexData[TransparentVertexPointer+9] = CLUTDestY;
             TransparentVertexPointer += 10;
+            TSPTransparentFace_t *TransparentFace = malloc(sizeof(TSPTransparentFace_t));
+            TransparentFace->VAOBufferOffset = TSP->TransparentVAO->CurrentSize;
+            TransparentFace->BlendingMode = (TextureInfo.TSB >> 5) & 3;
+            VAOUpdate(TSP->TransparentVAO,TransparentVertexData,TransparentVertexSize,3);
+            TransparentFace->Next = TSP->TransparentFaceList;
+            TSP->TransparentFaceList = TransparentFace;
+            TransparentVertexPointer = 0;
         } else {
             VertexData[VertexPointer] =   TSP->Vertex[Vert0].Position.x;
             VertexData[VertexPointer+1] = TSP->Vertex[Vert0].Position.y;
@@ -793,24 +806,31 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
                                      (Node->NumFaces - NumTransparentFaces) * 3);
     VAO->Next = Node->LeafOpaqueFaceListVAO;
     Node->LeafOpaqueFaceListVAO = VAO;
-    TransparentVAO = VAOInitXYZUVRGBCLUTInteger(TransparentVertexData,TransparentVertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,
-                                     NumTransparentFaces * 3);
-    TransparentVAO->Next = Node->LeafTransparentFaceListVAO;
-    Node->LeafTransparentFaceListVAO = TransparentVAO;
     free(VertexData);
     free(TransparentVertexData);
 }
 void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
 {
     TSP_t *Iterator;
-    int i;
     float *VertexData;
     int VertexSize;
     int VertexPointer;
     int Stride;
+    int NumTransparentFaces;
     int TotalFaceCount = 0;
+    int i;
+    int j;
     
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+        NumTransparentFaces = 0;
+        for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
+                NumTransparentFaces += TSPGetNodeTransparentFaceCount(Iterator,&Iterator->Node[i]);
+        }
+        if( TSPIsVersion3(Iterator) ) {
+            Stride = (3 + 2 + 3 + 2) * sizeof(int);
+            int TransparentVertexSize = Stride * 3 * NumTransparentFaces;
+            Iterator->TransparentVAO = VAOInitXYZUVRGBCLUTInteger(NULL,TransparentVertexSize,Stride,0,3,5,8,3);
+        }
         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
             if( Iterator->Node[i].NumFaces != 0 ) {
                 if( TSPIsVersion3(Iterator) ) {
@@ -1073,7 +1093,7 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
         DrawNode(Node->Next,LevelSettings);
     }
 }
-void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings,int AlphaPass)
+void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings)
 {
     Shader_t *Shader;
     VAO_t *Iterator;
@@ -1117,40 +1137,11 @@ void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings,int AlphaPass)
             glBindTextureUnit(0, Level->VRAM->TextureIndexPage.TextureID);
             glBindTextureUnit(1, Level->VRAM->PalettePage.TextureID);
 
-//             glActiveTexture(GL_TEXTURE0 + 0);
-//             glBindTexture(GL_TEXTURE_2D,Level->VRAM->TextureIndexPage.TextureID);
-//             glActiveTexture(GL_TEXTURE0 + 1);
-//             glBindTexture(GL_TEXTURE_2D,Level->VRAM->PalettePage.TextureID);
-            //TODO(Adriano):PSX uses tpage attribute to select blending mode for transparent objects.
-            //              If we want to use the correct blending mode we would need to iterate over 
-            //              the VAOs and select the correct one.
-            if( AlphaPass ) {
-                glDepthMask(0);
-                glBlendColor(0.25f, 0.25f, 0.25f, 1.f);
-                glEnable(GL_BLEND);
-                //Bby2plusFby2
-                glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-                glBlendFunc(GL_ONE, GL_SRC_ALPHA);
-                //BPlusF
-    //             glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-    //             glBlendFunc(GL_ONE, GL_SRC_ALPHA);
-                //BPlusFBy4
-    //             glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-    //             glBlendFunc(GL_CONSTANT_COLOR, GL_SRC_ALPHA);
-                for( Iterator = Node->LeafTransparentFaceListVAO; Iterator; Iterator = Iterator->Next ) {
-                    glBindVertexArray(Iterator->VAOId[0]);
-                    glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
-                    glBindVertexArray(0);
-                }
-                glDepthMask(1);
-
-            } else {
-                glDisable(GL_BLEND);
-                for( Iterator = Node->LeafOpaqueFaceListVAO; Iterator; Iterator = Iterator->Next ) {
-                    glBindVertexArray(Iterator->VAOId[0]);
-                    glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
-                    glBindVertexArray(0);
-                }
+            glDisable(GL_BLEND);
+            for( Iterator = Node->LeafOpaqueFaceListVAO; Iterator; Iterator = Iterator->Next ) {
+                glBindVertexArray(Iterator->VAOId[0]);
+                glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
+                glBindVertexArray(0);
             }
             glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D,0);
@@ -1159,9 +1150,9 @@ void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings,int AlphaPass)
             glUseProgram(0);
         }
     } else {
-        DrawNodeV3(Node->Child[1],LevelSettings,AlphaPass);
-        DrawNodeV3(Node->Next,LevelSettings,AlphaPass);
-        DrawNodeV3(Node->Child[0],LevelSettings,AlphaPass);
+        DrawNodeV3(Node->Child[1],LevelSettings);
+        DrawNodeV3(Node->Next,LevelSettings);
+        DrawNodeV3(Node->Child[0],LevelSettings);
 
     }
 //     if( Node->Child[0] != NULL ) {
@@ -1181,6 +1172,13 @@ void DrawTSPList(Level_t *Level)
 {
     TSP_t *TSPData;
     TSP_t *Iterator;
+    Shader_t *Shader;
+    int MVPMatrixID;
+    int EnableLightingID;
+    int ColorModeID;
+    int PaletteTextureID;
+    int TextureIndexID;
+    TSPTransparentFace_t *TransparentFaceIterator;
     int i;
     TSPData = Level->TSPList;
     
@@ -1197,20 +1195,71 @@ void DrawTSPList(Level_t *Level)
             //We need to render the tree twice in orde to get transparency working.
             //The first pass will render only the visible opaque objects while the
             //second one the transparent one.
-            for( i = 0; i < 2; i++ ) {
-                DrawNodeV3(&Iterator->Node[0],Level->Settings,i);
-            }
+            DrawNodeV3(&Iterator->Node[0],Level->Settings);
         } else {
             glEnable(GL_CULL_FACE);
             glCullFace(GL_FRONT);  
             DrawNode(&Iterator->Node[0],Level->Settings);
             glDisable(GL_CULL_FACE);
         }
-//                 DPrintf("Drawing %i faces for %s root %i\n",TotalFaceCount2,Iterator->FName,i);
-//                 TotalFaceCount2 = 0;
-//         }
-//             exit(0);
     }
+
+    // Alpha pass.
+        Shader = ShaderCache("TSPShaderV3","Shaders/TSPV3VertexShader.glsl","Shaders/TSPV3FragmentShader.glsl");
+        glUseProgram(Shader->ProgramID);
+
+        MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+        glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+        EnableLightingID = glGetUniformLocation(Shader->ProgramID,"EnableLighting");
+        PaletteTextureID = glGetUniformLocation(Shader->ProgramID,"ourPaletteTexture");
+        TextureIndexID = glGetUniformLocation(Shader->ProgramID,"ourIndexTexture");
+        glUniform1i(TextureIndexID, 0);
+        glUniform1i(PaletteTextureID,  1);
+        glUniform1i(EnableLightingID, Level->Settings.EnableLighting);
+        if( Level->Settings.WireFrame ) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        glBindTextureUnit(0, Level->VRAM->TextureIndexPage.TextureID);
+        glBindTextureUnit(1, Level->VRAM->PalettePage.TextureID);
+        glDepthMask(0);
+        glEnable(GL_BLEND);
+        glBlendColor(0.25f, 0.25f, 0.25f, 0.5f);
+     for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
+         if(!TSPIsVersion3(Iterator) ) {
+             continue;
+         }
+         glBindVertexArray(Iterator->TransparentVAO->VAOId[0]);
+         for( TransparentFaceIterator = Iterator->TransparentFaceList; TransparentFaceIterator; TransparentFaceIterator = TransparentFaceIterator->Next) {
+               switch( TransparentFaceIterator->BlendingMode ) {
+                   case 0:
+                       glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+                       glBlendFunc(GL_ONE, GL_SRC_ALPHA);
+                       break;
+                   case 1:
+                       glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+                       glBlendFunc(GL_ONE, GL_SRC_ALPHA);
+                       break;
+                   case 2:
+                       glBlendEquationSeparate(GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
+                       glBlendFunc(GL_ONE, GL_SRC_ALPHA);
+                       break;
+                   case 3:
+                       glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+                       glBlendFunc(GL_CONSTANT_COLOR, GL_SRC_ALPHA);
+                       break;
+             }
+             glDrawArrays(GL_TRIANGLES, TransparentFaceIterator->VAOBufferOffset, 3);
+        }
+        glBindVertexArray(0);
+     }
+        glDepthMask(1);
+        glActiveTexture(GL_TEXTURE0 + 0);
+        glBindTexture(GL_TEXTURE_2D,0);
+        glDisable(GL_BLEND);
+        glBlendColor(1.f, 1.f, 1.f, 1.f);
+        glUseProgram(0);
     if( Level->Settings.ShowCollisionData ) {
         for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
             DrawTSPCollisionData(Iterator);
@@ -1895,6 +1944,8 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
     TSP->Next = NULL;
     TSP->Number = TSPNumber;
     TSP->Face = NULL;
+    TSP->TransparentFaceList = NULL;
+    TSP->TransparentVAO = NULL;
     strcpy(TSP->FName,GetBaseName(FName));
     
     fread(&TSP->Header.ID,sizeof(TSP->Header.ID),1,TSPFile);

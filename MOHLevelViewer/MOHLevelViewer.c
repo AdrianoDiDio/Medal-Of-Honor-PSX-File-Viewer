@@ -898,10 +898,35 @@ void GLFrame()
      
      /* TEMP! */
      BSDCheckCompartmentTrigger(Level,Camera.Position);
-     DrawTSPList(Level);
 //      BSD2PDraw(Level);
      BSDDraw(Level);
      
+     temp[0] = 1;
+     temp[1] = 0;
+     temp[2] = 0;
+     glm_mat4_identity(VidConf.ModelViewMatrix);
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
+     temp[0] = 0;
+     temp[1] = 1;
+     temp[2] = 0;
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
+     temp[0] = 0;
+     temp[1] = 0;
+     temp[2] = 1;
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
+     temp[0] = -Camera.Position.x;
+     temp[1] = -Camera.Position.y;
+     temp[2] = -Camera.Position.z;
+     glm_translate(VidConf.ModelViewMatrix,temp);
+     
+     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
+     
+     //Emulate PSX Coordinate system...
+     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
+     
+     glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
+     glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
+     DrawTSPList(Level);
      glm_mat4_identity(VidConf.MVPMatrix);
     
      // 2D Drawing

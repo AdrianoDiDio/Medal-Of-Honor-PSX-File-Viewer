@@ -27,7 +27,20 @@ void VAOFree(VAO_t *VAO)
         free(Temp);
     }
 }
-
+void VAOUpdate(VAO_t *VAO,int *Data,int DataSize,int NumElements)
+{
+    int NextSlot;
+    NextSlot = VAO->CurrentSize * VAO->Stride;
+    if( NextSlot > VAO->Size ) {
+        DPrintf("VAOUpdate:Overflow detected...\n");
+        assert(1!=1);
+        return;
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, VAO->VBOId[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, VAO->CurrentSize * VAO->Stride, DataSize, Data);
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    VAO->CurrentSize += NumElements;
+}
 VAO_t *VAOInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,int Count)
 {
     VAO_t *VAO;
@@ -71,7 +84,7 @@ VAO_t *VAOInitXYZUVRGBCLUTInteger(int *Data,int DataSize,int Stride,int VertexOf
     glGenBuffers(1, VAO->VBOId);
     glBindBuffer(GL_ARRAY_BUFFER, VAO->VBOId[0]);
             
-    glBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_DYNAMIC_DRAW);
         
     glVertexAttribIPointer(0,3,GL_INT,Stride,BUFFER_INT_OFFSET(VertexOffset));
     glEnableVertexAttribArray(0);
@@ -84,6 +97,9 @@ VAO_t *VAOInitXYZUVRGBCLUTInteger(int *Data,int DataSize,int Stride,int VertexOf
     VAO->TSB = -1;
     VAO->TextureID = -1;
     VAO->Next = NULL;
+    VAO->CurrentSize = 0;
+    VAO->Stride = Stride;
+    VAO->Size = DataSize;
     VAO->Count = Count;
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
