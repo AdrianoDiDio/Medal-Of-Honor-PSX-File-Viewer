@@ -214,7 +214,191 @@ void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
 //         break;
     }
 }
+void TSPDumpFaceDataToPlyFile(TSP_t *TSP,int VertexOffset,FILE *OutFile)
+{
+    char Buffer[256];
 
+    int i;
+
+    if( !TSP || !OutFile ) {
+        bool InvalidFile = (OutFile == NULL ? true : false);
+        printf("TSPDumpFaceDataToFile: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        return;
+    }
+    for( i = 0; i < TSP->Header.NumFaces; i++ ) {
+
+        int Vert0 = VertexOffset + (i * 3) + 0;
+        int Vert1 = VertexOffset + (i * 3) + 1;
+        int Vert2 = VertexOffset + (i * 3) + 2;
+        sprintf(Buffer,"3 %i %i %i\n",Vert0,Vert1,Vert2);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+    }
+}
+int TSPDumpFaceV3DataToPlyFile(TSP_t *TSP,int VertexOffset,FILE *OutFile)
+{
+    char Buffer[256];
+    int NumRenderedNodes;
+    int i;
+    int j;
+    int FaceOffset;
+    if( !TSP || !OutFile ) {
+        bool InvalidFile = (OutFile == NULL ? true : false);
+        printf("TSPDumpFaceDataToFile: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        return -1;
+    }
+    
+    NumRenderedNodes = 0;
+    FaceOffset = 0;
+    for( i = 0; i < TSP->Header.NumNodes; i++ ) {
+        if( TSP->Node[i].NumFaces == 0 ) {
+            continue;
+        }
+
+          for( j = 0; j < TSP->Node[i].NumFaces; j++ ) {
+              int Vert0 = VertexOffset + FaceOffset + (j * 3) + 0;
+              int Vert1 = VertexOffset + FaceOffset + (j * 3) + 1;
+              int Vert2 = VertexOffset + FaceOffset + (j * 3) + 2;
+              sprintf(Buffer,"3 %i %i %i\n",Vert0,Vert1,Vert2);
+              fwrite(Buffer,strlen(Buffer),1,OutFile);
+          }
+        FaceOffset += TSP->Node[i].NumFaces * 3;
+        NumRenderedNodes++;
+    }
+    return FaceOffset;
+}
+
+void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile)
+{
+    TSP_t *Iterator;
+    char Buffer[256];
+    int i;
+    int j;
+    Vec3_t NewPos;
+    int FaceCount;
+    int VertexCount;
+    int VertexOffset;
+    
+    if( !TSPList || !OutFile ) {
+        bool InvalidFile = (OutFile == NULL ? true : false);
+        printf("TSPDumpDataToPlyFile: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        return;
+    }
+    sprintf(Buffer,"ply\nformat ascii 1.0\n");
+    fwrite(Buffer,strlen(Buffer),1,OutFile);
+    VertexCount = 0;
+    FaceCount = 0;
+    for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+        VertexCount += Iterator->Header.NumVertices;
+        if( TSPIsVersion3(Iterator) ) {
+            for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
+                FaceCount += Iterator->Node[i].NumFaces;
+            }
+        } else {
+            FaceCount += Iterator->Header.NumFaces;
+        }
+    }
+    sprintf(Buffer,
+        "element vertex %i\nproperty float x\nproperty float y\nproperty float z\nproperty float red\nproperty float green\nproperty float blue\nproperty float s\nproperty float t\n",FaceCount * 3);
+    fwrite(Buffer,strlen(Buffer),1,OutFile);
+    sprintf(Buffer,"element face %i\nproperty list uchar int vertex_indices\nend_header\n",FaceCount);
+    fwrite(Buffer,strlen(Buffer),1,OutFile);
+    VertexOffset = 0;
+    for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+        float TextureWidth;
+        float TextureHeight;
+        Vec3_t NewPos;
+        TextureWidth = Level->VRAM->Page.Width;
+        TextureHeight = Level->VRAM->Page.Height;
+        if( TSPIsVersion3(Iterator) ) {
+            for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
+                if( Iterator->Node[i].NumFaces == 0 ) {
+                    continue;
+                }
+                for( j = 0; j < Iterator->Node[i].NumFaces; j++ ) {
+                    TSPTextureInfo_t TextureInfo = Iterator->TextureData[Iterator->Node[i].FaceList[j].TextureDataIndex];
+                    int ColorMode = (TextureInfo.TSB & 0x80) >> 7;
+                    int VRAMPage = TextureInfo.TSB & 0x1F;
+                    float U0 = (((float)TextureInfo.UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+                    float V0 = /*255 -*/1.f-(((float)TextureInfo.UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+                    float U1 = (((float)TextureInfo.UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+                    float V1 = /*255 -*/1.f-(((float)TextureInfo.UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
+                    float U2 = (((float)TextureInfo.UV2.u + VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
+                    float V2 = /*255 -*/1.f-(((float)TextureInfo.UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+                    int Vert0 = Iterator->Node[i].FaceList[j].Vert0;
+                    int Vert1 = Iterator->Node[i].FaceList[j].Vert1;
+                    int Vert2 = Iterator->Node[i].FaceList[j].Vert2;
+                    NewPos = Vec3Build(Iterator->Vertex[Vert0].Position.x,Iterator->Vertex[Vert0].Position.y,Iterator->Vertex[Vert0].Position.z);
+                    Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
+                    sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+                            Iterator->Color[Vert0].r / 255.f,Iterator->Color[Vert0].g / 255.f,Iterator->Color[Vert0].b / 255.f,
+                            U0,V0
+                    );
+                    fwrite(Buffer,strlen(Buffer),1,OutFile);
+                    NewPos = Vec3Build(Iterator->Vertex[Vert1].Position.x,Iterator->Vertex[Vert1].Position.y,Iterator->Vertex[Vert1].Position.z);
+                    Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
+                    sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+                            Iterator->Color[Vert1].r / 255.f,Iterator->Color[Vert1].g / 255.f,Iterator->Color[Vert1].b / 255.f,
+                            U1,V1
+                    );
+                    fwrite(Buffer,strlen(Buffer),1,OutFile);      
+                    NewPos = Vec3Build(Iterator->Vertex[Vert2].Position.x,Iterator->Vertex[Vert2].Position.y,Iterator->Vertex[Vert2].Position.z);
+                    Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
+                    sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+                            Iterator->Color[Vert2].r / 255.f,Iterator->Color[Vert2].g / 255.f,Iterator->Color[Vert2].b / 255.f,
+                            U2,V2
+                    );
+                    fwrite(Buffer,strlen(Buffer),1,OutFile); 
+                }
+            }
+        } else {
+            for( i = 0; i < Iterator->Header.NumFaces; i++ ) {
+                int Vert0 = Iterator->Face[i].V0;
+                int Vert1 = Iterator->Face[i].V1;
+                int Vert2 = Iterator->Face[i].V2;
+                int ColorMode = (Iterator->Face[i].TSB.AsShort & 0x80) >> 7;
+                int VRAMPage = Iterator->Face[i].TSB.AsShort & 0x1F;
+                float U0 = (((float)Iterator->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+                float V0 = /*255 -*/1.f-(((float)Iterator->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+                float U1 = (((float)Iterator->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+                float V1 = /*255 -*/1.f-(((float)Iterator->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
+                float U2 = (((float)Iterator->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
+                float V2 = /*255 -*/1.f-(((float)Iterator->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+
+                NewPos = Vec3Build(Iterator->Vertex[Vert0].Position.x,Iterator->Vertex[Vert0].Position.y,Iterator->Vertex[Vert0].Position.z);
+                Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
+                sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+                        Iterator->Color[Vert0].r / 255.f,Iterator->Color[Vert0].g / 255.f,Iterator->Color[Vert0].b / 255.f,
+                        U0,V0
+                );
+                fwrite(Buffer,strlen(Buffer),1,OutFile);
+                NewPos = Vec3Build(Iterator->Vertex[Vert1].Position.x,Iterator->Vertex[Vert1].Position.y,Iterator->Vertex[Vert1].Position.z);
+                Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
+                sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+                        Iterator->Color[Vert1].r / 255.f,Iterator->Color[Vert1].g / 255.f,Iterator->Color[Vert1].b / 255.f,
+                        U1,V1
+                );
+                fwrite(Buffer,strlen(Buffer),1,OutFile);      
+                NewPos = Vec3Build(Iterator->Vertex[Vert2].Position.x,Iterator->Vertex[Vert2].Position.y,Iterator->Vertex[Vert2].Position.z);
+                Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
+                sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+                        Iterator->Color[Vert2].r / 255.f,Iterator->Color[Vert2].g / 255.f,Iterator->Color[Vert2].b / 255.f,
+                        U2,V2
+                );
+                fwrite(Buffer,strlen(Buffer),1,OutFile);      
+            }
+        }
+   }
+    
+    for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+        if( TSPIsVersion3(Iterator) ) {
+            VertexOffset += TSPDumpFaceV3DataToPlyFile(Iterator,VertexOffset,OutFile);
+        } else {
+            TSPDumpFaceDataToPlyFile(Iterator,VertexOffset,OutFile);
+            VertexOffset += Iterator->Header.NumFaces * 3;
+        }
+    }
+
+}
 
 bool TSPBoxInFrustum(ViewParm_t Camera,TSPBBox_t BBox)
 {
@@ -937,6 +1121,9 @@ void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings,int AlphaPass)
 //             glBindTexture(GL_TEXTURE_2D,Level->VRAM->TextureIndexPage.TextureID);
 //             glActiveTexture(GL_TEXTURE0 + 1);
 //             glBindTexture(GL_TEXTURE_2D,Level->VRAM->PalettePage.TextureID);
+            //TODO(Adriano):PSX uses tpage attribute to select blending mode for transparent objects.
+            //              If we want to use the correct blending mode we would need to iterate over 
+            //              the VAOs and select the correct one.
             if( AlphaPass ) {
                 glDepthMask(0);
                 glBlendColor(0.25f, 0.25f, 0.25f, 1.f);
@@ -1007,6 +1194,9 @@ void DrawTSPList(Level_t *Level)
 //             DrawTSP(Iterator);
 //         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
         if( TSPIsVersion3(Iterator) ) {
+            //We need to render the tree twice in orde to get transparency working.
+            //The first pass will render only the visible opaque objects while the
+            //second one the transparent one.
             for( i = 0; i < 2; i++ ) {
                 DrawNodeV3(&Iterator->Node[0],Level->Settings,i);
             }

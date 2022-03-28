@@ -240,6 +240,7 @@ void TSPCreateCollisionVAO(TSP_t *TSPList);
 int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY);
 bool TSPIsVersion3(TSP_t *TSP);
 void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile);
+void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile);
 void TSPFree(TSP_t *TSP);
 void TSPFreeList(TSP_t *List);
 #endif //__TSPVIEWER_H_

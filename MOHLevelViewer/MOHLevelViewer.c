@@ -28,6 +28,52 @@ Color_t    c_Grey =  {   0.75, 0.75,0.75,1.f};
 
 int StartSeconds = 0;
 
+int
+vasprintf(char **Strp, const char *Fmt, va_list Ap)
+{
+    va_list APCopy;
+    int Length;
+    char *Buffer;
+    int Result;
+
+    va_copy(APCopy, Ap);
+    Length = vsnprintf(NULL, 0, Fmt, APCopy);
+
+    if (Length < 0) {
+        return Length;
+    }
+
+    va_end(APCopy);
+    Buffer = malloc(Length + 1);
+
+    if (!Buffer) {
+        return -1;
+    }
+
+    Result = vsnprintf(Buffer, Length + 1, Fmt, Ap);
+
+    if (Result < 0) {
+        free(Buffer);
+    } else {
+        *Strp = Buffer;
+    }
+    return Result;
+}
+/*
+ sprintf version that takes an empty buffer and allocate the required space based on the format argument.
+ It should be included in some linux version but it is not standard.
+ */
+int asprintf(char **Strp, const char *Fmt, ...)
+{
+    int Error;
+    va_list Ap;
+
+    va_start(Ap, Fmt);
+    Error = vasprintf(Strp, Fmt, Ap);
+    va_end(Ap);
+
+    return Error;
+}
 char *StringCopy(const char *From)
 {
     char *Dest;
@@ -918,34 +964,69 @@ void SetDefaultSettings(Level_t *Level)
 
 void DumpLevel(Level_t* Level)
 {
-    char MissionDir[64];
-    char ExportDir[256];
-    char EngineDir[512];
-    char OutDir[1024];
+    char *EngineName;
+    char *EngineDir;
+    char *OutDir;
+    char *PlyDir;
+    char *ObjectFile;
+    char *PlyLevelFile;
+    char *PlyObjectFile;
     char FileName[256];
-    char ObjectFile[2048];
+    char PlyLevelFileName[256];
+    char PlyObjectFileName[256];
     char MaterialNameTag[64];
+    char MissionDir[64];
+    char ExportDir[64];
     FILE *OutFile;
+    FILE *PlyLevelOutFile;
+    FILE *PlyObjectOutFile;
+
 
     sprintf(FileName,"MSN%iLVL%i.obj",Level->MissionNumber,Level->LevelNumber);
+    sprintf(PlyLevelFileName,"MSN%iLVL%i_Level.ply",Level->MissionNumber,Level->LevelNumber);
+    sprintf(PlyObjectFileName,"MSN%iLVL%i_Objects.ply",Level->MissionNumber,Level->LevelNumber);
+
     sprintf(MissionDir,"MSN%iLVL%i",Level->MissionNumber,Level->LevelNumber);
     sprintf(ExportDir,"Export");
-    sprintf(EngineDir,"%s%c%s",ExportDir,PATHSEPARATOR,LevelGetGameEngine() == MOH_GAME_STANDARD ? "MOH" : "MOHUndergound");
-    sprintf(OutDir,"%s%c%s%c",EngineDir,PATHSEPARATOR,MissionDir,PATHSEPARATOR);
-    
+    asprintf(&EngineName,"%s",(LevelGetGameEngine() == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
+    asprintf(&EngineDir,"%s%c%s",ExportDir,PATHSEPARATOR,EngineName);
+    asprintf(&OutDir,"%s%c%s%c",EngineDir,PATHSEPARATOR,MissionDir,PATHSEPARATOR);
+    asprintf(&PlyDir,"%s%cPly%c",OutDir,PATHSEPARATOR,PATHSEPARATOR);
+
     CreateDirIfNotExists(ExportDir);
     CreateDirIfNotExists(EngineDir);
     CreateDirIfNotExists(OutDir);
+    CreateDirIfNotExists(PlyDir);
     
-    sprintf(ObjectFile,"%s%s", OutDir,FileName);
+    asprintf(&ObjectFile,"%s%s", OutDir,FileName);
+    asprintf(&PlyLevelFile,"%s%s", PlyDir,PlyLevelFileName);
+    asprintf(&PlyObjectFile,"%s%s", PlyDir,PlyObjectFileName);
+
     DPrintf("Dumping it...%s\n",ObjectFile);
     OutFile = fopen(ObjectFile,"w");
+    PlyLevelOutFile = fopen(PlyLevelFile,"w");
+    PlyObjectOutFile = fopen(PlyObjectFile,"w");
+
     sprintf(MaterialNameTag,"mtllib vram.mtl\n");
     fwrite(MaterialNameTag,strlen(MaterialNameTag),1,OutFile);
     TSPDumpDataToFile(Level->TSPList,OutFile);
+    TSPDumpDataToPlyFile(Level->TSPList,PlyLevelOutFile);
+
     BSDDumpDataToFile(Level->BSD,OutFile);
+    BSDDumpDataToPlyFile(Level->BSD,PlyObjectOutFile);
     VRAMDumpDataToFile(Level->VRAM,OutDir);
+    
+    free(EngineName);
+    free(EngineDir);
+    free(OutDir);
+    free(PlyDir);
+    free(ObjectFile);
+    free(PlyLevelFile);
+    free(PlyObjectFile);
+    
     fclose(OutFile);
+    fclose(PlyLevelOutFile);
+    fclose(PlyObjectOutFile);
 }
 
 bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
