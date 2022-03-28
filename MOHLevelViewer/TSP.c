@@ -123,7 +123,7 @@ void TSPDumpFaceDataToFile(TSP_t *TSP,FILE *OutFile)
         int Vert1 = TSP->Face[i].V1;
         int Vert2 = TSP->Face[i].V2;
         int BaseFaceUV = i * 3;
-        int ColorMode = (TSP->Face[i].TSB.AsShort & 0x80) >> 7;
+        int ColorMode = (TSP->Face[i].TSB.AsShort >> 7) & 0x3;
         int VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
         sprintf(Buffer,"usemtl vram\n");
         fwrite(Buffer,strlen(Buffer),1,OutFile);
@@ -316,7 +316,7 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile)
                 }
                 for( j = 0; j < Iterator->Node[i].NumFaces; j++ ) {
                     TSPTextureInfo_t TextureInfo = Iterator->TextureData[Iterator->Node[i].FaceList[j].TextureDataIndex];
-                    int ColorMode = (TextureInfo.TSB & 0x80) >> 7;
+                    int ColorMode = (Iterator->Face[i].TSB.AsShort >> 7) & 0x3;
                     int VRAMPage = TextureInfo.TSB & 0x1F;
                     float U0 = (((float)TextureInfo.UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
                     float V0 = /*255 -*/1.f-(((float)TextureInfo.UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
@@ -355,7 +355,7 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile)
                 int Vert0 = Iterator->Face[i].V0;
                 int Vert1 = Iterator->Face[i].V1;
                 int Vert2 = Iterator->Face[i].V2;
-                int ColorMode = (Iterator->Face[i].TSB.AsShort & 0x80) >> 7;
+                int ColorMode = (Iterator->Face[i].TSB.AsShort >> 7) & 0x3;
                 int VRAMPage = Iterator->Face[i].TSB.AsShort & 0x1F;
                 float U0 = (((float)Iterator->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
                 float V0 = /*255 -*/1.f-(((float)Iterator->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
