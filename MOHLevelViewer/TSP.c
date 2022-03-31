@@ -323,7 +323,7 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile)
                 }
                 for( j = 0; j < Iterator->Node[i].NumFaces; j++ ) {
                     TSPTextureInfo_t TextureInfo = Iterator->TextureData[Iterator->Node[i].FaceList[j].TextureDataIndex];
-                    int ColorMode = (Iterator->Face[i].TSB.AsShort >> 7) & 0x3;
+                    int ColorMode = (TextureInfo.TSB >> 7) & 0x3;
                     int VRAMPage = TextureInfo.TSB & 0x1F;
                     float U0 = (((float)TextureInfo.UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
                     float V0 = /*255 -*/1.f-(((float)TextureInfo.UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
