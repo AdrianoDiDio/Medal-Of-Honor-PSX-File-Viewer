@@ -241,7 +241,7 @@ struct Level_s;
 typedef struct Level_s Level_t;
 
 TSP_t  *TSPLoad(char *FName,int TSPNumber);
-void    DrawTSPList(Level_t *Level);
+void    TSPDrawList(Level_t *Level);
 void    TSPCreateVAO(TSP_t *TSP);
 void TSPCreateNodeBBoxVAO(TSP_t *TSPList);
 void TSPCreateCollisionVAO(TSP_t *TSPList);

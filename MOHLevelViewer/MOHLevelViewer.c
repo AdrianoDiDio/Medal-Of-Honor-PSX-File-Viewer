@@ -926,7 +926,7 @@ void GLFrame()
      
      glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
      glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
-     DrawTSPList(Level);
+     TSPDrawList(Level);
      glm_mat4_identity(VidConf.MVPMatrix);
     
      // 2D Drawing

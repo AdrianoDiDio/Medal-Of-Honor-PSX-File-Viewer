@@ -502,43 +502,64 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
     int Vert0;
     int Vert1;
     int Vert2;
-    float U0,V0;
-    float U1,V1;
-    float U2,V2;
+    int U0,V0;
+    int U1,V1;
+    int U2,V2;
     short TSB;
     short CBA;
-    float *VertexData;
+    int *VertexData;
     int VertexSize;
     int VertexPointer;
     int VertexOffset;
     int TextureOffset;
     int ColorOffset;
-    float TextureWidth;
-    float TextureHeight;
+    int CLUTOffset;
+    int CLUTPosX;
+    int CLUTPosY;
+    int CLUTDestX;
+    int CLUTDestY;
+    int CLUTPage;
     TSPDynamicFaceData_t *DynamicData;
     VAO_t *VAO;
     int i;
     
     Base = Node->BaseData / sizeof(TSPFace_t);
     Target = Base + Node->NumFaces;
-//            XYZ UV RGB
-    Stride = (3 + 2 + 3) * sizeof(float);
+//            XYZ UV RGB CLUT
+    Stride = (3 + 2 + 3 + 2) * sizeof(int);
                 
     VertexOffset = 0;
     TextureOffset = 3;
     ColorOffset = 5;
+    CLUTOffset = 8;
                 
     VertexSize = Stride * 3 * Node->NumFaces;
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
-    
-    TextureWidth = Level->VRAM->Page.Width;
-    TextureHeight = Level->VRAM->Page.Height;
-    
+        
     for( i = Base; i < Target; i++ ) {
         int ColorMode = (TSP->Face[i].TSB.AsShort >> 7) & 0x3;
         int VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
         int ABRRate = (TSP->Face[i].TSB.AsShort & 0x60) >> 5;
+        CLUTPosX = (TSP->Face[i].CBA.AsShort << 4) & 0x3F0;
+        CLUTPosY = (TSP->Face[i].CBA.AsShort >> 6) & 0x1ff;
+        CLUTPage = CLUTPosX / 64;
+        if( CLUTPosY >= 256 ) {
+            CLUTPage += 16;
+        }
+        if( CLUTPosY >= 256 ) {
+            CLUTDestX = (CLUTPosX - ((CLUTPage - 16) * 64));
+            CLUTDestY = CLUTPosY;
+        } else {
+            CLUTDestX = (CLUTPosX - (CLUTPage * 64));
+            CLUTDestY = CLUTPosY;
+        }
+        //8-Bit mode texture starts at 0;512.
+        if( ColorMode == 1 ) {
+            CLUTDestY += 512;
+        }
+        CLUTDestX += VRAMGetTexturePageX(CLUTPage);
+
         DPrintf("TSB is %u\n",TSP->Face[i].TSB.AsShort);
         DPrintf("Expected VRam Page:%i\n",VRAMPage);
         DPrintf("Expected Color Mode:%i\n",ColorMode);
@@ -559,12 +580,12 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
 //             TSB = DynamicData->TSB;
 //             CBA = DynamicData->CBA;
 //         } else {
-            U0 = (((float)TSP->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
-            V0 = /*255 -*/(((float)TSP->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-            U1 = (((float)TSP->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-            V1 = /*255 -*/(((float)TSP->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-            U2 = (((float)TSP->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-            V2 = /*255 -*/(((float)TSP->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+            U0 = TSP->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage);
+            V0 = TSP->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+            U1 = TSP->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage);
+            V1 = TSP->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+            U2 = TSP->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage);
+            V2 = TSP->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
             TSB = TSP->Face[i].TSB.AsShort;
             CBA = TSP->Face[i].CBA.AsShort;
 //         }
@@ -580,35 +601,39 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
         VertexData[VertexPointer+2] = TSP->Vertex[Vert0].Position.z;
         VertexData[VertexPointer+3] = U0;
         VertexData[VertexPointer+4] = V0;
-        VertexData[VertexPointer+5] = TSP->Color[Vert0].r / 255.f;
-        VertexData[VertexPointer+6] = TSP->Color[Vert0].g / 255.f;
-        VertexData[VertexPointer+7] = TSP->Color[Vert0].b / 255.f;
-        VertexPointer += 8;
+        VertexData[VertexPointer+5] = TSP->Color[Vert0].r;
+        VertexData[VertexPointer+6] = TSP->Color[Vert0].g;
+        VertexData[VertexPointer+7] = TSP->Color[Vert0].b;
+        VertexData[VertexPointer+8] = CLUTDestX;
+        VertexData[VertexPointer+9] = CLUTDestY;
+        VertexPointer += 10;
                     
         VertexData[VertexPointer] =   TSP->Vertex[Vert1].Position.x;
         VertexData[VertexPointer+1] = TSP->Vertex[Vert1].Position.y;
         VertexData[VertexPointer+2] = TSP->Vertex[Vert1].Position.z;
         VertexData[VertexPointer+3] = U1;
         VertexData[VertexPointer+4] = V1;
-        VertexData[VertexPointer+5] = TSP->Color[Vert1].r / 255.f;
-        VertexData[VertexPointer+6] = TSP->Color[Vert1].g / 255.f;
-        VertexData[VertexPointer+7] = TSP->Color[Vert1].b / 255.f;
-        VertexPointer += 8;
-                    
+        VertexData[VertexPointer+5] = TSP->Color[Vert1].r;
+        VertexData[VertexPointer+6] = TSP->Color[Vert1].g;
+        VertexData[VertexPointer+7] = TSP->Color[Vert1].b;
+        VertexData[VertexPointer+8] = CLUTDestX;
+        VertexData[VertexPointer+9] = CLUTDestY;
+        VertexPointer += 10;                    
         VertexData[VertexPointer] =   TSP->Vertex[Vert2].Position.x;
         VertexData[VertexPointer+1] = TSP->Vertex[Vert2].Position.y;
         VertexData[VertexPointer+2] = TSP->Vertex[Vert2].Position.z;
         VertexData[VertexPointer+3] = U2;
         VertexData[VertexPointer+4] = V2;
-        VertexData[VertexPointer+5] = TSP->Color[Vert2].r / 255.f;
-        VertexData[VertexPointer+6] = TSP->Color[Vert2].g / 255.f;
-        VertexData[VertexPointer+7] = TSP->Color[Vert2].b / 255.f;
-        VertexPointer += 8;
+        VertexData[VertexPointer+5] = TSP->Color[Vert2].r;
+        VertexData[VertexPointer+6] = TSP->Color[Vert2].g;
+        VertexData[VertexPointer+7] = TSP->Color[Vert2].b;
+        VertexData[VertexPointer+8] = CLUTDestX;
+        VertexData[VertexPointer+9] = CLUTDestY;
+        VertexPointer += 10;
     }
-    VAO = VAOInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,
-                        TSB,CBA,Node->NumFaces * 3);
-    VAO->Next = Node->LeafFaceListVAO;
-    Node->LeafFaceListVAO = VAO;
+    VAO = VAOInitXYZUVRGBCLUTInteger(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,Node->NumFaces * 3);
+    VAO->Next = Node->LeafOpaqueFaceListVAO;
+    Node->LeafOpaqueFaceListVAO = VAO;
     free(VertexData);
 }
 
@@ -1047,58 +1072,6 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
     VAO_t *Iterator;
     int MVPMatrixID;
     int EnableLightingID;
-    int i;
-    
-    if( !Node ) {
-        return;
-    }
-    
-    if( LevelSettings.EnableFrustumCulling && !TSPBoxInFrustum(Camera,Node->BBox) ) {
-        return;
-    }
-    
-    if( Level->Settings.ShowAABBTree ) {
-        DrawTSPBox(*Node);
-    }
-
-    if( Node->NumFaces != 0 ) {
-        if( Level->Settings.ShowMap ) {
-            Shader = ShaderCache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
-            glUseProgram(Shader->ProgramID);
-
-            MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-            glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-            EnableLightingID = glGetUniformLocation(Shader->ProgramID,"EnableLighting");
-            glUniform1i(EnableLightingID, LevelSettings.EnableLighting);
-            if( Level->Settings.WireFrame ) {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            } else {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            }
-            glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page.TextureID);
-
-            for( Iterator = Node->LeafFaceListVAO; Iterator; Iterator = Iterator->Next ) {
-                glBindVertexArray(Iterator->VAOId[0]);
-                glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
-                glBindVertexArray(0);
-            }
-            glBindTexture(GL_TEXTURE_2D,0);
-            glDisable(GL_BLEND);
-            glUseProgram(0);
-        }
-    } else {
-        for( i = 0; i < 2; i++ ) {
-            DrawNode(Node->Child[i],LevelSettings);
-        }
-        DrawNode(Node->Next,LevelSettings);
-    }
-}
-void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings)
-{
-    Shader_t *Shader;
-    VAO_t *Iterator;
-    int MVPMatrixID;
-    int EnableLightingID;
     int ColorModeID;
     int PaletteTextureID;
     int TextureIndexID;
@@ -1150,25 +1123,14 @@ void DrawNodeV3(TSPNode_t *Node,LevelSettings_t LevelSettings)
             glUseProgram(0);
         }
     } else {
-        DrawNodeV3(Node->Child[1],LevelSettings);
-        DrawNodeV3(Node->Next,LevelSettings);
-        DrawNodeV3(Node->Child[0],LevelSettings);
+        DrawNode(Node->Child[1],LevelSettings);
+        DrawNode(Node->Next,LevelSettings);
+        DrawNode(Node->Child[0],LevelSettings);
 
     }
-//     if( Node->Child[0] != NULL ) {
-//         DrawNode(Node->Child1);
-        
-//     }
-//     if( Node->NumFaces != 0 ) {
-
-//     }
-
-//     if( Node->Child[1] != NULL ) {
-//         DrawNode(Node->Child2);
-//     }
 }
 
-void DrawTSPList(Level_t *Level)
+void TSPDrawList(Level_t *Level)
 {
     TSP_t *TSPData;
     TSP_t *Iterator;
@@ -1195,7 +1157,7 @@ void DrawTSPList(Level_t *Level)
             //We need to render the tree twice in orde to get transparency working.
             //The first pass will render only the visible opaque objects while the
             //second one the transparent one.
-            DrawNodeV3(&Iterator->Node[0],Level->Settings);
+            DrawNode(&Iterator->Node[0],Level->Settings);
         } else {
             glEnable(GL_CULL_FACE);
             glCullFace(GL_FRONT);  
