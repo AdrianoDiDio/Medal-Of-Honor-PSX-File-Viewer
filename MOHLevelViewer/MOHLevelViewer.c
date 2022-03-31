@@ -589,6 +589,12 @@ void SysCheckKeyEvents()
                     //
                     Level->Settings.EnableLighting = !Level->Settings.EnableLighting;
                 }
+                if( Event.key.keysym.sym == SDLK_k ) {
+                    //
+                    // Toggle Semi-Transparency
+                    //
+                    Level->Settings.EnableSemiTransparency = !Level->Settings.EnableSemiTransparency;
+                }
                 if( Event.key.keysym.sym == SDLK_e ) {
                     //
                     // Dump Level to file
@@ -963,6 +969,8 @@ void GLFrame()
      y += VerticalSpacing;
      FontDrawString(Level,"Press g to enable or disable level Lighting",10,y,Level->Settings.EnableLighting ? c_Yellow : c_Red);
      y += VerticalSpacing;
+     FontDrawString(Level,"Press k to enable or disable Semi Transparency",10,y,Level->Settings.EnableSemiTransparency ? c_Yellow : c_Red);
+     y += VerticalSpacing;
      FontDrawString(Level,"Press e to dump the current level to a file",10,y,c_White);
      y += VerticalSpacing;
      FontDrawString(Level,"Press w a s d to move camera around",10,y,c_White);
@@ -982,6 +990,7 @@ void SetDefaultSettings(Level_t *Level)
     Level->Settings.DrawBSDShowCaseRenderObject = false;
     Level->Settings.EnableFrustumCulling = true;
     Level->Settings.EnableLighting = true;
+    Level->Settings.EnableSemiTransparency = true;
     Level->Settings.WireFrame = false;
     Level->Settings.ShowAABBTree = false;
     Level->Settings.ShowCollisionData = false;

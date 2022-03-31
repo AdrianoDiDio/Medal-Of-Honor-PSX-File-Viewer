@@ -158,6 +158,7 @@ typedef struct LevelSettings_s {
     bool DrawBSDShowCaseRenderObject;
     bool EnableFrustumCulling;
     bool EnableLighting;
+    bool EnableSemiTransparency;
 } LevelSettings_t;
 
 typedef struct Level_s {

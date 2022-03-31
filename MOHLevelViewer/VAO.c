@@ -72,7 +72,8 @@ VAO_t *VAOInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int 
     
     return VAO;
 }
-VAO_t *VAOInitXYZUVRGBCLUTInteger(int *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,int CLUTOffset,int Count)
+VAO_t *VAOInitXYZUVRGBCLUTColorModeInteger(int *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,int CLUTOffset,int ColorModeOffset,
+                                           int Count)
 {
     VAO_t *VAO;
     
@@ -94,6 +95,8 @@ VAO_t *VAOInitXYZUVRGBCLUTInteger(int *Data,int DataSize,int Stride,int VertexOf
     glEnableVertexAttribArray(2);
     glVertexAttribIPointer(3,2,GL_INT,Stride,BUFFER_INT_OFFSET(CLUTOffset));
     glEnableVertexAttribArray(3);
+    glVertexAttribIPointer(4,1,GL_INT,Stride,BUFFER_INT_OFFSET(ColorModeOffset));
+    glEnableVertexAttribArray(4);
     VAO->TSB = -1;
     VAO->TextureID = -1;
     VAO->Next = NULL;

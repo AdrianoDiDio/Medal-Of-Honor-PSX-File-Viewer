@@ -4,26 +4,47 @@ out vec4 FragColor;
 in vec3 ourColor;
 in vec2 TexCoord;
 in float LightingEnabled;
-uniform sampler2D ourTexture;
+in vec2 CLUTCoord;
+flat in int ourColorMode;
+flat in int STPMode;
+
+uniform usampler2D ourIndexTexture;
+uniform sampler2D ourPaletteTexture;
+
+uint InternalToPsxColor(vec4 c) {
+    uint a = uint(floor(c.a + 0.5));
+    uint r = uint(floor(c.r * 31.0 + 0.5));
+    uint g = uint(floor(c.g * 31.0 + 0.5));
+    uint b = uint(floor(c.b * 31.0 + 0.5));
+    return (a << 15) | (b << 10) | (g << 5) | r;
+}
 
 void main()
 {
-    vec4 TexColor;
-    vec4 Color;
-    TexColor = texture(ourTexture, TexCoord);
-    
-    if(TexColor.a < 0.5) {
+    uvec4 TexColor;
+    uint CLUTIndex;
+    vec4 CLUTTexel;
+    uint CLUTX;
+    uint CLUTY;
+
+    //NOTE(Adriano):16-bpp mode textures are encoded directly into CLUT.
+    if( ourColorMode == 2 ) {
+        CLUTTexel = texelFetch(ourPaletteTexture, ivec2(TexCoord), 0);
+    } else {
+        TexColor = texelFetch(ourIndexTexture, ivec2(TexCoord), 0);
+        CLUTIndex = TexColor.r;
+        CLUTX = uint(CLUTCoord.x) + CLUTIndex;
+        CLUTY = uint(CLUTCoord.y);
+        CLUTTexel = texelFetch(ourPaletteTexture, ivec2(CLUTX,CLUTY), 0);
+    }
+    if( InternalToPsxColor(CLUTTexel) == 0x0000u) {
         discard;
     }
-    //PS1 Uses black color as the transparent color.
-    if( TexColor.r <= 0.0 && TexColor.g <= 0.0 && TexColor.b <= 0.0 ) {
-        discard;
-    }
-    //Water not visible in 1_1/1_2
+
     if( LightingEnabled > 0.5 ) {
-        TexColor.r = clamp(TexColor.r * ourColor.r * 2.f, 0.f, 1.f);
-        TexColor.g = clamp(TexColor.g * ourColor.g * 2.f, 0.f, 1.f);
-        TexColor.b = clamp(TexColor.b * ourColor.b * 2.f, 0.f, 1.f);
+        CLUTTexel.r = clamp(CLUTTexel.r * ourColor.r * 2.f, 0.f, 1.f);
+        CLUTTexel.g = clamp(CLUTTexel.g * ourColor.g * 2.f, 0.f, 1.f);
+        CLUTTexel.b = clamp(CLUTTexel.b * ourColor.b * 2.f, 0.f, 1.f);
     }
-    FragColor = TexColor;
+    FragColor = CLUTTexel;
 }
