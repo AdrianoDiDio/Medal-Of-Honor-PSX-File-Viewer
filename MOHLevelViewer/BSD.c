@@ -1873,7 +1873,7 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     int Offset;
     int NodeNumReferencedRenderObjectIDOffset;
     int NumReferencedRenderObjectID;
-    BSDTableElement_t *Element;
+    BSDDynamicColor_t *DynamicColor;
     unsigned int NodeRenderObjectID;
     Vec3_t NodePosition;
     Vec3_t NodeRotation;
@@ -1883,19 +1883,40 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     
 
     fread(&BSD->Unknown,sizeof(BSD->Unknown),1,BSDFile);
-    fread(&BSD->PTable.NumElements,sizeof(BSD->PTable.NumElements),1,BSDFile);
-    DPrintf("PTable:Reading %i elements\n",BSD->PTable.NumElements);
-    fread(&BSD->PTable.ElementList,sizeof(BSD->PTable.ElementList),1,BSDFile);
-    //The PTable offset references the q block(Offset+2048) the size seems to be the given by size times 4
-    for( i = 0; i < BSD->PTable.NumElements; i++ ) {
-        DPrintf("Size:%i\n",BSD->PTable.ElementList[i].Size);
-        DPrintf("Offset:%i\n",BSD->PTable.ElementList[i].Offset);
-        DPrintf("Offset No Header:%i\n",BSD->PTable.ElementList[i].Offset + 2048);
-        DPrintf("U1:%i\n",BSD->PTable.ElementList[i].u1);
-        DPrintf("U2:%i\n",BSD->PTable.ElementList[i].u2);
-        DPrintf("U3:%i\n",BSD->PTable.ElementList[i].u3);
+    fread(&BSD->DynamicColorTable.NumDynamicColors,sizeof(BSD->DynamicColorTable.NumDynamicColors),1,BSDFile);
+    DPrintf("DynamicColorTable:Reading %i colors\n",BSD->DynamicColorTable.NumDynamicColors);
+
+    for( i = 0; i < BSD_DYNAMIC_COLOR_TABLE_SIZE; i++ ) {
+        DynamicColor = &BSD->DynamicColorTable.DynamicColorList[i];
+        fread(&DynamicColor->Size,sizeof(DynamicColor->Size),1,BSDFile);
+        fread(&DynamicColor->Offset,sizeof(DynamicColor->Offset),1,BSDFile);
+        fread(&DynamicColor->ColorIndex,sizeof(DynamicColor->ColorIndex),1,BSDFile);
+        fread(&DynamicColor->CurrentColor,sizeof(DynamicColor->CurrentColor),1,BSDFile);
+        fread(&DynamicColor->Delay,sizeof(DynamicColor->Delay),1,BSDFile);
+        if( DynamicColor->Size == 0 ) {
+            continue;
+        }
+
+
+        DynamicColor->ColorList = malloc(DynamicColor->Size * sizeof(Color1i));
+        DPrintf("Color Interpolator %i\n",i);
+        DPrintf("Offset:%i\n",DynamicColor->Offset);
+        DPrintf("Offset No Header:%i\n",DynamicColor->Offset + 2048);
+        DPrintf("CurrentColor:%i\n",DynamicColor->CurrentColor);
+        DPrintf("ColorIndex:%i\n",DynamicColor->ColorIndex);
+        DPrintf("Delay:%i\n",DynamicColor->Delay);
+        PrevPos = GetCurrentFilePosition(BSDFile);
+        fseek(BSDFile,DynamicColor->Offset + 2048,SEEK_SET);
+        DPrintf("Reading color at %i\n",GetCurrentFilePosition(BSDFile));
+        for( j = 0; j < DynamicColor->Size; j++ ) {
+            fread(&DynamicColor->ColorList[j],sizeof(DynamicColor->ColorList[j]),1,BSDFile);
+            DPrintf("Color %i %i %i %i %i (As Int %u)\n",j,DynamicColor->ColorList[j].rgba[0],
+                    DynamicColor->ColorList[j].rgba[1],DynamicColor->ColorList[j].rgba[2],DynamicColor->ColorList[j].rgba[3],DynamicColor->ColorList[j].Color
+            );
+        }
+        fseek(BSDFile,PrevPos,SEEK_SET);
     }
-    DPrintf("PTable end at %i\n",GetCurrentFilePosition(BSDFile));
+    DPrintf("DynamicColorTable ends at %i\n",GetCurrentFilePosition(BSDFile));
     //This section seems unused and should be constant in size (320 bytes).
     //TODO:Remove this useless code and just jump 320 bytes...
     MemBegin = GetCurrentFilePosition(BSDFile);
@@ -1988,11 +2009,13 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
         //Then update the UnknownOffset%i Value with the final one...
     }
     DPrintf("Current Position after RenderObject Table is: %i\n",GetCurrentFilePosition(BSDFile));
-    //PTable is empty only 7_1 BSD!
-    if( BSD->PTable.NumElements != 0 ) {
-        DPrintf("Skipping block referenced by PTable...\n");
-        Element = &BSD->PTable.ElementList[BSD->PTable.NumElements - 1];
-        Jump = ((Element->Offset + 2048) + (Element->Size * 4)) - GetCurrentFilePosition(BSDFile);
+    //NOTE(Adriano):Altough we are able to load the dynamic colors, BSD files are not meant to be read
+    //              sequentially, this means that we need to skip a certain amount of bytes in order to
+    //              guarantee that we are reading it correctly.
+    if( BSD->DynamicColorTable.NumDynamicColors != 0 ) {
+        DPrintf("Skipping block referenced by Dynamic Color Table...\n");
+        DynamicColor = &BSD->DynamicColorTable.DynamicColorList[BSD->DynamicColorTable.NumDynamicColors - 1];
+        Jump = ((DynamicColor->Offset + 2048) + (DynamicColor->Size * 4)) - GetCurrentFilePosition(BSDFile);
         DPrintf("Skipping %i Bytes...\n",Jump);
         assert(Jump > 0);
         SkipFileSection(Jump,BSDFile);

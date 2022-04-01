@@ -18,13 +18,13 @@
 */ 
 #include "MOHLevelViewer.h"
 
-Color_t    c_Black = {   0,    0,   0,   1.f};
-Color_t    c_Red    = {   1.f,  0,   0,   1.f};
-Color_t    c_Green    = {   0,    1.f, 0,   1.f};
-Color_t    c_Blue    = {   0,    0,   1.f, 1.f};
-Color_t    c_Yellow = {  1.f,  1.f, 0,   1.f};
-Color_t    c_White    = {   1.f,  1.f, 1.f, 1.f};
-Color_t    c_Grey =  {   0.75, 0.75,0.75,1.f};
+Color4f_t    c_Black = {   0,    0,   0,   1.f};
+Color4f_t    c_Red    = {   1.f,  0,   0,   1.f};
+Color4f_t    c_Green    = {   0,    1.f, 0,   1.f};
+Color4f_t    c_Blue    = {   0,    0,   1.f, 1.f};
+Color4f_t    c_Yellow = {  1.f,  1.f, 0,   1.f};
+Color4f_t    c_White    = {   1.f,  1.f, 1.f, 1.f};
+Color4f_t    c_Grey =  {   0.75, 0.75,0.75,1.f};
 
 int StartSeconds = 0;
 

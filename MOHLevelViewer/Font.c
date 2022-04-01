@@ -137,7 +137,7 @@ void FontLoadChar(Font_t *Font,int CharIndex,float RowX,float RowY)
     free(VertexData);
 }
 
-void FontDrawChar(char c,float x,float y,Color_t Color)
+void FontDrawChar(char c,float x,float y,Color4f_t Color)
 {
     Shader_t *Shader;
     int OrthoMatrixID;
@@ -170,7 +170,7 @@ void FontDrawChar(char c,float x,float y,Color_t Color)
     glBindVertexArray(0);
 }
 
-void FontDrawString(Level_t *Level,char *String,float x,float y,Color_t Color)
+void FontDrawString(Level_t *Level,char *String,float x,float y,Color4f_t Color)
 {
 
     float Spacing = 10.f;

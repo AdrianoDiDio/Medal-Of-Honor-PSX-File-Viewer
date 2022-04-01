@@ -29,6 +29,8 @@
 #define BSD_HANDLER_REG_TABLE_POSITION 0x59C
 #define BSD_PROPERTY_SET_FILE_POSITION 0x598
 
+#define BSD_DYNAMIC_COLOR_TABLE_SIZE 40
+
 typedef enum  {
     //NOTE(Adriano): Spawn node has an additional attribute at 0x34(52) indicating if it is the first or the second.
     BSD_PLAYER_SPAWN = 2289546822,
@@ -226,18 +228,20 @@ typedef struct BSDEntryTable_s {
     
 } BSDEntryTable_t;
 
-typedef struct BSDTableElement_s {
+typedef struct BSDDynamicColor_s {
     int Size;
     int Offset;
-    int u1;
-    int u2;
-    int u3;
-} BSDTableElement_t;
+    int ColorIndex;
+    int CurrentColor;
+    int Delay;
+    
+    Color1i *ColorList;
+} BSDDynamicColor_t;
 
-typedef struct BSDTable_s {
-    int NumElements;
-    BSDTableElement_t ElementList[40];
-} BSDTable_t;
+typedef struct BSDDynamicColorTable_s {
+    int NumDynamicColors;
+    BSDDynamicColor_t DynamicColorList[40];
+} BSDDynamicColorTable_t;
 
 typedef struct BSDTSPInfo_s {
     char TSPPattern[128];
@@ -312,7 +316,7 @@ typedef struct BSD_s {
     BSD_HEADER_t Header;
     BSDTSPInfo_t TSPInfo;
     char Unknown[72];
-    BSDTable_t   PTable;
+    BSDDynamicColorTable_t   DynamicColorTable;
     BSDEntryTable_t EntryTable;
     BSDRenderObjectBlock_t RenderObjectTable;
     BSDNodeInfo_t NodeData;

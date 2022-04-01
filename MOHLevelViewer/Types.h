@@ -38,13 +38,18 @@ typedef union  {
     short AsShort[2];
 } IntShortUnion;
 
-typedef struct Color_s
+typedef struct Color4f_s
 {
     float r;
     float g;
     float b;
     float a;
-} Color_t;
+} Color4f_t;
+
+typedef union {
+    int Color;
+    Byte rgba[4];
+} Color1i;
 
 typedef struct Vec3_s
 {
