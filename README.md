@@ -26,6 +26,7 @@
    * [BSD Files](#bsd-files)
       * [File Format](#file-format)
          * [TSP Info Block](#tsp-info-block)
+         * [Dynamic Color Block](#dynamic-color-block)
          * [Entry Table Block](#entry-table-block)
          * [RenderObject Block](#renderobject-block)
             * [Color Mode](#color-mode)
@@ -400,7 +401,38 @@ Right after the header the information about the corresponding TSP file is found
 | int  | 4 bytes  | Number of TSP Files that needs to be rendered at start |
 | int  | 4 bytes  | Number of the first TSP File that needs to be rendered |
 
-The other TSP are loaded in real time when hitting specific triggers contained into the level that unloads the previous one that were loaded in memory.
+The other TSP are loaded in real time when hitting specific triggers
+contained into the level that unloads the previous one that were loaded in
+memory.
+
+#### Dynamic Color Block
+This block is found at position 216 (excluding the header) or 2264
+(including the header) and contains information about dynamic colors that
+can be used by the TSP in order to render special effects like running
+water from a river,a blinking light etc...
+Each BSD file can hold a maximum number of 40 dynamic colors where each
+color is a structure of 20 bytes:
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| int  | 4 bytes  | NumColors |
+| int  | 4 bytes  | Offset |
+| int  | 4 bytes  | ColorIndex |
+| int  | 4 bytes  | CurrentColor |
+| int  | 4 bytes  | Delay |
+
+Every dynamic color entry has a number of colors that are loaded at the
+specified Offset where each color is just a 4-byte integer that represents
+the 3 components (RGB) plus a constant value that it is used to restart the
+animation ( by setting the Delay value to this constant ).  
+Every frame the dynamic color structure is updated only if the Delay reaches
+zero, after which the ColorIndex is incremented wrapping around only when
+it reaches the maximum value of NumColors.  
+This value is used to select the current color that will be used by the
+surface during rendering time.  
+The list of colors can be actually found after the RenderObject block and
+it is not meant to be read sequentially but loaded when parsing this
+block.   
 
 #### Entry Table Block
 This block is found at position 1340 (excluding the header) or 3388 (including the header) contains information about the position of some elements that are contained inside the file along with the number of elements and has a fixed size of 104.
@@ -435,7 +467,7 @@ This block is found at position 1340 (excluding the header) or 3388 (including t
 #### RenderObject Block
 After the entry block we find the number of RenderObject stored as an int (4 bytes).  
 A RenderObject, as the name implies , are all the objects that can be seen inside the level like Windows,Doors,Enemies,Weapons,Boxes,MG42s, etc...  
-Each RenderObject has a fixed size of 256 bytes (276 bytes for MOH:Underground) containing several fields that depending by the type of the RenderObject can be 
+Each RenderObject has a fixed size of 256 bytes (276 bytes for MOH:Underground) containing several fields that depending by the type of the RenderObject can be
 NULL or contains an offset to the data stored inside the BSD file.    
 
 | Type | Size | Description |

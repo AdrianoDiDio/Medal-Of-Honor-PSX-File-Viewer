@@ -229,7 +229,7 @@ typedef struct BSDEntryTable_s {
 } BSDEntryTable_t;
 
 typedef struct BSDDynamicColor_s {
-    int Size;
+    int NumColors;
     int Offset;
     int ColorIndex;
     int CurrentColor;
