@@ -416,15 +416,15 @@ color is a structure of 20 bytes:
 | Type | Size | Description |
 | ---- | ---- | ----------- |
 | int  | 4 bytes  | NumColors |
-| int  | 4 bytes  | Offset |
+| int  | 4 bytes  | StartingColorOffset |
 | int  | 4 bytes  | ColorIndex |
 | int  | 4 bytes  | CurrentColor |
 | int  | 4 bytes  | Delay |
 
 Every dynamic color entry has a number of colors that are loaded at the
-specified Offset where each color is just a 4-byte integer that represents
-the 3 components (RGB) plus a constant value that it is used to restart the
-animation ( by setting the Delay value to this constant ).  
+specified StartingColorOffset (to which you would add 4-bytes until all colors are read)
+where each color is just a 4-byte integer that represents the 3 components (RGB) plus a 
+constant value that it is used to restart the animation ( by setting the Delay value to this constant ).  
 Every frame the dynamic color structure is updated only if the Delay reaches
 zero, after which the ColorIndex is incremented wrapping around only when
 it reaches the maximum value of NumColors.  

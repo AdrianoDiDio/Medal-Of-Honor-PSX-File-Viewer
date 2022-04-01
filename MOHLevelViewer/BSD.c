@@ -1890,7 +1890,7 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     for( i = 0; i < BSD_DYNAMIC_COLOR_TABLE_SIZE; i++ ) {
         DynamicColor = &BSD->DynamicColorTable.DynamicColorList[i];
         fread(&DynamicColor->NumColors,sizeof(DynamicColor->NumColors),1,BSDFile);
-        fread(&DynamicColor->Offset,sizeof(DynamicColor->Offset),1,BSDFile);
+        fread(&DynamicColor->StartingColorOffset,sizeof(DynamicColor->StartingColorOffset),1,BSDFile);
         fread(&DynamicColor->ColorIndex,sizeof(DynamicColor->ColorIndex),1,BSDFile);
         fread(&DynamicColor->CurrentColor,sizeof(DynamicColor->CurrentColor),1,BSDFile);
         fread(&DynamicColor->Delay,sizeof(DynamicColor->Delay),1,BSDFile);
@@ -1901,13 +1901,13 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
 
         DynamicColor->ColorList = malloc(DynamicColor->NumColors * sizeof(Color1i));
         DPrintf("Color Interpolator %i\n",i);
-        DPrintf("Offset:%i\n",DynamicColor->Offset);
-        DPrintf("Offset No Header:%i\n",DynamicColor->Offset + 2048);
+        DPrintf("StartingColorOffset:%i\n",DynamicColor->StartingColorOffset);
+        DPrintf("StartingColorOffset No Header:%i\n",DynamicColor->StartingColorOffset + 2048);
         DPrintf("CurrentColor:%i\n",DynamicColor->CurrentColor);
         DPrintf("ColorIndex:%i\n",DynamicColor->ColorIndex);
         DPrintf("Delay:%i\n",DynamicColor->Delay);
         PrevPos = GetCurrentFilePosition(BSDFile);
-        fseek(BSDFile,DynamicColor->Offset + 2048,SEEK_SET);
+        fseek(BSDFile,DynamicColor->StartingColorOffset + 2048,SEEK_SET);
         DPrintf("Reading color at %i\n",GetCurrentFilePosition(BSDFile));
         for( j = 0; j < DynamicColor->NumColors; j++ ) {
             fread(&DynamicColor->ColorList[j],sizeof(DynamicColor->ColorList[j]),1,BSDFile);
@@ -2016,7 +2016,7 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     if( BSD->DynamicColorTable.NumDynamicColors != 0 ) {
         DPrintf("Skipping block referenced by Dynamic Color Table...\n");
         DynamicColor = &BSD->DynamicColorTable.DynamicColorList[BSD->DynamicColorTable.NumDynamicColors - 1];
-        Jump = ((DynamicColor->Offset + 2048) + (DynamicColor->NumColors * 4)) - GetCurrentFilePosition(BSDFile);
+        Jump = ((DynamicColor->StartingColorOffset + 2048) + (DynamicColor->NumColors * 4)) - GetCurrentFilePosition(BSDFile);
         DPrintf("Skipping %i Bytes...\n",Jump);
         assert(Jump > 0);
         SkipFileSection(Jump,BSDFile);
