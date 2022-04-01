@@ -475,6 +475,28 @@ void BSDFree(BSD_t *BSD)
     free(BSD);
 }
 
+void BSDUpdateColorList(BSD_t *BSD)
+{
+    BSDDynamicColor_t *DynamicColor;
+    int i;
+    for( i = 0; i < BSD->DynamicColorTable.NumDynamicColors; i++ ) {
+        DynamicColor = &BSD->DynamicColorTable.DynamicColorList[i];
+        if( !DynamicColor->NumColors ) {
+            continue;
+        }
+        DynamicColor->Delay--;
+        if( DynamicColor->Delay <= 0 ) {
+            DynamicColor->ColorIndex++;
+            if( DynamicColor->ColorIndex >= DynamicColor->NumColors ) {
+                DynamicColor->ColorIndex = 0;
+            }
+            //PSX runs at 30FPS...increment the delay in order to simulate that speed...
+            DynamicColor->Delay = DynamicColor->ColorList[DynamicColor->ColorIndex].rgba[3] * 6;
+            DynamicColor->CurrentColor = DynamicColor->ColorList[DynamicColor->ColorIndex].Color;
+        }
+    }
+}
+
 void BSDVAOPointList(BSD_t *BSD)
 {
     int NumSkip;

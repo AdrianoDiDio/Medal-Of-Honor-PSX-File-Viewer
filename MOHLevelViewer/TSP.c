@@ -782,8 +782,13 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
         DPrintf("Expected ABR rate:%i\n",ABRRate);
         
         Vert0 = Node->FaceList[i].Vert0;
-        Vert1 = Node->FaceList[i].Vert1;
-        Vert2 = Node->FaceList[i].Vert2;
+        if( Node->FaceList[i].SwapV1V2 ) {
+            Vert1 = Node->FaceList[i].Vert2;
+            Vert2 = Node->FaceList[i].Vert1;
+        } else {
+            Vert1 = Node->FaceList[i].Vert1;
+            Vert2 = Node->FaceList[i].Vert2;
+        }
         
 //         DynamicData = GetDynamicDataByFaceIndex(TSP,j,2);
 //         if( DynamicData != NULL ) {
@@ -798,10 +803,17 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
 //         } else {
             U0 = (TextureInfo.UV0.u + VRAMGetTexturePageX(VRAMPage));
             V0 = TextureInfo.UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-            U1 = (TextureInfo.UV1.u + VRAMGetTexturePageX(VRAMPage));
-            V1 = (TextureInfo.UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
-            U2 = (TextureInfo.UV2.u + VRAMGetTexturePageX(VRAMPage));
-            V2 = (TextureInfo.UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
+            if( Node->FaceList[i].SwapV1V2 ) {
+                U2 = (TextureInfo.UV1.u + VRAMGetTexturePageX(VRAMPage));
+                V2 = (TextureInfo.UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
+                U1 = (TextureInfo.UV2.u + VRAMGetTexturePageX(VRAMPage));
+                V1 = (TextureInfo.UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
+            } else {
+                U1 = (TextureInfo.UV1.u + VRAMGetTexturePageX(VRAMPage));
+                V1 = (TextureInfo.UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
+                U2 = (TextureInfo.UV2.u + VRAMGetTexturePageX(VRAMPage));
+                V2 = (TextureInfo.UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
+            }
             TSB = TextureInfo.TSB;
             CBA = TextureInfo.CBA;
 //         }
@@ -1275,20 +1287,10 @@ void TSPDrawList(Level_t *Level)
     }
 
     for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
-//             DrawNode(Iterator->BSDTree);
-//             DrawTSP(Iterator);
-//         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
-        if( TSPIsVersion3(Iterator) ) {
-            //We need to render the tree twice in orde to get transparency working.
-            //The first pass will render only the visible opaque objects while the
-            //second one the transparent one.
-            DrawNode(&Iterator->Node[0],Level->Settings);
-        } else {
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_FRONT);  
-            DrawNode(&Iterator->Node[0],Level->Settings);
-            glDisable(GL_CULL_FACE);
-        }
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);  
+        DrawNode(&Iterator->Node[0],Level->Settings);
+        glDisable(GL_CULL_FACE);
     }
 
     // Alpha pass.
@@ -1422,10 +1424,10 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
                     TSP->Node[i].FaceList[CurrentFaceIndex].V0V1 = TempFace.V0V1;
                     TSP->Node[i].FaceList[CurrentFaceIndex].V2 = TempFace.V2;
                     TSP->Node[i].FaceList[CurrentFaceIndex].TextureDataIndex = TempFace.TextureDataIndex;
-
                     TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 = TempFace.Vert0 = TSP->Node[i].FaceList[CurrentFaceIndex].V0V1 & 0x1FFF;
                     TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 = TempFace.Vert1 = ( TSP->Node[i].FaceList[CurrentFaceIndex].V0V1 >> 16 ) & 0X1FFF;
                     TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 = TempFace.Vert2 = TSP->Node[i].FaceList[CurrentFaceIndex].V2 & 0X1FFF;
+                    TSP->Node[i].FaceList[CurrentFaceIndex].SwapV1V2 = 0;
                     DPrintf("TSPReadNodeChunk:Got Vert0:%i %i %i\n",TSP->Node[i].FaceList[CurrentFaceIndex].Vert0,TSP->Node[i].FaceList[CurrentFaceIndex].Vert1,
                         TSP->Node[i].FaceList[CurrentFaceIndex].Vert2
                     );
@@ -1450,6 +1452,11 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
                             TempFace.Vert1 = TempFace.Vert2;
                         }
                         TempFace.Vert2 = Marker & 0x1FFF;
+                        if( Marker & 0x4000 ) {
+                            TSP->Node[i].FaceList[CurrentFaceIndex].SwapV1V2 = 1;
+                        } else {
+                            TSP->Node[i].FaceList[CurrentFaceIndex].SwapV1V2 = 0;
+                        }
                         TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 = TempFace.Vert0;
                         TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 = TempFace.Vert1;
                         TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 = TempFace.Vert2;

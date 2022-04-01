@@ -87,6 +87,7 @@ typedef struct TSPFaceV3_s {
     unsigned int Vert0;
     unsigned int Vert1;
     unsigned int Vert2;
+    int SwapV1V2;
 } TSPFaceV3_t;
 
 //36 Bytes.
