@@ -117,8 +117,8 @@ void TSPDumpFaceDataToFile(TSP_t *TSP,FILE *OutFile)
     TextureHeight = Level->VRAM->Page.Height;
 
     for( i = TSP->Header.NumFaces - 1; i >= 0 ; i-- ) {
-        int ColorMode = (TSP->Face[i].TSB.AsShort >> 7) & 0x3;
-        int VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
+        int ColorMode = (TSP->Face[i].TSB >> 7) & 0x3;
+        int VRAMPage = TSP->Face[i].TSB & 0x1F;
         float U0 = (((float)TSP->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
         float V0 = /*255 -*/1.f-(((float)TSP->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
         float U1 = (((float)TSP->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
@@ -133,8 +133,8 @@ void TSPDumpFaceDataToFile(TSP_t *TSP,FILE *OutFile)
         int Vert1 = TSP->Face[i].V1;
         int Vert2 = TSP->Face[i].V2;
         int BaseFaceUV = i * 3;
-        int ColorMode = (TSP->Face[i].TSB.AsShort >> 7) & 0x3;
-        int VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
+        int ColorMode = (TSP->Face[i].TSB >> 7) & 0x3;
+        int VRAMPage = TSP->Face[i].TSB & 0x1F;
         sprintf(Buffer,"usemtl vram\n");
         fwrite(Buffer,strlen(Buffer),1,OutFile);
         sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),-(BaseFaceUV+3),-(Vert1+1),-(BaseFaceUV+2),-(Vert2+1),-(BaseFaceUV+1));
@@ -365,8 +365,8 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile)
                 int Vert0 = Iterator->Face[i].V0;
                 int Vert1 = Iterator->Face[i].V1;
                 int Vert2 = Iterator->Face[i].V2;
-                int ColorMode = (Iterator->Face[i].TSB.AsShort >> 7) & 0x3;
-                int VRAMPage = Iterator->Face[i].TSB.AsShort & 0x1F;
+                int ColorMode = (Iterator->Face[i].TSB >> 7) & 0x3;
+                int VRAMPage = Iterator->Face[i].TSB & 0x1F;
                 float U0 = (((float)Iterator->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
                 float V0 = /*255 -*/1.f-(((float)Iterator->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
                 float U1 = (((float)Iterator->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
@@ -488,7 +488,7 @@ int TSPGetNodeTransparentFaceCount(TSP_t *TSP,TSPNode_t *Node)
         Base = Node->BaseData / sizeof(TSPFace_t);
         Target = Base + Node->NumFaces;
         for( i = Base; i < Target; i++ ) {
-            if( (TSP->Face[i].TSB.AsShort & 0x4000 ) != 0 ) {
+            if( (TSP->Face[i].TSB & 0x4000 ) != 0 ) {
                 Result++;
             }
         }
@@ -559,22 +559,22 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
                                               (Node->NumFaces - NumTransparentFaces) * 3);
     Node->OpaqueFacesVAO = VAO;
     for( i = Base; i < Target; i++ ) {
-        ColorMode = (TSP->Face[i].TSB.AsShort >> 7) & 0x3;
-        VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
-        ABRRate = (TSP->Face[i].TSB.AsShort & 0x60) >> 5;
+        ColorMode = (TSP->Face[i].TSB >> 7) & 0x3;
+        VRAMPage = TSP->Face[i].TSB & 0x1F;
+        ABRRate = (TSP->Face[i].TSB & 0x60) >> 5;
         
         RenderingFace = malloc(sizeof(TSPRenderingFace_t));
         RenderingFace->Flags = 0;
         RenderingFace->Next = NULL;
         
-        CLUTPosX = (TSP->Face[i].CBA.AsShort << 4) & 0x3F0;
-        CLUTPosY = (TSP->Face[i].CBA.AsShort >> 6) & 0x1ff;
+        CLUTPosX = (TSP->Face[i].CBA << 4) & 0x3F0;
+        CLUTPosY = (TSP->Face[i].CBA >> 6) & 0x1ff;
         CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
         CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
         CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
         CLUTDestX += VRAMGetTexturePageX(CLUTPage);
 
-        DPrintf("TSB is %u\n",TSP->Face[i].TSB.AsShort);
+        DPrintf("TSB is %u\n",TSP->Face[i].TSB);
         DPrintf("Expected VRam Page:%i\n",VRAMPage);
         DPrintf("Expected Color Mode:%i\n",ColorMode);
         DPrintf("Expected ABR rate:%i\n",ABRRate);
@@ -600,8 +600,8 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             V1 = TSP->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
             U2 = TSP->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage);
             V2 = TSP->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-            TSB = TSP->Face[i].TSB.AsShort;
-            CBA = TSP->Face[i].CBA.AsShort;
+            TSB = TSP->Face[i].TSB;
+            CBA = TSP->Face[i].CBA;
 //         }
                     
                     
@@ -609,7 +609,7 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
                     TSP->Face[i].UV0.u,TSP->Face[i].UV0.v,
                     TSP->Face[i].UV1.u,TSP->Face[i].UV1.v,
                     TSP->Face[i].UV2.u,TSP->Face[i].UV2.v);
-        if( (TSP->Face[i].TSB.AsShort & 0x4000) != 0) {
+        if( (TSP->Face[i].TSB & 0x4000) != 0) {
             TransparentVertexData[TransparentVertexPointer] =   TSP->Vertex[Vert0].Position.x;
             TransparentVertexData[TransparentVertexPointer+1] = TSP->Vertex[Vert0].Position.y;
             TransparentVertexData[TransparentVertexPointer+2] = TSP->Vertex[Vert0].Position.z;
@@ -650,7 +650,7 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexPointer += 11;
             
             RenderingFace->VAOBufferOffset = TSP->TransparentVAO->CurrentSize;
-            RenderingFace->BlendingMode = (TSP->Face[i].TSB.AsShort >> 5 ) & 3;
+            RenderingFace->BlendingMode = (TSP->Face[i].TSB >> 5 ) & 3;
             RenderingFace->Flags |= TSP_FX_TRANSPARENCY;
 //             if( IsAnimated ) {
 //                 RenderingFace->ColorIndex[0] = ((TSP->Color[Vert0].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert0].Color2.Color&0xFF) : -1;
@@ -1445,15 +1445,15 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
         DPrintf("TSPReadNodeChunk:Reading node %i at %i\n",i,TSP->Node[i].FileOffset.Offset);
         fread(&TSP->Node[i].BBox,sizeof(TSPBBox_t),1,InFile);
         fread(&TSP->Node[i].NumFaces,sizeof(TSP->Node[i].NumFaces),1,InFile);
-        fread(&TSP->Node[i].U2.AsInt,sizeof(TSP->Node[i].U2.AsInt),1,InFile);
-        fread(&TSP->Node[i].U3.AsInt,sizeof(TSP->Node[i].U3.AsInt),1,InFile);
+        fread(&TSP->Node[i].U2,sizeof(TSP->Node[i].U2),1,InFile);
+        fread(&TSP->Node[i].U3,sizeof(TSP->Node[i].U3),1,InFile);
         fread(&TSP->Node[i].BaseData,sizeof(TSP->Node[i].BaseData),1,InFile);
         TSP->Node[i].FaceList = NULL;
         DPrintf("TSPReadNodeChunk:Node has %i faces\n",TSP->Node[i].NumFaces);
         DPrintf("TSPReadNodeChunk:Node BaseData %i (References offset %i)\n",TSP->Node[i].BaseData,
                 TSP->Node[i].BaseData + TSP->Header.NodeOffset);
-        DPrintf("TSPReadNodeChunk:Node U2 %i\n",TSP->Node[i].U2.AsInt);
-        DPrintf("TSPReadNodeChunk:Node U3 %i\n",TSP->Node[i].U3.AsInt);
+        DPrintf("TSPReadNodeChunk:Node U2 %i\n",TSP->Node[i].U2);
+        DPrintf("TSPReadNodeChunk:Node U3 %i\n",TSP->Node[i].U3);
         int Base = TSP->Node[i].BaseData / sizeof(TSPFace_t);
         int Target = Base + TSP->Node[i].NumFaces;
         DPrintf("We need to render %i faces starting from offset %i\n",TSP->Node[i].NumFaces,TSP->Header.FaceOffset + TSP->Node[i].BaseData);
@@ -1574,8 +1574,8 @@ void TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
         printf("V0:%u\n",TSP->Face[i].V0);
         printf("V1:%u\n",TSP->Face[i].V1);
         printf("V2:%u\n",TSP->Face[i].V2);
-        printf("CBA:%u\n",TSP->Face[i].CBA.AsShort);
-        printf("TSB:%u\n",TSP->Face[i].TSB.AsShort);
+        printf("CBA:%u\n",TSP->Face[i].CBA);
+        printf("TSB:%u\n",TSP->Face[i].TSB);
 //     }
 #endif
     }

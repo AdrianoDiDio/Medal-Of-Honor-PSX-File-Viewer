@@ -75,9 +75,9 @@ typedef struct TSPFace_s {
     unsigned short V1;
     unsigned short V2;
     TSPUv_t UV0;
-    ShortByteUnion CBA;
+    unsigned short CBA;
     TSPUv_t UV1;
-    ShortByteUnion TSB;
+    unsigned short TSB;
     TSPUv_t UV2;
 } TSPFace_t;
 
@@ -102,8 +102,8 @@ typedef struct TSPNodeFileLookUp_s {
 typedef struct TSPNode_s {
     TSPBBox_t BBox;
     int NumFaces; // 16 This should be an offset relative to the face offset...
-    IntShortUnion U2; // 20 //Starting index
-    IntShortUnion U3; // 24
+    int U2; // 20 //Starting index
+    int U3; // 24
     int BaseData; // This is the Node Dimension...BaseData / sizeof(TSPFace_t) If NumFaces != 0 or BaseData / sizeof(TSPNode_t) If NumFaces == 0
     
     TSPNodeFileLookUp_t FileOffset;
@@ -114,8 +114,6 @@ typedef struct TSPNode_s {
     TSPRenderingFace_t *OpaqueFaceList;
     struct TSPNode_s *Child[2];
     struct TSPNode_s *Next;
-//     IntShortUnion Child1Offset;
-//     IntShortUnion Child2Offset;
 } TSPNode_t;
 
 

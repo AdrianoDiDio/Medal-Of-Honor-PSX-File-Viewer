@@ -27,17 +27,6 @@ typedef unsigned char Byte;
 //     true
 // } bool;
 
-typedef union  {
-    unsigned short AsShort;
-    Byte AsBytes[2];
-}ShortByteUnion;
-
-
-typedef union  {
-    int   AsInt;
-    short AsShort[2];
-} IntShortUnion;
-
 typedef struct Color4f_s
 {
     float r;
