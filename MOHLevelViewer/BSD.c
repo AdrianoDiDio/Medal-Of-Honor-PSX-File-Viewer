@@ -850,7 +850,7 @@ void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData)
         VertexData[VertexPointer+4] = V2;
         VertexPointer += 5;
     }
-    VAO = VAOInitXYZUV(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,RenderObjectData->Face[i].TexInfo,-1,
+    VAO = VAOInitXYZUV(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,-1,-1,
                         RenderObjectData->NumFaces * 3);
     VAO->Next = RenderObjectData->VAO;
     RenderObjectData->VAO = VAO;
@@ -859,7 +859,7 @@ void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData)
 
 void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData)
 {
-        float TextureWidth;
+    float TextureWidth;
     float TextureHeight;
     unsigned short Vert0;
     unsigned short Vert1;
@@ -919,7 +919,7 @@ void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData)
         VertexData[VertexPointer+4] = V2;
         VertexPointer += 5;
     }
-    VAO = VAOInitXYZUV(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,RenderObjectData->FaceV2[i].TexInfo,-1,
+    VAO = VAOInitXYZUV(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,-1,-1,
                         RenderObjectData->NumFaces * 3);
     VAO->Next = RenderObjectData->VAO;
     RenderObjectData->VAO = VAO;

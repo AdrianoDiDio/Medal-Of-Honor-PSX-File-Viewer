@@ -31,13 +31,6 @@ typedef struct TSPVec3_s {
     short z;
 } TSPVec3_t;
 
-typedef struct TSPColor_s {
-    Byte r;
-    Byte g;
-    Byte b;
-    Byte a;
-} TSPColor_t;
-
 typedef struct TSPUv_s {
     Byte u;
     Byte v;
@@ -231,7 +224,7 @@ typedef struct TSP_s {
     TSPNode_t   *Node;
     TSPFace_t   *Face;
     TSPVert_t   *Vertex;
-    TSPColor_t  *Color;
+    Color1i     *Color;
     TSPDynamicData_t  *DynamicData;
     TSPTextureInfo_t *TextureData;
     TSPCollision_t *CollisionData;

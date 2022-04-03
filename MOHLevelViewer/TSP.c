@@ -211,7 +211,7 @@ void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
             NewPos = Vec3Build(Iterator->Vertex[i].Position.x,Iterator->Vertex[i].Position.y,Iterator->Vertex[i].Position.z);
             Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
             sprintf(Buffer,"v %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
-                Iterator->Color[i].r / 255.f,Iterator->Color[i].g / 255.f,Iterator->Color[i].b / 255.f
+                Iterator->Color[i].rgba[0] / 255.f,Iterator->Color[i].rgba[1] / 255.f,Iterator->Color[i].rgba[2] / 255.f
             );
             fwrite(Buffer,strlen(Buffer),1,OutFile);            
         }
@@ -340,21 +340,21 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile)
                     NewPos = Vec3Build(Iterator->Vertex[Vert0].Position.x,Iterator->Vertex[Vert0].Position.y,Iterator->Vertex[Vert0].Position.z);
                     Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
                     sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
-                            Iterator->Color[Vert0].r / 255.f,Iterator->Color[Vert0].g / 255.f,Iterator->Color[Vert0].b / 255.f,
+                            Iterator->Color[Vert0].rgba[0] / 255.f,Iterator->Color[Vert0].rgba[1] / 255.f,Iterator->Color[Vert0].rgba[2] / 255.f,
                             U0,V0
                     );
                     fwrite(Buffer,strlen(Buffer),1,OutFile);
                     NewPos = Vec3Build(Iterator->Vertex[Vert1].Position.x,Iterator->Vertex[Vert1].Position.y,Iterator->Vertex[Vert1].Position.z);
                     Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
                     sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
-                            Iterator->Color[Vert1].r / 255.f,Iterator->Color[Vert1].g / 255.f,Iterator->Color[Vert1].b / 255.f,
+                            Iterator->Color[Vert1].rgba[0] / 255.f,Iterator->Color[Vert1].rgba[1] / 255.f,Iterator->Color[Vert1].rgba[2] / 255.f,
                             U1,V1
                     );
                     fwrite(Buffer,strlen(Buffer),1,OutFile);      
                     NewPos = Vec3Build(Iterator->Vertex[Vert2].Position.x,Iterator->Vertex[Vert2].Position.y,Iterator->Vertex[Vert2].Position.z);
                     Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
                     sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
-                            Iterator->Color[Vert2].r / 255.f,Iterator->Color[Vert2].g / 255.f,Iterator->Color[Vert2].b / 255.f,
+                            Iterator->Color[Vert2].rgba[0] / 255.f,Iterator->Color[Vert2].rgba[1] / 255.f,Iterator->Color[Vert2].rgba[2] / 255.f,
                             U2,V2
                     );
                     fwrite(Buffer,strlen(Buffer),1,OutFile); 
@@ -377,21 +377,21 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile)
                 NewPos = Vec3Build(Iterator->Vertex[Vert0].Position.x,Iterator->Vertex[Vert0].Position.y,Iterator->Vertex[Vert0].Position.z);
                 Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
                 sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
-                        Iterator->Color[Vert0].r / 255.f,Iterator->Color[Vert0].g / 255.f,Iterator->Color[Vert0].b / 255.f,
+                        Iterator->Color[Vert0].rgba[0] / 255.f,Iterator->Color[Vert0].rgba[1] / 255.f,Iterator->Color[Vert0].rgba[2] / 255.f,
                         U0,V0
                 );
                 fwrite(Buffer,strlen(Buffer),1,OutFile);
                 NewPos = Vec3Build(Iterator->Vertex[Vert1].Position.x,Iterator->Vertex[Vert1].Position.y,Iterator->Vertex[Vert1].Position.z);
                 Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
                 sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
-                        Iterator->Color[Vert1].r / 255.f,Iterator->Color[Vert1].g / 255.f,Iterator->Color[Vert1].b / 255.f,
+                        Iterator->Color[Vert1].rgba[0] / 255.f,Iterator->Color[Vert1].rgba[1] / 255.f,Iterator->Color[Vert1].rgba[2] / 255.f,
                         U1,V1
                 );
                 fwrite(Buffer,strlen(Buffer),1,OutFile);      
                 NewPos = Vec3Build(Iterator->Vertex[Vert2].Position.x,Iterator->Vertex[Vert2].Position.y,Iterator->Vertex[Vert2].Position.z);
                 Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
                 sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
-                        Iterator->Color[Vert2].r / 255.f,Iterator->Color[Vert2].g / 255.f,Iterator->Color[Vert2].b / 255.f,
+                        Iterator->Color[Vert2].rgba[0] / 255.f,Iterator->Color[Vert2].rgba[1] / 255.f,Iterator->Color[Vert2].rgba[2] / 255.f,
                         U2,V2
                 );
                 fwrite(Buffer,strlen(Buffer),1,OutFile);      
@@ -618,9 +618,9 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexData[TransparentVertexPointer+2] = TSP->Vertex[Vert0].Position.z;
             TransparentVertexData[TransparentVertexPointer+3] = U0;
             TransparentVertexData[TransparentVertexPointer+4] = V0;
-            TransparentVertexData[TransparentVertexPointer+5] = TSP->Color[Vert0].r;
-            TransparentVertexData[TransparentVertexPointer+6] = TSP->Color[Vert0].g;
-            TransparentVertexData[TransparentVertexPointer+7] = TSP->Color[Vert0].b;
+            TransparentVertexData[TransparentVertexPointer+5] = TSP->Color[Vert0].rgba[0];
+            TransparentVertexData[TransparentVertexPointer+6] = TSP->Color[Vert0].rgba[1];
+            TransparentVertexData[TransparentVertexPointer+7] = TSP->Color[Vert0].rgba[2];
             TransparentVertexData[TransparentVertexPointer+8] = CLUTDestX;
             TransparentVertexData[TransparentVertexPointer+9] = CLUTDestY;
             TransparentVertexData[TransparentVertexPointer+10] = ColorMode;
@@ -631,9 +631,9 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexData[TransparentVertexPointer+2] = TSP->Vertex[Vert1].Position.z;
             TransparentVertexData[TransparentVertexPointer+3] = U1;
             TransparentVertexData[TransparentVertexPointer+4] = V1;
-            TransparentVertexData[TransparentVertexPointer+5] = TSP->Color[Vert1].r;
-            TransparentVertexData[TransparentVertexPointer+6] = TSP->Color[Vert1].g;
-            TransparentVertexData[TransparentVertexPointer+7] = TSP->Color[Vert1].b;
+            TransparentVertexData[TransparentVertexPointer+5] = TSP->Color[Vert1].rgba[0];
+            TransparentVertexData[TransparentVertexPointer+6] = TSP->Color[Vert1].rgba[1];
+            TransparentVertexData[TransparentVertexPointer+7] = TSP->Color[Vert1].rgba[2];
             TransparentVertexData[TransparentVertexPointer+8] = CLUTDestX;
             TransparentVertexData[TransparentVertexPointer+9] = CLUTDestY;
             TransparentVertexData[TransparentVertexPointer+10] = ColorMode;
@@ -644,9 +644,9 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexData[TransparentVertexPointer+2] = TSP->Vertex[Vert2].Position.z;
             TransparentVertexData[TransparentVertexPointer+3] = U2;
             TransparentVertexData[TransparentVertexPointer+4] = V2;
-            TransparentVertexData[TransparentVertexPointer+5] = TSP->Color[Vert2].r;
-            TransparentVertexData[TransparentVertexPointer+6] = TSP->Color[Vert2].g;
-            TransparentVertexData[TransparentVertexPointer+7] = TSP->Color[Vert2].b;
+            TransparentVertexData[TransparentVertexPointer+5] = TSP->Color[Vert2].rgba[0];
+            TransparentVertexData[TransparentVertexPointer+6] = TSP->Color[Vert2].rgba[1];
+            TransparentVertexData[TransparentVertexPointer+7] = TSP->Color[Vert2].rgba[2];
             TransparentVertexData[TransparentVertexPointer+8] = CLUTDestX;
             TransparentVertexData[TransparentVertexPointer+9] = CLUTDestY;
             TransparentVertexData[TransparentVertexPointer+10] = ColorMode;
@@ -677,9 +677,9 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             VertexData[VertexPointer+2] = TSP->Vertex[Vert0].Position.z;
             VertexData[VertexPointer+3] = U0;
             VertexData[VertexPointer+4] = V0;
-            VertexData[VertexPointer+5] = TSP->Color[Vert0].r;
-            VertexData[VertexPointer+6] = TSP->Color[Vert0].g;
-            VertexData[VertexPointer+7] = TSP->Color[Vert0].b;
+            VertexData[VertexPointer+5] = TSP->Color[Vert0].rgba[0];
+            VertexData[VertexPointer+6] = TSP->Color[Vert0].rgba[1];
+            VertexData[VertexPointer+7] = TSP->Color[Vert0].rgba[2];
             VertexData[VertexPointer+8] = CLUTDestX;
             VertexData[VertexPointer+9] = CLUTDestY;
             VertexData[VertexPointer+10] = ColorMode;
@@ -690,9 +690,9 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             VertexData[VertexPointer+2] = TSP->Vertex[Vert1].Position.z;
             VertexData[VertexPointer+3] = U1;
             VertexData[VertexPointer+4] = V1;
-            VertexData[VertexPointer+5] = TSP->Color[Vert1].r;
-            VertexData[VertexPointer+6] = TSP->Color[Vert1].g;
-            VertexData[VertexPointer+7] = TSP->Color[Vert1].b;
+            VertexData[VertexPointer+5] = TSP->Color[Vert1].rgba[0];
+            VertexData[VertexPointer+6] = TSP->Color[Vert1].rgba[1];
+            VertexData[VertexPointer+7] = TSP->Color[Vert1].rgba[2];
             VertexData[VertexPointer+8] = CLUTDestX;
             VertexData[VertexPointer+9] = CLUTDestY;
             VertexData[VertexPointer+10] = ColorMode;
@@ -702,9 +702,9 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             VertexData[VertexPointer+2] = TSP->Vertex[Vert2].Position.z;
             VertexData[VertexPointer+3] = U2;
             VertexData[VertexPointer+4] = V2;
-            VertexData[VertexPointer+5] = TSP->Color[Vert2].r;
-            VertexData[VertexPointer+6] = TSP->Color[Vert2].g;
-            VertexData[VertexPointer+7] = TSP->Color[Vert2].b;
+            VertexData[VertexPointer+5] = TSP->Color[Vert2].rgba[0];
+            VertexData[VertexPointer+6] = TSP->Color[Vert2].rgba[1];
+            VertexData[VertexPointer+7] = TSP->Color[Vert2].rgba[2];
             VertexData[VertexPointer+8] = CLUTDestX;
             VertexData[VertexPointer+9] = CLUTDestY;
             VertexData[VertexPointer+10] = ColorMode;
@@ -866,9 +866,9 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexData[TransparentVertexPointer+2] = TSP->Vertex[Vert0].Position.z;
             TransparentVertexData[TransparentVertexPointer+3] = U0;
             TransparentVertexData[TransparentVertexPointer+4] = V0;
-            TransparentVertexData[TransparentVertexPointer+5] = TSP->Color[Vert0].r;
-            TransparentVertexData[TransparentVertexPointer+6] = TSP->Color[Vert0].g;
-            TransparentVertexData[TransparentVertexPointer+7] = TSP->Color[Vert0].b;
+            TransparentVertexData[TransparentVertexPointer+5] = TSP->Color[Vert0].rgba[0];
+            TransparentVertexData[TransparentVertexPointer+6] = TSP->Color[Vert0].rgba[1];
+            TransparentVertexData[TransparentVertexPointer+7] = TSP->Color[Vert0].rgba[2];
             TransparentVertexData[TransparentVertexPointer+8] = CLUTDestX;
             TransparentVertexData[TransparentVertexPointer+9] = CLUTDestY;
             TransparentVertexData[TransparentVertexPointer+10] = ColorMode;
@@ -879,9 +879,9 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexData[TransparentVertexPointer+2] = TSP->Vertex[Vert1].Position.z;
             TransparentVertexData[TransparentVertexPointer+3] = U1;
             TransparentVertexData[TransparentVertexPointer+4] = V1;
-            TransparentVertexData[TransparentVertexPointer+5] = TSP->Color[Vert1].r;
-            TransparentVertexData[TransparentVertexPointer+6] = TSP->Color[Vert1].g;
-            TransparentVertexData[TransparentVertexPointer+7] = TSP->Color[Vert1].b;
+            TransparentVertexData[TransparentVertexPointer+5] = TSP->Color[Vert1].rgba[0];
+            TransparentVertexData[TransparentVertexPointer+6] = TSP->Color[Vert1].rgba[1];
+            TransparentVertexData[TransparentVertexPointer+7] = TSP->Color[Vert1].rgba[2];
             TransparentVertexData[TransparentVertexPointer+8] = CLUTDestX;
             TransparentVertexData[TransparentVertexPointer+9] = CLUTDestY;
             TransparentVertexData[TransparentVertexPointer+10] = ColorMode;
@@ -892,9 +892,9 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexData[TransparentVertexPointer+2] = TSP->Vertex[Vert2].Position.z;
             TransparentVertexData[TransparentVertexPointer+3] = U2;
             TransparentVertexData[TransparentVertexPointer+4] = V2;
-            TransparentVertexData[TransparentVertexPointer+5] = TSP->Color[Vert2].r;
-            TransparentVertexData[TransparentVertexPointer+6] = TSP->Color[Vert2].g;
-            TransparentVertexData[TransparentVertexPointer+7] = TSP->Color[Vert2].b;
+            TransparentVertexData[TransparentVertexPointer+5] = TSP->Color[Vert2].rgba[0];
+            TransparentVertexData[TransparentVertexPointer+6] = TSP->Color[Vert2].rgba[1];
+            TransparentVertexData[TransparentVertexPointer+7] = TSP->Color[Vert2].rgba[2];
             TransparentVertexData[TransparentVertexPointer+8] = CLUTDestX;
             TransparentVertexData[TransparentVertexPointer+9] = CLUTDestY;
             TransparentVertexData[TransparentVertexPointer+10] = ColorMode;
@@ -924,9 +924,9 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             VertexData[VertexPointer+2] = TSP->Vertex[Vert0].Position.z;
             VertexData[VertexPointer+3] = U0;
             VertexData[VertexPointer+4] = V0;
-            VertexData[VertexPointer+5] = TSP->Color[Vert0].r;
-            VertexData[VertexPointer+6] = TSP->Color[Vert0].g;
-            VertexData[VertexPointer+7] = TSP->Color[Vert0].b;
+            VertexData[VertexPointer+5] = TSP->Color[Vert0].rgba[0];
+            VertexData[VertexPointer+6] = TSP->Color[Vert0].rgba[1];
+            VertexData[VertexPointer+7] = TSP->Color[Vert0].rgba[2];
             VertexData[VertexPointer+8] = CLUTDestX;
             VertexData[VertexPointer+9] = CLUTDestY;
             VertexData[VertexPointer+10] = ColorMode;
@@ -937,9 +937,9 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             VertexData[VertexPointer+2] = TSP->Vertex[Vert1].Position.z;
             VertexData[VertexPointer+3] = U1;
             VertexData[VertexPointer+4] = V1;
-            VertexData[VertexPointer+5] = TSP->Color[Vert1].r;
-            VertexData[VertexPointer+6] = TSP->Color[Vert1].g;
-            VertexData[VertexPointer+7] = TSP->Color[Vert1].b;
+            VertexData[VertexPointer+5] = TSP->Color[Vert1].rgba[0];
+            VertexData[VertexPointer+6] = TSP->Color[Vert1].rgba[1];
+            VertexData[VertexPointer+7] = TSP->Color[Vert1].rgba[2];
             VertexData[VertexPointer+8] = CLUTDestX;
             VertexData[VertexPointer+9] = CLUTDestY;
             VertexData[VertexPointer+10] = ColorMode;
@@ -950,9 +950,9 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             VertexData[VertexPointer+2] = TSP->Vertex[Vert2].Position.z;
             VertexData[VertexPointer+3] = U2;
             VertexData[VertexPointer+4] = V2;
-            VertexData[VertexPointer+5] = TSP->Color[Vert2].r;
-            VertexData[VertexPointer+6] = TSP->Color[Vert2].g;
-            VertexData[VertexPointer+7] = TSP->Color[Vert2].b;
+            VertexData[VertexPointer+5] = TSP->Color[Vert2].rgba[0];
+            VertexData[VertexPointer+6] = TSP->Color[Vert2].rgba[1];
+            VertexData[VertexPointer+7] = TSP->Color[Vert2].rgba[2];
             VertexData[VertexPointer+8] = CLUTDestX;
             VertexData[VertexPointer+9] = CLUTDestY;
             VertexData[VertexPointer+10] = ColorMode;
@@ -1129,9 +1129,9 @@ void TSPPrintVec3(TSPVec3_t Vector)
     printf("(%i;%i;%i)\n",Vector.x,Vector.y,Vector.z);
 }
 
-void TSPPrintColor(TSPColor_t Color)
+void TSPPrintColor(Color1i Color)
 {
-    printf("RGBA:(%i;%i;%i;%i)\n",Color.r,Color.g,Color.b,Color.a);
+    printf("RGBA:(%i;%i;%i;%i)\n",Color.rgba[0],Color.rgba[1],Color.rgba[2],Color.rgba[3]);
 }
 
 void DrawTSPBox(TSPNode_t Node)
@@ -1632,10 +1632,10 @@ void TSPReadColorChunk(TSP_t *TSP,FILE *InFile)
         return;
     }
     
-    TSP->Color = malloc(TSP->Header.NumColors * sizeof(TSPColor_t));
+    TSP->Color = malloc(TSP->Header.NumColors * sizeof(Color1i));
     
     for( i = 0; i < TSP->Header.NumColors; i++ ) {
-        Ret = fread(&TSP->Color[i],sizeof(TSPColor_t),1,InFile);
+        Ret = fread(&TSP->Color[i],sizeof(Color1i),1,InFile);
         if( Ret != 1 ) {
             printf("TSPReadColorChunk:Early failure when reading normal %i\n",i);
             return;
