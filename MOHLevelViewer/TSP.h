@@ -19,6 +19,12 @@
 #ifndef __TSPVIEWER_H_
 #define __TSPVIEWER_H_
 
+typedef enum {
+    TSP_FX_NONE = 1,
+    TSP_FX_TRANSPARENCY = 2,
+    TSP_FX_ANIMATED = 4,
+} TSPRenderingFaceFlags;
+
 typedef struct TSPVec3_s {
     short x;
     short y;
@@ -61,11 +67,14 @@ typedef struct TSPTextureInfo_s {
     short   Padding;
 } TSPTextureInfo_t;
 
-typedef struct TSPTransparentFace_s {
+typedef struct TSPRenderingFace_s {
     int VAOBufferOffset;
     int BlendingMode;
-    struct TSPTransparentFace_s *Next;
-} TSPTransparentFace_t;
+    unsigned int OriginalColor[3];
+    int ColorIndex[3];
+    int Flags;
+    struct TSPRenderingFace_s *Next;
+} TSPRenderingFace_t;
 
 //16 Bytes.
 typedef struct TSPFace_s {
@@ -107,12 +116,9 @@ typedef struct TSPNode_s {
     TSPNodeFileLookUp_t FileOffset;
     TSPFaceV3_t *FaceList;
     VAO_t *BBoxVAO;
-    //TODO:Remove once semi-transparency is working even in MOH.
-    VAO_t *LeafFaceListVAO;
-    //This will be the only VAO that will be used.
-    VAO_t *LeafOpaqueFaceListVAO;
-    VAO_t *LeafTransparentFaceListVAO;
+    VAO_t *OpaqueFacesVAO;
     VAO_t *LeafCollisionFaceListVAO;
+    TSPRenderingFace_t *OpaqueFaceList;
     struct TSPNode_s *Child[2];
     struct TSPNode_s *Next;
 //     IntShortUnion Child1Offset;
@@ -233,7 +239,7 @@ typedef struct TSP_s {
     int          Number;
     VAO_t       *VAOList;
     VAO_t       *TransparentVAO;
-    TSPTransparentFace_t *TransparentFaceList;
+    TSPRenderingFace_t *TransparentFaceList;
     VAO_t       *CollisionVAOList;
     struct TSP_s *Next;
 } TSP_t;

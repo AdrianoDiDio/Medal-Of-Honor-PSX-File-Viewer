@@ -442,11 +442,18 @@ void BSDRenderObjectListCleanUp(BSD_t *BSD)
 
 void BSDFree(BSD_t *BSD)
 {
-    int i;
-    
     BSDTSPStreamNode_t *Temp;
     BSDRenderObjectDrawable_t *Drawable;
+    BSDDynamicColor_t *DynamicColor;
+    int i;
     
+    for( i = 0; i < BSD_DYNAMIC_COLOR_TABLE_SIZE; i++ ) {
+        DynamicColor = &BSD->DynamicColorTable.DynamicColorList[i];
+        if( DynamicColor->NumColors == 0 ) {
+            continue;
+        }
+        free(DynamicColor->ColorList);
+    }
     free(BSD->NodeData.Table);
     free(BSD->NodeData.Node);
     

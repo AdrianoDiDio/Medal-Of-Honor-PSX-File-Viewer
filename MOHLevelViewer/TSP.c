@@ -21,16 +21,19 @@
 
 void TSPFree(TSP_t *TSP)
 {
-    TSPTransparentFace_t *Temp;
+    TSPRenderingFace_t *Temp;
     int i;
 //     TSP->Node
 //     TSPRecursiveNodeFree(&TSP->Node[0]);
     for( i = 0; i < TSP->Header.NumNodes; i++ ) {
         VAOFree(TSP->Node[i].BBoxVAO);
-        VAOFree(TSP->Node[i].LeafFaceListVAO);
-        VAOFree(TSP->Node[i].LeafOpaqueFaceListVAO);
-        VAOFree(TSP->Node[i].LeafTransparentFaceListVAO);
+        VAOFree(TSP->Node[i].OpaqueFacesVAO);
         VAOFree(TSP->Node[i].LeafCollisionFaceListVAO);
+        while( TSP->Node[i].OpaqueFaceList ) {
+            Temp = TSP->Node[i].OpaqueFaceList;
+            TSP->Node[i].OpaqueFaceList = TSP->Node[i].OpaqueFaceList->Next;
+            free(Temp);
+        }
         if( TSP->Node[i].FaceList ) {
             free(TSP->Node[i].FaceList);
         }
@@ -509,6 +512,7 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
     short CBA;
     int *VertexData;
     int *TransparentVertexData;
+    int TotalVertexSize;
     int VertexSize;
     int TransparentVertexSize;
     int VertexPointer;
@@ -540,14 +544,16 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
     ColorModeOffset = 10;
                 
     NumTransparentFaces = TSPGetNodeTransparentFaceCount(TSP,Node);
-                
-    VertexSize = Stride * 3 * (Node->NumFaces - NumTransparentFaces);
+    VertexSize = Stride * 3;
+    TotalVertexSize = VertexSize * (Node->NumFaces - NumTransparentFaces);
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
     TransparentVertexSize = Stride * 3;
     TransparentVertexData = malloc(TransparentVertexSize);
     TransparentVertexPointer = 0;
-        
+    VAO = VAOInitXYZUVRGBCLUTColorModeInteger(NULL,TotalVertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,ColorModeOffset,
+                                              (Node->NumFaces - NumTransparentFaces) * 3);
+    Node->OpaqueFacesVAO = VAO;
     for( i = Base; i < Target; i++ ) {
         int ColorMode = (TSP->Face[i].TSB.AsShort >> 7) & 0x3;
         int VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
@@ -645,13 +651,26 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexData[TransparentVertexPointer+9] = CLUTDestY;
             TransparentVertexData[TransparentVertexPointer+10] = ColorMode;
             TransparentVertexPointer += 11;
-            TSPTransparentFace_t *TransparentFace = malloc(sizeof(TSPTransparentFace_t));
-            TransparentFace->VAOBufferOffset = TSP->TransparentVAO->CurrentSize;
-            TransparentFace->BlendingMode = (TSP->Face[i].TSB.AsShort >> 5) & 3;
+            TSPRenderingFace_t *RenderingFace = malloc(sizeof(TSPRenderingFace_t));
+            RenderingFace->VAOBufferOffset = TSP->TransparentVAO->CurrentSize;
+            RenderingFace->BlendingMode = (TSP->Face[i].TSB.AsShort >> 5 ) & 3;
+            RenderingFace->Flags = 0;
+            RenderingFace->Flags |= TSP_FX_TRANSPARENCY;
+//             if( IsAnimated ) {
+//                 RenderingFace->ColorIndex[0] = ((TSP->Color[Vert0].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert0].Color2.Color&0xFF) : -1;
+//                 RenderingFace->ColorIndex[1] = ((TSP->Color[Vert1].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert1].Color2.Color&0xFF) : -1; 
+//                 RenderingFace->ColorIndex[2] = ((TSP->Color[Vert2].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert2].Color2.Color&0xFF) : -1;
+//                 //Save the orignal color in order to interpolate it later...
+//                 RenderingFace->OriginalColor[0] = TSP->Color[Vert0].Color2.Color;
+//                 RenderingFace->OriginalColor[1] = TSP->Color[Vert1].Color2.Color;
+//                 RenderingFace->OriginalColor[2] =  TSP->Color[Vert2].Color2.Color;
+//                 RenderingFace->Flags |= TSP_FX_ANIMATED;
+//             }
             VAOUpdate(TSP->TransparentVAO,TransparentVertexData,TransparentVertexSize,3);
-            TransparentFace->Next = TSP->TransparentFaceList;
-            TSP->TransparentFaceList = TransparentFace;
+            RenderingFace->Next = TSP->TransparentFaceList;
+            TSP->TransparentFaceList = RenderingFace;
             TransparentVertexPointer = 0;
+
         } else {
             VertexData[VertexPointer] =   TSP->Vertex[Vert0].Position.x;
             VertexData[VertexPointer+1] = TSP->Vertex[Vert0].Position.y;
@@ -690,12 +709,27 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             VertexData[VertexPointer+9] = CLUTDestY;
             VertexData[VertexPointer+10] = ColorMode;
             VertexPointer += 11;
+            TSPRenderingFace_t *RenderingFace = malloc(sizeof(TSPRenderingFace_t));
+            RenderingFace->VAOBufferOffset = Node->OpaqueFacesVAO->CurrentSize;
+            RenderingFace->Flags = 0;
+//             if( IsAnimated ) {
+//                 TFace->ColorIndex[0] = ((TSP->Color[Vert0].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert0].Color2.Color&0xFF) : -1;
+//                 TFace->ColorIndex[1] = ((TSP->Color[Vert1].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert1].Color2.Color&0xFF) : -1; 
+//                 TFace->ColorIndex[2] = ((TSP->Color[Vert2].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert2].Color2.Color&0xFF) : -1;
+//                 //Save the orignal color in order to interpolate it later...
+//                 TFace->OriginalColor[0] = TSP->Color[Vert0].Color2.Color;
+//                 TFace->OriginalColor[1] = TSP->Color[Vert1].Color2.Color;
+//                 TFace->OriginalColor[2] =  TSP->Color[Vert2].Color2.Color;
+//                 TFace->Flags |= TSP_FX_ANIMATED;
+//             } else {
+                RenderingFace->Flags |= TSP_FX_NONE;
+//             }
+            VAOUpdate(Node->OpaqueFacesVAO,VertexData,VertexSize,3);
+            RenderingFace->Next = Node->OpaqueFaceList;
+            Node->OpaqueFaceList = RenderingFace;
+            VertexPointer = 0;
         }
     }
-    VAO = VAOInitXYZUVRGBCLUTColorModeInteger(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,ColorModeOffset,
-                                              (Node->NumFaces - NumTransparentFaces) * 3);
-    VAO->Next = Node->LeafOpaqueFaceListVAO;
-    Node->LeafOpaqueFaceListVAO = VAO;
     free(VertexData);
     free(TransparentVertexData);
 }
@@ -713,6 +747,7 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
     short CBA;
     int *VertexData;
     int *TransparentVertexData;
+    int TotalVertexSize;
     int VertexSize;
     int TransparentVertexSize;
     int VertexPointer;
@@ -744,14 +779,16 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
     ColorModeOffset = 10;
     
     NumTransparentFaces = TSPGetNodeTransparentFaceCount(TSP,Node);
-                
-    VertexSize = Stride * 3 * (Node->NumFaces - NumTransparentFaces);
+    VertexSize = Stride * 3;
+    TotalVertexSize = VertexSize * (Node->NumFaces - NumTransparentFaces);
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
     TransparentVertexSize = Stride * 3;
     TransparentVertexData = malloc(TransparentVertexSize);
     TransparentVertexPointer = 0;
-    
+    VAO = VAOInitXYZUVRGBCLUTColorModeInteger(NULL,TotalVertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,ColorModeOffset,
+                                     (Node->NumFaces - NumTransparentFaces) * 3);
+    Node->OpaqueFacesVAO = VAO;
     for( i = 0; i < Node->NumFaces; i++ ) {
         TextureInfo = TSP->TextureData[Node->FaceList[i].TextureDataIndex];
         int ColorMode = (TextureInfo.TSB >> 7) & 0x3;
@@ -862,12 +899,24 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexData[TransparentVertexPointer+9] = CLUTDestY;
             TransparentVertexData[TransparentVertexPointer+10] = ColorMode;
             TransparentVertexPointer += 11;
-            TSPTransparentFace_t *TransparentFace = malloc(sizeof(TSPTransparentFace_t));
-            TransparentFace->VAOBufferOffset = TSP->TransparentVAO->CurrentSize;
-            TransparentFace->BlendingMode = (TextureInfo.TSB >> 5) & 3;
+            TSPRenderingFace_t *RenderingFace = malloc(sizeof(TSPRenderingFace_t));
+            RenderingFace->VAOBufferOffset = TSP->TransparentVAO->CurrentSize;
+            RenderingFace->BlendingMode = (TextureInfo.TSB >> 5) & 3;
+            RenderingFace->Flags = 0;
+            RenderingFace->Flags |= TSP_FX_TRANSPARENCY;
+//             if( IsAnimated ) {
+//                 RenderingFace->ColorIndex[0] = ((TSP->Color[Vert0].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert0].Color2.Color&0xFF) : -1;
+//                 RenderingFace->ColorIndex[1] = ((TSP->Color[Vert1].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert1].Color2.Color&0xFF) : -1; 
+//                 RenderingFace->ColorIndex[2] = ((TSP->Color[Vert2].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert2].Color2.Color&0xFF) : -1;
+//                 //Save the orignal color in order to interpolate it later...
+//                 RenderingFace->OriginalColor[0] = TSP->Color[Vert0].Color2.Color;
+//                 RenderingFace->OriginalColor[1] = TSP->Color[Vert1].Color2.Color;
+//                 RenderingFace->OriginalColor[2] =  TSP->Color[Vert2].Color2.Color;
+//                 RenderingFace->Flags |= TSP_FX_ANIMATED;
+//             }
             VAOUpdate(TSP->TransparentVAO,TransparentVertexData,TransparentVertexSize,3);
-            TransparentFace->Next = TSP->TransparentFaceList;
-            TSP->TransparentFaceList = TransparentFace;
+            RenderingFace->Next = TSP->TransparentFaceList;
+            TSP->TransparentFaceList = RenderingFace;
             TransparentVertexPointer = 0;
         } else {
             VertexData[VertexPointer] =   TSP->Vertex[Vert0].Position.x;
@@ -908,12 +957,27 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             VertexData[VertexPointer+9] = CLUTDestY;
             VertexData[VertexPointer+10] = ColorMode;
             VertexPointer += 11;
+            TSPRenderingFace_t *RenderingFace = malloc(sizeof(TSPRenderingFace_t));
+            RenderingFace->VAOBufferOffset = Node->OpaqueFacesVAO->CurrentSize;
+            RenderingFace->Flags = 0;
+//             if( IsAnimated ) {
+//                 RenderingFace->ColorIndex[0] = ((TSP->Color[Vert0].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert0].Color2.Color&0xFF) : -1;
+//                 RenderingFace->ColorIndex[1] = ((TSP->Color[Vert1].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert1].Color2.Color&0xFF) : -1; 
+//                 RenderingFace->ColorIndex[2] = ((TSP->Color[Vert2].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert2].Color2.Color&0xFF) : -1;
+//                 //Save the orignal color in order to interpolate it later...
+//                 RenderingFace->OriginalColor[0] = TSP->Color[Vert0].Color2.Color;
+//                 RenderingFace->OriginalColor[1] = TSP->Color[Vert1].Color2.Color;
+//                 RenderingFace->OriginalColor[2] =  TSP->Color[Vert2].Color2.Color;
+//                 RenderingFace->Flags |= TSP_FX_ANIMATED;
+//             } else {
+                RenderingFace->Flags |= TSP_FX_NONE;
+//             }
+            VAOUpdate(Node->OpaqueFacesVAO,VertexData,VertexSize,3);
+            RenderingFace->Next = Node->OpaqueFaceList;
+            Node->OpaqueFaceList = RenderingFace;
+            VertexPointer = 0;
         }
     }
-    VAO = VAOInitXYZUVRGBCLUTColorModeInteger(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,ColorModeOffset,
-                                     (Node->NumFaces - NumTransparentFaces) * 3);
-    VAO->Next = Node->LeafOpaqueFaceListVAO;
-    Node->LeafOpaqueFaceListVAO = VAO;
     free(VertexData);
     free(TransparentVertexData);
 }
@@ -1191,11 +1255,9 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
             glBindTextureUnit(1, Level->VRAM->PalettePage.TextureID);
 
             glDisable(GL_BLEND);
-            for( Iterator = Node->LeafOpaqueFaceListVAO; Iterator; Iterator = Iterator->Next ) {
-                glBindVertexArray(Iterator->VAOId[0]);
-                glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
-                glBindVertexArray(0);
-            }
+            glBindVertexArray(Node->OpaqueFacesVAO->VAOId[0]);
+            glDrawArrays(GL_TRIANGLES, 0, Node->OpaqueFacesVAO->Count);
+            glBindVertexArray(0);
             glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D,0);
             glDisable(GL_BLEND);
@@ -1216,7 +1278,7 @@ void TSPDrawTransparentFaces(TSP_t *TSP,LevelSettings_t Settings)
     int EnableLightingID;
     int PaletteTextureID;
     int TextureIndexID;
-    TSPTransparentFace_t *TransparentFaceIterator;
+    TSPRenderingFace_t *TransparentFaceIterator;
 
     
     Shader = ShaderCache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
@@ -1452,6 +1514,8 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
                             TempFace.Vert1 = TempFace.Vert2;
                         }
                         TempFace.Vert2 = Marker & 0x1FFF;
+                        //NOTE(Adriano):If this bit is set, we need to swap vert1 and vert2 in order
+                        //to keep the face winding clockwise and make culling works properly.
                         if( Marker & 0x4000 ) {
                             TSP->Node[i].FaceList[CurrentFaceIndex].SwapV1V2 = 1;
                         } else {
