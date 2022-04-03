@@ -595,6 +595,17 @@ void SysCheckKeyEvents()
                     //
                     Level->Settings.EnableSemiTransparency = !Level->Settings.EnableSemiTransparency;
                 }
+                if( Event.key.keysym.sym == SDLK_m ) {
+                    //
+                    // Toggle Semi-Transparency
+                    //
+                    Level->Settings.EnableSurfaceAnimations = !Level->Settings.EnableSurfaceAnimations;
+                    //Special Case
+                    if( !Level->Settings.EnableSurfaceAnimations ) {
+                        //Disabled it reset it back to original state.
+                        TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,1);
+                    }
+                }
                 if( Event.key.keysym.sym == SDLK_e ) {
                     //
                     // Dump Level to file
@@ -866,6 +877,11 @@ void GLFrame()
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
+    if( Level->Settings.EnableSurfaceAnimations ) {
+        BSDUpdateColorList(Level->BSD);
+        TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,0);
+    }
+    
     glm_perspective(glm_rad(110.f),(float) VidConf.Width/ (float) VidConf.Height,1.f, 4096.f,VidConf.PMatrixM4);
 // 
 // #if 0
@@ -971,6 +987,8 @@ void GLFrame()
      y += VerticalSpacing;
      FontDrawString(Level,"Press k to enable or disable Semi Transparency",10,y,Level->Settings.EnableSemiTransparency ? c_Yellow : c_Red);
      y += VerticalSpacing;
+     FontDrawString(Level,"Press m to enable or disable animated surfaces",10,y,Level->Settings.EnableSurfaceAnimations ? c_Yellow : c_Red);
+     y += VerticalSpacing;
      FontDrawString(Level,"Press e to dump the current level to a file",10,y,c_White);
      y += VerticalSpacing;
      FontDrawString(Level,"Press w a s d to move camera around",10,y,c_White);
@@ -991,6 +1009,7 @@ void SetDefaultSettings(Level_t *Level)
     Level->Settings.EnableFrustumCulling = true;
     Level->Settings.EnableLighting = true;
     Level->Settings.EnableSemiTransparency = true;
+    Level->Settings.EnableSurfaceAnimations = true;
     Level->Settings.WireFrame = false;
     Level->Settings.ShowAABBTree = false;
     Level->Settings.ShowCollisionData = false;

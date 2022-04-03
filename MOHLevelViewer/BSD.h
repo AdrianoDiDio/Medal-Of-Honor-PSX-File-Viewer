@@ -240,7 +240,7 @@ typedef struct BSDDynamicColor_s {
 
 typedef struct BSDDynamicColorTable_s {
     int NumDynamicColors;
-    BSDDynamicColor_t DynamicColorList[40];
+    BSDDynamicColor_t DynamicColorList[BSD_DYNAMIC_COLOR_TABLE_SIZE];
 } BSDDynamicColorTable_t;
 
 typedef struct BSDTSPInfo_s {
@@ -351,8 +351,10 @@ unsigned int BSDMPNodeIDToRenderObjectID(unsigned int NodeID);
 int     BSDGetRenderObjectIndexByID(BSD_t *BSD,int ID);
 bool    BSDIsRenderObjectPresent(BSD_t *BSD,unsigned int RenderObjectID);
 void    BSDFixRenderObjectPosition(Level_t *Level);
+int     BSDGetCurrentDynamicColorByIndex(BSD_t *BSD,int Index);
 void    BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile);
 void    BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile);
+void    BSDUpdateColorList(BSD_t *BSD);
 void    BSDFree(BSD_t *BSD);
 
 #endif //__BSDVIEWER_H_

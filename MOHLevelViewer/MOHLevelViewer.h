@@ -42,8 +42,8 @@
 #include "TIM.h"
 #include "VRAM.h"
 #include "Font.h"
-#include "TSP.h"
 #include "BSD.h"
+#include "TSP.h"
 #include "BSDTwoPlayers.h"
 
 #ifdef __linux__
@@ -159,6 +159,7 @@ typedef struct LevelSettings_s {
     bool EnableFrustumCulling;
     bool EnableLighting;
     bool EnableSemiTransparency;
+    bool EnableSurfaceAnimations;
 } LevelSettings_t;
 
 typedef struct Level_s {

@@ -36,7 +36,7 @@ typedef struct Color4f_s
 } Color4f_t;
 
 typedef union {
-    int Color;
+    int c;
     Byte rgba[4];
 } Color1i_t;
 

@@ -240,6 +240,7 @@ typedef struct Level_s Level_t;
 
 TSP_t  *TSPLoad(char *FName,int TSPNumber);
 void    TSPDrawList(Level_t *Level);
+void TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,int Reset);
 void    TSPCreateVAO(TSP_t *TSP);
 void TSPCreateNodeBBoxVAO(TSP_t *TSPList);
 void TSPCreateCollisionVAO(TSP_t *TSPList);

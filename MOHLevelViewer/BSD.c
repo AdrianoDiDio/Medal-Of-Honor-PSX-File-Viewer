@@ -499,9 +499,18 @@ void BSDUpdateColorList(BSD_t *BSD)
             }
             //PSX runs at 30FPS...increment the delay in order to simulate that speed...
             DynamicColor->Delay = DynamicColor->ColorList[DynamicColor->ColorIndex].rgba[3] * 6;
-            DynamicColor->CurrentColor = DynamicColor->ColorList[DynamicColor->ColorIndex].Color;
+            DynamicColor->CurrentColor = DynamicColor->ColorList[DynamicColor->ColorIndex].c;
         }
     }
+}
+
+int BSDGetCurrentDynamicColorByIndex(BSD_t *BSD,int Index)
+{
+    if( Index < 0 || Index > BSD_DYNAMIC_COLOR_TABLE_SIZE ) {
+        DPrintf("BSDGetCurrentDynamicColorByIndex:Invalid index %i\n",Index);
+        return 0;
+    }
+    return BSD->DynamicColorTable.DynamicColorList[Index].CurrentColor;
 }
 
 void BSDVAOPointList(BSD_t *BSD)
@@ -1941,7 +1950,7 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
         for( j = 0; j < DynamicColor->NumColors; j++ ) {
             fread(&DynamicColor->ColorList[j],sizeof(DynamicColor->ColorList[j]),1,BSDFile);
             DPrintf("Color %i %i %i %i %i (As Int %u)\n",j,DynamicColor->ColorList[j].rgba[0],
-                    DynamicColor->ColorList[j].rgba[1],DynamicColor->ColorList[j].rgba[2],DynamicColor->ColorList[j].rgba[3],DynamicColor->ColorList[j].Color
+                    DynamicColor->ColorList[j].rgba[1],DynamicColor->ColorList[j].rgba[2],DynamicColor->ColorList[j].rgba[3],DynamicColor->ColorList[j].c
             );
         }
         fseek(BSDFile,PrevPos,SEEK_SET);
