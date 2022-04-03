@@ -1928,7 +1928,7 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
         }
 
 
-        DynamicColor->ColorList = malloc(DynamicColor->NumColors * sizeof(Color1i));
+        DynamicColor->ColorList = malloc(DynamicColor->NumColors * sizeof(Color1i_t));
         DPrintf("Color Interpolator %i\n",i);
         DPrintf("StartingColorOffset:%i\n",DynamicColor->StartingColorOffset);
         DPrintf("StartingColorOffset No Header:%i\n",DynamicColor->StartingColorOffset + 2048);

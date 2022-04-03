@@ -36,7 +36,10 @@ typedef struct VRam_s {
 } VRAM_t;
 
 VRAM_t *VRAMInit(TIMImage_t *ImageList);
-float VRAMGetTexturePageX(int VRAMPage);
-float VRAMGetTexturePageY(int VRAMPage,int ColorMode);
+int VRAMGetTexturePageX(int VRAMPage);
+int VRAMGetTexturePageY(int VRAMPage,int ColorMode);
+int VRAMGetCLUTPage(int CLUTPosX,int CLUTPosY);
+int VRAMGetCLUTPositionX(int CLUTX,int CLUTY,int CLUTPage);
+int VRAMGetCLUTOffsetY(int ColorMode);
 void VRAMDumpDataToFile(VRAM_t *VRam,char *OutBaseDir);
 #endif //__VRAM_H_

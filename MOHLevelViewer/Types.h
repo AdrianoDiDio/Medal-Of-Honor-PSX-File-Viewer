@@ -49,7 +49,7 @@ typedef struct Color4f_s
 typedef union {
     int Color;
     Byte rgba[4];
-} Color1i;
+} Color1i_t;
 
 typedef struct Vec3_s
 {

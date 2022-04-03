@@ -96,27 +96,55 @@ void VRAMDumpDataToFile(VRAM_t *VRAM,char *OutBaseDir)
     fclose(MaterialFile);
 }
 
-float VRAMGetTexturePageX(int VRAMPage)
+int VRAMGetTexturePageX(int VRAMPage)
 {
-    return ((VRAMPage % 16) * 256.f);
+    return ((VRAMPage % 16) * 256);
 }
 
-float VRAMGetTexturePageY(int VRAMPage,int ColorMode)
+int VRAMGetTexturePageY(int VRAMPage,int ColorMode)
 {
     float ModeOffset;
     float PageY;
     if( ColorMode == BPP_4 || ColorMode == 0) {
-        ModeOffset = 0.f;
+        ModeOffset = 0;
     } else {
-        ModeOffset = 512.f;
+        ModeOffset = 512;
     }
     PageY = ModeOffset;
     if( VRAMPage >= 16 ) {
-        PageY += 256.f;
+        PageY += 256;
     }
     return PageY;
 }
 
+int VRAMGetCLUTPage(int CLUTPosX,int CLUTPosY)
+{
+    int CLUTPage;
+    CLUTPage = CLUTPosX / 64;
+    if( CLUTPosY >= 256 ) {
+        CLUTPage += 16;
+    }
+    return CLUTPage;
+}
+int VRAMGetCLUTOffsetY(int ColorMode)
+{
+    if( ColorMode == BPP_8 || ColorMode == 1 ) {
+        return 512;
+    }
+    
+    return 0;
+}
+
+int VRAMGetCLUTPositionX(int CLUTX,int CLUTY,int CLUTPage)
+{
+    int Offset;
+    if( CLUTY >= 256 ) {
+        Offset = (CLUTX - ((CLUTPage - 16) * 64));
+    } else {
+        Offset = (CLUTX - (CLUTPage * 64));
+    }
+    return Offset;
+}
 void VRAMPutTexture(VRAM_t *VRAM,TIMImage_t *Image)
 {
     int VRAMPage;
@@ -190,12 +218,10 @@ void VRAMPutRawTexture(VRAM_t *VRAM,TIMImage_t *Image)
 }
 void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
 {
-    int VRAMPage;
     SDL_Rect SrcRect;
     int DestX;
     int DestY;
 
-    VRAMPage = Image->CLUTTexturePage;
     //TODO:Special case decide whether we want to blit image into CLUT or
     //     create a new storage for direct textures to be bind and passed to shaders.
     //     Either way we need to pass ColorMode to shader in order to fetch the correct data!
@@ -204,15 +230,11 @@ void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
         return;
     }
 
-    
-    if( Image->Header.CLUTOrgY >= 256 ) {
-        DestX = (Image->Header.CLUTOrgX - ((Image->CLUTTexturePage - 16) * 64));
-        DestY = Image->Header.CLUTOrgY/* - 256*/;
-    } else {
-        DestX = (Image->Header.CLUTOrgX - (Image->CLUTTexturePage * 64));
-        DestY = Image->Header.CLUTOrgY;
-    }
-    SrcRect.x = VRAMGetTexturePageX(VRAMPage) + DestX;
+    DestX = VRAMGetCLUTPositionX(Image->Header.CLUTOrgX,Image->Header.CLUTOrgY,Image->CLUTTexturePage);
+    DestY = Image->Header.CLUTOrgY + VRAMGetCLUTOffsetY(Image->Header.BPP);
+    DestX += VRAMGetTexturePageX(Image->CLUTTexturePage);
+
+    SrcRect.x = DestX;
     SrcRect.y = DestY;
     SrcRect.w = Image->Header.NumClutColors;
     SrcRect.h = Image->Header.NumCluts;
@@ -224,8 +246,6 @@ void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
         if( SrcRect.w > 256 ) {
             SrcRect.w = 256;
         }
-        //Get to the next texture area (8-bit mode).
-        SrcRect.y += 512;
     }
     glTextureSubImage2D(VRAM->PalettePage.TextureID, 0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, Image->CLUT);
 }

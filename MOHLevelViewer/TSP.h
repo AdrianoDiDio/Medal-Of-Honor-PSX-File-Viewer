@@ -224,7 +224,7 @@ typedef struct TSP_s {
     TSPNode_t   *Node;
     TSPFace_t   *Face;
     TSPVert_t   *Vertex;
-    Color1i     *Color;
+    Color1i_t     *Color;
     TSPDynamicData_t  *DynamicData;
     TSPTextureInfo_t *TextureData;
     TSPCollision_t *CollisionData;

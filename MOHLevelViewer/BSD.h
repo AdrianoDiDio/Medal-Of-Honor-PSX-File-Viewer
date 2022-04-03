@@ -235,7 +235,7 @@ typedef struct BSDDynamicColor_s {
     int CurrentColor;
     int Delay;
     
-    Color1i *ColorList;
+    Color1i_t *ColorList;
 } BSDDynamicColor_t;
 
 typedef struct BSDDynamicColorTable_s {

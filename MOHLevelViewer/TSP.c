@@ -528,7 +528,11 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
     int CLUTDestY;
     int CLUTPage;
     int NumTransparentFaces;
+    int ColorMode;
+    int VRAMPage;
+    int ABRRate;
     TSPDynamicFaceData_t *DynamicData;
+    TSPRenderingFace_t *RenderingFace;
     VAO_t *VAO;
     int i;
     
@@ -555,26 +559,19 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
                                               (Node->NumFaces - NumTransparentFaces) * 3);
     Node->OpaqueFacesVAO = VAO;
     for( i = Base; i < Target; i++ ) {
-        int ColorMode = (TSP->Face[i].TSB.AsShort >> 7) & 0x3;
-        int VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
-        int ABRRate = (TSP->Face[i].TSB.AsShort & 0x60) >> 5;
+        ColorMode = (TSP->Face[i].TSB.AsShort >> 7) & 0x3;
+        VRAMPage = TSP->Face[i].TSB.AsShort & 0x1F;
+        ABRRate = (TSP->Face[i].TSB.AsShort & 0x60) >> 5;
+        
+        RenderingFace = malloc(sizeof(TSPRenderingFace_t));
+        RenderingFace->Flags = 0;
+        RenderingFace->Next = NULL;
+        
         CLUTPosX = (TSP->Face[i].CBA.AsShort << 4) & 0x3F0;
         CLUTPosY = (TSP->Face[i].CBA.AsShort >> 6) & 0x1ff;
-        CLUTPage = CLUTPosX / 64;
-        if( CLUTPosY >= 256 ) {
-            CLUTPage += 16;
-        }
-        if( CLUTPosY >= 256 ) {
-            CLUTDestX = (CLUTPosX - ((CLUTPage - 16) * 64));
-            CLUTDestY = CLUTPosY;
-        } else {
-            CLUTDestX = (CLUTPosX - (CLUTPage * 64));
-            CLUTDestY = CLUTPosY;
-        }
-        //8-Bit mode texture starts at 0;512.
-        if( ColorMode == 1 ) {
-            CLUTDestY += 512;
-        }
+        CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
+        CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
+        CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
         CLUTDestX += VRAMGetTexturePageX(CLUTPage);
 
         DPrintf("TSB is %u\n",TSP->Face[i].TSB.AsShort);
@@ -651,10 +648,9 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexData[TransparentVertexPointer+9] = CLUTDestY;
             TransparentVertexData[TransparentVertexPointer+10] = ColorMode;
             TransparentVertexPointer += 11;
-            TSPRenderingFace_t *RenderingFace = malloc(sizeof(TSPRenderingFace_t));
+            
             RenderingFace->VAOBufferOffset = TSP->TransparentVAO->CurrentSize;
             RenderingFace->BlendingMode = (TSP->Face[i].TSB.AsShort >> 5 ) & 3;
-            RenderingFace->Flags = 0;
             RenderingFace->Flags |= TSP_FX_TRANSPARENCY;
 //             if( IsAnimated ) {
 //                 RenderingFace->ColorIndex[0] = ((TSP->Color[Vert0].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert0].Color2.Color&0xFF) : -1;
@@ -709,9 +705,8 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             VertexData[VertexPointer+9] = CLUTDestY;
             VertexData[VertexPointer+10] = ColorMode;
             VertexPointer += 11;
-            TSPRenderingFace_t *RenderingFace = malloc(sizeof(TSPRenderingFace_t));
+            
             RenderingFace->VAOBufferOffset = Node->OpaqueFacesVAO->CurrentSize;
-            RenderingFace->Flags = 0;
 //             if( IsAnimated ) {
 //                 TFace->ColorIndex[0] = ((TSP->Color[Vert0].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert0].Color2.Color&0xFF) : -1;
 //                 TFace->ColorIndex[1] = ((TSP->Color[Vert1].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert1].Color2.Color&0xFF) : -1; 
@@ -763,8 +758,12 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
     int CLUTDestX;
     int CLUTDestY;
     int CLUTPage;
+    int ColorMode;
+    int VRAMPage;
+    int ABRRate;
     TSPDynamicFaceData_t *DynamicData;
     TSPTextureInfo_t TextureInfo;
+    TSPRenderingFace_t *RenderingFace;
     VAO_t *VAO;
 
     int i;
@@ -791,26 +790,20 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
     Node->OpaqueFacesVAO = VAO;
     for( i = 0; i < Node->NumFaces; i++ ) {
         TextureInfo = TSP->TextureData[Node->FaceList[i].TextureDataIndex];
-        int ColorMode = (TextureInfo.TSB >> 7) & 0x3;
-        int VRAMPage = TextureInfo.TSB & 0x1F;
-        int ABRRate = (TextureInfo.TSB & 0x60) >> 5;
+        ColorMode = (TextureInfo.TSB >> 7) & 0x3;
+        VRAMPage = TextureInfo.TSB & 0x1F;
+        ABRRate = (TextureInfo.TSB & 0x60) >> 5;
+        
+        RenderingFace = malloc(sizeof(TSPRenderingFace_t));
+        RenderingFace->Flags = 0;
+        RenderingFace->Next = NULL;
+        
         CLUTPosX = (TextureInfo.CBA << 4) & 0x3F0;
         CLUTPosY = (TextureInfo.CBA >> 6) & 0x1ff;
-        CLUTPage = CLUTPosX / 64;
-        if( CLUTPosY >= 256 ) {
-            CLUTPage += 16;
-        }
-        if( CLUTPosY >= 256 ) {
-            CLUTDestX = (CLUTPosX - ((CLUTPage - 16) * 64));
-            CLUTDestY = CLUTPosY;
-        } else {
-            CLUTDestX = (CLUTPosX - (CLUTPage * 64));
-            CLUTDestY = CLUTPosY;
-        }
-        //8-Bit mode texture starts at 0;512.
-        if( ColorMode == 1 ) {
-            CLUTDestY += 512;
-        }
+        
+        CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
+        CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
+        CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
         CLUTDestX += VRAMGetTexturePageX(CLUTPage);
         
         DPrintf("TSB is %u\n",TextureInfo.TSB);
@@ -899,10 +892,9 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexData[TransparentVertexPointer+9] = CLUTDestY;
             TransparentVertexData[TransparentVertexPointer+10] = ColorMode;
             TransparentVertexPointer += 11;
-            TSPRenderingFace_t *RenderingFace = malloc(sizeof(TSPRenderingFace_t));
+
             RenderingFace->VAOBufferOffset = TSP->TransparentVAO->CurrentSize;
             RenderingFace->BlendingMode = (TextureInfo.TSB >> 5) & 3;
-            RenderingFace->Flags = 0;
             RenderingFace->Flags |= TSP_FX_TRANSPARENCY;
 //             if( IsAnimated ) {
 //                 RenderingFace->ColorIndex[0] = ((TSP->Color[Vert0].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert0].Color2.Color&0xFF) : -1;
@@ -957,10 +949,10 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             VertexData[VertexPointer+9] = CLUTDestY;
             VertexData[VertexPointer+10] = ColorMode;
             VertexPointer += 11;
-            TSPRenderingFace_t *RenderingFace = malloc(sizeof(TSPRenderingFace_t));
+
             RenderingFace->VAOBufferOffset = Node->OpaqueFacesVAO->CurrentSize;
-            RenderingFace->Flags = 0;
-//             if( IsAnimated ) {
+
+            //             if( IsAnimated ) {
 //                 RenderingFace->ColorIndex[0] = ((TSP->Color[Vert0].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert0].Color2.Color&0xFF) : -1;
 //                 RenderingFace->ColorIndex[1] = ((TSP->Color[Vert1].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert1].Color2.Color&0xFF) : -1; 
 //                 RenderingFace->ColorIndex[2] = ((TSP->Color[Vert2].Color2.Color & 0xFF00FF) < 40) ? (TSP->Color[Vert2].Color2.Color&0xFF) : -1;
@@ -1129,7 +1121,7 @@ void TSPPrintVec3(TSPVec3_t Vector)
     printf("(%i;%i;%i)\n",Vector.x,Vector.y,Vector.z);
 }
 
-void TSPPrintColor(Color1i Color)
+void TSPPrintColor(Color1i_t Color)
 {
     printf("RGBA:(%i;%i;%i;%i)\n",Color.rgba[0],Color.rgba[1],Color.rgba[2],Color.rgba[3]);
 }
@@ -1472,6 +1464,7 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
             DPrintf("TSPReadNodeChunk:Child1:%i\n",TSP->Node[i].FileOffset.Child1Offset + TSP->Header.NodeOffset);
             DPrintf("TSPReadNodeChunk:Child2:%i\n",TSP->Node[i].FileOffset.Child2Offset + TSP->Header.NodeOffset);
         } else {
+            TSP->Node[i].OpaqueFaceList = NULL;
             if( TSPIsVersion3(TSP) ) {
                 TSP->Node[i].FaceList = malloc(TSP->Node[i].NumFaces * sizeof(TSPFaceV3_t));
                 PrevFilePosition = ftell(InFile);
@@ -1632,10 +1625,10 @@ void TSPReadColorChunk(TSP_t *TSP,FILE *InFile)
         return;
     }
     
-    TSP->Color = malloc(TSP->Header.NumColors * sizeof(Color1i));
+    TSP->Color = malloc(TSP->Header.NumColors * sizeof(Color1i_t));
     
     for( i = 0; i < TSP->Header.NumColors; i++ ) {
-        Ret = fread(&TSP->Color[i],sizeof(Color1i),1,InFile);
+        Ret = fread(&TSP->Color[i],sizeof(Color1i_t),1,InFile);
         if( Ret != 1 ) {
             printf("TSPReadColorChunk:Early failure when reading normal %i\n",i);
             return;
