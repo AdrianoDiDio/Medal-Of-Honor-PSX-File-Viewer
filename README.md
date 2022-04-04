@@ -70,10 +70,10 @@
 
 
 ## Introduction
-This project contains a set of tools that can be used to view Medal Of Honor for PSX Level files and images.
-It was tested under Linux but it should also run on any other platform since it uses SDL2.
-At the moment I've been able to extract and render all the images and level data except for Enemies and Animation.
-Game Files are not available into this repository and you need a copy of the game in order to use it.
+This project contains a set of tools that can be used to view Medal Of Honor and Medal Of Honor Underground Level files and images.  
+It was tested under Linux and Windows but it should also run on any other platform.  
+At the moment I've been able to extract and render all the images and level data except for Enemies and Animation.  
+Game Files are not available into this repository and you need a copy of the game in order to use it.  
 
 ## Common Formats
 ### TSB
@@ -716,6 +716,9 @@ Each Property contains the following data:
 | q  | Press to toggle between wireframe and Normal mode |
 | f  | Press to toggle Frustum Culling using TSP BSP Tree |
 | g  | Press to enable/disable Lighting |
+| k  | Press to enable/disable semi-transparency |
+| m  | Press to enable/disable animated surfaces |
+| e  | Press to export the current level to an obj/ply file (Exported levels are found in the current folder inside a directory named 'Export') |
 | w,a,s,d | Press to move the camera anywhere on the loaded level|
 
 ## RSC Files
