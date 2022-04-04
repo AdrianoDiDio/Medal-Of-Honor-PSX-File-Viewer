@@ -1226,8 +1226,10 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
             } else {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
-            glBindTextureUnit(0, Level->VRAM->TextureIndexPage.TextureID);
-            glBindTextureUnit(1, Level->VRAM->PalettePage.TextureID);
+            glActiveTexture(GL_TEXTURE0 + 0);
+            glBindTexture(GL_TEXTURE_2D, Level->VRAM->TextureIndexPage.TextureID);
+            glActiveTexture(GL_TEXTURE0 + 1);
+            glBindTexture(GL_TEXTURE_2D, Level->VRAM->PalettePage.TextureID);
 
             glDisable(GL_BLEND);
             glBindVertexArray(Node->OpaqueFacesVAO->VAOId[0]);
@@ -1283,6 +1285,9 @@ void TSPUpdateAnimatedRenderingFace(TSPRenderingFace_t *Face,VAO_t *VAO,BSD_t *B
             ColorData[1] = FinalColor.rgba[1];
             ColorData[2] = FinalColor.rgba[2];    
         }
+        //The offset in which we write the color is based on the current VAO Offset to which
+        //we add the stride times i which moves the pointer to one of the three vertices (each vertex takes Stride amount of bytes)
+        //and finally we add 5 times sizeof(int) in order to grab the starting definition of the color data inside the vertex array.
         glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * i) + (5*sizeof(int)), 3 * sizeof(int), &ColorData);
     }
 }
@@ -1351,8 +1356,10 @@ void TSPDrawTransparentFaces(TSP_t *TSP,LevelSettings_t Settings)
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
-    glBindTextureUnit(0, Level->VRAM->TextureIndexPage.TextureID);
-    glBindTextureUnit(1, Level->VRAM->PalettePage.TextureID);
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, Level->VRAM->TextureIndexPage.TextureID);
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, Level->VRAM->PalettePage.TextureID);
     glBindVertexArray(TSP->TransparentVAO->VAOId[0]);
     if( !Settings.EnableSemiTransparency ) {
         glDrawArrays(GL_TRIANGLES, 0, TSP->TransparentVAO->Count);

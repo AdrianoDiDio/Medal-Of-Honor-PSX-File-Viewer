@@ -597,12 +597,12 @@ void SysCheckKeyEvents()
                 }
                 if( Event.key.keysym.sym == SDLK_m ) {
                     //
-                    // Toggle Semi-Transparency
+                    // Toggle Surfaces Animation
                     //
                     Level->Settings.EnableSurfaceAnimations = !Level->Settings.EnableSurfaceAnimations;
                     //Special Case
                     if( !Level->Settings.EnableSurfaceAnimations ) {
-                        //Disabled it reset it back to original state.
+                        //User has disabled it....reset it back to the original state.
                         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,1);
                     }
                 }

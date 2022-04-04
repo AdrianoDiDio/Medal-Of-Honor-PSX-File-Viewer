@@ -214,7 +214,9 @@ void VRAMPutRawTexture(VRAM_t *VRAM,TIMImage_t *Image)
         DPrintf("VRAMPutRAWTexture:Failed to expand image %s\n",Image->Name);
         return;
     }
-    glTextureSubImage2D(VRAM->TextureIndexPage.TextureID, 0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RED_INTEGER, GL_UNSIGNED_BYTE, ImageData);
+    glBindTexture(GL_TEXTURE_2D,VRAM->TextureIndexPage.TextureID);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RED_INTEGER, GL_UNSIGNED_BYTE, ImageData);
+    glBindTexture(GL_TEXTURE_2D,0);
 }
 void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
 {
@@ -247,7 +249,9 @@ void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
             SrcRect.w = 256;
         }
     }
-    glTextureSubImage2D(VRAM->PalettePage.TextureID, 0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, Image->CLUT);
+    glBindTexture(GL_TEXTURE_2D,VRAM->PalettePage.TextureID);
+    glTexSubImage2D(GL_TEXTURE_2D,0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, Image->CLUT);
+    glBindTexture(GL_TEXTURE_2D,0);
 }
 
 void VRAMPutDirectModeIntoCLUT(VRAM_t *VRAM,TIMImage_t *Image)
@@ -273,8 +277,10 @@ void VRAMPutDirectModeIntoCLUT(VRAM_t *VRAM,TIMImage_t *Image)
     SrcRect.y = VRAMGetTexturePageY(VRAMPage,Image->Header.BPP) + DestY;
     SrcRect.w = Image->Width;
     SrcRect.h = Image->Height;
-    glTextureSubImage2D(VRAM->PalettePage.TextureID, 0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, 
+    glBindTexture(GL_TEXTURE_2D,VRAM->PalettePage.TextureID);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, 
                         Image->Data);
+    glBindTexture(GL_TEXTURE_2D,0);
 }
 
 VRAM_t *VRAMInit(TIMImage_t *ImageList)
