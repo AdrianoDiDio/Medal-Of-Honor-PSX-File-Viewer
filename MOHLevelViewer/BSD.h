@@ -175,7 +175,7 @@ unsigned short NumVertex;
     int     ScaleZ;
     char    Pad2[20];
 //     int     UOffset1;
-    int     MatrixOffset;
+    int     ColorOffset;
     char    LastU[32];
     unsigned int     ReferencedRenderObject;
     char    Pad3[16];
@@ -288,6 +288,7 @@ typedef struct BSDFaceV2_s {
 typedef struct BSDRenderObject_s {
     BSDRenderObjectElement_t *Data;
     BSDPosition_t  *Vertex;
+    Color1i_t      *Color;
     BSDFace_t      *Face;
     BSDFaceV2_t    *FaceV2;
     int             NumFaces;

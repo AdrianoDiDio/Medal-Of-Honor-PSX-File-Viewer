@@ -2,7 +2,8 @@
 out vec4 FragColor;
   
 in vec2 TexCoord;
-
+in vec3 ourColor;
+in float LightingEnabled;
 uniform sampler2D ourTexture;
 
 void main()
@@ -14,8 +15,13 @@ void main()
     if( TexColor.r <= 0.0 && TexColor.g <= 0.0 && TexColor.b <= 0.0 ) {
         discard;
     }
-    if( TexColor.rgb == vec3(0.14453125,0.14453125,0.21875) ) {
-    discard;
+//     if( TexColor.rgb == vec3(0.14453125,0.14453125,0.21875) ) {
+//     discard;
+//     }
+    if( LightingEnabled > 0.5 ) {
+        TexColor.r = clamp(TexColor.r * ourColor.r * 2.f, 0.f, 1.f);
+        TexColor.g = clamp(TexColor.g * ourColor.g * 2.f, 0.f, 1.f);
+        TexColor.b = clamp(TexColor.b * ourColor.b * 2.f, 0.f, 1.f);
     }
     FragColor = TexColor;
 }

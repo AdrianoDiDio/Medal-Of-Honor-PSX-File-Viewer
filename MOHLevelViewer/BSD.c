@@ -46,6 +46,7 @@ void BSDDumpFaceDataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDra
     BSDRenderObjectElement_t *RenderObjectElement;
     vec3 VertPos;
     vec3 OutVector;
+    Color1i_t Color;
     float TextureWidth;
     float TextureHeight;
     int i;
@@ -58,11 +59,14 @@ void BSDDumpFaceDataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDra
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].x;
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].z;
+        Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[i];
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"v %f %f %f\n",
+        sprintf(Buffer,"v %f %f %f %f %f %f\n",
                 (OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f,
                 (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,
-                (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f
+                (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+                Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f
+
         );
         fwrite(Buffer,strlen(Buffer),1,OutFile); 
     }
@@ -104,6 +108,7 @@ void BSDDumpFaceV2DataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectD
     BSDRenderObjectElement_t *RenderObjectElement;
     vec3 VertPos;
     vec3 OutVector;
+    Color1i_t Color;
     float TextureWidth;
     float TextureHeight;
     int i;
@@ -116,11 +121,13 @@ void BSDDumpFaceV2DataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectD
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].x;
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].z;
+        Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[i];
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"v %f %f %f\n",
+        sprintf(Buffer,"v %f %f %f %f %f %f\n",
                 (OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f,
                 (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,
-                (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f
+                (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+                Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f
         );
         fwrite(Buffer,strlen(Buffer),1,OutFile); 
     }
@@ -218,6 +225,7 @@ void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObject
     char Buffer[256];
     vec3 VertPos;
     vec3 OutVector;
+    Color1i_t Color;
     float TextureWidth;
     float TextureHeight;
     int i;
@@ -244,23 +252,29 @@ void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObject
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].x;
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].z;
+        Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert0];
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,
-               (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,U0,V0);
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f, (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+                Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U0,V0);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
+        Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert1];
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].x;
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,
-               (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,U1,V1);
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+                Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U1,V1);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
+        Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert2];
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].x;
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,
-               (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,U2,V2);
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+                Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U2,V2);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
     }
 }
@@ -270,6 +284,7 @@ void BSDDumpFaceV2DataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObje
     char Buffer[256];
     vec3 VertPos;
     vec3 OutVector;
+    Color1i_t Color;
     float TextureWidth;
     float TextureHeight;
     int i;
@@ -292,27 +307,32 @@ void BSDDumpFaceV2DataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObje
         int Vert0 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].Vert0;
         int Vert1 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].Vert1;
         int Vert2 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].Vert2;
-        
+        Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert0];
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].x;
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,
-               (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,U0,V0);
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+                Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U0,V0);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
+        Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert1];
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].x;
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,
-               (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,U1,V1);
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+                Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U1,V1);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
+        Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert2];
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].x;
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,
-               (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,U2,V2);
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+                Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U2,V2);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
     }
 }
@@ -341,7 +361,7 @@ void BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile)
     }
     
     sprintf(Buffer,
-        "element vertex %i\nproperty float x\nproperty float y\nproperty float z\nproperty float s\nproperty float t\n",FaceCount * 3);
+        "element vertex %i\nproperty float x\nproperty float y\nproperty float z\nproperty float red\nproperty float green\nproperty float blue\nproperty float s\nproperty float t\n",FaceCount * 3);
     fwrite(Buffer,strlen(Buffer),1,OutFile);
     sprintf(Buffer,"element face %i\nproperty list uchar int vertex_indices\nend_header\n",FaceCount);
     fwrite(Buffer,strlen(Buffer),1,OutFile);
@@ -810,18 +830,20 @@ void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData)
     int Stride;
     int VertexOffset;
     int TextureOffset;
+    int ColorOffset;
     VAO_t *VAO;
     int i;
     
     TextureWidth = Level->VRAM->Page.Width;
     TextureHeight = Level->VRAM->Page.Height;
-        
-    Stride = (3 + 2) * sizeof(float);
+//            XYZ UV RGB
+    Stride = (3 + 2 + 3) * sizeof(float);
     VertexSize = Stride * 3 * RenderObjectData->NumFaces;
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
     VertexOffset = 0;
     TextureOffset = 3;
+    ColorOffset = 5;
     for( i = 0; i < RenderObjectData->NumFaces; i++ ) {
 
         Vert0 = (RenderObjectData->Face[i].VData & 0xFF);
@@ -843,23 +865,32 @@ void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData)
         VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert0].z;
         VertexData[VertexPointer+3] = U0;
         VertexData[VertexPointer+4] = V0;
-        VertexPointer += 5;
+        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert0].rgba[0] / 255.f;
+        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert0].rgba[1] / 255.f;
+        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert0].rgba[2] / 255.f;
+        VertexPointer += 8;
                 
         VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert1].x;
         VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert1].y;
         VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert1].z;
         VertexData[VertexPointer+3] = U1;
         VertexData[VertexPointer+4] = V1;
-        VertexPointer += 5;
+        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert1].rgba[0] / 255.f;
+        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert1].rgba[1] / 255.f;
+        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert1].rgba[2] / 255.f;
+        VertexPointer += 8;
                 
         VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert2].x;
         VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert2].y;
         VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert2].z;
         VertexData[VertexPointer+3] = U2;
         VertexData[VertexPointer+4] = V2;
-        VertexPointer += 5;
+        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert2].rgba[0] / 255.f;
+        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert2].rgba[1] / 255.f;
+        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert2].rgba[2] / 255.f;
+        VertexPointer += 8;
     }
-    VAO = VAOInitXYZUV(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,-1,-1,
+    VAO = VAOInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,-1,-1,
                         RenderObjectData->NumFaces * 3);
     VAO->Next = RenderObjectData->VAO;
     RenderObjectData->VAO = VAO;
@@ -879,18 +910,20 @@ void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData)
     int Stride;
     int VertexOffset;
     int TextureOffset;
+    int ColorOffset;
     VAO_t *VAO;
     int i;
     
     TextureWidth = Level->VRAM->Page.Width;
     TextureHeight = Level->VRAM->Page.Height;
-        
-    Stride = (3 + 2) * sizeof(float);
+//            XYZ UV RGB
+    Stride = (3 + 2 + 3) * sizeof(float);
     VertexSize = Stride * 3 * RenderObjectData->NumFaces;
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
     VertexOffset = 0;
     TextureOffset = 3;
+    ColorOffset = 5;
     for( i = 0; i < RenderObjectData->NumFaces; i++ ) {
 
         Vert0 = RenderObjectData->FaceV2[i].Vert0;
@@ -912,23 +945,32 @@ void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData)
         VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert0].z;
         VertexData[VertexPointer+3] = U0;
         VertexData[VertexPointer+4] = V0;
-        VertexPointer += 5;
+        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert0].rgba[0] / 255.f;
+        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert0].rgba[1] / 255.f;
+        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert0].rgba[2] / 255.f;
+        VertexPointer += 8;
                 
         VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert1].x;
         VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert1].y;
         VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert1].z;
         VertexData[VertexPointer+3] = U1;
         VertexData[VertexPointer+4] = V1;
-        VertexPointer += 5;
+        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert1].rgba[0] / 255.f;
+        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert1].rgba[1] / 255.f;
+        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert1].rgba[2] / 255.f;
+        VertexPointer += 8;
                 
         VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert2].x;
         VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert2].y;
         VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert2].z;
         VertexData[VertexPointer+3] = U2;
         VertexData[VertexPointer+4] = V2;
-        VertexPointer += 5;
+        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert2].rgba[0] / 255.f;
+        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert2].rgba[1] / 255.f;
+        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert2].rgba[2] / 255.f;
+        VertexPointer += 8;
     }
-    VAO = VAOInitXYZUV(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,-1,-1,
+    VAO = VAOInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,-1,-1,
                         RenderObjectData->NumFaces * 3);
     VAO->Next = RenderObjectData->VAO;
     RenderObjectData->VAO = VAO;
@@ -1455,6 +1497,7 @@ void BSDDraw(Level_t *Level)
     BSDRenderObjectDrawable_t *RenderObjectIterator;
     VAO_t *VAOIterator;
     int MVPMatrixID;
+    int EnableLightingID;
     int i;
     
     if( 1 ) {
@@ -1503,6 +1546,8 @@ void BSDDraw(Level_t *Level)
         Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
         glUseProgram(Shader->ProgramID);
         MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+        EnableLightingID = glGetUniformLocation(Shader->ProgramID,"EnableLighting");
+        glUniform1i(EnableLightingID, Level->Settings.EnableLighting);
         glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page.TextureID);
 
         for( RenderObjectIterator = Level->BSD->RenderObjectDrawableList; RenderObjectIterator; 
@@ -1625,6 +1670,7 @@ void BSDDraw(Level_t *Level)
 
 void ParseRenderObjectVertexData(BSD_t *BSD,FILE *BSDFile)
 {
+    int Size;
     int i;
     int j;
     
@@ -1632,26 +1678,41 @@ void ParseRenderObjectVertexData(BSD_t *BSD,FILE *BSDFile)
     memset(BSD->RenderObjectList,0,BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObject_t));
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
         BSD->RenderObjectList[i].Data = &BSD->RenderObjectTable.RenderObject[i];
-        if( BSD->RenderObjectList[i].Data->VertOffset == 0 ) {
-            continue;
+        if( BSD->RenderObjectList[i].Data->VertOffset != 0 ) {
+            Size = BSD->RenderObjectList[i].Data->NumVertex * sizeof(BSDPosition_t);
+            BSD->RenderObjectList[i].Vertex = malloc(Size);
+            memset(BSD->RenderObjectList[i].Vertex,0,Size);
+            fseek(BSDFile,BSD->RenderObjectList[i].Data->VertOffset + 2048,SEEK_SET);
+            DPrintf("Reading Vertex definition at %i (Current:%i)\n",
+                    BSD->RenderObjectList[i].Data->VertOffset + 2048,GetCurrentFilePosition(BSDFile)); 
+            for( j = 0; j < BSD->RenderObjectList[i].Data->NumVertex; j++ ) {
+                DPrintf("Reading Vertex at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+                fread(&BSD->RenderObjectList[i].Vertex[j],sizeof(BSDPosition_t),1,BSDFile);
+                DPrintf("Vertex %i;%i;%i %i\n",BSD->RenderObjectList[i].Vertex[j].x,
+                        BSD->RenderObjectList[i].Vertex[j].y,BSD->RenderObjectList[i].Vertex[j].z,
+                        BSD->RenderObjectList[i].Vertex[j].Pad
+                );
+                
+            }
+        }
+        if( BSD->RenderObjectList[i].Data->ColorOffset != 0 ) {
+            Size = BSD->RenderObjectList[i].Data->NumVertex * sizeof(Color1i_t);
+            BSD->RenderObjectList[i].Color = malloc(Size);
+            memset(BSD->RenderObjectList[i].Color,0,Size);
+            fseek(BSDFile,BSD->RenderObjectList[i].Data->ColorOffset + 2048,SEEK_SET);
+            DPrintf("Reading Color definition at %i (Current:%i)\n",
+                    BSD->RenderObjectList[i].Data->ColorOffset + 2048,GetCurrentFilePosition(BSDFile)); 
+            for( j = 0; j < BSD->RenderObjectList[i].Data->NumVertex; j++ ) {
+                DPrintf("Reading Color at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+                fread(&BSD->RenderObjectList[i].Color[j],sizeof(Color1i_t),1,BSDFile);
+                DPrintf("Color %i => %i;%i;%i;%i\n",BSD->RenderObjectList[i].Color[j].c,
+                        BSD->RenderObjectList[i].Color[j].rgba[0],BSD->RenderObjectList[i].Color[j].rgba[1],BSD->RenderObjectList[i].Color[j].rgba[2],
+                        BSD->RenderObjectList[i].Color[j].rgba[3]
+                );
+                
+            }
         }
 
-        int RenderObjectVertSize = sizeof(BSDPosition_t) * BSD->RenderObjectList[i].Data->NumVertex;
-//         DPrintf("Element Size is %i\n",RenderObjectVertSize); 
-        BSD->RenderObjectList[i].Vertex = malloc(RenderObjectVertSize);
-        memset(BSD->RenderObjectList[i].Vertex,0,RenderObjectVertSize);
-        fseek(BSDFile,BSD->RenderObjectList[i].Data->VertOffset + 2048,SEEK_SET);
-        DPrintf("Reading Vertex definition at %i (Current:%i)\n",
-                BSD->RenderObjectList[i].Data->VertOffset + 2048,GetCurrentFilePosition(BSDFile)); 
-        for( j = 0; j < BSD->RenderObjectList[i].Data->NumVertex; j++ ) {
-            DPrintf("Reading Vertex at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
-            fread(&BSD->RenderObjectList[i].Vertex[j],sizeof(BSDPosition_t),1,BSDFile);
-            DPrintf("Vertex %i;%i;%i %i\n",BSD->RenderObjectList[i].Vertex[j].x,
-                    BSD->RenderObjectList[i].Vertex[j].y,BSD->RenderObjectList[i].Vertex[j].z,
-                    BSD->RenderObjectList[i].Vertex[j].Pad
-            );
-            
-        }
     }
 }
 
@@ -1663,9 +1724,6 @@ void ParseRenderObjectFaceData(BSD_t *BSD,int RenderObjectDataOffset,FILE *BSDFi
     int Vert0;
     int Vert1;
     int Vert2;
-    short x;
-    short y;
-    short z;
     unsigned int Marker;
     BSDFaceV2_t TempFace;
     int i;
@@ -1680,18 +1738,7 @@ void ParseRenderObjectFaceData(BSD_t *BSD,int RenderObjectDataOffset,FILE *BSDFi
         if( BSD->RenderObjectList[i].Data->FaceOffset == 0 ) {
             continue;
         }
-        //Also Grabs the position...
-        fseek(BSDFile,BSD->RenderObjectList[i].Data->MatrixOffset + 2048,SEEK_SET);
-        fread(&x,sizeof(x),1,BSDFile);
-        fread(&y,sizeof(y),1,BSDFile);
-        fread(&z,sizeof(z),1,BSDFile);
-        BSD->RenderObjectList[i].Position.x = x;
-        BSD->RenderObjectList[i].Position.y = y;
-        BSD->RenderObjectList[i].Position.z = z;
-        Vec3RotateXAxis(DEGTORAD(180.f),&BSD->RenderObjectList[i].Position);
         DPrintf("ParseRenderObjectFaceData:RenderObject ID %u\n",BSD->RenderObjectList[i].Data->ID);
-        DPrintf("Face is at %u;%u;%u\n",x,y,z); 
-        
         if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
             NumFaceOffset = ( RenderObjectDataOffset + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) ) + 260;
             fseek(BSDFile,NumFaceOffset,SEEK_SET);

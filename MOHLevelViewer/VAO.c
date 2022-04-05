@@ -265,7 +265,7 @@ VAO_t *VAOInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int Co
     return VAO;
 }
 
-VAO_t *VAOInitXYZIBO(float *Data,int DataSize,int Stride,unsigned short *Index,int IndexSize,int VertexOffset)
+VAO_t *VAOInitXYZRGBIBO(float *Data,int DataSize,int Stride,unsigned short *Index,int IndexSize,int VertexOffset,int ColorOffset)
 {
     VAO_t *VAO;
     
@@ -279,6 +279,8 @@ VAO_t *VAOInitXYZIBO(float *Data,int DataSize,int Stride,unsigned short *Index,i
     glBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
     glVertexAttribPointer(0,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(VertexOffset));
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(ColorOffset));
+    glEnableVertexAttribArray(1);
     
     glGenBuffers(1, VAO->IBOId);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VAO->IBOId[0]);

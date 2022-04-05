@@ -966,8 +966,14 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
     int VertexPointer;
     int Stride;
     int NumTransparentFaces;
-    int TotalFaceCount = 0;
+    vec4 BoxColor;
     int i;
+    
+    unsigned short BBoxIndices[16] = {
+        0, 1, 2, 3,
+        4, 5, 6, 7,
+        0, 4, 1, 5, 2, 6, 3, 7
+    };
     
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         NumTransparentFaces = 0;
@@ -987,65 +993,100 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
                 }
             }
             
-            //       XYZ
-            Stride = (3) * sizeof(float);
-        
+          //       XYZ RGB
+            Stride = (3 + 3) * sizeof(float);
             VertexSize = Stride;
             VertexData = malloc(VertexSize * 8/** sizeof(float)*/);
             VertexPointer = 0;
                     
+            if( Iterator->Node[i].NumFaces != 0 ) {
+                //Leaf -- Yellow
+                BoxColor[0] = 1;
+                BoxColor[1] = 1;
+                BoxColor[2] = 0;
+                BoxColor[3] = 1;
+            } else {
+                //Splitter -- Red
+                BoxColor[0] = 1;
+                BoxColor[1] = 0;
+                BoxColor[2] = 0;
+                BoxColor[3] = 1;
+            }
             VertexData[VertexPointer] =   Iterator->Node[i].BBox.Min.x;
             VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y;
             VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Min.z;
-            VertexPointer += 3;
-                        
-            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Min.x;
-            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y;
-            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
-            VertexPointer += 3;
-            
-            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
-            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y;
-            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
-            VertexPointer += 3;
-            
-            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
-            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y;
-            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Min.z;
-            VertexPointer += 3;
-            
-            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Min.x;
-            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Max.y;
-            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Min.z;
-            VertexPointer += 3;
-            
-            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Min.x;
-            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Max.y;
-            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
-            VertexPointer += 3;
-                        
-            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
-            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Max.y;
-            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
-            VertexPointer += 3;
-            
-            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
-            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Max.y;
-            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Min.z;
-            VertexPointer += 3;
+            VertexData[VertexPointer+3] = BoxColor[0];
+            VertexData[VertexPointer+4] = BoxColor[1];
+            VertexData[VertexPointer+5] = BoxColor[2];
 
+            VertexPointer += 6;
+                        
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Min.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
+            VertexData[VertexPointer+3] = BoxColor[0];
+            VertexData[VertexPointer+4] = BoxColor[1];
+            VertexData[VertexPointer+5] = BoxColor[2];
+
+            VertexPointer += 6;
             
-            unsigned short Index[16] = {
-                0, 1, 2, 3,
-                4, 5, 6, 7,
-                0, 4, 1, 5, 2, 6, 3, 7
-            };
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
+            VertexData[VertexPointer+3] = BoxColor[0];
+            VertexData[VertexPointer+4] = BoxColor[1];
+            VertexData[VertexPointer+5] = BoxColor[2];
+
+            VertexPointer += 6;
             
-            Iterator->Node[i].BBoxVAO = VAOInitXYZIBO(VertexData,VertexSize * 8,Stride,Index,sizeof(Index),0);            
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Min.z;
+            VertexData[VertexPointer+3] = BoxColor[0];
+            VertexData[VertexPointer+4] = BoxColor[1];
+            VertexData[VertexPointer+5] = BoxColor[2];
+
+            VertexPointer += 6;
+            
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Min.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Max.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Min.z;
+            VertexData[VertexPointer+3] = BoxColor[0];
+            VertexData[VertexPointer+4] = BoxColor[1];
+            VertexData[VertexPointer+5] = BoxColor[2];
+
+            VertexPointer += 6;
+            
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Min.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Max.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
+            VertexData[VertexPointer+3] = BoxColor[0];
+            VertexData[VertexPointer+4] = BoxColor[1];
+            VertexData[VertexPointer+5] = BoxColor[2];
+
+            VertexPointer += 6;
+                        
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Max.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
+            VertexData[VertexPointer+3] = BoxColor[0];
+            VertexData[VertexPointer+4] = BoxColor[1];
+            VertexData[VertexPointer+5] = BoxColor[2];
+
+            VertexPointer += 6;
+            
+            VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Max.y;
+            VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Min.z;
+            VertexData[VertexPointer+3] = BoxColor[0];
+            VertexData[VertexPointer+4] = BoxColor[1];
+            VertexData[VertexPointer+5] = BoxColor[2];
+
+            VertexPointer += 6;
+            
+            Iterator->Node[i].BBoxVAO = VAOInitXYZRGBIBO(VertexData,VertexSize * 8,Stride,BBoxIndices,sizeof(BBoxIndices),0,3);            
             free(VertexData);
         }
-        DPrintf("Linearly we got to draw %i faces (%i NumFaces in header) for %s.\n",TotalFaceCount,Iterator->Header.NumFaces,Iterator->FName);
-        TotalFaceCount = 0;
     }
 }
 
@@ -1113,35 +1154,13 @@ void TSPPrintColor(Color1i_t Color)
 void DrawTSPBox(TSPNode_t Node)
 {
     Shader_t *Shader;
-    vec4 BoxColor;
     int MVPMatrixID;
-    int ColorID;
-    
-
-    
-    if( Node.NumFaces != 0 ) {
-        //Leaf -- Yellow
-        BoxColor[0] = 1;
-        BoxColor[1] = 1;
-        BoxColor[2] = 0;
-        BoxColor[3] = 1;
-    } else {
-        //Splitter -- Red
-        BoxColor[0] = 1;
-        BoxColor[1] = 0;
-        BoxColor[2] = 0;
-        BoxColor[3] = 1;
-    }
-    
     
     Shader = ShaderCache("TSPBBoxShader","Shaders/TSPBBoxVertexShader.glsl","Shaders/TSPBBoxFragmentShader.glsl");
     glUseProgram(Shader->ProgramID);
     
     MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
     glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-        
-    ColorID = glGetUniformLocation(Shader->ProgramID,"Color");
-    glUniform4fv(ColorID,1,BoxColor);
     
     glBindVertexArray(Node.BBoxVAO->VAOId[0]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Node.BBoxVAO->IBOId[0]);

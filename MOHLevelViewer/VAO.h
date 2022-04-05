@@ -45,7 +45,7 @@ VAO_t *VAOInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int Tex
 VAO_t *VAOInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset);
 VAO_t *VAOInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset);
 // 3D Indexed
-VAO_t *VAOInitXYZIBO(float *Data,int DataSize,int Stride,unsigned short *Index,int IndexSize,int VertexOffset);
+VAO_t *VAOInitXYZRGBIBO(float *Data,int DataSize,int Stride,unsigned short *Index,int IndexSize,int VertexOffset,int ColorOffset);
 // 2D
 VAO_t *VAOInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,
                       bool StaticDraw);

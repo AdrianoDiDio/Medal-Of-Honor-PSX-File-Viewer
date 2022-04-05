@@ -499,7 +499,7 @@ NULL or contains an offset to the data stored inside the BSD file.
 | int  | 4 bytes  | Unknown Data Offset |
 | char  | 8 bytes  | Unknown Data |
 | int  | 4 bytes  | Unknown Data Offset |
-| int  | 4 bytes  | Unknown Data Offset (Probably an offset to a Matrix stored in the file that represent the model rotation) |
+| int  | 4 bytes  | Color Offset (Indices are the same as the one used for vertices) |
 | char  | 52 bytes  | Unknown Data |
 | int  | 4 bytes  | Type |
 
