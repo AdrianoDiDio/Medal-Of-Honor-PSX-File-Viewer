@@ -453,6 +453,9 @@ void BSDRenderObjectListCleanUp(BSD_t *BSD)
         if( BSD->RenderObjectList[i].Vertex != NULL ) {
             free(BSD->RenderObjectList[i].Vertex);
         }
+        if( BSD->RenderObjectList[i].Color != NULL ) {
+            free(BSD->RenderObjectList[i].Color);
+        }
         if( BSD->RenderObjectList[i].VAO != NULL ) {
             VAOFree(BSD->RenderObjectList[i].VAO);
         }
