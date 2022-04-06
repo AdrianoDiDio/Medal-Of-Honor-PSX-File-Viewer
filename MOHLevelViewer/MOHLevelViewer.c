@@ -28,8 +28,15 @@ Color4f_t    c_Grey =  {   0.75, 0.75,0.75,1.f};
 
 int StartSeconds = 0;
 
-int
-vasprintf(char **Strp, const char *Fmt, va_list Ap)
+float Rand01()
+{
+    return (rand() / (float)(RAND_MAX));
+}
+int RandRangeI(int Min,int Max)
+{
+    return rand() % ( (Max + 1 - Min) + Min);
+}
+int vasprintf(char **Strp, const char *Fmt, va_list Ap)
 {
     va_list APCopy;
     int Length;
@@ -949,6 +956,27 @@ void GLFrame()
      glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
      glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
      TSPDrawList(Level);
+     
+     temp[0] = 1;
+     temp[1] = 0;
+     temp[2] = 0;
+     glm_mat4_identity(VidConf.ModelViewMatrix);
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
+     temp[0] = 0;
+     temp[1] = 1;
+     temp[2] = 0;
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
+     temp[0] = 0;
+     temp[1] = 0;
+     temp[2] = 1;
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
+     
+     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
+     
+     //Emulate PSX Coordinate system...
+     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
+     BSDDrawSky(Level);
+     
      glm_mat4_identity(VidConf.MVPMatrix);
     
      // 2D Drawing
@@ -1169,6 +1197,7 @@ void Quit()
 {
     LevelCleanUp();
     ShaderManagerFree();
+    free(VidConf.Driver);
     free(ComTime);
     SDL_Quit();
     exit(0);
@@ -1182,6 +1211,7 @@ void Quit()
 #define _ENABLEVIDEOOUT 1
 int main(int argc,char **argv)
 {
+    srand(time(NULL));
     if( argc != 4 ) {
         printf("%s <MOH Directory> <Mission Number> <Level Number> will load level files from that mission.\n",argv[0]);
         return -1;

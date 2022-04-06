@@ -23,6 +23,7 @@ void ShaderManagerFree()
     Shader_t *Temp;
     
     while( ShaderList ) {
+        glDeleteProgram(ShaderList->ProgramID);
         Temp = ShaderList;
         ShaderList = ShaderList->Next;
         free(Temp);

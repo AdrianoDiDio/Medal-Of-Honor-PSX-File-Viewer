@@ -204,6 +204,8 @@ void    GLSet3D();
 void    CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility);
 void    CamUpdateVectors(ViewParm_t *Camera);
 int     LevelGetGameEngine();
+float   Rand01();
+int     RandRangeI(int Min,int Max);
 void    Quit();
 
 #endif //__MOHLEVELVIEWER_H_

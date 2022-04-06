@@ -19,6 +19,15 @@
 
 #include "MOHLevelViewer.h"
 
+Color1i_t StarsColors[8] = {
+    {4034953344},
+    {2155888736},
+    {1077997600},
+    {4293943392},
+    {2164260863},
+    {4282417216},
+    {0}
+};
 /*
     1_1.BSD Compartment Trigger => 3246.604492;9.330523;-8456.515625
     673.832092;22.795897;-3504.162842
@@ -486,9 +495,15 @@ void BSDFree(BSD_t *BSD)
     free(BSD->PropertySetFile.Property);
     free(BSD->RenderObjectTable.RenderObject);
     BSDRenderObjectListCleanUp(BSD);
-//     BSDRenderObjectListCleanUp(BSD->RenderObjectShowCaseList);
+
     VAOFree(BSD->NodeVAO);
     VAOFree(BSD->RenderObjectPointVAO);
+    
+    if( BSDIsMoonEnabled(BSD) ) {
+        VAOFree(BSD->SkyData.MoonVAO);
+    }
+    
+    VAOFree(BSD->SkyData.StarsVAO);
     
     while( BSD->RenderObjectDrawableList ) {
         Drawable = BSD->RenderObjectDrawableList;
@@ -503,6 +518,11 @@ void BSDFree(BSD_t *BSD)
     }
     
     free(BSD);
+}
+
+int BSDIsMoonEnabled(BSD_t *BSD)
+{
+    return BSD->SkyData.MoonZ != 0;
 }
 
 void BSDUpdateColorList(BSD_t *BSD)
@@ -536,7 +556,7 @@ int BSDGetCurrentDynamicColorByIndex(BSD_t *BSD,int Index)
     return BSD->DynamicColorTable.DynamicColorList[Index].CurrentColor;
 }
 
-void BSDVAOPointList(BSD_t *BSD)
+void BSDCreatePointListVAO(BSD_t *BSD)
 {
     int NumSkip;
     float *NodeData;
@@ -601,7 +621,7 @@ void BSDVAOPointList(BSD_t *BSD)
     BSD->NodeVAO = VAOInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3);            
     free(NodeData);
 }
-void BSDVAORenderObjectPointList(BSD_t *BSD)
+void BSDCreateRenderObjectPointListVAO(BSD_t *BSD)
 {
     BSDRenderObjectDrawable_t *Iterator;
     BSDRenderObjectElement_t RenderObjectElement;
@@ -776,9 +796,7 @@ void BSDVAOBoxList(BSD_t *BSD)
 
 void BSDVAOObjectList(BSD_t *BSD)
 {
-
-    BSDVAORenderObjectPointList(BSD);
-
+    BSDCreateRenderObjectPointListVAO(BSD);
 }
 
 
@@ -979,6 +997,144 @@ void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData)
     RenderObjectData->VAO = VAO;
     free(VertexData);
 }
+
+void BSDCreateMoonVAO(BSD_t *BSD)
+{
+    float x;
+    float y;
+    float z;
+    float w;
+    float h;
+    float u0;
+    float v0;
+    float TexWidth;
+    float TexHeight;
+    float ImageWidth;
+    float ImageHeight;
+    float *VertexData;
+    int Stride;
+    int DataSize;
+    int VertexPointer;
+    Vec3_t MoonPosition;
+    
+    
+    if( !BSDIsMoonEnabled(BSD) ) {
+        DPrintf("Moon is not enabled...\n");
+        return;
+    }
+    
+    //        XYZ  UV
+    Stride = (3 + 2) * sizeof(float);
+    DataSize = Stride * 6;
+    
+    ImageWidth = Level->VRAM->Page.Width;
+    ImageHeight = Level->VRAM->Page.Height;
+
+    u0 = ((float)BSD_MOON_TEXTURE_X + VRAMGetTexturePageX(BSD_MOON_VRAM_PAGE)) / ImageWidth;
+    //Color Mode 0 => 4 BPP texture
+    v0 = ((float)BSD_MOON_TEXTURE_Y + VRAMGetTexturePageY(BSD_MOON_VRAM_PAGE,0)) / ImageHeight;
+    TexWidth = ((float)BSD_MOON_WIDTH) / ImageWidth;
+    TexHeight = ((float)BSD_MOON_HEIGHT) / ImageHeight;
+    
+    VertexData = malloc(DataSize);
+    VertexPointer = 0;
+    MoonPosition = Vec3Build((BSD->SkyData.MoonZ * 32) / 200,BSD->SkyData.MoonY,BSD->SkyData.MoonZ);
+    Vec3RotateXAxis(DEGTORAD(180.f),&MoonPosition);
+    x = MoonPosition.x;
+    y = MoonPosition.y;
+    z = MoonPosition.z;
+    
+    w = BSD_MOON_WIDTH * (BSD->SkyData.StarRadius * 4);
+    h = BSD_MOON_HEIGHT * (BSD->SkyData.StarRadius * 4);
+
+    VertexData[VertexPointer] =  x;
+    VertexData[VertexPointer+1] = y + h;
+    VertexData[VertexPointer+2] = z;
+    VertexData[VertexPointer+3] = u0;
+    VertexData[VertexPointer+4] = v0 + TexHeight;
+    VertexPointer += 5;
+            
+    VertexData[VertexPointer] =  x;
+    VertexData[VertexPointer+1] = y;
+    VertexData[VertexPointer+2] = z;
+    VertexData[VertexPointer+3] = u0;
+    VertexData[VertexPointer+4] = v0;
+    VertexPointer += 5;
+            
+    VertexData[VertexPointer] =  x + w;
+    VertexData[VertexPointer+1] = y + h;
+    VertexData[VertexPointer+2] = z;
+    VertexData[VertexPointer+3] = u0 + TexWidth;
+    VertexData[VertexPointer+4] = v0 + TexHeight;
+    VertexPointer += 5;
+            
+
+    VertexData[VertexPointer] =  x + w;
+    VertexData[VertexPointer+1] = y + h;
+    VertexData[VertexPointer+2] = z;
+    VertexData[VertexPointer+3] = u0 + TexWidth;
+    VertexData[VertexPointer+4] = v0 + TexHeight;
+    VertexPointer += 5;
+            
+    VertexData[VertexPointer] =  x;
+    VertexData[VertexPointer+1] = y;
+    VertexData[VertexPointer+2] = z;
+    VertexData[VertexPointer+3] = u0;
+    VertexData[VertexPointer+4] = v0;
+    VertexPointer += 5;
+            
+    VertexData[VertexPointer] =  x + w;
+    VertexData[VertexPointer+1] = y;
+    VertexData[VertexPointer+2] = z;
+    VertexData[VertexPointer+3] = u0 + TexWidth;
+    VertexData[VertexPointer+4] = v0;
+    VertexPointer += 5;        
+    BSD->SkyData.MoonVAO = VAOInitXYZUV(VertexData,DataSize,Stride,0,3,-1,-1,6);
+    free(VertexData);
+}
+
+void BSDCreateStarsVAO(BSD_t *BSD)
+{
+    float *VertexData;
+    float R;
+    float Phi;
+    float Theta;
+    int VertexPointer;
+    int Stride;
+    int VertexSize;
+    int i;
+    Color1i_t RandColor;
+
+    //        XYZ RGB
+    Stride = (3 + 3) * sizeof(float);
+    VertexSize = Stride * BSD_SKY_MAX_STARS_NUMBER;
+    VertexData = malloc(VertexSize);
+    VertexPointer = 0;
+    
+
+    for( i = 0; i < BSD_SKY_MAX_STARS_NUMBER; i++ ) {
+        R = (BSD->SkyData.StarRadius*256) * sqrt(Rand01());
+        Theta = Rand01() * 2 * M_PI;
+        Phi = acos(2.0 * Rand01() - 1.0);/*BSDRand01() * M_PI;*/
+        RandColor = StarsColors[RandRangeI(0,7)];
+        VertexData[VertexPointer] =  (R * sin(Phi) * cos(Theta) );
+        VertexData[VertexPointer+1] = (R * sin(Theta) * sin(Phi) ) - (BSD->SkyData.StarRadius*264);
+        VertexData[VertexPointer+2] = R * cos(Phi);
+        VertexData[VertexPointer+3] = RandColor.rgba[0] / 255.f;
+        VertexData[VertexPointer+4] = RandColor.rgba[1] / 255.f;
+        VertexData[VertexPointer+5] = RandColor.rgba[2] / 255.f;
+        VertexPointer += 6;
+    }
+    BSD->SkyData.StarsVAO = VAOInitXYZRGB(VertexData,VertexSize,Stride,0,3);
+    free(VertexData);
+}
+
+void BSDCreateSkyVAOs(BSD_t *BSD)
+{
+    BSDCreateMoonVAO(BSD);
+    BSDCreateStarsVAO(BSD);
+}
+
 void BSDCreateVAOs(BSD_t *BSD)
 {
     BSDRenderObject_t *RenderObjectData;
@@ -998,8 +1154,9 @@ void BSDCreateVAOs(BSD_t *BSD)
             BSDCreateFaceVAO(RenderObjectData);
         }
     }
-    BSDVAOPointList(Level->BSD);
-    BSDVAORenderObjectPointList(Level->BSD);
+    BSDCreatePointListVAO(Level->BSD);
+    BSDCreateRenderObjectPointListVAO(Level->BSD);
+    BSDCreateSkyVAOs(Level->BSD);
 }
 
 
@@ -1667,10 +1824,41 @@ void BSDDraw(Level_t *Level)
         glBindTexture(GL_TEXTURE_2D,0);
         glUseProgram(0);
     }
-    
-
 }
 
+void BSDDrawSky(Level_t *Level)
+{
+    Shader_t *Shader;
+    int MVPMatrixID;
+    glDepthMask(0);
+    if( BSDIsMoonEnabled(Level->BSD) ) {
+        Shader = ShaderCache("MoonShader","Shaders/MoonVertexShader.glsl","Shaders/MoonFragmentShader.glsl");
+        glUseProgram(Shader->ProgramID);
+        MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+        glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page.TextureID);
+
+        glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+
+        glBindVertexArray(Level->BSD->SkyData.MoonVAO->VAOId[0]);
+        glDrawArrays(GL_TRIANGLES, 0, Level->BSD->SkyData.MoonVAO->Count);
+        glBindVertexArray(0);
+                
+        glBindTexture(GL_TEXTURE_2D,0);
+        glUseProgram(0);
+    }
+    
+    Shader = ShaderCache("StarsShader","Shaders/StarsVertexShader.glsl","Shaders/StarsFragmentShader.glsl");
+    glUseProgram(Shader->ProgramID);
+    MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+    
+    glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+    glPointSize(2.f);
+    glBindVertexArray(Level->BSD->SkyData.StarsVAO->VAOId[0]);
+    glDrawArrays(GL_POINTS, 0, 255);
+    glBindVertexArray(0);
+    glUseProgram(0);
+    glDepthMask(1);
+}
 void ParseRenderObjectVertexData(BSD_t *BSD,FILE *BSDFile)
 {
     int Size;
@@ -1902,13 +2090,13 @@ void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
     }
     
     PreviousFilePosition = GetCurrentFilePosition(BSDFile);
-    fseek(BSDFile,sizeof(BSD_HEADER_t) + BSD_PROPERTY_SET_FILE_POSITION,SEEK_SET);
+    fseek(BSDFile,sizeof(BSD_Header_t) + BSD_PROPERTY_SET_FILE_POSITION,SEEK_SET);
     fread(&PropertySetFileOffset,sizeof(PropertySetFileOffset),1,BSDFile);
     if( PropertySetFileOffset == 0 ) {
         DPrintf("BSDReadPropertySetFile:BSD File has no property file set.\n");
         return;
     }
-    fseek(BSDFile,sizeof(BSD_HEADER_t) + PropertySetFileOffset,SEEK_SET);
+    fseek(BSDFile,sizeof(BSD_Header_t) + PropertySetFileOffset,SEEK_SET);
     fread(&BSD->PropertySetFile.NumProperties,sizeof(BSD->PropertySetFile.NumProperties),1,BSDFile);
     DPrintf("BSDReadPropertySetFile:Reading %i properties at %i (%i).\n",BSD->PropertySetFile.NumProperties,
             GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
@@ -2018,11 +2206,11 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     MemEnd = GetCurrentFilePosition(BSDFile);
     assert( (MemEnd - MemBegin) == 320 );
     DPrintf("Mem end at %i\n",GetCurrentFilePosition(BSDFile));
-    //This file section of 104 bytes contains the begin/end offset of some entries.
+    //This file section of 80 bytes contains the begin/end offset of some entries.
     //Like the NodeListTableStart/NodeListEnd after the header (+2048).
     //We can have a max of 26 offsets or 13 Begin/End Definitions.
 //     SkipFileSection(BSDFile,104);
-    assert(sizeof(BSD->EntryTable) == 104);
+    assert(sizeof(BSD->EntryTable) == 80);
     DPrintf("Reading EntryTable at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
     fread(&BSD->EntryTable,sizeof(BSD->EntryTable),1,BSDFile);
     DPrintf("Node table is at %i (%i)\n",BSD->EntryTable.NodeTableOffset,BSD->EntryTable.NodeTableOffset + 2048);
@@ -2037,6 +2225,21 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     DPrintf("Data6 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off6,BSD->EntryTable.Off6 + 2048,BSD->EntryTable.Num6);
     DPrintf("Data7 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off7,BSD->EntryTable.Off7 + 2048,BSD->EntryTable.Num7);
     DPrintf("Data8 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off8,BSD->EntryTable.Off8 + 2048,BSD->EntryTable.Num8);
+    // Read Sky Defs...
+    fread(&BSD->SkyData.U0,sizeof(BSD->SkyData.U0),1,BSDFile);
+    fread(&BSD->SkyData.U1,sizeof(BSD->SkyData.U1),1,BSDFile);
+    fread(&BSD->SkyData.U2,sizeof(BSD->SkyData.U2),1,BSDFile);
+    fread(&BSD->SkyData.StarRadius,sizeof(BSD->SkyData.StarRadius),1,BSDFile);
+    fread(&BSD->SkyData.U3,sizeof(BSD->SkyData.U3),1,BSDFile);
+    fread(&BSD->SkyData.MoonZ,sizeof(BSD->SkyData.MoonZ),1,BSDFile);
+    fread(&BSD->SkyData.MoonY,sizeof(BSD->SkyData.MoonY),1,BSDFile);
+    fread(&BSD->SkyData.U4,sizeof(BSD->SkyData.U4),1,BSDFile);
+    fread(&BSD->SkyData.U5,sizeof(BSD->SkyData.U5),1,BSDFile);
+    fread(&BSD->SkyData.U6,sizeof(BSD->SkyData.U6),1,BSDFile);
+
+    DPrintf("MoonY:%i MoonZ:%i\n",BSD->SkyData.MoonY,BSD->SkyData.MoonZ);
+    DPrintf("Star Radius:%i\n",BSD->SkyData.StarRadius);
+    
     if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
         SkipFileSection(16,BSDFile);
     }
@@ -2302,6 +2505,9 @@ int LoadLevel(Level_t *Level)
     Level->BSD->NodeVAO = NULL;
     Level->BSD->RenderObjectPointVAO = NULL;
     Level->BSD->NumRenderObjectPoint = 0;
+    Level->BSD->SkyData.MoonVAO = NULL;
+    Level->BSD->SkyData.StarsVAO = NULL;
+
     
     assert(sizeof(Level->BSD->Header) == 2048);
     fread(&Level->BSD->Header,sizeof(Level->BSD->Header),1,BSDFile);

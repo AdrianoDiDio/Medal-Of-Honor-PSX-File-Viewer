@@ -79,7 +79,7 @@ void BSD2PReadEntryTableChunk(BSD2P_t *BSD,FILE *InFile)
         DPrintf("BSD2PReadEntryTableChunk: Invalid %s\n",InvalidFile ? "file" : "BSD2P struct");
         return;
     }
-    fseek(InFile,BSD2P_ENTRY_TABLE_POSITION + sizeof(BSD_HEADER_t),SEEK_SET);
+    fseek(InFile,BSD2P_ENTRY_TABLE_POSITION + sizeof(BSD_Header_t),SEEK_SET);
     //ATM we are interested at the node offset...
     fread(&BSD->NodeOffset,sizeof(BSD->NodeOffset),1,InFile);
     DPrintf("BSD2PReadEntryTableChunk:Node table is at %i (%i)\n",BSD->NodeOffset,BSD->NodeOffset + 2048);
@@ -95,7 +95,7 @@ void BSD2PReadRenderObjectChunk(BSD2P_t *BSD,FILE *InFile)
         DPrintf("BSD2PReadRenderObjectChunk: Invalid %s\n",InvalidFile ? "file" : "BSD2P struct");
         return;
     }
-    fseek(InFile,BSD2P_ENTRY_TABLE_POSITION + sizeof(BSD_HEADER_t) + BSD2P_ENTRY_TABLE_SIZE,SEEK_SET);
+    fseek(InFile,BSD2P_ENTRY_TABLE_POSITION + sizeof(BSD_Header_t) + BSD2P_ENTRY_TABLE_SIZE,SEEK_SET);
     fread(&BSD->RenderObjectTable.NumRenderObject,sizeof(BSD->RenderObjectTable.NumRenderObject),1,InFile);
     StartinUAt = GetCurrentFilePosition(InFile);
     DPrintf("BSD2PReadRenderObjectChunk: Reading %i RenderObject Elements...\n",BSD->RenderObjectTable.NumRenderObject);
@@ -147,7 +147,7 @@ void BSD2PReadNodeChunk(BSD2P_t *BSD,FILE *InFile)
         DPrintf("BSD2PReadNodeChunk: Invalid %s\n",InvalidFile ? "file" : "BSD2P struct");
         return;
     }
-    fseek(InFile,BSD->NodeOffset + sizeof(BSD_HEADER_t),SEEK_SET);
+    fseek(InFile,BSD->NodeOffset + sizeof(BSD_Header_t),SEEK_SET);
     DPrintf("BSD2PReadNodeChunk: Reading at %i.\n",GetCurrentFilePosition(InFile));
     fread(&BSD->NodeData.Header,sizeof(BSD->NodeData.Header),1,InFile);
     DPrintf("BSD2PReadNodeChunk: Reading %i entries.\n",BSD->NodeData.Header.NumNodes);

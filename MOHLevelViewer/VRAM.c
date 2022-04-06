@@ -178,6 +178,7 @@ void VRAMPutTexture(VRAM_t *VRAM,TIMImage_t *Image)
     Byte *Data = TIMToOpenGL32(Image);
     Src = SDL_CreateRGBSurfaceFrom(Data,Image->Width,Image->Height,32,4 * Image->Width,0x000000FF,0x0000FF00,0x00FF0000, 0xFF000000);
     SDL_BlitScaled(Src,NULL,VRAM->Page.Surface,&SrcRect);
+    free(Data);
 }
 void VRAMPutRawTexture(VRAM_t *VRAM,TIMImage_t *Image)
 {
@@ -217,6 +218,7 @@ void VRAMPutRawTexture(VRAM_t *VRAM,TIMImage_t *Image)
     glBindTexture(GL_TEXTURE_2D,VRAM->TextureIndexPage.TextureID);
     glTexSubImage2D(GL_TEXTURE_2D, 0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RED_INTEGER, GL_UNSIGNED_BYTE, ImageData);
     glBindTexture(GL_TEXTURE_2D,0);
+    free(ImageData);
 }
 void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
 {

@@ -28,6 +28,7 @@
          * [TSP Info Block](#tsp-info-block)
          * [Dynamic Color Block](#dynamic-color-block)
          * [Entry Table Block](#entry-table-block)
+         * [Sky Box Definitions](#sky-box-definitions)
          * [RenderObject Block](#renderobject-block)
             * [Color Mode](#color-mode)
             * [Texture Page](#texture-page)
@@ -435,7 +436,7 @@ it is not meant to be read sequentially but loaded when parsing this
 block.   
 
 #### Entry Table Block
-This block is found at position 1340 (excluding the header) or 3388 (including the header) contains information about the position of some elements that are contained inside the file along with the number of elements and has a fixed size of 104.
+This block is found at position 1340 (excluding the header) or 3388 (including the header) contains information about the position of some elements that are contained inside the file along with the number of elements and has a fixed size of 80 bytes.
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -459,10 +460,26 @@ This block is found at position 1340 (excluding the header) or 3388 (including t
 | int  | 4 bytes  | Number of elements at Offset8 |
 | int  | 4 bytes  | Unknown Offset9 |
 | int  | 4 bytes  | Number of elements at Offset9 |
-| char | 12 bytes | More unknown offsets |
-| int  | 4 bytes | Property Set File |
-| char  | 8 bytes | More unknown offsets  |
 
+#### Sky Box Definitions
+This block is found at position 1420 ( excluding the header) or 3468 (including the header) and contains information about the position  
+of the moon and how the stars are projected across the screen.  
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| Byte | 1 byte  | Unknown0 |
+| Byte | 1 byte  | Unknown1 |
+| Byte | 1 byte  | Unknown2 |
+| Byte | 1 byte  | Star Circle Radius (Used when generating the star arrays as the radius for polar coordinates) |
+| int  | 4 bytes  | Unknown3 |
+| short  | 2 bytes  | Moon Position Z |
+| short  | 2 bytes  | Moon Position Y |
+| int  | 4 bytes  | Unknown4 |
+| int  | 4 bytes  | Unknown5|
+| int  | 4 bytes  | Unknown6 |
+
+There can be a maximum number of 255 stars across the screen and they are generated randomly using the Radius.  
+The stars colors are selected from a fixed array of colors that has a size of 7 and can be found in the source file.  
 
 #### RenderObject Block
 After the entry block we find the number of RenderObject stored as an int (4 bytes).  

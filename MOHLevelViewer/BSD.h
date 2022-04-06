@@ -31,6 +31,13 @@
 
 #define BSD_DYNAMIC_COLOR_TABLE_SIZE 40
 
+#define BSD_SKY_MAX_STARS_NUMBER 255
+#define BSD_MOON_VRAM_PAGE 15
+#define BSD_MOON_WIDTH 32
+#define BSD_MOON_HEIGHT 32
+#define BSD_MOON_TEXTURE_X 192
+#define BSD_MOON_TEXTURE_Y 96
+
 typedef enum  {
     //NOTE(Adriano): Spawn node has an additional attribute at 0x34(52) indicating if it is the first or the second.
     BSD_PLAYER_SPAWN = 2289546822,
@@ -224,8 +231,6 @@ typedef struct BSDEntryTable_s {
     int Off8;
     int Num8;
     
-    char UnkBytes[24];
-    
 } BSDEntryTable_t;
 
 typedef struct BSDDynamicColor_s {
@@ -255,10 +260,10 @@ typedef struct BSD_Header_Element_s {
     int Value;
 } BSD_Header_Element_t;
 
-typedef struct BSD_HEADER_s {
+typedef struct BSD_Header_s {
     int NumHeadElements;
     int Sector[511];
-} BSD_HEADER_t;
+} BSD_Header_t;
 
 typedef struct BSDFace_s {
     BSDUv_t UV0;
@@ -308,17 +313,35 @@ typedef struct BSDProperty_s {
     Byte NumNodes;
     unsigned short *NodeList;
 } BSDProperty_t;
+
 typedef struct BSDPropertySetFile_s {
     int  NumProperties;
     BSDProperty_t *Property;
 } BSDPropertySetFile_t;
 
+typedef struct BSDSky_s {
+    Byte U0;
+    Byte U1;
+    Byte U2;
+    Byte StarRadius;
+    int U3;
+    short MoonZ;
+    short MoonY;
+    int U4;
+    int U5;
+    int U6;
+    
+    VAO_t *MoonVAO;
+    VAO_t *StarsVAO;
+} BSDSky_t;
+
 typedef struct BSD_s {
-    BSD_HEADER_t Header;
+    BSD_Header_t Header;
     BSDTSPInfo_t TSPInfo;
     char Unknown[72];
     BSDDynamicColorTable_t   DynamicColorTable;
     BSDEntryTable_t EntryTable;
+    BSDSky_t SkyData;
     BSDRenderObjectBlock_t RenderObjectTable;
     BSDNodeInfo_t NodeData;
     BSDPropertySetFile_t PropertySetFile;
@@ -347,6 +370,7 @@ char   *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
 Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD);
 void    BSDCreateVAOs(BSD_t *BSD);
 void    BSDDraw(Level_t *Level);
+void    BSDDrawSky(Level_t *Level);
 unsigned int BSDNodeIDToRenderObjectID(unsigned int NodeID);
 unsigned int BSDMPNodeIDToRenderObjectID(unsigned int NodeID);
 int     BSDGetRenderObjectIndexByID(BSD_t *BSD,int ID);
@@ -356,6 +380,7 @@ int     BSDGetCurrentDynamicColorByIndex(BSD_t *BSD,int Index);
 void    BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile);
 void    BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile);
 void    BSDUpdateColorList(BSD_t *BSD);
+int     BSDIsMoonEnabled(BSD_t *BSD);
 void    BSDFree(BSD_t *BSD);
 
 #endif //__BSDVIEWER_H_
