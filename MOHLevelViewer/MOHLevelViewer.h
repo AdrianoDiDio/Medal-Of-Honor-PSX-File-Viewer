@@ -159,7 +159,7 @@ typedef struct LevelSettings_s {
     bool EnableFrustumCulling;
     bool EnableLighting;
     bool EnableSemiTransparency;
-    bool EnableSurfaceAnimations;
+    bool EnableAnimatedLights;
 } LevelSettings_t;
 
 typedef struct Level_s {

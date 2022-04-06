@@ -606,9 +606,9 @@ void SysCheckKeyEvents()
                     //
                     // Toggle Surfaces Animation
                     //
-                    Level->Settings.EnableSurfaceAnimations = !Level->Settings.EnableSurfaceAnimations;
+                    Level->Settings.EnableAnimatedLights = !Level->Settings.EnableAnimatedLights;
                     //Special Case
-                    if( !Level->Settings.EnableSurfaceAnimations ) {
+                    if( !Level->Settings.EnableAnimatedLights ) {
                         //User has disabled it....reset it back to the original state.
                         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,1);
                     }
@@ -884,8 +884,8 @@ void GLFrame()
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    if( Level->Settings.EnableSurfaceAnimations ) {
-        BSDUpdateColorList(Level->BSD);
+    if( Level->Settings.EnableAnimatedLights ) {
+        BSDUpdateAnimatedLights(Level->BSD);
         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,0);
     }
     
@@ -1015,7 +1015,7 @@ void GLFrame()
      y += VerticalSpacing;
      FontDrawString(Level,"Press k to enable or disable Semi Transparency",10,y,Level->Settings.EnableSemiTransparency ? c_Yellow : c_Red);
      y += VerticalSpacing;
-     FontDrawString(Level,"Press m to enable or disable animated surfaces",10,y,Level->Settings.EnableSurfaceAnimations ? c_Yellow : c_Red);
+     FontDrawString(Level,"Press m to enable or disable animated lights",10,y,Level->Settings.EnableAnimatedLights ? c_Yellow : c_Red);
      y += VerticalSpacing;
      FontDrawString(Level,"Press e to dump the current level to a file",10,y,c_White);
      y += VerticalSpacing;
@@ -1037,7 +1037,7 @@ void SetDefaultSettings(Level_t *Level)
     Level->Settings.EnableFrustumCulling = true;
     Level->Settings.EnableLighting = true;
     Level->Settings.EnableSemiTransparency = true;
-    Level->Settings.EnableSurfaceAnimations = true;
+    Level->Settings.EnableAnimatedLights = true;
     Level->Settings.WireFrame = false;
     Level->Settings.ShowAABBTree = false;
     Level->Settings.ShowCollisionData = false;

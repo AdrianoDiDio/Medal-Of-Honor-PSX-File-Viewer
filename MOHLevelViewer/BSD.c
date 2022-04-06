@@ -476,15 +476,15 @@ void BSDFree(BSD_t *BSD)
 {
     BSDTSPStreamNode_t *Temp;
     BSDRenderObjectDrawable_t *Drawable;
-    BSDDynamicColor_t *DynamicColor;
+    BSDAnimatedLight_t *AnimatedLight;
     int i;
     
-    for( i = 0; i < BSD_DYNAMIC_COLOR_TABLE_SIZE; i++ ) {
-        DynamicColor = &BSD->DynamicColorTable.DynamicColorList[i];
-        if( DynamicColor->NumColors == 0 ) {
+    for( i = 0; i < BSD_ANIMATED_LIGHTS_TABLE_SIZE; i++ ) {
+        AnimatedLight = &BSD->AnimatedLightsTable.AnimatedLightsList[i];
+        if( AnimatedLight->NumColors == 0 ) {
             continue;
         }
-        free(DynamicColor->ColorList);
+        free(AnimatedLight->ColorList);
     }
     free(BSD->NodeData.Table);
     free(BSD->NodeData.Node);
@@ -525,35 +525,35 @@ int BSDIsMoonEnabled(BSD_t *BSD)
     return BSD->SkyData.MoonZ != 0;
 }
 
-void BSDUpdateColorList(BSD_t *BSD)
+void BSDUpdateAnimatedLights(BSD_t *BSD)
 {
-    BSDDynamicColor_t *DynamicColor;
+    BSDAnimatedLight_t *AnimatedLight;
     int i;
-    for( i = 0; i < BSD->DynamicColorTable.NumDynamicColors; i++ ) {
-        DynamicColor = &BSD->DynamicColorTable.DynamicColorList[i];
-        if( !DynamicColor->NumColors ) {
+    for( i = 0; i < BSD->AnimatedLightsTable.NumAnimatedLights; i++ ) {
+        AnimatedLight = &BSD->AnimatedLightsTable.AnimatedLightsList[i];
+        if( !AnimatedLight->NumColors ) {
             continue;
         }
-        DynamicColor->Delay--;
-        if( DynamicColor->Delay <= 0 ) {
-            DynamicColor->ColorIndex++;
-            if( DynamicColor->ColorIndex >= DynamicColor->NumColors ) {
-                DynamicColor->ColorIndex = 0;
+        AnimatedLight->Delay--;
+        if( AnimatedLight->Delay <= 0 ) {
+            AnimatedLight->ColorIndex++;
+            if( AnimatedLight->ColorIndex >= AnimatedLight->NumColors ) {
+                AnimatedLight->ColorIndex = 0;
             }
             //PSX runs at 30FPS...increment the delay in order to simulate that speed...
-            DynamicColor->Delay = DynamicColor->ColorList[DynamicColor->ColorIndex].rgba[3] * 6;
-            DynamicColor->CurrentColor = DynamicColor->ColorList[DynamicColor->ColorIndex].c;
+            AnimatedLight->Delay = AnimatedLight->ColorList[AnimatedLight->ColorIndex].rgba[3] * 6;
+            AnimatedLight->CurrentColor = AnimatedLight->ColorList[AnimatedLight->ColorIndex].c;
         }
     }
 }
 
-int BSDGetCurrentDynamicColorByIndex(BSD_t *BSD,int Index)
+int BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index)
 {
-    if( Index < 0 || Index > BSD_DYNAMIC_COLOR_TABLE_SIZE ) {
-        DPrintf("BSDGetCurrentDynamicColorByIndex:Invalid index %i\n",Index);
+    if( Index < 0 || Index > BSD_ANIMATED_LIGHTS_TABLE_SIZE ) {
+        DPrintf("BSDGetCurrentAnimatedLightColorByIndex:Invalid index %i\n",Index);
         return 0;
     }
-    return BSD->DynamicColorTable.DynamicColorList[Index].CurrentColor;
+    return BSD->AnimatedLightsTable.AnimatedLightsList[Index].CurrentColor;
 }
 
 void BSDCreatePointListVAO(BSD_t *BSD)
@@ -2149,7 +2149,7 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     int Offset;
     int NodeNumReferencedRenderObjectIDOffset;
     int NumReferencedRenderObjectID;
-    BSDDynamicColor_t *DynamicColor;
+    BSDAnimatedLight_t *AnimatedLight;
     unsigned int NodeRenderObjectID;
     Vec3_t NodePosition;
     Vec3_t NodeRotation;
@@ -2159,41 +2159,41 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     
 
     fread(&BSD->Unknown,sizeof(BSD->Unknown),1,BSDFile);
-    DPrintf("DynamicColorTable is at %li\n",ftell(BSDFile));
-    fread(&BSD->DynamicColorTable.NumDynamicColors,sizeof(BSD->DynamicColorTable.NumDynamicColors),1,BSDFile);
-    DPrintf("DynamicColorTable:Reading %i colors at %li\n",BSD->DynamicColorTable.NumDynamicColors,ftell(BSDFile));
+    DPrintf("AnimatedLightsTable is at %li\n",ftell(BSDFile));
+    fread(&BSD->AnimatedLightsTable.NumAnimatedLights,sizeof(BSD->AnimatedLightsTable.NumAnimatedLights),1,BSDFile);
+    DPrintf("AnimatedLightsTable:Reading %i colors at %li\n",BSD->AnimatedLightsTable.NumAnimatedLights,ftell(BSDFile));
 
-    for( i = 0; i < BSD_DYNAMIC_COLOR_TABLE_SIZE; i++ ) {
-        DynamicColor = &BSD->DynamicColorTable.DynamicColorList[i];
-        fread(&DynamicColor->NumColors,sizeof(DynamicColor->NumColors),1,BSDFile);
-        fread(&DynamicColor->StartingColorOffset,sizeof(DynamicColor->StartingColorOffset),1,BSDFile);
-        fread(&DynamicColor->ColorIndex,sizeof(DynamicColor->ColorIndex),1,BSDFile);
-        fread(&DynamicColor->CurrentColor,sizeof(DynamicColor->CurrentColor),1,BSDFile);
-        fread(&DynamicColor->Delay,sizeof(DynamicColor->Delay),1,BSDFile);
-        if( DynamicColor->NumColors == 0 ) {
+    for( i = 0; i < BSD_ANIMATED_LIGHTS_TABLE_SIZE; i++ ) {
+        AnimatedLight = &BSD->AnimatedLightsTable.AnimatedLightsList[i];
+        fread(&AnimatedLight->NumColors,sizeof(AnimatedLight->NumColors),1,BSDFile);
+        fread(&AnimatedLight->StartingColorOffset,sizeof(AnimatedLight->StartingColorOffset),1,BSDFile);
+        fread(&AnimatedLight->ColorIndex,sizeof(AnimatedLight->ColorIndex),1,BSDFile);
+        fread(&AnimatedLight->CurrentColor,sizeof(AnimatedLight->CurrentColor),1,BSDFile);
+        fread(&AnimatedLight->Delay,sizeof(AnimatedLight->Delay),1,BSDFile);
+        if( AnimatedLight->NumColors == 0 ) {
             continue;
         }
 
 
-        DynamicColor->ColorList = malloc(DynamicColor->NumColors * sizeof(Color1i_t));
+        AnimatedLight->ColorList = malloc(AnimatedLight->NumColors * sizeof(Color1i_t));
         DPrintf("Color Interpolator %i\n",i);
-        DPrintf("StartingColorOffset:%i\n",DynamicColor->StartingColorOffset);
-        DPrintf("StartingColorOffset No Header:%i\n",DynamicColor->StartingColorOffset + 2048);
-        DPrintf("CurrentColor:%i\n",DynamicColor->CurrentColor);
-        DPrintf("ColorIndex:%i\n",DynamicColor->ColorIndex);
-        DPrintf("Delay:%i\n",DynamicColor->Delay);
+        DPrintf("StartingColorOffset:%i\n",AnimatedLight->StartingColorOffset);
+        DPrintf("StartingColorOffset No Header:%i\n",AnimatedLight->StartingColorOffset + 2048);
+        DPrintf("CurrentColor:%i\n",AnimatedLight->CurrentColor);
+        DPrintf("ColorIndex:%i\n",AnimatedLight->ColorIndex);
+        DPrintf("Delay:%i\n",AnimatedLight->Delay);
         PrevPos = GetCurrentFilePosition(BSDFile);
-        fseek(BSDFile,DynamicColor->StartingColorOffset + 2048,SEEK_SET);
+        fseek(BSDFile,AnimatedLight->StartingColorOffset + 2048,SEEK_SET);
         DPrintf("Reading color at %i\n",GetCurrentFilePosition(BSDFile));
-        for( j = 0; j < DynamicColor->NumColors; j++ ) {
-            fread(&DynamicColor->ColorList[j],sizeof(DynamicColor->ColorList[j]),1,BSDFile);
-            DPrintf("Color %i %i %i %i %i (As Int %u)\n",j,DynamicColor->ColorList[j].rgba[0],
-                    DynamicColor->ColorList[j].rgba[1],DynamicColor->ColorList[j].rgba[2],DynamicColor->ColorList[j].rgba[3],DynamicColor->ColorList[j].c
+        for( j = 0; j < AnimatedLight->NumColors; j++ ) {
+            fread(&AnimatedLight->ColorList[j],sizeof(AnimatedLight->ColorList[j]),1,BSDFile);
+            DPrintf("Color %i %i %i %i %i (As Int %u)\n",j,AnimatedLight->ColorList[j].rgba[0],
+                    AnimatedLight->ColorList[j].rgba[1],AnimatedLight->ColorList[j].rgba[2],AnimatedLight->ColorList[j].rgba[3],AnimatedLight->ColorList[j].c
             );
         }
         fseek(BSDFile,PrevPos,SEEK_SET);
     }
-    DPrintf("DynamicColorTable ends at %i\n",GetCurrentFilePosition(BSDFile));
+    DPrintf("AnimatedLightsTable ends at %i\n",GetCurrentFilePosition(BSDFile));
     //This section seems unused and should be constant in size (320 bytes).
     //TODO:Remove this useless code and just jump 320 bytes...
     MemBegin = GetCurrentFilePosition(BSDFile);
@@ -2304,10 +2304,10 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     //NOTE(Adriano):Altough we are able to load the dynamic colors and grab the data from there, BSD files are not meant to be read
     //              sequentially, this means that we need to skip a certain amount of bytes which corresponds to the area pointed by each dynamic color,
     //              that contains a list of color values,in order to guarantee that we are reading it correctly.
-    if( BSD->DynamicColorTable.NumDynamicColors != 0 ) {
+    if( BSD->AnimatedLightsTable.NumAnimatedLights != 0 ) {
         DPrintf("Skipping block referenced by Dynamic Color Table...\n");
-        DynamicColor = &BSD->DynamicColorTable.DynamicColorList[BSD->DynamicColorTable.NumDynamicColors - 1];
-        Jump = ((DynamicColor->StartingColorOffset + 2048) + (DynamicColor->NumColors * 4)) - GetCurrentFilePosition(BSDFile);
+        AnimatedLight = &BSD->AnimatedLightsTable.AnimatedLightsList[BSD->AnimatedLightsTable.NumAnimatedLights - 1];
+        Jump = ((AnimatedLight->StartingColorOffset + 2048) + (AnimatedLight->NumColors * 4)) - GetCurrentFilePosition(BSDFile);
         DPrintf("Skipping %i Bytes...\n",Jump);
         assert(Jump > 0);
         SkipFileSection(Jump,BSDFile);

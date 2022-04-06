@@ -29,7 +29,7 @@
 #define BSD_HANDLER_REG_TABLE_POSITION 0x59C
 #define BSD_PROPERTY_SET_FILE_POSITION 0x598
 
-#define BSD_DYNAMIC_COLOR_TABLE_SIZE 40
+#define BSD_ANIMATED_LIGHTS_TABLE_SIZE 40
 
 #define BSD_SKY_MAX_STARS_NUMBER 255
 #define BSD_MOON_VRAM_PAGE 15
@@ -233,7 +233,7 @@ typedef struct BSDEntryTable_s {
     
 } BSDEntryTable_t;
 
-typedef struct BSDDynamicColor_s {
+typedef struct BSDAnimatedLight_s {
     int NumColors;
     int StartingColorOffset;
     int ColorIndex;
@@ -241,12 +241,12 @@ typedef struct BSDDynamicColor_s {
     int Delay;
     
     Color1i_t *ColorList;
-} BSDDynamicColor_t;
+} BSDAnimatedLight_t;
 
-typedef struct BSDDynamicColorTable_s {
-    int NumDynamicColors;
-    BSDDynamicColor_t DynamicColorList[BSD_DYNAMIC_COLOR_TABLE_SIZE];
-} BSDDynamicColorTable_t;
+typedef struct BSDAnimatedLightTable_s {
+    int NumAnimatedLights;
+    BSDAnimatedLight_t AnimatedLightsList[BSD_ANIMATED_LIGHTS_TABLE_SIZE];
+} BSDAnimatedLightTable_t;
 
 typedef struct BSDTSPInfo_s {
     char TSPPattern[128];
@@ -339,7 +339,7 @@ typedef struct BSD_s {
     BSD_Header_t Header;
     BSDTSPInfo_t TSPInfo;
     char Unknown[72];
-    BSDDynamicColorTable_t   DynamicColorTable;
+    BSDAnimatedLightTable_t   AnimatedLightsTable;
     BSDEntryTable_t EntryTable;
     BSDSky_t SkyData;
     BSDRenderObjectBlock_t RenderObjectTable;
@@ -376,10 +376,10 @@ unsigned int BSDMPNodeIDToRenderObjectID(unsigned int NodeID);
 int     BSDGetRenderObjectIndexByID(BSD_t *BSD,int ID);
 bool    BSDIsRenderObjectPresent(BSD_t *BSD,unsigned int RenderObjectID);
 void    BSDFixRenderObjectPosition(Level_t *Level);
-int     BSDGetCurrentDynamicColorByIndex(BSD_t *BSD,int Index);
+int     BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index);
 void    BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile);
 void    BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile);
-void    BSDUpdateColorList(BSD_t *BSD);
+void    BSDUpdateAnimatedLights(BSD_t *BSD);
 int     BSDIsMoonEnabled(BSD_t *BSD);
 void    BSDFree(BSD_t *BSD);
 

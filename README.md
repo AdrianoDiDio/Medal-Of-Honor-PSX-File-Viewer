@@ -26,7 +26,7 @@
    * [BSD Files](#bsd-files)
       * [File Format](#file-format)
          * [TSP Info Block](#tsp-info-block)
-         * [Dynamic Color Block](#dynamic-color-block)
+         * [Animated Lights Block](#animated-lights-block)
          * [Entry Table Block](#entry-table-block)
          * [Sky Box Definitions](#sky-box-definitions)
          * [RenderObject Block](#renderobject-block)
@@ -406,13 +406,13 @@ The other TSP are loaded in real time when hitting specific triggers
 contained into the level that unloads the previous one that were loaded in
 memory.
 
-#### Dynamic Color Block
+#### Animated Lights Block
 This block is found at position 216 (excluding the header) or 2264
-(including the header) and contains information about dynamic colors that
+(including the header) and contains information about animated lights that
 can be used by the TSP in order to render special effects like running
 water from a river,a blinking light etc...
-Each BSD file can hold a maximum number of 40 dynamic colors where each
-color is a structure of 20 bytes:
+Each BSD file can hold a maximum number of 40 animated lights where each
+one is contained in a structure of 20 bytes:
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -422,11 +422,11 @@ color is a structure of 20 bytes:
 | int  | 4 bytes  | CurrentColor |
 | int  | 4 bytes  | Delay |
 
-Every dynamic color entry has a number of colors that are loaded at the
+Every animated light has a number of colors that are loaded at the
 specified StartingColorOffset (to which you would add 4-bytes until all colors are read)
 where each color is just a 4-byte integer that represents the 3 components (RGB) plus a 
 constant value that it is used to restart the animation ( by setting the Delay value to this constant ).  
-Every frame the dynamic color structure is updated only if the Delay reaches
+Every frame the animated light structure is updated only if the Delay reaches
 zero, after which the ColorIndex is incremented wrapping around only when
 it reaches the maximum value of NumColors.  
 This value is used to select the current color that will be used by the

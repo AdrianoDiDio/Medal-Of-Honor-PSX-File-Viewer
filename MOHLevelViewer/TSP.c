@@ -1292,7 +1292,7 @@ void TSPUpdateAnimatedRenderingFace(TSPRenderingFace_t *Face,VAO_t *VAO,BSD_t *B
         if( Face->ColorIndex[i] == -1 ) {
             continue;
         }
-        CurrentColor = BSDGetCurrentDynamicColorByIndex(BSD,Face->ColorIndex[i]);
+        CurrentColor = BSDGetCurrentAnimatedLightColorByIndex(BSD,Face->ColorIndex[i]);
         OriginalColor.c = Face->OriginalColor[i];
         FinalColor.c = (OriginalColor.c & 0xFF00) | (CurrentColor & 0xFFFFFF);
         if( Reset ) {
