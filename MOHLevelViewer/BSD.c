@@ -2356,11 +2356,11 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
         //Then update the UnknownOffset%i Value with the final one...
     }
     DPrintf("Current Position after RenderObject Table is: %i\n",GetCurrentFilePosition(BSDFile));
-    //NOTE(Adriano):Altough we are able to load the dynamic colors and grab the data from there, BSD files are not meant to be read
-    //              sequentially, this means that we need to skip a certain amount of bytes which corresponds to the area pointed by each dynamic color,
+    //NOTE(Adriano):Altough we are able to load all the animated lights and grab the color data from there, BSD files are not meant to be read
+    //              sequentially, this means that we need to skip a certain amount of bytes which corresponds to the area pointed by each animated light,
     //              that contains a list of color values,in order to guarantee that we are reading it correctly.
     if( BSD->AnimatedLightsTable.NumAnimatedLights != 0 ) {
-        DPrintf("Skipping block referenced by Dynamic Color Table...\n");
+        DPrintf("Skipping block referenced by Animated lights Table...\n");
         AnimatedLight = &BSD->AnimatedLightsTable.AnimatedLightsList[BSD->AnimatedLightsTable.NumAnimatedLights - 1];
         Jump = ((AnimatedLight->StartingColorOffset + 2048) + (AnimatedLight->NumColors * 4)) - GetCurrentFilePosition(BSDFile);
         DPrintf("Skipping %i Bytes...\n",Jump);
