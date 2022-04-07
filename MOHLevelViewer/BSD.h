@@ -331,6 +331,7 @@ typedef struct BSDSky_s {
     int U5;
     int U6;
     
+    Color1i_t StarsColors[BSD_SKY_MAX_STARS_NUMBER];
     VAO_t *MoonVAO;
     VAO_t *StarsVAO;
 } BSDSky_t;
@@ -380,7 +381,9 @@ int     BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index);
 void    BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile);
 void    BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile);
 void    BSDUpdateAnimatedLights(BSD_t *BSD);
+void    BSDUpdateStarsColors(BSD_t *BSD);
 int     BSDIsMoonEnabled(BSD_t *BSD);
+int     BSDAreStarsEnabled(BSD_t *BSD);
 void    BSDFree(BSD_t *BSD);
 
 #endif //__BSDVIEWER_H_

@@ -51,7 +51,7 @@ void BSD2PVAOPointList(BSD2P_t *BSD)
         NodeData[NodeDataPointer+5] = 0.30f;
         NodeDataPointer += 6;
     }
-    BSD->NodeVAO = VAOInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3);            
+    BSD->NodeVAO = VAOInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3,0);            
     free(NodeData);
 }
 

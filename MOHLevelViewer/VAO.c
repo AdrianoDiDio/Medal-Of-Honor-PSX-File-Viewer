@@ -237,7 +237,7 @@ VAO_t *VAOInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int Tex
     return VAO;
 }
 
-VAO_t *VAOInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset)
+VAO_t *VAOInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset,int DynamicDraw)
 {
     VAO_t *VAO;
     
@@ -249,7 +249,7 @@ VAO_t *VAOInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int Co
     glGenBuffers(1, VAO->VBOId);
     glBindBuffer(GL_ARRAY_BUFFER, VAO->VBOId[0]);
             
-    glBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, DataSize,Data, DynamicDraw == 1 ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
         
     glVertexAttribPointer(0,3,GL_FLOAT,false,Stride,BUFFER_OFFSET(VertexOffset));
     glEnableVertexAttribArray(0);

@@ -503,7 +503,9 @@ void BSDFree(BSD_t *BSD)
         VAOFree(BSD->SkyData.MoonVAO);
     }
     
-    VAOFree(BSD->SkyData.StarsVAO);
+    if( BSDAreStarsEnabled(BSD) ) {
+        VAOFree(BSD->SkyData.StarsVAO);
+    }
     
     while( BSD->RenderObjectDrawableList ) {
         Drawable = BSD->RenderObjectDrawableList;
@@ -523,6 +525,11 @@ void BSDFree(BSD_t *BSD)
 int BSDIsMoonEnabled(BSD_t *BSD)
 {
     return BSD->SkyData.MoonZ != 0;
+}
+
+int BSDAreStarsEnabled(BSD_t *BSD)
+{
+    return BSD->SkyData.StarRadius != 0;
 }
 
 void BSDUpdateAnimatedLights(BSD_t *BSD)
@@ -545,6 +552,47 @@ void BSDUpdateAnimatedLights(BSD_t *BSD)
             AnimatedLight->CurrentColor = AnimatedLight->ColorList[AnimatedLight->ColorIndex].c;
         }
     }
+}
+
+void BSDUpdateStarsColors(BSD_t *BSD)
+{
+    float Data[3];
+    float DataSize;
+    int BaseOffset;
+    int Stride;
+    int Random;
+    int i;
+    Color1i_t StarColor;
+    
+    DataSize = 3 * sizeof(float);
+    Stride = (3 + 3) * sizeof(float);
+
+    glBindBuffer(GL_ARRAY_BUFFER, BSD->SkyData.StarsVAO->VBOId[0]);
+    
+    for( i = 0; i < BSD_SKY_MAX_STARS_NUMBER; i++ ) {
+        Random = rand();
+        BaseOffset = (i * Stride);
+        StarColor = BSD->SkyData.StarsColors[i];
+        Data[0] = StarColor.rgba[0];
+        Data[1] = StarColor.rgba[1];
+        Data[2] = StarColor.rgba[2];
+        if( (Random & 3 ) != 0 ) {
+            if( StarColor.rgba[0] >= 33 ) {
+                Data[0] -= 32;
+            }
+            if( StarColor.rgba[1] >= 33 ) {
+                Data[1] -= 32;
+            }
+            if( StarColor.rgba[2] >= 33 ) {
+                Data[2] -= 32;
+            }
+        }
+        Data[0] /= 255.f;
+        Data[1] /= 255.f;
+        Data[2] /= 255.f;
+        glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (3*sizeof(float)), DataSize, &Data);
+    }
+     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 int BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index)
@@ -618,7 +666,7 @@ void BSDCreatePointListVAO(BSD_t *BSD)
         }
         NodeDataPointer += 6;
     }
-    BSD->NodeVAO = VAOInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3);            
+    BSD->NodeVAO = VAOInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3,0);            
     free(NodeData);
 }
 void BSDCreateRenderObjectPointListVAO(BSD_t *BSD)
@@ -692,7 +740,7 @@ void BSDCreateRenderObjectPointListVAO(BSD_t *BSD)
         RenderObjectDataPointer += 6;
         i++;
     }
-    BSD->RenderObjectPointVAO = VAOInitXYZRGB(RenderObjectData,RenderObjectDataSize - (Stride * NumSkip),Stride,0,3);            
+    BSD->RenderObjectPointVAO = VAOInitXYZRGB(RenderObjectData,RenderObjectDataSize - (Stride * NumSkip),Stride,0,3,0);            
     free(RenderObjectData);
 }
 #if 0
@@ -820,7 +868,7 @@ void BSDAddNodeToRenderObjecDrawabletList(BSD_t *BSD,int MissionNumber,unsigned 
     }
     DPrintf("RenderObjectID %u for node %u Index %i\n",RenderObjectID,NodeID,RenderObjectIndex);
 
-    Object = malloc(sizeof(BSDRenderObject_t));
+    Object = malloc(sizeof(BSDRenderObjectDrawable_t));
     Object->RenderObjectIndex = RenderObjectIndex;
     Object->Position = Position;
     //PSX GTE Uses 4096 as unit value only when dealing with fixed math operation.
@@ -1105,18 +1153,22 @@ void BSDCreateStarsVAO(BSD_t *BSD)
     int i;
     Color1i_t RandColor;
 
+    if( !BSDAreStarsEnabled(BSD) ) {
+        DPrintf("Stars are not enabled...\n");
+        return;
+    }
     //        XYZ RGB
     Stride = (3 + 3) * sizeof(float);
     VertexSize = Stride * BSD_SKY_MAX_STARS_NUMBER;
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
     
-
     for( i = 0; i < BSD_SKY_MAX_STARS_NUMBER; i++ ) {
         R = (BSD->SkyData.StarRadius*256) * sqrt(Rand01());
         Theta = Rand01() * 2 * M_PI;
         Phi = acos(2.0 * Rand01() - 1.0);/*BSDRand01() * M_PI;*/
         RandColor = StarsColors[RandRangeI(0,7)];
+        BSD->SkyData.StarsColors[i] = RandColor;
         VertexData[VertexPointer] =  (R * sin(Phi) * cos(Theta) );
         VertexData[VertexPointer+1] = (R * sin(Theta) * sin(Phi) ) - (BSD->SkyData.StarRadius*264);
         VertexData[VertexPointer+2] = R * cos(Phi);
@@ -1125,7 +1177,7 @@ void BSDCreateStarsVAO(BSD_t *BSD)
         VertexData[VertexPointer+5] = RandColor.rgba[2] / 255.f;
         VertexPointer += 6;
     }
-    BSD->SkyData.StarsVAO = VAOInitXYZRGB(VertexData,VertexSize,Stride,0,3);
+    BSD->SkyData.StarsVAO = VAOInitXYZRGB(VertexData,VertexSize,Stride,0,3,1);
     free(VertexData);
 }
 
@@ -1846,17 +1898,20 @@ void BSDDrawSky(Level_t *Level)
         glBindTexture(GL_TEXTURE_2D,0);
         glUseProgram(0);
     }
-    
-    Shader = ShaderCache("StarsShader","Shaders/StarsVertexShader.glsl","Shaders/StarsFragmentShader.glsl");
-    glUseProgram(Shader->ProgramID);
-    MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-    
-    glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-    glPointSize(2.f);
-    glBindVertexArray(Level->BSD->SkyData.StarsVAO->VAOId[0]);
-    glDrawArrays(GL_POINTS, 0, 255);
-    glBindVertexArray(0);
-    glUseProgram(0);
+    if( BSDAreStarsEnabled(Level->BSD) ) {
+        BSDUpdateStarsColors(Level->BSD);
+        
+        Shader = ShaderCache("StarsShader","Shaders/StarsVertexShader.glsl","Shaders/StarsFragmentShader.glsl");
+        glUseProgram(Shader->ProgramID);
+        MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
+        
+        glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+        glPointSize(2.f);
+        glBindVertexArray(Level->BSD->SkyData.StarsVAO->VAOId[0]);
+        glDrawArrays(GL_POINTS, 0, 255);
+        glBindVertexArray(0);
+        glUseProgram(0);
+    }
     glDepthMask(1);
 }
 void ParseRenderObjectVertexData(BSD_t *BSD,FILE *BSDFile)
