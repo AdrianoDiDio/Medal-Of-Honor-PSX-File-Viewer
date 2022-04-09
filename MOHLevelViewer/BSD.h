@@ -367,8 +367,8 @@ typedef struct BSD_s {
 struct Level_s;
 typedef struct Level_s Level_t;
 
-// BSD_t  *BSDLoad(char *FName,int MissionNumber);
-int     LoadLevel(Level_t *Level);
+FILE   *BSDEarlyInit(Level_t *Level);
+int     BSDLoad(Level_t *Level,FILE *BSDFile);
 void    BSDCheckCompartmentTrigger(Level_t *Level,Vec3_t CameraPosition);
 char   *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId);
 char   *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);

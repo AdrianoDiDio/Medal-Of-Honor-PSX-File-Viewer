@@ -1112,7 +1112,10 @@ void DumpLevel(Level_t* Level)
 
 bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
 {
+    FILE *BSDFile;
     char Buffer[512];
+    int i;
+    TSP_t *TSP;
     
     if( Level != NULL ) {
         free(Level);
@@ -1129,33 +1132,47 @@ bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
     strcpy(Level->BasePath,Directory);
     snprintf(Level->MissionPath,sizeof(Level->MissionPath),"%s/DATA/MSN%i/LVL%i",Directory,Level->MissionNumber,Level->LevelNumber);
     
-    DPrintf("Working directory:%s\n",Directory);
-    DPrintf("Loading level %s Mission %i Level %i\n",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
+    DPrintf("LevelInit:Working directory:%s\n",Directory);
+    DPrintf("LevelInit:Loading level %s Mission %i Level %i\n",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 
     //Step.1 Load all the tims from taf.
     //0 is hardcoded...for the images it doesn't make any difference between 0 and 1
     //but if we need to load all the level sounds then 0 means Standard Mode while 1 American (All voices are translated to english!).
     snprintf(Buffer,sizeof(Buffer),"%s/%i_%i0.TAF",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
-//     snprintf(Buffer,sizeof(Buffer),"%s/DATA/TWOPLAYR/PLAYERS/B/GI_P1.TAF",Level->BasePath);
+
     Level->ImageList = TIMGetAllImages(Buffer);
-    //Step.2 Load the BSD file and also load the TSP one.
-    if( LoadLevel(Level) == -1 ) {
-        DPrintf("Failed to LoadLevel\n");
+    
+    if( !Level->ImageList ) {
+        DPrintf("LevelInit:Failed to load TAF file %s\n",Buffer);
         return false;
     }
-//     snprintf(Buffer,sizeof(Buffer),"%s/%i_%i.BSD",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
-//     BSDLoad(Buffer,Level);
-//     if( !Level->BSD ) {
-//         DPrintf("Couldn't load BSD...aborting.\n");
-//         return false;
-//     }
-    //TESTING PURPOSES ONLY!
-    snprintf(Buffer,sizeof(Buffer),"%s/DATA/TWOPLAYR/PLAYERS/B/GI_P1.BSD",Level->BasePath);
-//     Level->BSDTwoP = BSD2PLoad(Buffer,Level->MissionNumber);
-//     if( !Level->BSDTwoP ) {
-//         DPrintf("Couldn't load BSD2P...aborting.\n");
-//         return false;
-//     }
+    //Step.2 Partially load the BSD file in order to get the TSP info.
+    BSDFile = BSDEarlyInit(Level);
+    if( !BSDFile ) {
+        DPrintf("LevelInit:Failed to load BSD file\n");
+        return false;
+    }
+    
+    //Read the TSP FILES
+    //Step.3 Load all the TSP file based on the data read from the BSD file.
+    //Note that we are going to load all the tsp file since we do not know 
+    //where in the bsd file it signals to stream/load the next tsp.
+    for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.TargetInitialCompartment; i++ ) {
+       Level->TSPNumberRenderList[i] = i;
+    }
+    for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.NumTSP; i++ ) {
+        snprintf(Buffer,sizeof(Buffer),"%s/TSP0/%i_%i_C%i.TSP",Level->MissionPath,Level->MissionNumber,Level->LevelNumber,i);
+        TSP = TSPLoad(Buffer,i);
+        if( !TSP ) {
+            DPrintf("LoadLevel:Failed to load TSP File %s\n",Buffer);
+            return false;
+        }
+        TSP->Next = Level->TSPList;
+        Level->TSPList = TSP;
+    }
+    //Step.4 Resume loading the BSD after we successfully loaded the TSP.
+    DPrintf("LoadLevel: Detected game %s\n",LevelGetGameEngine() == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
+    BSDLoad(Level,BSDFile);
     sprintf(Level->EngineName,"Engine %s",LevelGetGameEngine() == MOH_GAME_STANDARD ? "MOH" : "MOH Underground");
     return true;
     
@@ -1208,7 +1225,7 @@ void Quit()
     - MISSION NUMBER
     - LEVEL NUMBER
 */
-#define _ENABLEVIdEOOUT 1
+#define _ENABLEVIDEOOUT 1
 int main(int argc,char **argv)
 {
     srand(time(NULL));
@@ -1221,7 +1238,7 @@ int main(int argc,char **argv)
         return -1;
     }
 
-#if _ENABLEVIdEOOUT
+#if _ENABLEVIDEOOUT
     SysVidInit(1366,768,false);
     ComTime = malloc(sizeof(ComTimeInfo_t));
     memset(ComTime,0,sizeof(ComTimeInfo_t));

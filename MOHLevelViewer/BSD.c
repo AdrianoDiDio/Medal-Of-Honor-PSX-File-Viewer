@@ -606,7 +606,6 @@ int BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index)
 
 void BSDCreatePointListVAO(BSD_t *BSD)
 {
-    int NumSkip;
     float *NodeData;
     int    NodeDataPointer;
     int    Stride;
@@ -617,22 +616,11 @@ void BSDCreatePointListVAO(BSD_t *BSD)
     NodeDataSize = Stride * BSD->NodeData.Header.NumNodes;
     NodeData = malloc(NodeDataSize);
     NodeDataPointer = 0;
-    NumSkip = 0;
     for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
-//         if( BSD->NodeData.Node[i].CollisionVolumeType != 2 ) {
-//             NumSkip++;
-//             continue;
-//         }
-//         if( Level->BSD->NodeData.Node[i].MessageData == 0 ) {
-//             NumSkip++;
-//             continue;
-//         }
         NodeData[NodeDataPointer] =   BSD->NodeData.Node[i].Position.x;
         NodeData[NodeDataPointer+1] = BSD->NodeData.Node[i].Position.y;
         NodeData[NodeDataPointer+2] = BSD->NodeData.Node[i].Position.z;
-//         NodeData[NodeDataPointer] =   BSD->NodeData.Node[i].Position.x - (BSD->NodeData.Node[i].PositionMax.x / 2);
-//         NodeData[NodeDataPointer+1] = BSD->NodeData.Node[i].Position.y - (BSD->NodeData.Node[i].PositionMax.y / 2);
-//         NodeData[NodeDataPointer+2] = BSD->NodeData.Node[i].Position.z - (BSD->NodeData.Node[i].PositionMax.z / 2);
+
         if( BSD->NodeData.Node[i].Id == BSD_TSP_LOAD_TRIGGER ) {
             // BLUE
             NodeData[NodeDataPointer+3] = 0.f;
@@ -666,7 +654,7 @@ void BSDCreatePointListVAO(BSD_t *BSD)
         }
         NodeDataPointer += 6;
     }
-    BSD->NodeVAO = VAOInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3,0);            
+    BSD->NodeVAO = VAOInitXYZRGB(NodeData,NodeDataSize,Stride,0,3,0);            
     free(NodeData);
 }
 void BSDCreateRenderObjectPointListVAO(BSD_t *BSD)
@@ -743,110 +731,6 @@ void BSDCreateRenderObjectPointListVAO(BSD_t *BSD)
     BSD->RenderObjectPointVAO = VAOInitXYZRGB(RenderObjectData,RenderObjectDataSize - (Stride * NumSkip),Stride,0,3,0);            
     free(RenderObjectData);
 }
-#if 0
-void BSDVAOBoxList(BSD_t *BSD)
-{
-    int NumSkip;
-    float *NodeData;
-    int    NodeDataPointer;
-    int    Stride;
-    int    NodeDataSize;
-    int    i;
-    
-    Stride = (48 + 3) * sizeof(float);
-    NodeDataSize = Stride * BSD->NodeData.Header.NumNodes;
-    NodeData = malloc(NodeDataSize);
-    NodeDataPointer = 0;
-    NumSkip = 0;
-    for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
-//         if( BSD->NodeData.Node[i].Id != BSD_PICKUP_OBJECT ) {
-//             NumSkip++;
-//             continue;
-//         }
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].Position.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].Position.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].Position.z;
-        NodeDataPointer += 3;
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].Position.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].Position.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].PositionMax.z;
-        NodeDataPointer += 3;
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].PositionMax.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].Position.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].PositionMax.z;
-        NodeDataPointer += 3;
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].PositionMax.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].Position.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].Position.z;
-        NodeDataPointer += 3;
-        
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].Position.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].PositionMax.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].Position.z;
-        NodeDataPointer += 3;
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].Position.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].PositionMax.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].PositionMax.z;
-        NodeDataPointer += 3;
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].PositionMax.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].PositionMax.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].PositionMax.z;
-        NodeDataPointer += 3;
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].PositionMax.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].PositionMax.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].Position.z;
-        NodeDataPointer += 3;
-        
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].Position.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].Position.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].Position.z;
-        NodeDataPointer += 3;
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].Position.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].PositionMax.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].Position.z;
-        NodeDataPointer += 3;
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].Position.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].Position.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].PositionMax.z;
-        NodeDataPointer += 3;
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].Position.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].PositionMax.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].PositionMax.z;
-        NodeDataPointer += 3;
-        
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].PositionMax.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].Position.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].Position.z;
-        NodeDataPointer += 3;
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].PositionMax.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].PositionMax.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].Position.z;
-        NodeDataPointer += 3;
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].PositionMax.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].Position.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].PositionMax.z;
-        NodeDataPointer += 3;
-        NodeData[NodeDataPointer] = BSD->NodeData.Node[i].PositionMax.x;
-        NodeData[NodeDataPointer + 1] = BSD->NodeData.Node[i].PositionMax.y;
-        NodeData[NodeDataPointer + 2] = BSD->NodeData.Node[i].PositionMax.z;
-        NodeDataPointer += 3;
-        if( BSD->NodeData.Node[i].Id == BSD_TSP_LOAD_TRIGGER ) {
-            NodeData[NodeDataPointer] = 0.f;
-            NodeData[NodeDataPointer+1] = 0.f;
-            NodeData[NodeDataPointer+2] = 1.f;
-        }
-        NodeDataPointer += 3;
-    }
-    BSD->NodeBoxVAO = VAOInitXYZRGB(NodeData,NodeDataSize - (Stride * NumSkip),Stride,0,3);            
-    free(NodeData);
-}
-#endif
-
-void BSDVAOObjectList(BSD_t *BSD)
-{
-    BSDCreateRenderObjectPointListVAO(BSD);
-}
-
 
 void BSDAddNodeToRenderObjecDrawabletList(BSD_t *BSD,int MissionNumber,unsigned int NodeId,Vec3_t Position,Vec3_t Rotation)
 {
@@ -2565,7 +2449,7 @@ void BSDReadNodeChunk(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     }
 }
 
-int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
+int BSDLoad(Level_t *Level,FILE *BSDFile)
 {   
     int MemBegin;
     int MemEnd;
@@ -2573,8 +2457,8 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     int Jump;
     BSDAnimatedLight_t *AnimatedLight;
     
-    fread(&BSD->Unknown,sizeof(BSD->Unknown),1,BSDFile);
-    BSDReadAnimatedLightChunk(BSD,BSDFile);
+    fread(&Level->BSD->Unknown,sizeof(Level->BSD->Unknown),1,BSDFile);
+    BSDReadAnimatedLightChunk(Level->BSD,BSDFile);
     //This section seems unused and should be constant in size (320 bytes).
     //TODO:Remove this useless code and just jump 320 bytes...
     MemBegin = GetCurrentFilePosition(BSDFile);
@@ -2591,55 +2475,55 @@ int BSDLoad(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     //This file section of 80 bytes contains the begin/end offset of some entries.
     //Like the NodeListTableStart/NodeListEnd after the header (+2048).
     //We can have a max of 20 offsets or 10 Begin/End Definitions.
-    BSDReadEntryTableChunk(BSD,BSDFile);
+    BSDReadEntryTableChunk(Level->BSD,BSDFile);
     
-    BSDReadSkyChunk(BSD,BSDFile);
+    BSDReadSkyChunk(Level->BSD,BSDFile);
     
     if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
         SkipFileSection(16,BSDFile);
     }
     
     DPrintf("Current Position after entries is %i\n",GetCurrentFilePosition(BSDFile));
-    BSDReadRenderObjectChunk(BSD,BSDFile);
+    BSDReadRenderObjectChunk(Level->BSD,BSDFile);
     DPrintf("Current Position after RenderObject Table is: %i\n",GetCurrentFilePosition(BSDFile));
     //NOTE(Adriano):Altough we are able to load all the animated lights and grab the color data from there, BSD files are not meant to be read
     //              sequentially, this means that we need to skip a certain amount of bytes which corresponds to the area pointed by each animated light,
     //              that contains a list of color values,in order to guarantee that we are reading it correctly.
-    if( BSD->AnimatedLightsTable.NumAnimatedLights != 0 ) {
+    if( Level->BSD->AnimatedLightsTable.NumAnimatedLights != 0 ) {
         DPrintf("Skipping block referenced by Animated lights Table...\n");
-        AnimatedLight = &BSD->AnimatedLightsTable.AnimatedLightsList[BSD->AnimatedLightsTable.NumAnimatedLights - 1];
+        AnimatedLight = &Level->BSD->AnimatedLightsTable.AnimatedLightsList[Level->BSD->AnimatedLightsTable.NumAnimatedLights - 1];
         Jump = ((AnimatedLight->StartingColorOffset + 2048) + (AnimatedLight->NumColors * 4)) - GetCurrentFilePosition(BSDFile);
         DPrintf("Skipping %i Bytes...\n",Jump);
         assert(Jump > 0);
         SkipFileSection(Jump,BSDFile);
     }
     DPrintf("Current Position after Color List Block is: %i\n",GetCurrentFilePosition(BSDFile));
-    BSDReadNodeChunk(BSD,MissionNumber,BSDFile);
-    BSDReadPropertySetFile(BSD,BSDFile);
+    BSDReadNodeChunk(Level->BSD,Level->MissionNumber,BSDFile);
+    BSDReadPropertySetFile(Level->BSD,BSDFile);
     fclose(BSDFile);
     return 1;
 }
 
-int LoadLevel(Level_t *Level)
+
+FILE *BSDEarlyInit(Level_t *Level)
 {
-    TSP_t *TSP;
     FILE *BSDFile;
     char Buffer[512];
     int i;
     
     if( !Level ) {
-        DPrintf("LoadLevel:Invalid Level data\n");
-        return -1;
+        DPrintf("BSDEarlyInit:Invalid Level data\n");
+        return NULL;
     }
     snprintf(Buffer,sizeof(Buffer),"%s/%i_%i.BSD",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 
-    DPrintf("LoadLevel:Loading BSD file %s...\n",Buffer);
+    DPrintf("BSDEarlyInit:Loading BSD file %s...\n",Buffer);
     
     BSDFile = fopen(Buffer,"rb");
     
     if( BSDFile == NULL ) {
-        DPrintf("LoadLevel:Failed opening BSD File.\n");
-        return -1;
+        DPrintf("BSDEarlyInit:Failed opening BSD File.\n");
+        return NULL;
     }
     Level->BSD = malloc(sizeof(BSD_t));
     
@@ -2658,14 +2542,14 @@ int LoadLevel(Level_t *Level)
     
     assert(sizeof(Level->BSD->Header) == 2048);
     fread(&Level->BSD->Header,sizeof(Level->BSD->Header),1,BSDFile);
-    DPrintf("LoadLevel: BSD Header contains %i(%#02x) element.\n",Level->BSD->Header.NumHeadElements,Level->BSD->Header.NumHeadElements);
+    DPrintf("BSDEarlyInit: BSD Header contains %i(%#02x) element.\n",Level->BSD->Header.NumHeadElements,Level->BSD->Header.NumHeadElements);
     for( i = 0; i < Level->BSD->Header.NumHeadElements; i++ ) {
-        printf("LoadLevel:Got %i(%#02x)(%i)\n",Level->BSD->Header.Sector[i],Level->BSD->Header.Sector[i],Level->BSD->Header.Sector[i] >> 0xb);
+        DPrintf("BSDEarlyInit:Got %i(%#02x)(%i)\n",Level->BSD->Header.Sector[i],Level->BSD->Header.Sector[i],Level->BSD->Header.Sector[i] >> 0xb);
     }
     //At position 152 after the header we have the SPRITE definitions...
     //Maybe hud/ammo...
     fread(&Level->BSD->TSPInfo,sizeof(Level->BSD->TSPInfo),1,BSDFile);
-    DPrintf("LoadLevel:Reading TSP info.\n");
+    DPrintf("BSDEarlyInit:Reading TSP info.\n");
     DPrintf("Compartment pattern: %s\n",Level->BSD->TSPInfo.TSPPattern);
     DPrintf("Number of compartments: %i\n",Level->BSD->TSPInfo.NumTSP);
     DPrintf("TargetInitialCompartment: %i\n",Level->BSD->TSPInfo.TargetInitialCompartment);
@@ -2673,25 +2557,9 @@ int LoadLevel(Level_t *Level)
     DPrintf("u3: %i\n",Level->BSD->TSPInfo.u3);
     DPrintf("TSP Block ends at %i\n",GetCurrentFilePosition(BSDFile));
     assert(Level->BSD->TSPInfo.u3 == 0);
-    
-    //Read the TSP FILES
-    //Step.3 Load all the TSP file based on the data read from the BSD file.
-    //Note that we are going to load all the tsp file since we do not know 
-    //where in the bsd file it signals to stream/load the next tsp.
-    for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.TargetInitialCompartment; i++ ) {
-       Level->TSPNumberRenderList[i] = i;
-    }
-    for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.NumTSP; i++ ) {
-        snprintf(Buffer,sizeof(Buffer),"%s/TSP0/%i_%i_C%i.TSP",Level->MissionPath,Level->MissionNumber,Level->LevelNumber,i);
-        TSP = TSPLoad(Buffer,i);
-        TSP->Next = Level->TSPList;
-        Level->TSPList = TSP;
-    }
-    //Keep on reading BSD
-    DPrintf("LoadLevel: Detected game %s\n",LevelGetGameEngine() == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
-    BSDLoad(Level->BSD,Level->MissionNumber,BSDFile);
-    return 1;
+    return BSDFile;
 }
+
 #ifdef __STANDALONE
 int main(int argc,char **argv) {
     FILE *BSDFile;
