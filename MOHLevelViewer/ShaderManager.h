@@ -24,7 +24,7 @@
 typedef struct Shader_s
 {
     char   *Name;
-    int     ProgramID;
+    int     ProgramId;
     struct Shader_s *Next;
 } Shader_t;
 

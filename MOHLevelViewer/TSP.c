@@ -1154,13 +1154,13 @@ void TSPPrintColor(Color1i_t Color)
 void DrawTSPBox(TSPNode_t Node)
 {
     Shader_t *Shader;
-    int MVPMatrixID;
+    int MVPMatrixId;
     
     Shader = ShaderCache("TSPBBoxShader","Shaders/TSPBBoxVertexShader.glsl","Shaders/TSPBBoxFragmentShader.glsl");
-    glUseProgram(Shader->ProgramID);
+    glUseProgram(Shader->ProgramId);
     
-    MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-    glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+    MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+    glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
     
     glBindVertexArray(Node.BBoxVAO->VAOId[0]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Node.BBoxVAO->IBOId[0]);
@@ -1175,7 +1175,7 @@ void DrawTSPCollisionData(TSP_t *TSP)
 {
     VAO_t *Iterator;
     Shader_t *Shader;
-    int MVPMatrixID;
+    int MVPMatrixId;
     
     if( !TSP ) {
         DPrintf("Invalid TSP...\n");
@@ -1183,10 +1183,10 @@ void DrawTSPCollisionData(TSP_t *TSP)
     }
     
     Shader = ShaderCache("TSPCollisionShader","Shaders/TSPCollisionVertexShader.glsl","Shaders/TSPCollisionFragmentShader.glsl");
-    glUseProgram(Shader->ProgramID);
+    glUseProgram(Shader->ProgramId);
 
-    MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-    glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+    MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+    glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
     
     for( Iterator = TSP->CollisionVAOList; Iterator; Iterator = Iterator->Next ) {
         glBindVertexArray(Iterator->VAOId[0]);
@@ -1210,10 +1210,10 @@ bool IsTSPInRenderArray(Level_t *Level,int TSPNumber)
 void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
 {
     Shader_t *Shader;
-    int MVPMatrixID;
-    int EnableLightingID;
-    int PaletteTextureID;
-    int TextureIndexID;
+    int MVPMatrixId;
+    int EnableLightingId;
+    int PaletteTextureId;
+    int TextureIndexId;
     
     if( !Node ) {
         return;
@@ -1230,25 +1230,25 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
     if( Node->NumFaces != 0 ) {
         if( Level->Settings.ShowMap ) {
             Shader = ShaderCache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
-            glUseProgram(Shader->ProgramID);
+            glUseProgram(Shader->ProgramId);
 
-            MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-            glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-            EnableLightingID = glGetUniformLocation(Shader->ProgramID,"EnableLighting");
-            PaletteTextureID = glGetUniformLocation(Shader->ProgramID,"ourPaletteTexture");
-            TextureIndexID = glGetUniformLocation(Shader->ProgramID,"ourIndexTexture");
-            glUniform1i(TextureIndexID, 0);
-            glUniform1i(PaletteTextureID,  1);
-            glUniform1i(EnableLightingID, LevelSettings.EnableLighting);
+            MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+            glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
+            EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
+            PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
+            TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+            glUniform1i(TextureIndexId, 0);
+            glUniform1i(PaletteTextureId,  1);
+            glUniform1i(EnableLightingId, LevelSettings.EnableLighting);
             if( Level->Settings.WireFrame ) {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             } else {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
             glActiveTexture(GL_TEXTURE0 + 0);
-            glBindTexture(GL_TEXTURE_2D, Level->VRAM->TextureIndexPage.TextureID);
+            glBindTexture(GL_TEXTURE_2D, Level->VRAM->TextureIndexPage.TextureId);
             glActiveTexture(GL_TEXTURE0 + 1);
-            glBindTexture(GL_TEXTURE_2D, Level->VRAM->PalettePage.TextureID);
+            glBindTexture(GL_TEXTURE_2D, Level->VRAM->PalettePage.TextureId);
 
             glDisable(GL_BLEND);
             glBindVertexArray(Node->OpaqueFacesVAO->VAOId[0]);
@@ -1352,33 +1352,33 @@ void TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,int Reset)
 void TSPDrawTransparentFaces(TSP_t *TSP,LevelSettings_t Settings)
 {
     Shader_t *Shader;
-    int MVPMatrixID;
-    int EnableLightingID;
-    int PaletteTextureID;
-    int TextureIndexID;
+    int MVPMatrixId;
+    int EnableLightingId;
+    int PaletteTextureId;
+    int TextureIndexId;
     TSPRenderingFace_t *TransparentFaceIterator;
 
     
     Shader = ShaderCache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
-    glUseProgram(Shader->ProgramID);
+    glUseProgram(Shader->ProgramId);
 
-    MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-    glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-    EnableLightingID = glGetUniformLocation(Shader->ProgramID,"EnableLighting");
-    PaletteTextureID = glGetUniformLocation(Shader->ProgramID,"ourPaletteTexture");
-    TextureIndexID = glGetUniformLocation(Shader->ProgramID,"ourIndexTexture");
-    glUniform1i(TextureIndexID, 0);
-    glUniform1i(PaletteTextureID,  1);
-    glUniform1i(EnableLightingID, Level->Settings.EnableLighting);
+    MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+    glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
+    EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
+    PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
+    TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+    glUniform1i(TextureIndexId, 0);
+    glUniform1i(PaletteTextureId,  1);
+    glUniform1i(EnableLightingId, Level->Settings.EnableLighting);
     if( Settings.WireFrame ) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, Level->VRAM->TextureIndexPage.TextureID);
+    glBindTexture(GL_TEXTURE_2D, Level->VRAM->TextureIndexPage.TextureId);
     glActiveTexture(GL_TEXTURE0 + 1);
-    glBindTexture(GL_TEXTURE_2D, Level->VRAM->PalettePage.TextureID);
+    glBindTexture(GL_TEXTURE_2D, Level->VRAM->PalettePage.TextureId);
     glBindVertexArray(TSP->TransparentVAO->VAOId[0]);
     if( !Settings.EnableSemiTransparency ) {
         glDrawArrays(GL_TRIANGLES, 0, TSP->TransparentVAO->Count);
@@ -2135,7 +2135,7 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
     TSP->TransparentVAO = NULL;
     strcpy(TSP->FName,GetBaseName(FName));
     
-    fread(&TSP->Header.ID,sizeof(TSP->Header.ID),1,TSPFile);
+    fread(&TSP->Header.Id,sizeof(TSP->Header.Id),1,TSPFile);
     fread(&TSP->Header.Version,sizeof(TSP->Header.Version),1,TSPFile);
     fread(&TSP->Header.NumNodes,sizeof(TSP->Header.NumNodes),1,TSPFile);
     fread(&TSP->Header.NodeOffset,sizeof(TSP->Header.NodeOffset),1,TSPFile);
@@ -2166,7 +2166,7 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
     DPrintf(" -- TSP HEADER --\n");
     DPrintf("TSP Number: %i\n",TSP->Number);
     DPrintf("TSP File: %s\n",TSP->FName);
-    DPrintf("ID:%u\n",TSP->Header.ID);
+    DPrintf("Id:%u\n",TSP->Header.Id);
     DPrintf("Version:%u\n",TSP->Header.Version);
     DPrintf("NumNodes:%i NodeOffset:%i\n",TSP->Header.NumNodes,TSP->Header.NodeOffset);
     DPrintf("NumFaces:%i FaceOffset:%i\n",TSP->Header.NumFaces,TSP->Header.FaceOffset);

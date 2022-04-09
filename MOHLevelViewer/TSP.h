@@ -184,7 +184,7 @@ typedef struct TSPCollision_s {
 } TSPCollision_t;
 
 typedef struct TSPHeader_s {
-    unsigned short ID;
+    unsigned short Id;
     unsigned short Version;
     
     int NumNodes;

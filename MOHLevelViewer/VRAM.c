@@ -215,7 +215,7 @@ void VRAMPutRawTexture(VRAM_t *VRAM,TIMImage_t *Image)
         DPrintf("VRAMPutRAWTexture:Failed to expand image %s\n",Image->Name);
         return;
     }
-    glBindTexture(GL_TEXTURE_2D,VRAM->TextureIndexPage.TextureID);
+    glBindTexture(GL_TEXTURE_2D,VRAM->TextureIndexPage.TextureId);
     glTexSubImage2D(GL_TEXTURE_2D, 0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RED_INTEGER, GL_UNSIGNED_BYTE, ImageData);
     glBindTexture(GL_TEXTURE_2D,0);
     free(ImageData);
@@ -251,7 +251,7 @@ void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
             SrcRect.w = 256;
         }
     }
-    glBindTexture(GL_TEXTURE_2D,VRAM->PalettePage.TextureID);
+    glBindTexture(GL_TEXTURE_2D,VRAM->PalettePage.TextureId);
     glTexSubImage2D(GL_TEXTURE_2D,0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, Image->CLUT);
     glBindTexture(GL_TEXTURE_2D,0);
 }
@@ -279,7 +279,7 @@ void VRAMPutDirectModeIntoCLUT(VRAM_t *VRAM,TIMImage_t *Image)
     SrcRect.y = VRAMGetTexturePageY(VRAMPage,Image->Header.BPP) + DestY;
     SrcRect.w = Image->Width;
     SrcRect.h = Image->Height;
-    glBindTexture(GL_TEXTURE_2D,VRAM->PalettePage.TextureID);
+    glBindTexture(GL_TEXTURE_2D,VRAM->PalettePage.TextureId);
     glTexSubImage2D(GL_TEXTURE_2D, 0, SrcRect.x, SrcRect.y, SrcRect.w, SrcRect.h, GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, 
                         Image->Data);
     glBindTexture(GL_TEXTURE_2D,0);
@@ -297,8 +297,8 @@ VRAM_t *VRAMInit(TIMImage_t *ImageList)
     
     VRAM->Page.Surface = SDL_CreateRGBSurface(0,VRAM->Page.Width,VRAM->Page.Height,32, 0x000000FF,0x0000FF00,0x00FF0000, 0xFF000000);
 
-    glGenTextures(1,&VRAM->PalettePage.TextureID);
-    glBindTexture(GL_TEXTURE_2D,VRAM->PalettePage.TextureID);
+    glGenTextures(1,&VRAM->PalettePage.TextureId);
+    glBindTexture(GL_TEXTURE_2D,VRAM->PalettePage.TextureId);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
@@ -306,8 +306,8 @@ VRAM_t *VRAMInit(TIMImage_t *ImageList)
     glTexStorage2D(GL_TEXTURE_2D,1,GL_RGB5_A1,VRAM->Page.Width, VRAM->Page.Height);
     glBindTexture(GL_TEXTURE_2D,0);
 
-    glGenTextures(1,&VRAM->TextureIndexPage.TextureID);
-    glBindTexture(GL_TEXTURE_2D,VRAM->TextureIndexPage.TextureID);
+    glGenTextures(1,&VRAM->TextureIndexPage.TextureId);
+    glBindTexture(GL_TEXTURE_2D,VRAM->TextureIndexPage.TextureId);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
@@ -331,8 +331,8 @@ VRAM_t *VRAMInit(TIMImage_t *ImageList)
 #ifdef _DEBUG
     VRAMDump(VRAM);
 #endif
-    glGenTextures(1,&VRAM->Page.TextureID);
-    glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureID);
+    glGenTextures(1,&VRAM->Page.TextureId);
+    glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);

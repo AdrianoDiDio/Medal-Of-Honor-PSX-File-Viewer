@@ -22,7 +22,7 @@
 
 
 typedef struct VRamPage_s {
-    unsigned int TextureID;
+    unsigned int TextureId;
     SDL_Surface *Surface;
     Byte *Data; //RGB Pixel value.
     float Width;

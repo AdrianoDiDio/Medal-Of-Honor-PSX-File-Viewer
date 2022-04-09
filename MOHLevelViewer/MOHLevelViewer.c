@@ -763,15 +763,15 @@ void GLSetProjectionMatrix()
 
 /*
  Suppressed messages:
- ID = 131204 => Message:Texture state usage warning
+ Id = 131204 => Message:Texture state usage warning
  */
-void GLDebugOutput(GLenum Source, GLenum Type, unsigned int ID, GLenum Severity, GLsizei Length, const char *Message, const void *UserParam)
+void GLDebugOutput(GLenum Source, GLenum Type, unsigned int Id, GLenum Severity, GLsizei Length, const char *Message, const void *UserParam)
 {
-    if( ID == 131204 ) {
+    if( Id == 131204 ) {
         return;
     }
     DPrintf("---------------\n");
-    DPrintf("Debug message ID: %i\n",ID);
+    DPrintf("Debug message Id: %i\n",Id);
 
 
     switch (Source) {
@@ -1208,7 +1208,7 @@ void Quit()
     - MISSION NUMBER
     - LEVEL NUMBER
 */
-#define _ENABLEVIDEOOUT 1
+#define _ENABLEVIdEOOUT 1
 int main(int argc,char **argv)
 {
     srand(time(NULL));
@@ -1221,7 +1221,7 @@ int main(int argc,char **argv)
         return -1;
     }
 
-#if _ENABLEVIDEOOUT
+#if _ENABLEVIdEOOUT
     SysVidInit(1366,768,false);
     ComTime = malloc(sizeof(ComTimeInfo_t));
     memset(ComTime,0,sizeof(ComTimeInfo_t));

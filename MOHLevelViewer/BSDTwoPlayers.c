@@ -59,13 +59,13 @@ void BSD2PVAOPointList(BSD2P_t *BSD)
 void BSD2PDraw(Level_t *Level)
 {
     Shader_t *Shader;
-    int MVPMatrixID;
+    int MVPMatrixId;
     
     Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
-    glUseProgram(Shader->ProgramID);
+    glUseProgram(Shader->ProgramId);
 
-    MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-    glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
+    MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+    glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
     glBindVertexArray(Level->BSDTwoP->NodeVAO->VAOId[0]);
     glPointSize(10.f);
     glDrawArrays(GL_POINTS, 0, Level->BSDTwoP->NodeData.Header.NumNodes);
@@ -105,7 +105,7 @@ void BSD2PReadRenderObjectChunk(BSD2P_t *BSD,FILE *InFile)
         assert(GetCurrentFilePosition(InFile) == StartinUAt + (i * 256));
         DPrintf("BSD2PReadRenderObjectChunk: Reading RenderObject Element %i at %i\n",i,GetCurrentFilePosition(InFile));
         fread(&BSD->RenderObjectTable.RenderObject[i],sizeof(BSD->RenderObjectTable.RenderObject[i]),1,InFile);
-        DPrintf("BSD2PReadRenderObjectChunk: RenderObject ID:%u\n",BSD->RenderObjectTable.RenderObject[i].ID);
+        DPrintf("BSD2PReadRenderObjectChunk: RenderObject Id:%u\n",BSD->RenderObjectTable.RenderObject[i].Id);
         DPrintf("BSD2PReadRenderObjectChunk: RenderObject Type:%i | %s\n",BSD->RenderObjectTable.RenderObject[i].Type,
             BSDRenderObjectGetEnumStringFromType(BSD->RenderObjectTable.RenderObject[i].Type)
         );
@@ -137,9 +137,9 @@ void BSD2PReadNodeChunk(BSD2P_t *BSD,FILE *InFile)
     int NodeFilePosition;
     int Offset;
     int Delta;
-    int NodeNumReferencedRenderObjectIDOffset;
-    int NumReferencedRenderObjectID;
-    unsigned int NodeRenderObjectID;
+    int NodeNumReferencedRenderObjectIdOffset;
+    int NumReferencedRenderObjectId;
+    unsigned int NodeRenderObjectId;
     int PrevPos;
     int i;
     if( !BSD || !InFile ) {
@@ -174,7 +174,7 @@ void BSD2PReadNodeChunk(BSD2P_t *BSD,FILE *InFile)
         DPrintf("BSD2PReadNodeChunk: -- NODE %i (Pos %i PosNoHeader %i)-- \n",i,NodeFilePosition,NodeFilePosition - 2048);
         assert(GetCurrentFilePosition(InFile) == (BSD->NodeData.Table[i].Offset + NodeTableEnd));
         fread(&BSD->NodeData.Node[i],sizeof(BSDNode_t),1,InFile);
-        DPrintf("BSD2PReadNodeChunk: ID:%u | ID:%s\n",BSD->NodeData.Node[i].Id,BSDNodeGetEnumStringFromNodeID(BSD->NodeData.Node[i].Id));
+        DPrintf("BSD2PReadNodeChunk: Id:%u | Id:%s\n",BSD->NodeData.Node[i].Id,BSDNodeGetEnumStringFromNodeId(BSD->NodeData.Node[i].Id));
         DPrintf("BSD2PReadNodeChunk: Size:%i\n",BSD->NodeData.Node[i].Size);
         DPrintf("BSD2PReadNodeChunk: U2:%i\n",BSD->NodeData.Node[i].u2);
         DPrintf("BSD2PReadNodeChunk: Type:%i\n",BSD->NodeData.Node[i].Type);
@@ -211,22 +211,22 @@ void BSD2PReadNodeChunk(BSD2P_t *BSD,FILE *InFile)
             if( BSD->NodeData.Node[i].Id == BSD_TSP_LOAD_TRIGGER ) {
                 DPrintf("BSD2PReadNodeChunk: Node is a BSD_TSP_LOAD_TRIGGER.\n");
             } else {
-                fread(&NodeNumReferencedRenderObjectIDOffset,sizeof(NodeNumReferencedRenderObjectIDOffset),1,InFile);
-                DPrintf("BSD2PReadNodeChunk: Node has RenderObject offset %i.\n",NodeNumReferencedRenderObjectIDOffset);
-                if( NodeNumReferencedRenderObjectIDOffset != 0 ) {
+                fread(&NodeNumReferencedRenderObjectIdOffset,sizeof(NodeNumReferencedRenderObjectIdOffset),1,InFile);
+                DPrintf("BSD2PReadNodeChunk: Node has RenderObject offset %i.\n",NodeNumReferencedRenderObjectIdOffset);
+                if( NodeNumReferencedRenderObjectIdOffset != 0 ) {
                     if( BSD->NodeData.Node[i].Type == 4 ) {
-                        DPrintf("BSD2PReadNodeChunk: Node has Type 4 so the RenderObject is %u.\n",NodeNumReferencedRenderObjectIDOffset);
-//                         BSDAddNodeToUObjectList(BSD,MissionNumber,NodeNumReferencedRenderObjectIDOffset,NodePosition);
+                        DPrintf("BSD2PReadNodeChunk: Node has Type 4 so the RenderObject is %u.\n",NodeNumReferencedRenderObjectIdOffset);
+//                         BSDAddNodeToUObjectList(BSD,MissionNumber,NodeNumReferencedRenderObjectIdOffset,NodePosition);
                     } else {
-                        fseek(InFile,NodeFilePosition + NodeNumReferencedRenderObjectIDOffset,SEEK_SET);
-                        fread(&NumReferencedRenderObjectID,sizeof(NumReferencedRenderObjectID),1,InFile);
-                        DPrintf("BSD2PReadNodeChunk: Node is referencing %i RenderObjects.\n",NumReferencedRenderObjectID);
-                        for( j = 0; j < NumReferencedRenderObjectID; j++ ) {
-                            fread(&NodeRenderObjectID,sizeof(NodeRenderObjectID),1,InFile);
-                            if( BSD->NodeData.Node[i].Id == BSD_ENEMY_SPAWN && NodeRenderObjectID != 3817496448 && j == 0 ) {
+                        fseek(InFile,NodeFilePosition + NodeNumReferencedRenderObjectIdOffset,SEEK_SET);
+                        fread(&NumReferencedRenderObjectId,sizeof(NumReferencedRenderObjectId),1,InFile);
+                        DPrintf("BSD2PReadNodeChunk: Node is referencing %i RenderObjects.\n",NumReferencedRenderObjectId);
+                        for( j = 0; j < NumReferencedRenderObjectId; j++ ) {
+                            fread(&NodeRenderObjectId,sizeof(NodeRenderObjectId),1,InFile);
+                            if( BSD->NodeData.Node[i].Id == BSD_ENEMY_SPAWN && NodeRenderObjectId != 3817496448 && j == 0 ) {
                                 DPrintf("BSD2PReadNodeChunk: We have a different RenderObject for this enemy spawn...\n");
                             }
-//                             BSDAddNodeToUObjectList(BSD,MissionNumber,NodeUBlockID,NodePosition);
+//                             BSDAddNodeToUObjectList(BSD,MissionNumber,NodeUBlockId,NodePosition);
                         }
                     }
                 }

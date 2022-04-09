@@ -43,7 +43,7 @@ void VAOUpdate(VAO_t *VAO,int *Data,int DataSize,int NumElements)
     glBindBuffer(GL_ARRAY_BUFFER,0);
     VAO->CurrentSize += NumElements;
 }
-VAO_t *VAOInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,int Count)
+VAO_t *VAOInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureId,int Count)
 {
     VAO_t *VAO;
     
@@ -65,7 +65,7 @@ VAO_t *VAOInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int 
     glEnableVertexAttribArray(2);
 
     VAO->TSB = TSB;
-    VAO->TextureID = TextureID;
+    VAO->TextureId = TextureId;
     VAO->Next = NULL;
     VAO->Count = Count;
     glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -100,7 +100,7 @@ VAO_t *VAOInitXYZUVRGBCLUTColorModeInteger(int *Data,int DataSize,int Stride,int
     glVertexAttribIPointer(4,1,GL_INT,Stride,BUFFER_INT_OFFSET(ColorModeOffset));
     glEnableVertexAttribArray(4);
     VAO->TSB = -1;
-    VAO->TextureID = -1;
+    VAO->TextureId = -1;
     VAO->Next = NULL;
     VAO->CurrentSize = 0;
     VAO->Stride = Stride;
@@ -113,7 +113,7 @@ VAO_t *VAOInitXYZUVRGBCLUTColorModeInteger(int *Data,int DataSize,int Stride,int
     return VAO;
 
 }
-VAO_t *VAOInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureID,
+VAO_t *VAOInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,short TSB,int TextureId,
     bool StaticDraw)
 {
     VAO_t *VAO;
@@ -136,7 +136,7 @@ VAO_t *VAOInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int T
     glEnableVertexAttribArray(2);
 
     VAO->TSB = TSB;
-    VAO->TextureID = TextureID;
+    VAO->TextureId = TextureId;
     VAO->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -166,7 +166,7 @@ VAO_t *VAOInitXYRGB(float *Data,int DataSize,int Stride,int VertexOffset,int Col
     glEnableVertexAttribArray(1);
 
     VAO->TSB = -1;
-    VAO->TextureID = -1;
+    VAO->TextureId = -1;
     VAO->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -176,7 +176,7 @@ VAO_t *VAOInitXYRGB(float *Data,int DataSize,int Stride,int VertexOffset,int Col
     return VAO;
 }
 
-VAO_t *VAOInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID,bool StaticDraw)
+VAO_t *VAOInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureId,bool StaticDraw)
 {
     VAO_t *VAO;
     
@@ -196,7 +196,7 @@ VAO_t *VAOInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int Text
     glEnableVertexAttribArray(1);
 
     VAO->TSB = TSB;
-    VAO->TextureID = TextureID;
+    VAO->TextureId = TextureId;
     VAO->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -206,7 +206,7 @@ VAO_t *VAOInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int Text
     return VAO;
 }
 
-VAO_t *VAOInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureID,int Count)
+VAO_t *VAOInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureId,int Count)
 {
     VAO_t *VAO;
     
@@ -226,7 +226,7 @@ VAO_t *VAOInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int Tex
     glEnableVertexAttribArray(1);
 
     VAO->TSB = TSB;
-    VAO->TextureID = TextureID;
+    VAO->TextureId = TextureId;
     VAO->Count = Count;
     VAO->Next = NULL;
     
@@ -257,7 +257,7 @@ VAO_t *VAOInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int Co
     glEnableVertexAttribArray(1);
 
     VAO->TSB = -1;
-    VAO->TextureID = -1;
+    VAO->TextureId = -1;
     VAO->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -291,7 +291,7 @@ VAO_t *VAOInitXYZRGBIBO(float *Data,int DataSize,int Stride,unsigned short *Inde
     
 
     VAO->TSB = -1;
-    VAO->TextureID = -1;
+    VAO->TextureId = -1;
     VAO->Next = NULL;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -319,7 +319,7 @@ VAO_t *VAOInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset)
     glEnableVertexAttribArray(0);
 
     VAO->TSB = -1;
-    VAO->TextureID = -1;
+    VAO->TextureId = -1;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);

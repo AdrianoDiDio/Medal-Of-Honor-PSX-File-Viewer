@@ -29,11 +29,15 @@
 #define BSD_HANDLER_REG_TABLE_POSITION 0x59C
 #define BSD_PROPERTY_SET_FILE_POSITION 0x598
 
+#define BSD_ANIMATED_LIGHTS_FILE_POSITION 0xD8
 #define BSD_ANIMATED_LIGHTS_TABLE_SIZE 40
 
+#define BSD_ENTRY_TABLE_FILE_POSITION 0x53C
+
+#define BSD_SKY_DATA_FILE_POSITION 0x58C
 #define BSD_SKY_MAX_STARS_NUMBER 255
 #define BSD_MOON_VRAM_PAGE 15
-#define BSD_MOON_WIDTH 32
+#define BSD_MOON_WIdTH 32
 #define BSD_MOON_HEIGHT 32
 #define BSD_MOON_TEXTURE_X 192
 #define BSD_MOON_TEXTURE_Y 96
@@ -49,8 +53,8 @@ typedef enum  {
     BSD_NODE_SCRIPT = 3088847075, // Needs doublecheck
     BSD_ANIMATED_OBJECT = 376079867,
     BSD_DESTRUCTIBLE_WINDOW = 3542063242
-    //Object ID 8499 could either be Audio Source / Timers / Random entity spawner ...
-} BSDNodeID;
+    //Object Id 8499 could either be Audio Source / Timers / Random entity spawner ...
+} BSDNodeId;
 
 typedef enum {
     BSD_RENDER_OBJECT_CARRY_AUX_ELEMENTS = 0, //Contains all the RenderObject that can be carried such as enemy helmet,grenade,rocket, etc.
@@ -81,7 +85,7 @@ typedef enum {
     BSD_RENDER_OBJECT_WEAPON_GERMAN_GRENADE = 3097846808,
     BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_3 = 2691923848,
     BSD_RENDER_OBJECT_WEAPON_M1_GARAND = 1326598003
-} BSDRenderObjectWeaponID;
+} BSDRenderObjectWeaponId;
 
 typedef enum {
     BSD_NODE_TABLE,
@@ -103,9 +107,9 @@ typedef struct BSDUv_s {
 
 typedef struct BSDNode_s {
     //
-    // TODO:Map all the known ID.
+    // TODO:Map all the known Id.
     //
-    // This is actually an unsigned int ID
+    // This is actually an unsigned int Id
 //     unsigned short Id;
 //     unsigned short u1;
     unsigned int Id;
@@ -120,7 +124,7 @@ typedef struct BSDNode_s {
     short CollisionInfo1; // CylinderBottom or BoxHeight
     short CollisionInfo2; // CylinderTop or BoxDepth
 //     char Pad2[8];
-    int MessageData; //Offset to a list of Message IDs
+    int MessageData; //Offset to a list of Message Ids
     Byte DynamicBlockIndex;
     //TODO:At 0x5c in every pickup object is stored the amount of ammo...
 } BSDNode_t;
@@ -164,7 +168,7 @@ typedef struct BSDNodeInfo_s {
 */
 
 typedef struct BSDRenderObjectElement_s {
-unsigned int ID;
+unsigned int Id;
     char    U0[40];
     int     FaceOffset;
     char    U[8];
@@ -366,16 +370,16 @@ typedef struct Level_s Level_t;
 // BSD_t  *BSDLoad(char *FName,int MissionNumber);
 int     LoadLevel(Level_t *Level);
 void    BSDCheckCompartmentTrigger(Level_t *Level,Vec3_t CameraPosition);
-char   *BSDNodeGetEnumStringFromNodeID(unsigned int NodeID);
+char   *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId);
 char   *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
 Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD);
 void    BSDCreateVAOs(BSD_t *BSD);
 void    BSDDraw(Level_t *Level);
 void    BSDDrawSky(Level_t *Level);
-unsigned int BSDNodeIDToRenderObjectID(unsigned int NodeID);
-unsigned int BSDMPNodeIDToRenderObjectID(unsigned int NodeID);
-int     BSDGetRenderObjectIndexByID(BSD_t *BSD,int ID);
-bool    BSDIsRenderObjectPresent(BSD_t *BSD,unsigned int RenderObjectID);
+unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId);
+unsigned int BSDMPNodeIdToRenderObjectId(unsigned int NodeId);
+int     BSDGetRenderObjectIndexById(BSD_t *BSD,int Id);
+bool    BSDIsRenderObjectPresent(BSD_t *BSD,unsigned int RenderObjectId);
 void    BSDFixRenderObjectPosition(Level_t *Level);
 int     BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index);
 void    BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile);

@@ -23,7 +23,7 @@ void ShaderManagerFree()
     Shader_t *Temp;
     
     while( ShaderList ) {
-        glDeleteProgram(ShaderList->ProgramID);
+        glDeleteProgram(ShaderList->ProgramId);
         Temp = ShaderList;
         ShaderList = ShaderList->Next;
         free(Temp);
@@ -57,9 +57,9 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
 {
     Shader_t *Result;
     char *ShaderInfoLog;
-    int VertexShaderID;
-    int FragmentShaderID;
-    int ProgramID;
+    int VertexShaderId;
+    int FragmentShaderId;
+    int ProgramId;
     int InfoLogLength;
     int ShaderTaskResult;
     char *ShaderSource;
@@ -70,67 +70,67 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
     
     Result = malloc(sizeof(Shader_t));
     
-    VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-    FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+    VertexShaderId = glCreateShader(GL_VERTEX_SHADER);
+    FragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     
     DPrintf("Compiling Vertex Shader: %s\n", VertexShaderFile);
     ShaderSource = ShaderRead(VertexShaderFile);
-    glShaderSource(VertexShaderID, 1, (const GLchar**) &ShaderSource, NULL);
-    glCompileShader(VertexShaderID);
+    glShaderSource(VertexShaderId, 1, (const GLchar**) &ShaderSource, NULL);
+    glCompileShader(VertexShaderId);
 
-    glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &ShaderTaskResult);
-    glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    glGetShaderiv(VertexShaderId, GL_COMPILE_STATUS, &ShaderTaskResult);
+    glGetShaderiv(VertexShaderId, GL_INFO_LOG_LENGTH, &InfoLogLength);
     
     if ( InfoLogLength > 0 && ShaderTaskResult == 0 ){
         ShaderInfoLog = malloc(InfoLogLength + 1);
-        glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, ShaderInfoLog);
+        glGetShaderInfoLog(VertexShaderId, InfoLogLength, NULL, ShaderInfoLog);
         ShaderInfoLog[InfoLogLength] = '\0';
         DPrintf("Compile Error:%s\n", ShaderInfoLog);
     }
     
     DPrintf("Compiling Fragment Shader: %s\n", FragmentShaderFile);
     ShaderSource = ShaderRead(FragmentShaderFile);
-    glShaderSource(FragmentShaderID, 1, (const GLchar**) &ShaderSource, NULL);
-    glCompileShader(FragmentShaderID);
+    glShaderSource(FragmentShaderId, 1, (const GLchar**) &ShaderSource, NULL);
+    glCompileShader(FragmentShaderId);
 
-    glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &ShaderTaskResult);
-    glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    glGetShaderiv(FragmentShaderId, GL_COMPILE_STATUS, &ShaderTaskResult);
+    glGetShaderiv(FragmentShaderId, GL_INFO_LOG_LENGTH, &InfoLogLength);
     
     if ( InfoLogLength > 0 && ShaderTaskResult == 0){
         ShaderInfoLog = malloc(InfoLogLength + 1);
-        glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, ShaderInfoLog);
+        glGetShaderInfoLog(FragmentShaderId, InfoLogLength, NULL, ShaderInfoLog);
         ShaderInfoLog[InfoLogLength] = '\0';
         DPrintf("Compile Error:%s\n", ShaderInfoLog);
     }
     
     DPrintf("Linking...\n");
     
-    ProgramID = glCreateProgram();
-    glAttachShader(ProgramID, VertexShaderID);
-    glAttachShader(ProgramID, FragmentShaderID);
-    glLinkProgram(ProgramID);
+    ProgramId = glCreateProgram();
+    glAttachShader(ProgramId, VertexShaderId);
+    glAttachShader(ProgramId, FragmentShaderId);
+    glLinkProgram(ProgramId);
 
-    glGetProgramiv(ProgramID, GL_LINK_STATUS, &ShaderTaskResult);
-    glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    glGetProgramiv(ProgramId, GL_LINK_STATUS, &ShaderTaskResult);
+    glGetProgramiv(ProgramId, GL_INFO_LOG_LENGTH, &InfoLogLength);
 
     if ( InfoLogLength > 0  && ShaderTaskResult == 0){
         ShaderInfoLog = malloc(InfoLogLength + 1);
-        glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, ShaderInfoLog);
+        glGetProgramInfoLog(ProgramId, InfoLogLength, NULL, ShaderInfoLog);
         ShaderInfoLog[InfoLogLength] = '\0';
         DPrintf("Linking Error:%s\n", ShaderInfoLog);
     }
     
     Result->Name = StringCopy(ShaderName);
-    Result->ProgramID = ProgramID;
+    Result->ProgramId = ProgramId;
     
     Result->Next = ShaderList;
     ShaderList= Result;
     
     NumShaders++;
-    glDetachShader(ProgramID, VertexShaderID);
-    glDetachShader(ProgramID, FragmentShaderID);
-    glDeleteShader(VertexShaderID);
-    glDeleteShader(FragmentShaderID);
+    glDetachShader(ProgramId, VertexShaderId);
+    glDetachShader(ProgramId, FragmentShaderId);
+    glDeleteShader(VertexShaderId);
+    glDeleteShader(FragmentShaderId);
     return Result;
 
 }
