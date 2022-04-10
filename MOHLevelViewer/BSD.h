@@ -372,7 +372,7 @@ int     BSDLoad(Level_t *Level,FILE *BSDFile);
 void    BSDCheckCompartmentTrigger(Level_t *Level,Vec3_t CameraPosition);
 char   *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId);
 char   *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
-Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD);
+Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD,Vec3_t *Rotation);
 void    BSDCreateVAOs(BSD_t *BSD);
 void    BSDDraw(Level_t *Level);
 void    BSDDrawSky(Level_t *Level);

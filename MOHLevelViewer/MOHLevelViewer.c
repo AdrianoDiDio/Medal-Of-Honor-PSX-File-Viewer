@@ -288,21 +288,6 @@ void Vec3Scale(Vec3_t InVec,float Amount,Vec3_t *OutVec)
     OutVec->z = InVec.z * Amount;
 }
 
-void CamInit(ViewParm_t *Camera)
-{
-    Camera->Position = BSDGetPlayerSpawn(Level->BSD);
-
-    Camera->OldPosition = Camera->Position;
-
-    Camera->Angle.x = 0.0;
-    Camera->Angle.y = 0.0;
-    Camera->Angle.z = 0.0;
-
-    Camera->Up = Vec3Build(0.0f,1.0f,0.0f);
-    Camera->Right = Vec3Build(1.0f,0.0f,0.0f);
-    Camera->Forward = Vec3Build(0.0f,0.0f,1.0f);
-    
-}
 
 void CamFixAngles(ViewParm_t *Camera)
 {
@@ -325,6 +310,24 @@ void CamFixAngles(ViewParm_t *Camera)
 
 }
 
+void CamInit(ViewParm_t *Camera)
+{
+    Vec3_t PlayerRotation;
+    Camera->Position = BSDGetPlayerSpawn(Level->BSD,&PlayerRotation);
+
+    Camera->OldPosition = Camera->Position;
+
+    Camera->Angle.x = (PlayerRotation.x / 4096.f) *  360.f;
+    Camera->Angle.y = (PlayerRotation.y / 4096.f) *  360.f;
+    Camera->Angle.z = (PlayerRotation.z / 4096.f) *  360.f;
+
+    Camera->Up = Vec3Build(0.0f,1.0f,0.0f);
+    Camera->Right = Vec3Build(1.0f,0.0f,0.0f);
+    Camera->Forward = Vec3Build(0.0f,0.0f,1.0f);
+
+    CamFixAngles(Camera);
+}
+
 void CamMouseEvent(ViewParm_t *Camera,int Dx,int Dy)
 {
     Camera->Angle.x += ( Dy - (VidConf.Height/2) ) / 10.0f; // 0.001f;
@@ -332,58 +335,58 @@ void CamMouseEvent(ViewParm_t *Camera,int Dx,int Dy)
     CamFixAngles(Camera);
 }
 
-void CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility)
+void CamUpdate(ViewParm_t *Camera,int Orientation, float Sensitivity)
 {
     switch ( Orientation ) {
         case DIR_FORWARD:
             Camera->Forward.x = sin(DEGTORAD(Camera->Angle.y));
             Camera->Forward.z = -cos(DEGTORAD(Camera->Angle.y));
             Camera->Forward.y = -sin(DEGTORAD(Camera->Angle.x));
-            Vec3Scale(Camera->Forward,Sensibility,&Camera->Forward);
+            Vec3Scale(Camera->Forward,Sensitivity,&Camera->Forward);
             Vec3Add(Camera->Position,Camera->Forward,&Camera->Position);
             break;
         case DIR_BACKWARD:
             Camera->Forward.x = -sin(DEGTORAD(Camera->Angle.y));
             Camera->Forward.z = cos(DEGTORAD(Camera->Angle.y));
             Camera->Forward.y = sin(DEGTORAD(Camera->Angle.x));
-            Vec3Scale(Camera->Forward,Sensibility,&Camera->Forward);
+            Vec3Scale(Camera->Forward,Sensitivity,&Camera->Forward);
             Vec3Add(Camera->Position,Camera->Forward,&Camera->Position);
             break;
         case DIR_UPWARD:
-            Camera->Position.y += Sensibility;
+            Camera->Position.y += Sensitivity;
             break;
         case DIR_DOWNWARD:
-            Camera->Position.y -= Sensibility;
+            Camera->Position.y -= Sensitivity;
             break;
         case DIR_LEFTWARD:
             Camera->Right.x = -(float)(cos(DEGTORAD(Camera->Angle.y)));
             Camera->Right.z = -(float)(sin(DEGTORAD(Camera->Angle.y)));
-            Vec3Scale(Camera->Right,Sensibility,&Camera->Right);
+            Vec3Scale(Camera->Right,Sensitivity,&Camera->Right);
             Vec3Add(Camera->Position,Camera->Right,&Camera->Position);
             break;
         case DIR_RIGHTWARD:
             Camera->Right.x = (float)(cos(DEGTORAD(Camera->Angle.y)));
             Camera->Right.z = (float)(sin(DEGTORAD(Camera->Angle.y)));
-            Vec3Scale(Camera->Right,Sensibility,&Camera->Right);
+            Vec3Scale(Camera->Right,Sensitivity,&Camera->Right);
             Vec3Add(Camera->Position,Camera->Right,&Camera->Position);
             break;
          case LOOK_LEFT:
-             Camera->Angle.y -= Sensibility;
+             Camera->Angle.y -= Sensitivity;
              if ( Camera->Angle.y < -360.f ) {
                  Camera->Angle.y += 360.f;
              }
              break;
          case LOOK_RIGHT:
-             Camera->Angle.y += Sensibility;
+             Camera->Angle.y += Sensitivity;
              if ( Camera->Angle.y > 360.f ) {
                  Camera->Angle.y -= 360.f;
              }
              break;
          case LOOK_DOWN:
-             Camera->Angle.x += Sensibility;
+             Camera->Angle.x += Sensitivity;
              break;
          case LOOK_UP:
-             Camera->Angle.x -= Sensibility;
+             Camera->Angle.x -= Sensitivity;
              break;
         default:
             break;

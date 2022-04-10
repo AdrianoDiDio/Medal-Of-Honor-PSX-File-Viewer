@@ -1097,7 +1097,7 @@ void BSDCreateVAOs(BSD_t *BSD)
 
 
 
-Vec3_t BSDGetPlayerSpawn(BSD_t *BSD)
+Vec3_t BSDGetPlayerSpawn(BSD_t *BSD,Vec3_t *Rotation)
 {
     Vec3_t PlayerSpawn;
     int i;
@@ -1114,12 +1114,12 @@ Vec3_t BSDGetPlayerSpawn(BSD_t *BSD)
             continue;
         }
         PlayerSpawn = Vec3Build(BSD->NodeData.Node[i].Position.x,BSD->NodeData.Node[i].Position.y,BSD->NodeData.Node[i].Position.z);
+        if( Rotation ) {
+            *Rotation = Vec3Build(BSD->NodeData.Node[i].Rotation.x,BSD->NodeData.Node[i].Rotation.y,BSD->NodeData.Node[i].Rotation.z);
+        }
         break;
     }
     Vec3RotateXAxis(DEGTORAD(180.f),&PlayerSpawn);
-//     Vec3_t Temp;
-//     Temp.x = Temp.y = Temp.z = 0.f;
-//     return Temp;
     return PlayerSpawn;
 }
 int BSDGetRenderObjectIndexById(BSD_t *BSD,int Id)
@@ -1710,7 +1710,7 @@ void BSDDraw(Level_t *Level)
         glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page.TextureId);
         Vec3_t PSpawn;
     
-        PSpawn = BSDGetPlayerSpawn(Level->BSD);
+        PSpawn = BSDGetPlayerSpawn(Level->BSD,NULL);
     
         for( i = 0; i < Level->BSD->RenderObjectTable.NumRenderObject; i++ ) {
             vec3 temp;
