@@ -43,7 +43,7 @@ VAO_t *VAOInitXYZUVRGBCLUTColorModeInteger(int *Data,int DataSize,int Stride,int
                                            int Count);
 VAO_t *VAOInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,short TSB,int TextureId,int Count);
 VAO_t *VAOInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset,int DynamicDraw);
-VAO_t *VAOInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset);
+VAO_t *VAOInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset,int Count);
 // 3D Indexed
 VAO_t *VAOInitXYZRGBIBO(float *Data,int DataSize,int Stride,unsigned short *Index,int IndexSize,int VertexOffset,int ColorOffset);
 // 2D

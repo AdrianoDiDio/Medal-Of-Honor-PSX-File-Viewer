@@ -301,7 +301,7 @@ VAO_t *VAOInitXYZRGBIBO(float *Data,int DataSize,int Stride,unsigned short *Inde
     return VAO;
 }
 
-VAO_t *VAOInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset)
+VAO_t *VAOInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset,int Count)
 {
     VAO_t *VAO;
     
@@ -320,6 +320,7 @@ VAO_t *VAOInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset)
 
     VAO->TSB = -1;
     VAO->TextureId = -1;
+    VAO->Count = Count;
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);

@@ -95,13 +95,40 @@ void GUIDrawDebugWindow(GUI_t *GUI)
     }
     igEnd();
 }
+int OvOpen = 1;
+void GUIDrawHelpOverlay()
+{
+    int WindowFlags;
+    ImGuiViewport *Viewport;
+    ImVec2 WorkPosition;
+    ImVec2 WindowPosition;
+    ImVec2 WindowPivot;
+    
+    WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+    Viewport = igGetMainViewport();
+    WorkPosition = Viewport->WorkPos;
+    WindowPosition.x = (WorkPosition.x + 10.f);
+    WindowPosition.y = (WorkPosition.y + 10.f);
+    WindowPivot.x = 0.f;
+    WindowPivot.y = 0.f;
+    igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
+
+    if( igBegin("Help", NULL, WindowFlags) ) {
+        igText("Press F1 to enable/disable debug settings");
+    }
+    igEnd();
+}
 void GUIDraw(GUI_t *GUI)
 {
     if( !GUI->IsActive ) {
+        GUIBeginFrame();
+        GUIDrawHelpOverlay();
+        GUIEndFrame();
         return;
     }
     GUIBeginFrame();
     GUIDrawDebugWindow(GUI);
+    igShowDemoWindow(NULL);
     GUIEndFrame();
 }
 GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)

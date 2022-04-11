@@ -1100,17 +1100,18 @@ void TSPCreateCollisionVAO(TSP_t *TSPList)
     int Stride;
 
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+        VAO_t *VAO;
+        //       XYZ
+        Stride = (3) * sizeof(float);
+                
+        VertexSize = Stride;
+        VertexData = malloc(VertexSize * 3 * Iterator->CollisionData->Header.NumFaces);
+        VertexPointer = 0;
         for( i = 0; i < Iterator->CollisionData->Header.NumFaces; i++ ) {
-            VAO_t *VAO;
             int Vert0 = Iterator->CollisionData->Face[i].V0;
             int Vert1 = Iterator->CollisionData->Face[i].V1;
             int Vert2 = Iterator->CollisionData->Face[i].V2;
-            //       XYZ
-            Stride = (3) * sizeof(float);
-                
-            VertexSize = Stride;
-            VertexData = malloc(VertexSize * 3/** sizeof(float)*/);
-            VertexPointer = 0;
+
                     
             VertexData[VertexPointer] =   Iterator->CollisionData->Vertex[Vert0].Position.x;
             VertexData[VertexPointer+1] = Iterator->CollisionData->Vertex[Vert0].Position.y;
@@ -1126,12 +1127,11 @@ void TSPCreateCollisionVAO(TSP_t *TSPList)
             VertexData[VertexPointer+1] = Iterator->CollisionData->Vertex[Vert2].Position.y;
             VertexData[VertexPointer+2] = Iterator->CollisionData->Vertex[Vert2].Position.z;
             VertexPointer += 3;
-            
-            VAO = VAOInitXYZ(VertexData,VertexSize * 3,Stride,0);            
-            VAO->Next = Iterator->CollisionVAOList;
-            Iterator->CollisionVAOList = VAO;
-            free(VertexData);
         }
+        VAO = VAOInitXYZ(VertexData,VertexSize * 3 * Iterator->CollisionData->Header.NumFaces,Stride,0,Iterator->CollisionData->Header.NumFaces * 3);            
+        VAO->Next = Iterator->CollisionVAOList;
+        Iterator->CollisionVAOList = VAO;
+        free(VertexData);
     }
 
 }
@@ -1190,7 +1190,7 @@ void DrawTSPCollisionData(TSP_t *TSP)
     
     for( Iterator = TSP->CollisionVAOList; Iterator; Iterator = Iterator->Next ) {
         glBindVertexArray(Iterator->VAOId[0]);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
         glBindVertexArray(0);
     }
     glUseProgram(0);
