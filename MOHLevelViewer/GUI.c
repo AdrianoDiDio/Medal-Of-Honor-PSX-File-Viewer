@@ -62,13 +62,46 @@ void GUIEndFrame()
     igRender();
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 }
+
+void GUIDrawDebugWindow(GUI_t *GUI)
+{
+    if( igBegin("Debug Settings",(bool *) &GUI->IsActive,0) ) {
+//             if( Level->IsPathSet && Level->Loaded ) {
+        igText(Level->EngineName);
+        igSeparator();
+//             }
+        igText("Debug Settings");
+        igCheckbox("WireFrame Mode",&Level->Settings.WireFrame);
+        igCheckbox("Show Level",&Level->Settings.ShowMap);
+        igCheckbox("Show Collision Data",&Level->Settings.ShowCollisionData);
+        igCheckbox("Show BSP Tree",&Level->Settings.ShowAABBTree);
+        igCheckbox("Show BSD nodes as Points",&Level->Settings.ShowBSDNodes);
+        igCheckbox("Show BSD RenderObjects as Points",&Level->Settings.ShowBSDRenderObject);
+        igCheckbox("Draw BSD RenderObjects",&Level->Settings.DrawBSDRenderObjects);
+        igCheckbox("Enable BSD RenderObjects ShowCase Rendering",&Level->Settings.DrawBSDShowCaseRenderObject);
+        igCheckbox("Frustum Culling",&Level->Settings.EnableFrustumCulling);
+        igCheckbox("Lighting",&Level->Settings.EnableLighting);
+        igCheckbox("Semi-Transparency",&Level->Settings.EnableSemiTransparency);
+        if( igCheckbox("Animated Lights",&Level->Settings.EnableAnimatedLights) ) {
+            if( !Level->Settings.EnableAnimatedLights ) {
+                TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,1);
+            }
+        }
+        igSeparator();
+    }
+    //If the user has closed it make sure to reset the cursor state.
+    if( !GUI->IsActive ) {
+        SysHideCursor();
+    }
+    igEnd();
+}
 void GUIDraw(GUI_t *GUI)
 {
     if( !GUI->IsActive ) {
         return;
     }
     GUIBeginFrame();
-    igShowDemoWindow(NULL);
+    GUIDrawDebugWindow(GUI);
     GUIEndFrame();
 }
 GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
