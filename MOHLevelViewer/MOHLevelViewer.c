@@ -436,6 +436,7 @@ bool VidInitSDL()
 
 bool VidOpenWindow()
 {
+    SDL_GLContext Context;
     //Make sure we have an OpenGL context.
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
@@ -453,7 +454,10 @@ bool VidOpenWindow()
     VideoSurface = SDL_CreateWindow(VidConf.Title,SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                      VidConf.Width, VidConf.Height, SDL_WINDOW_OPENGL);
 //     SDL_SetWindowTitle(VideoSurface,);
-    SDL_GL_CreateContext(VideoSurface);
+    Context = SDL_GL_CreateContext(VideoSurface);
+    
+    GUI = GUIInit(VideoSurface,Context);
+    
     VidConf.Initialized = true;
     SDL_GL_SetSwapInterval(1);
     
@@ -530,135 +534,144 @@ void SysCheckKeyEvents()
     SDL_Event Event;
     float CamSpeed = 80.f;
     while( SDL_PollEvent(&Event) ) {
-        switch( Event.type ) {
-            case SDL_MOUSEMOTION:
-                CamMouseEvent(&Camera,Event.motion.x,Event.motion.y);
-                SysCenterCursor();
-                break;
-            case SDL_KEYDOWN:
-                if( Event.key.keysym.sym == SDLK_ESCAPE ) {
-                    Quit();
-                }
-                if( Event.key.keysym.sym == SDLK_q ) {
-                    //
-                    // Toggle between WireFrame and Normal mode.
-                    //
-                    Level->Settings.WireFrame = !Level->Settings.WireFrame;
-                }
-                if( Event.key.keysym.sym == SDLK_c ) {
-                    //
-                    // Toggle to show Collision data or not.
-                    //
-                    Level->Settings.ShowCollisionData = !Level->Settings.ShowCollisionData;
-                }
-                if( Event.key.keysym.sym == SDLK_b ) {
-                    //
-                    // Toggle to show AABB data or not.
-                    //
-                    Level->Settings.ShowAABBTree = !Level->Settings.ShowAABBTree;
-                }
-                if( Event.key.keysym.sym == SDLK_l ) {
-                    //
-                    // Toggle to show level data or not.
-                    //
-                    Level->Settings.ShowMap = !Level->Settings.ShowMap;
-                }
-                if( Event.key.keysym.sym == SDLK_n ) {
-                    //
-                    // Toggle to show bsd nodes or not.
-                    //
-                    Level->Settings.ShowBSDNodes = !Level->Settings.ShowBSDNodes;
-                }
-                if( Event.key.keysym.sym == SDLK_r ) {
-                    //
-                    // Toggle to show bsd render object as points.
-                    //
-                    Level->Settings.ShowBSDRenderObject = !Level->Settings.ShowBSDRenderObject;
-                }
-                if( Event.key.keysym.sym == SDLK_p ) {
-                    //
-                    // Toggle to render bsd RenderObject.
-                    //
-                    Level->Settings.DrawBSDRenderObjects = !Level->Settings.DrawBSDRenderObjects;
-                }
-                if( Event.key.keysym.sym == SDLK_i ) {
-                    //
-                    // Toggle to render all the available RenderObject.
-                    //
-                    Level->Settings.DrawBSDShowCaseRenderObject = !Level->Settings.DrawBSDShowCaseRenderObject;
-                }
-                if( Event.key.keysym.sym == SDLK_f ) {
-                    //
-                    // Toggle Frustum Culling
-                    //
-                    Level->Settings.EnableFrustumCulling = !Level->Settings.EnableFrustumCulling;
-                }
-                if( Event.key.keysym.sym == SDLK_g ) {
-                    //
-                    // Toggle Level Lighting
-                    //
-                    Level->Settings.EnableLighting = !Level->Settings.EnableLighting;
-                }
-                if( Event.key.keysym.sym == SDLK_k ) {
-                    //
-                    // Toggle Semi-Transparency
-                    //
-                    Level->Settings.EnableSemiTransparency = !Level->Settings.EnableSemiTransparency;
-                }
-                if( Event.key.keysym.sym == SDLK_m ) {
-                    //
-                    // Toggle Surfaces Animation
-                    //
-                    Level->Settings.EnableAnimatedLights = !Level->Settings.EnableAnimatedLights;
-                    //Special Case
-                    if( !Level->Settings.EnableAnimatedLights ) {
-                        //User has disabled it....reset it back to the original state.
-                        TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,1);
+        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F1 ) {
+            GUIToggle(GUI);
+        }
+        if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
+            Quit();
+        }
+        
+        if( !GUIProcessEvent(GUI,&Event) ) {
+            switch( Event.type ) {
+                case SDL_MOUSEMOTION:
+                    CamMouseEvent(&Camera,Event.motion.x,Event.motion.y);
+                    SysCenterCursor();
+                    break;
+                case SDL_KEYDOWN:
+                    if( Event.key.keysym.sym == SDLK_ESCAPE ) {
+                        Quit();
                     }
-                }
-                if( Event.key.keysym.sym == SDLK_e ) {
-                    //
-                    // Dump Level to file
-                    //
-                    DumpLevel(Level);
-                }
-                if( Event.key.keysym.sym == SDLK_w ) {
-                    CamUpdate(&Camera, DIR_FORWARD, CamSpeed * ComTime->Delta);
-                }
-                if( Event.key.keysym.sym == SDLK_s ) {
-                    CamUpdate(&Camera, DIR_BACKWARD, CamSpeed * ComTime->Delta);
-                }
-                if( Event.key.keysym.sym == SDLK_a ) {
-                    CamUpdate(&Camera, DIR_LEFTWARD, CamSpeed * ComTime->Delta);
-                }
-                if( Event.key.keysym.sym == SDLK_d ) {
-                    CamUpdate(&Camera, DIR_RIGHTWARD, CamSpeed * ComTime->Delta);
-                }
-                if( Event.key.keysym.sym == SDLK_SPACE ) {
-                    CamUpdate(&Camera, DIR_UPWARD, CamSpeed * ComTime->Delta);
-                }
-                if( Event.key.keysym.sym == SDLK_z ) {
-                    CamUpdate(&Camera, DIR_DOWNWARD, CamSpeed * ComTime->Delta);
-                }
-//                 if( Event.key.keysym.sym == SDLK_LEFT ) {
-//                     CamUpdate(&Camera, LOOK_LEFT, CamSpeed * ComTime->Delta);
-//                 }
-//                 if( Event.key.keysym.sym == SDLK_RIGHT ) {
-//                     CamUpdate(&Camera, LOOK_RIGHT, CamSpeed * ComTime->Delta);
-//                 }
-//                 if( Event.key.keysym.sym == SDLK_UP ) {
-//                     CamUpdate(&Camera, LOOK_UP, CamSpeed * ComTime->Delta);
-//                 }
-//                 if( Event.key.keysym.sym == SDLK_DOWN ) {
-//                     CamUpdate(&Camera, LOOK_DOWN, CamSpeed * ComTime->Delta);
-//                 }
-                CamFixAngles(&Camera);
-                break;
-            case SDL_QUIT:
-                Quit();
-                break;
-            default:
-                break;
+                    if( Event.key.keysym.sym == SDLK_q ) {
+                        //
+                        // Toggle between WireFrame and Normal mode.
+                        //
+                        Level->Settings.WireFrame = !Level->Settings.WireFrame;
+                    }
+                    if( Event.key.keysym.sym == SDLK_c ) {
+                        //
+                        // Toggle to show Collision data or not.
+                        //
+                        Level->Settings.ShowCollisionData = !Level->Settings.ShowCollisionData;
+                    }
+                    if( Event.key.keysym.sym == SDLK_b ) {
+                        //
+                        // Toggle to show AABB data or not.
+                        //
+                        Level->Settings.ShowAABBTree = !Level->Settings.ShowAABBTree;
+                    }
+                    if( Event.key.keysym.sym == SDLK_l ) {
+                        //
+                        // Toggle to show level data or not.
+                        //
+                        Level->Settings.ShowMap = !Level->Settings.ShowMap;
+                    }
+                    if( Event.key.keysym.sym == SDLK_n ) {
+                        //
+                        // Toggle to show bsd nodes or not.
+                        //
+                        Level->Settings.ShowBSDNodes = !Level->Settings.ShowBSDNodes;
+                    }
+                    if( Event.key.keysym.sym == SDLK_r ) {
+                        //
+                        // Toggle to show bsd render object as points.
+                        //
+                        Level->Settings.ShowBSDRenderObject = !Level->Settings.ShowBSDRenderObject;
+                    }
+                    if( Event.key.keysym.sym == SDLK_p ) {
+                        //
+                        // Toggle to render bsd RenderObject.
+                        //
+                        Level->Settings.DrawBSDRenderObjects = !Level->Settings.DrawBSDRenderObjects;
+                    }
+                    if( Event.key.keysym.sym == SDLK_i ) {
+                        //
+                        // Toggle to render all the available RenderObject.
+                        //
+                        Level->Settings.DrawBSDShowCaseRenderObject = !Level->Settings.DrawBSDShowCaseRenderObject;
+                    }
+                    if( Event.key.keysym.sym == SDLK_f ) {
+                        //
+                        // Toggle Frustum Culling
+                        //
+                        Level->Settings.EnableFrustumCulling = !Level->Settings.EnableFrustumCulling;
+                    }
+                    if( Event.key.keysym.sym == SDLK_g ) {
+                        //
+                        // Toggle Level Lighting
+                        //
+                        Level->Settings.EnableLighting = !Level->Settings.EnableLighting;
+                    }
+                    if( Event.key.keysym.sym == SDLK_k ) {
+                        //
+                        // Toggle Semi-Transparency
+                        //
+                        Level->Settings.EnableSemiTransparency = !Level->Settings.EnableSemiTransparency;
+                    }
+                    if( Event.key.keysym.sym == SDLK_m ) {
+                        //
+                        // Toggle Surfaces Animation
+                        //
+                        Level->Settings.EnableAnimatedLights = !Level->Settings.EnableAnimatedLights;
+                        //Special Case
+                        if( !Level->Settings.EnableAnimatedLights ) {
+                            //User has disabled it....reset it back to the original state.
+                            TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,1);
+                        }
+                    }
+                    if( Event.key.keysym.sym == SDLK_e ) {
+                        //
+                        // Dump Level to file
+                        //
+                        DumpLevel(Level);
+                    }
+                    if( Event.key.keysym.sym == SDLK_w ) {
+                        CamUpdate(&Camera, DIR_FORWARD, CamSpeed * ComTime->Delta);
+                    }
+                    if( Event.key.keysym.sym == SDLK_s ) {
+                        CamUpdate(&Camera, DIR_BACKWARD, CamSpeed * ComTime->Delta);
+                    }
+                    if( Event.key.keysym.sym == SDLK_a ) {
+                        CamUpdate(&Camera, DIR_LEFTWARD, CamSpeed * ComTime->Delta);
+                    }
+                    if( Event.key.keysym.sym == SDLK_d ) {
+                        CamUpdate(&Camera, DIR_RIGHTWARD, CamSpeed * ComTime->Delta);
+                    }
+                    if( Event.key.keysym.sym == SDLK_SPACE ) {
+                        CamUpdate(&Camera, DIR_UPWARD, CamSpeed * ComTime->Delta);
+                    }
+                    if( Event.key.keysym.sym == SDLK_z ) {
+                        CamUpdate(&Camera, DIR_DOWNWARD, CamSpeed * ComTime->Delta);
+                    }
+    //                 if( Event.key.keysym.sym == SDLK_LEFT ) {
+    //                     CamUpdate(&Camera, LOOK_LEFT, CamSpeed * ComTime->Delta);
+    //                 }
+    //                 if( Event.key.keysym.sym == SDLK_RIGHT ) {
+    //                     CamUpdate(&Camera, LOOK_RIGHT, CamSpeed * ComTime->Delta);
+    //                 }
+    //                 if( Event.key.keysym.sym == SDLK_UP ) {
+    //                     CamUpdate(&Camera, LOOK_UP, CamSpeed * ComTime->Delta);
+    //                 }
+    //                 if( Event.key.keysym.sym == SDLK_DOWN ) {
+    //                     CamUpdate(&Camera, LOOK_DOWN, CamSpeed * ComTime->Delta);
+    //                 }
+                    CamFixAngles(&Camera);
+                    break;
+                case SDL_QUIT:
+                    Quit();
+                    break;
+                default:
+                    break;
+            }
         }
     }
     
@@ -1027,6 +1040,8 @@ void GLFrame()
 //   FontDrawString(Level,"A B C D E F G H I J K L M N O P Q R S T U V W X Y Z",0,(VidConf.Height / 2 ) + 10);
 //   FontDrawString(Level,"0 1 2 3 4 5 6 7 8 9 10",0,(VidConf.Height / 2 ) + 20);
 //   FontDrawString(Level,"? ! \" ' ",0,(VidConf.Height / 2 ) + 30);
+     
+     GUIDraw(GUI);
      glEnable(GL_DEPTH_TEST);
 }
 
@@ -1215,6 +1230,7 @@ void LevelCleanUp()
 
 void Quit()
 {
+    GUIFree(GUI);
     LevelCleanUp();
     ShaderManagerFree();
     free(VidConf.Driver);

@@ -44,6 +44,7 @@
 #include "Types.h"
 #include "ShaderManager.h"
 #include "VAO.h"
+#include "GUI.h"
 #include "TIM.h"
 #include "VRAM.h"
 #include "Font.h"
@@ -188,7 +189,7 @@ VidDriver_t VidConf;
 ViewParm_t Camera;
 ComTimeInfo_t *ComTime;
 Level_t *Level;
-
+GUI_t *GUI;
 SDL_Window *VideoSurface;
 SDL_Renderer *SDLRenderer;
 
@@ -211,6 +212,8 @@ void    CamUpdateVectors(ViewParm_t *Camera);
 int     LevelGetGameEngine();
 float   Rand01();
 int     RandRangeI(int Min,int Max);
+void    SysShowCursor();
+void    SysHideCursor();
 void    Quit();
 
 #endif //__MOHLEVELVIEWER_H_

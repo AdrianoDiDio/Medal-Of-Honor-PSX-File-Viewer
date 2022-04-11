@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(MOHLevelViewer)
 
-set(SOURCE_FILES ShaderManager.c VAO.c TSP.c 
+set(SOURCE_FILES ShaderManager.c VAO.c GUI.c TSP.c 
                  TIM.c Font.c BSD.c BSDTwoPlayers.c 
                  VRAM.c MOHLevelViewer.c
 )

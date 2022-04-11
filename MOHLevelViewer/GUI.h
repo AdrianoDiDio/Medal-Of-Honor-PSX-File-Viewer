@@ -18,4 +18,17 @@
 */ 
 #ifndef __GUI_H_
 #define __GUI_H_
+
+typedef struct GUI_s {
+    ImGuiContext *Context;
+    ImGuiFileDialog *DirSelectFileDialog;
+    int IsActive;
+} GUI_t;
+
+
+GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext);
+void GUIToggle(GUI_t *GUI);
+int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
+void GUIDraw(GUI_t *GUI);
+void GUIFree(GUI_t *GUI);
 #endif//__GUI_H_
