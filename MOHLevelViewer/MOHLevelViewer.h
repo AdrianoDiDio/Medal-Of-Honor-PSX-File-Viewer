@@ -33,8 +33,13 @@
 #include <png.h>
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
-//TEMPORARY!
+
 #include <cglm/cglm.h>
+
+#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+#include "cimgui.h"
+#include "cimgui_impl.h"
+#include "ImGuiFileDialog.h"
 
 #include "Types.h"
 #include "ShaderManager.h"

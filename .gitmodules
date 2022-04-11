@@ -1,0 +1,4 @@
+[submodule "MOHLevelViewer/Libs/ImGuiFileDialog"]
+	path = MOHLevelViewer/Libs/ImGuiFileDialog
+	url = https://github.com/aiekick/ImGuiFileDialog.git
+	branch = Lib_Only
