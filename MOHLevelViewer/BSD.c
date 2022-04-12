@@ -61,8 +61,8 @@ void BSDDumpFaceDataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDra
     int i;
         
     RenderObjectElement = &BSD->RenderObjectTable.RenderObject[RenderObjectDrawable->RenderObjectIndex];
-    TextureWidth = Level->VRAM->Page.Width;
-    TextureHeight = Level->VRAM->Page.Height;
+    TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
+    TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
     
     for( i = RenderObjectElement->NumVertex - 1; i >= 0; i-- ) {
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].x;
@@ -123,8 +123,8 @@ void BSDDumpFaceV2DataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectD
     int i;
         
     RenderObjectElement = &BSD->RenderObjectTable.RenderObject[RenderObjectDrawable->RenderObjectIndex];
-    TextureWidth = Level->VRAM->Page.Width;
-    TextureHeight = Level->VRAM->Page.Height;
+    TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
+    TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
     
     for( i = RenderObjectElement->NumVertex - 1; i >= 0; i-- ) {
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].x;
@@ -190,7 +190,7 @@ void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
         return;
     }
 
-    for( RenderObjectIterator = Level->BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
+    for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
         RenderObjectElement = &BSD->RenderObjectTable.RenderObject[RenderObjectIterator->RenderObjectIndex];
         sprintf(Buffer,"o BSD%i\n",RenderObjectElement->Id);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
@@ -239,8 +239,8 @@ void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObject
     float TextureHeight;
     int i;
         
-    TextureWidth = Level->VRAM->Page.Width;
-    TextureHeight = Level->VRAM->Page.Height;
+    TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
+    TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
     
     for( i = 0 ; i < BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].NumFaces; i++ ) {
         int VRAMPage = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].TexInfo;
@@ -298,8 +298,8 @@ void BSDDumpFaceV2DataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObje
     float TextureHeight;
     int i;
         
-    TextureWidth = Level->VRAM->Page.Width;
-    TextureHeight = Level->VRAM->Page.Height;
+    TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
+    TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
     
     for( i = 0 ; i < BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].NumFaces; i++ ) {
         int VRAMPage = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].TexInfo;
@@ -365,7 +365,7 @@ void BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile)
     sprintf(Buffer,"ply\nformat ascii 1.0\n");
     fwrite(Buffer,strlen(Buffer),1,OutFile);
     FaceCount = 0;
-    for( RenderObjectIterator = Level->BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
+    for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
         FaceCount += BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].NumFaces;
     }
     
@@ -374,7 +374,7 @@ void BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile)
     fwrite(Buffer,strlen(Buffer),1,OutFile);
     sprintf(Buffer,"element face %i\nproperty list uchar int vertex_indices\nend_header\n",FaceCount);
     fwrite(Buffer,strlen(Buffer),1,OutFile);
-    for( RenderObjectIterator = Level->BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
+    for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
         glm_mat4_identity(RotationMatrix);
         
         RotationAxis[0] = 1;
@@ -408,7 +408,7 @@ void BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile)
         }
     }
     VertexOffset = 0;
-    for( RenderObjectIterator = Level->BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
+    for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
         for( i = 0; i < BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].NumFaces; i++ ) {
             int Vert0 = VertexOffset + (i * 3) + 0;
             int Vert1 = VertexOffset + (i * 3) + 1;
@@ -770,7 +770,7 @@ void BSDAddNodeToRenderObjecDrawabletList(BSD_t *BSD,int MissionNumber,unsigned 
     BSD->RenderObjectDrawableList = Object;
     BSD->NumRenderObjectPoint++;
 }
-void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData)
+void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData,VRAM_t *VRAM)
 {
     float TextureWidth;
     float TextureHeight;
@@ -787,8 +787,8 @@ void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData)
     VAO_t *VAO;
     int i;
     
-    TextureWidth = Level->VRAM->Page.Width;
-    TextureHeight = Level->VRAM->Page.Height;
+    TextureWidth = VRAM->Page.Width;
+    TextureHeight = VRAM->Page.Height;
 //            XYZ UV RGB
     Stride = (3 + 2 + 3) * sizeof(float);
     VertexSize = Stride * 3 * RenderObjectData->NumFaces;
@@ -850,7 +850,7 @@ void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData)
     free(VertexData);
 }
 
-void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData)
+void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData,VRAM_t *VRAM)
 {
     float TextureWidth;
     float TextureHeight;
@@ -867,8 +867,8 @@ void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData)
     VAO_t *VAO;
     int i;
     
-    TextureWidth = Level->VRAM->Page.Width;
-    TextureHeight = Level->VRAM->Page.Height;
+    TextureWidth = VRAM->Page.Width;
+    TextureHeight = VRAM->Page.Height;
 //            XYZ UV RGB
     Stride = (3 + 2 + 3) * sizeof(float);
     VertexSize = Stride * 3 * RenderObjectData->NumFaces;
@@ -930,7 +930,7 @@ void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData)
     free(VertexData);
 }
 
-void BSDCreateMoonVAO(BSD_t *BSD)
+void BSDCreateMoonVAO(BSD_t *BSD,VRAM_t *VRAM)
 {
     float x;
     float y;
@@ -959,8 +959,8 @@ void BSDCreateMoonVAO(BSD_t *BSD)
     Stride = (3 + 2) * sizeof(float);
     DataSize = Stride * 6;
     
-    ImageWidth = Level->VRAM->Page.Width;
-    ImageHeight = Level->VRAM->Page.Height;
+    ImageWidth = VRAM->Page.Width;
+    ImageHeight = VRAM->Page.Height;
 
     u0 = ((float)BSD_MOON_TEXTURE_X + VRAMGetTexturePageX(BSD_MOON_VRAM_PAGE)) / ImageWidth;
     //Color Mode 0 => 4 BPP texture
@@ -1065,13 +1065,13 @@ void BSDCreateStarsVAO(BSD_t *BSD)
     free(VertexData);
 }
 
-void BSDCreateSkyVAOs(BSD_t *BSD)
+void BSDCreateSkyVAOs(BSD_t *BSD,VRAM_t *VRAM)
 {
-    BSDCreateMoonVAO(BSD);
+    BSDCreateMoonVAO(BSD,VRAM);
     BSDCreateStarsVAO(BSD);
 }
 
-void BSDCreateVAOs(BSD_t *BSD)
+void BSDCreateVAOs(BSD_t *BSD,VRAM_t *VRAM)
 {
     BSDRenderObject_t *RenderObjectData;
     int i;
@@ -1084,15 +1084,15 @@ void BSDCreateVAOs(BSD_t *BSD)
             DPrintf("Failed setting vao...Invalid NumFace %i\n",RenderObjectData->NumFaces);
             continue;
         }
-        if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
-            BSDCreateFaceV2VAO(RenderObjectData);
+        if( BSD->GameEngine == MOH_GAME_UNDERGROUND ) {
+            BSDCreateFaceV2VAO(RenderObjectData,VRAM);
         } else {
-            BSDCreateFaceVAO(RenderObjectData);
+            BSDCreateFaceVAO(RenderObjectData,VRAM);
         }
     }
-    BSDCreatePointListVAO(Level->BSD);
-    BSDCreateRenderObjectPointListVAO(Level->BSD);
-    BSDCreateSkyVAOs(Level->BSD);
+    BSDCreatePointListVAO(BSD);
+    BSDCreateRenderObjectPointListVAO(BSD);
+    BSDCreateSkyVAOs(BSD,VRAM);
 }
 
 
@@ -2016,7 +2016,7 @@ void LoadRenderObjectsFaceData(BSD_t *BSD,int RenderObjectDataOffset,FILE *BSDFi
             continue;
         }
         DPrintf("LoadRenderObjectsFaceData:RenderObject Id %u\n",BSD->RenderObjectList[i].Data->Id);
-        if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
+        if( BSD->GameEngine == MOH_GAME_UNDERGROUND ) {
             FaceOffset = ( RenderObjectDataOffset + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) ) + 260;
             ParseRenderObjectFaceDataV2(&BSD->RenderObjectList[i],FaceOffset,BSDFile);
         } else {
@@ -2215,7 +2215,7 @@ void BSDReadRenderObjectChunk(BSD_t *BSD,FILE *BSDFile)
     
     BSD->RenderObjectTable.RenderObject = malloc(BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObjectElement_t));
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
+        if( BSD->GameEngine == MOH_GAME_UNDERGROUND ) {
             assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectPosition + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE));
         } else {
             assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectPosition + (i * MOH_RENDER_OBJECT_SIZE));
@@ -2251,7 +2251,7 @@ void BSDReadRenderObjectChunk(BSD_t *BSD,FILE *BSDFile)
         } else {
             DPrintf("RenderObject No Reference set...\n");
         }
-        if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
+        if( BSD->GameEngine == MOH_GAME_UNDERGROUND ) {
             if( BSD->RenderObjectTable.RenderObject[i].FaceOffset == 0 ) {
                 fread(&BSD->RenderObjectTable.RenderObject[i].FaceOffset,sizeof(int),1,BSDFile);
                 SkipFileSection(16,BSDFile);
@@ -2449,7 +2449,7 @@ void BSDReadNodeChunk(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
     }
 }
 
-int BSDLoad(Level_t *Level,FILE *BSDFile)
+int BSDLoad(Level_t *Level,int GameEngine,FILE *BSDFile)
 {   
     int MemBegin;
     int MemEnd;
@@ -2457,6 +2457,7 @@ int BSDLoad(Level_t *Level,FILE *BSDFile)
     int Jump;
     BSDAnimatedLight_t *AnimatedLight;
     
+    Level->BSD->GameEngine = GameEngine;
     fread(&Level->BSD->Unknown,sizeof(Level->BSD->Unknown),1,BSDFile);
     BSDReadAnimatedLightChunk(Level->BSD,BSDFile);
     //This section seems unused and should be constant in size (320 bytes).
@@ -2479,7 +2480,7 @@ int BSDLoad(Level_t *Level,FILE *BSDFile)
     
     BSDReadSkyChunk(Level->BSD,BSDFile);
     
-    if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
+    if( Level->BSD->GameEngine == MOH_GAME_UNDERGROUND ) {
         SkipFileSection(16,BSDFile);
     }
     

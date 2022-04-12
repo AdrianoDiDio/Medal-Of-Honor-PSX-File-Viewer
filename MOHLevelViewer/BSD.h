@@ -362,18 +362,20 @@ typedef struct BSD_s {
     //Easy lookup to see if the camera is in that node position so that
     //we can update the TSPNumberRenderList.
     BSDTSPStreamNode_t *TSPStreamNodeList;
+    
+    int         GameEngine;
 } BSD_t;
 
 struct Level_s;
 typedef struct Level_s Level_t;
 
 FILE   *BSDEarlyInit(Level_t *Level);
-int     BSDLoad(Level_t *Level,FILE *BSDFile);
+int     BSDLoad(Level_t *Level,int GameEngine,FILE *BSDFile);
 void    BSDCheckCompartmentTrigger(Level_t *Level,Vec3_t CameraPosition);
 char   *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId);
 char   *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
 Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD,Vec3_t *Rotation);
-void    BSDCreateVAOs(BSD_t *BSD);
+void    BSDCreateVAOs(BSD_t *BSD,VRAM_t *VRAM);
 void    BSDDraw(Level_t *Level);
 void    BSDDrawSky(Level_t *Level);
 unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId);

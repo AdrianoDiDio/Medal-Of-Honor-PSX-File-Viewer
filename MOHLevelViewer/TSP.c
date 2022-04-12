@@ -113,8 +113,8 @@ void TSPDumpFaceDataToFile(TSP_t *TSP,FILE *OutFile)
         return;
     }
     
-    TextureWidth = Level->VRAM->Page.Width;
-    TextureHeight = Level->VRAM->Page.Height;
+    TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
+    TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
 
     for( i = TSP->Header.NumFaces - 1; i >= 0 ; i-- ) {
         int ColorMode = (TSP->Face[i].TSB >> 7) & 0x3;
@@ -133,8 +133,6 @@ void TSPDumpFaceDataToFile(TSP_t *TSP,FILE *OutFile)
         int Vert1 = TSP->Face[i].V1;
         int Vert2 = TSP->Face[i].V2;
         int BaseFaceUV = i * 3;
-        int ColorMode = (TSP->Face[i].TSB >> 7) & 0x3;
-        int VRAMPage = TSP->Face[i].TSB & 0x1F;
         sprintf(Buffer,"usemtl vram\n");
         fwrite(Buffer,strlen(Buffer),1,OutFile);
         sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),-(BaseFaceUV+3),-(Vert1+1),-(BaseFaceUV+2),-(Vert2+1),-(BaseFaceUV+1));
@@ -156,8 +154,8 @@ void TSPDumpFaceV3DataToFile(TSP_t *TSP,FILE *OutFile)
         return;
     }
     
-    TextureWidth = Level->VRAM->Page.Width;
-    TextureHeight = Level->VRAM->Page.Height;
+    TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
+    TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
 
     
     for( i = 0; i < TSP->Header.NumNodes; i++ ) {
@@ -316,9 +314,8 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile)
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         float TextureWidth;
         float TextureHeight;
-        Vec3_t NewPos;
-        TextureWidth = Level->VRAM->Page.Width;
-        TextureHeight = Level->VRAM->Page.Height;
+        TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
+        TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
         if( TSPIsVersion3(Iterator) ) {
             for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
                 if( Iterator->Node[i].NumFaces == 0 ) {
@@ -512,8 +509,6 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
     int U0,V0;
     int U1,V1;
     int U2,V2;
-    short TSB;
-    short CBA;
     int *VertexData;
     int *TransparentVertexData;
     int TotalVertexSize;
@@ -535,7 +530,7 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
     int ColorMode;
     int VRAMPage;
     int ABRRate;
-    TSPDynamicFaceData_t *DynamicData;
+//     TSPDynamicFaceData_t *DynamicData;
     TSPRenderingFace_t *RenderingFace;
     VAO_t *VAO;
     int i;
@@ -604,8 +599,6 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             V1 = TSP->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
             U2 = TSP->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage);
             V2 = TSP->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-            TSB = TSP->Face[i].TSB;
-            CBA = TSP->Face[i].CBA;
 //         }
         
         if( TSPGetColorIndex(TSP->Color[Vert0].c) < 40 || TSPGetColorIndex(TSP->Color[Vert1].c) < 40 || TSPGetColorIndex(TSP->Color[Vert2].c) < 40 ) {
@@ -733,8 +726,6 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
     int U0,V0;
     int U1,V1;
     int U2,V2;
-    short TSB;
-    short CBA;
     int *VertexData;
     int *TransparentVertexData;
     int TotalVertexSize;
@@ -756,7 +747,7 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
     int ColorMode;
     int VRAMPage;
     int ABRRate;
-    TSPDynamicFaceData_t *DynamicData;
+//     TSPDynamicFaceData_t *DynamicData;
     TSPTextureInfo_t TextureInfo;
     TSPRenderingFace_t *RenderingFace;
     VAO_t *VAO;
@@ -839,8 +830,6 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
                 U2 = (TextureInfo.UV2.u + VRAMGetTexturePageX(VRAMPage));
                 V2 = (TextureInfo.UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
             }
-            TSB = TextureInfo.TSB;
-            CBA = TextureInfo.CBA;
 //         }
                     
         if( TSPGetColorIndex(TSP->Color[Vert0].c) < 40 || TSPGetColorIndex(TSP->Color[Vert1].c) < 40 || TSPGetColorIndex(TSP->Color[Vert2].c) < 40 ) {
@@ -1223,12 +1212,12 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
         return;
     }
     
-    if( Level->Settings.ShowAABBTree ) {
+    if( LevelSettings.ShowAABBTree ) {
         DrawTSPBox(*Node);
     }
 
     if( Node->NumFaces != 0 ) {
-        if( Level->Settings.ShowMap ) {
+        if( LevelSettings.ShowMap ) {
             Shader = ShaderCache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
             glUseProgram(Shader->ProgramId);
 
@@ -1240,15 +1229,15 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
             glUniform1i(TextureIndexId, 0);
             glUniform1i(PaletteTextureId,  1);
             glUniform1i(EnableLightingId, LevelSettings.EnableLighting);
-            if( Level->Settings.WireFrame ) {
+            if( LevelSettings.WireFrame ) {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             } else {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
             glActiveTexture(GL_TEXTURE0 + 0);
-            glBindTexture(GL_TEXTURE_2D, Level->VRAM->TextureIndexPage.TextureId);
+            glBindTexture(GL_TEXTURE_2D, LevelManager->CurrentLevel->VRAM->TextureIndexPage.TextureId);
             glActiveTexture(GL_TEXTURE0 + 1);
-            glBindTexture(GL_TEXTURE_2D, Level->VRAM->PalettePage.TextureId);
+            glBindTexture(GL_TEXTURE_2D, LevelManager->CurrentLevel->VRAM->PalettePage.TextureId);
 
             glDisable(GL_BLEND);
             glBindVertexArray(Node->OpaqueFacesVAO->VAOId[0]);
@@ -1369,16 +1358,16 @@ void TSPDrawTransparentFaces(TSP_t *TSP,LevelSettings_t Settings)
     TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
     glUniform1i(TextureIndexId, 0);
     glUniform1i(PaletteTextureId,  1);
-    glUniform1i(EnableLightingId, Level->Settings.EnableLighting);
+    glUniform1i(EnableLightingId, Settings.EnableLighting);
     if( Settings.WireFrame ) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, Level->VRAM->TextureIndexPage.TextureId);
+    glBindTexture(GL_TEXTURE_2D, LevelManager->CurrentLevel->VRAM->TextureIndexPage.TextureId);
     glActiveTexture(GL_TEXTURE0 + 1);
-    glBindTexture(GL_TEXTURE_2D, Level->VRAM->PalettePage.TextureId);
+    glBindTexture(GL_TEXTURE_2D, LevelManager->CurrentLevel->VRAM->PalettePage.TextureId);
     glBindVertexArray(TSP->TransparentVAO->VAOId[0]);
     if( !Settings.EnableSemiTransparency ) {
         glDrawArrays(GL_TRIANGLES, 0, TSP->TransparentVAO->Count);

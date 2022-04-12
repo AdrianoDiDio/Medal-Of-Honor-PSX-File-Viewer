@@ -59,7 +59,7 @@ int FontGetStride()
 //          XY  UV
     return (2 + 2) * sizeof(float);
 }
-void FontLoadChar(Font_t *Font,int CharIndex,float RowX,float RowY)
+void FontLoadChar(Font_t *Font,VRAM_t *VRAM,int CharIndex,float RowX,float RowY)
 {
     float x;
     float y;
@@ -80,8 +80,8 @@ void FontLoadChar(Font_t *Font,int CharIndex,float RowX,float RowY)
     //We need 6 vertices to describe a quad...
     DataSize = Stride * 6;
     
-    ImageWidth = Level->VRAM->Page.Width;
-    ImageHeight = Level->VRAM->Page.Height;
+    ImageWidth = VRAM->Page.Width;
+    ImageHeight = VRAM->Page.Height;
     
     u0 = ((float)RowX + VRAMGetTexturePageX(MOH_FONT_TEXTURE_VRAM_PAGE)) / ImageWidth;
     //Color Mode 0 => 4 BPP texture
@@ -165,7 +165,7 @@ void FontDrawChar(char c,float x,float y,Color4f_t Color)
     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
     glUniformMatrix4fv(OrthoMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
     CharIndex = (int) c;
-    glBindVertexArray(Level->Font->Characters[ASCII_To_MOH_Table[CharIndex]]->VAOId[0]);
+    glBindVertexArray(LevelManager->CurrentLevel->Font->Characters[ASCII_To_MOH_Table[CharIndex]]->VAOId[0]);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 }
@@ -193,7 +193,7 @@ void FontDrawString(Level_t *Level,char *String,float x,float y,Color4f_t Color)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void FontLoad(Font_t *Font)
+void FontLoad(Font_t *Font,VRAM_t *VRAM)
 {
     int i;
     float RowPosition;
@@ -207,15 +207,15 @@ void FontLoad(Font_t *Font)
             ColumnPosition = 0;
         }
         DPrintf("Fetching char %i at %fx%f\n",i,RowPosition,ColumnPosition);
-        FontLoadChar(Font,i,RowPosition,ColumnPosition);
+        FontLoadChar(Font,VRAM,i,RowPosition,ColumnPosition);
         ColumnPosition += MOH_FONT_CHAR_HEIGHT;
     }
 }
 
-Font_t *FontInit()
+Font_t *FontInit(VRAM_t *VRAM)
 {
     Font_t *Font;
     Font = malloc(sizeof(Font_t));
-    FontLoad(Font);
+    FontLoad(Font,VRAM);
     return Font;
 }

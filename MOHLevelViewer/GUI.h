@@ -22,13 +22,18 @@
 typedef struct GUI_s {
     ImGuiContext *Context;
     ImGuiFileDialog *DirSelectFileDialog;
-    int IsActive;
+    bool DebugWindowHandle;
+    bool SettingsWindowHandle;
+    int NumActiveWindows;
 } GUI_t;
 
-
+struct LevelManager_s;
+typedef struct LevelManager_s LevelManager_t;
 GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext);
-void GUIToggle(GUI_t *GUI);
+
+void GUIToggleDebugWindow(GUI_t *GUI);
+void GUIToggleSettingsWindow(GUI_t *GUI);
 int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
-void GUIDraw(GUI_t *GUI);
+void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager);
 void GUIFree(GUI_t *GUI);
 #endif//__GUI_H_

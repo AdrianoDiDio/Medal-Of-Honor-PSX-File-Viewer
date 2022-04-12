@@ -310,17 +310,21 @@ void CamFixAngles(ViewParm_t *Camera)
 
 }
 
-void CamInit(ViewParm_t *Camera)
+void CamInit(ViewParm_t *Camera,BSD_t *BSD)
 {
     Vec3_t PlayerRotation;
-    Camera->Position = BSDGetPlayerSpawn(Level->BSD,&PlayerRotation);
 
+
+    if( !BSD ) {
+        Camera->Position = Vec3Build(0.f,0.f,0.f);
+        Camera->Angle = Vec3Build(0.f,0.f,0.f);
+    } else {
+        Camera->Position = BSDGetPlayerSpawn(BSD,&PlayerRotation);
+        Camera->Angle.x = (PlayerRotation.x / 4096.f) *  360.f;
+        Camera->Angle.y = (PlayerRotation.y / 4096.f) *  360.f;
+        Camera->Angle.z = (PlayerRotation.z / 4096.f) *  360.f;
+    }
     Camera->OldPosition = Camera->Position;
-
-    Camera->Angle.x = (PlayerRotation.x / 4096.f) *  360.f;
-    Camera->Angle.y = (PlayerRotation.y / 4096.f) *  360.f;
-    Camera->Angle.z = (PlayerRotation.z / 4096.f) *  360.f;
-
     Camera->Up = Vec3Build(0.0f,1.0f,0.0f);
     Camera->Right = Vec3Build(1.0f,0.0f,0.0f);
     Camera->Forward = Vec3Build(0.0f,0.0f,1.0f);
@@ -520,7 +524,7 @@ void InitSDL(const char *Title,int Width,int Height,bool Fullscreen)
 
     
     VidConf.Driver = StringCopy("SDL");
-    SysHideCursor();
+//     SysHideCursor();
     return;
 }
 
@@ -535,7 +539,10 @@ void SysCheckKeyEvents()
     float CamSpeed = 80.f;
     while( SDL_PollEvent(&Event) ) {
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F1 ) {
-            GUIToggle(GUI);
+            GUIToggleDebugWindow(GUI);
+        }
+        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F2 ) {
+            GUIToggleSettingsWindow(GUI);
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit();
@@ -550,89 +557,6 @@ void SysCheckKeyEvents()
                 case SDL_KEYDOWN:
                     if( Event.key.keysym.sym == SDLK_ESCAPE ) {
                         Quit();
-                    }
-                    if( Event.key.keysym.sym == SDLK_q ) {
-                        //
-                        // Toggle between WireFrame and Normal mode.
-                        //
-                        Level->Settings.WireFrame = !Level->Settings.WireFrame;
-                    }
-                    if( Event.key.keysym.sym == SDLK_c ) {
-                        //
-                        // Toggle to show Collision data or not.
-                        //
-                        Level->Settings.ShowCollisionData = !Level->Settings.ShowCollisionData;
-                    }
-                    if( Event.key.keysym.sym == SDLK_b ) {
-                        //
-                        // Toggle to show AABB data or not.
-                        //
-                        Level->Settings.ShowAABBTree = !Level->Settings.ShowAABBTree;
-                    }
-                    if( Event.key.keysym.sym == SDLK_l ) {
-                        //
-                        // Toggle to show level data or not.
-                        //
-                        Level->Settings.ShowMap = !Level->Settings.ShowMap;
-                    }
-                    if( Event.key.keysym.sym == SDLK_n ) {
-                        //
-                        // Toggle to show bsd nodes or not.
-                        //
-                        Level->Settings.ShowBSDNodes = !Level->Settings.ShowBSDNodes;
-                    }
-                    if( Event.key.keysym.sym == SDLK_r ) {
-                        //
-                        // Toggle to show bsd render object as points.
-                        //
-                        Level->Settings.ShowBSDRenderObject = !Level->Settings.ShowBSDRenderObject;
-                    }
-                    if( Event.key.keysym.sym == SDLK_p ) {
-                        //
-                        // Toggle to render bsd RenderObject.
-                        //
-                        Level->Settings.DrawBSDRenderObjects = !Level->Settings.DrawBSDRenderObjects;
-                    }
-                    if( Event.key.keysym.sym == SDLK_i ) {
-                        //
-                        // Toggle to render all the available RenderObject.
-                        //
-                        Level->Settings.DrawBSDShowCaseRenderObject = !Level->Settings.DrawBSDShowCaseRenderObject;
-                    }
-                    if( Event.key.keysym.sym == SDLK_f ) {
-                        //
-                        // Toggle Frustum Culling
-                        //
-                        Level->Settings.EnableFrustumCulling = !Level->Settings.EnableFrustumCulling;
-                    }
-                    if( Event.key.keysym.sym == SDLK_g ) {
-                        //
-                        // Toggle Level Lighting
-                        //
-                        Level->Settings.EnableLighting = !Level->Settings.EnableLighting;
-                    }
-                    if( Event.key.keysym.sym == SDLK_k ) {
-                        //
-                        // Toggle Semi-Transparency
-                        //
-                        Level->Settings.EnableSemiTransparency = !Level->Settings.EnableSemiTransparency;
-                    }
-                    if( Event.key.keysym.sym == SDLK_m ) {
-                        //
-                        // Toggle Surfaces Animation
-                        //
-                        Level->Settings.EnableAnimatedLights = !Level->Settings.EnableAnimatedLights;
-                        //Special Case
-                        if( !Level->Settings.EnableAnimatedLights ) {
-                            //User has disabled it....reset it back to the original state.
-                            TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,1);
-                        }
-                    }
-                    if( Event.key.keysym.sym == SDLK_e ) {
-                        //
-                        // Dump Level to file
-                        //
-                        DumpLevel(Level);
                     }
                     if( Event.key.keysym.sym == SDLK_w ) {
                         CamUpdate(&Camera, DIR_FORWARD, CamSpeed * ComTime->Delta);
@@ -892,13 +816,21 @@ void InitGLView()
     GLSetDefaultState();
 }
 
-
-void GLFrame()
+void LevelManagerDraw(LevelManager_t *LevelManager)
 {
-    float y;
-    float VerticalSpacing = 10.f;
+    Level_t *Level;
+    vec3 temp;
+
+    //LevelManager has not received a valid path yet.
+    if( !LevelManager->IsPathSet ) {
+        return;
+    }
+    //Level has not been loaded in yet.
+    if( !LevelManager->CurrentLevel ) {
+        return;
+    }
     
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    Level = LevelManager->CurrentLevel;
     
     if( Level->Settings.EnableAnimatedLights ) {
         BSDUpdateAnimatedLights(Level->BSD);
@@ -906,15 +838,7 @@ void GLFrame()
     }
     
     glm_perspective(glm_rad(110.f),(float) VidConf.Width/ (float) VidConf.Height,1.f, 4096.f,VidConf.PMatrixM4);
-// 
-// #if 0
-//     GLSet3D();
-//     glRotatef(Camera.Angle.x, 1.0f, 0.0f, 0.0f);
-//     glRotatef(Camera.Angle.y, 0.0f, 1.0f, 0.0f);
-//     glRotatef(Camera.Angle.z, 0.0f, 0.0f, 1.0f);
-//     glTranslatef(-Camera.Position.x, -Camera.Position.y, -Camera.Position.z);
-// #endif
-     vec3 temp;
+
      temp[0] = 1;
      temp[1] = 0;
      temp[2] = 0;
@@ -992,57 +916,15 @@ void GLFrame()
      //Emulate PSX Coordinate system...
      glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
      BSDDrawSky(Level);
-     
-     glm_mat4_identity(VidConf.MVPMatrix);
-    
-     // 2D Drawing
-     
-     glDisable (GL_DEPTH_TEST);
-     
-     glm_mat4_identity(VidConf.PMatrixM4);
-     glm_ortho(0,VidConf.Width,VidConf.Height,0,-1,1,VidConf.PMatrixM4);
-     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-     y = 100;
-     FontDrawString(Level,Level->EngineName,10,y,c_White);
-     y += VerticalSpacing;
-     FontDrawString(Level,ComTime->FpsSimpleString,10,y,c_White);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press ESC to exit",10,y,c_White);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press c to show or hide collision data",10,y,Level->Settings.ShowCollisionData ? c_Yellow : c_Red);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press b to show or hide BSP tree data",10,y,Level->Settings.ShowAABBTree ? c_Yellow : c_Red);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press i to show or hide BSD showcase",10,y,Level->Settings.DrawBSDShowCaseRenderObject ? c_Yellow : c_Red);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press l to show or hide the level",10,y,Level->Settings.ShowMap ? c_Yellow : c_Red);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press n to show or hide BSD nodes as points",10,y,Level->Settings.ShowBSDNodes ? c_Yellow : c_Red);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press p to show or hide BSD RenderObject",10,y,Level->Settings.DrawBSDRenderObjects ? c_Yellow : c_Red);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press r to show or hide BSD RenderObject as points",10,y,Level->Settings.ShowBSDRenderObject ? c_Yellow : c_Red);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press q to enable or disable wireframe mode",10,y,Level->Settings.WireFrame ? c_Yellow : c_Red);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press f to enable or disable frustum culling",10,y,Level->Settings.EnableFrustumCulling ? c_Yellow : c_Red);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press g to enable or disable level Lighting",10,y,Level->Settings.EnableLighting ? c_Yellow : c_Red);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press k to enable or disable Semi Transparency",10,y,Level->Settings.EnableSemiTransparency ? c_Yellow : c_Red);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press m to enable or disable animated lights",10,y,Level->Settings.EnableAnimatedLights ? c_Yellow : c_Red);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press e to dump the current level to a file",10,y,c_White);
-     y += VerticalSpacing;
-     FontDrawString(Level,"Press w a s d to move camera around",10,y,c_White);
-//   FontDrawString(Level,"a b c d e f g h i j k l m n o p q r s t u v w x y z",0,VidConf.Height / 2);
-//   FontDrawString(Level,"A B C D E F G H I J K L M N O P Q R S T U V W X Y Z",0,(VidConf.Height / 2 ) + 10);
-//   FontDrawString(Level,"0 1 2 3 4 5 6 7 8 9 10",0,(VidConf.Height / 2 ) + 20);
-//   FontDrawString(Level,"? ! \" ' ",0,(VidConf.Height / 2 ) + 30);
-     
-     GUIDraw(GUI);
-     glEnable(GL_DEPTH_TEST);
+}
+
+void GLFrame()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    LevelManagerDraw(LevelManager);
+    glDisable (GL_DEPTH_TEST);
+    GUIDraw(GUI,LevelManager);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void SetDefaultSettings(Level_t *Level)
@@ -1128,29 +1010,26 @@ void DumpLevel(Level_t* Level)
     fclose(PlyObjectOutFile);
 }
 
-bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
+bool LevelInit(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber)
 {
     FILE *BSDFile;
     char Buffer[512];
     int i;
     TSP_t *TSP;
+    Level_t *Level;
     
-    if( Level != NULL ) {
-        free(Level);
-    }
     Level = malloc(sizeof(Level_t));
     Level->Font = NULL;
     Level->VRAM = NULL;
     Level->TSPList = NULL;
     Level->ImageList = NULL;
     SetDefaultSettings(Level);
-    Level->MissionNumber = StringToInt(MissionNumber);
-    Level->LevelNumber = StringToInt(LevelNumber);
+    Level->MissionNumber = MissionNumber;
+    Level->LevelNumber = LevelNumber;
 
-    strcpy(Level->BasePath,Directory);
-    snprintf(Level->MissionPath,sizeof(Level->MissionPath),"%s/DATA/MSN%i/LVL%i",Directory,Level->MissionNumber,Level->LevelNumber);
+    snprintf(Level->MissionPath,sizeof(Level->MissionPath),"%s/DATA/MSN%i/LVL%i",LevelManager->BasePath,Level->MissionNumber,Level->LevelNumber);
     
-    DPrintf("LevelInit:Working directory:%s\n",Directory);
+    DPrintf("LevelInit:Working directory:%s\n",LevelManager->BasePath);
     DPrintf("LevelInit:Loading level %s Mission %i Level %i\n",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 
     //Step.1 Load all the tims from taf.
@@ -1188,16 +1067,26 @@ bool LevelInit(char *Directory,char *MissionNumber,char *LevelNumber)
         TSP->Next = Level->TSPList;
         Level->TSPList = TSP;
     }
+    LevelManager->GameEngine = TSPIsVersion3(Level->TSPList) ? MOH_GAME_UNDERGROUND : MOH_GAME_STANDARD;
     //Step.4 Resume loading the BSD after we successfully loaded the TSP.
-    DPrintf("LoadLevel: Detected game %s\n",LevelGetGameEngine() == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
-    BSDLoad(Level,BSDFile);
-    sprintf(Level->EngineName,"Engine %s",LevelGetGameEngine() == MOH_GAME_STANDARD ? "MOH" : "MOH Underground");
+    DPrintf("LoadLevel: Detected game %s\n",LevelManager->GameEngine == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
+    BSDLoad(Level,LevelManager->GameEngine,BSDFile);
+    sprintf(Level->EngineName,"Engine %s",LevelManager->GameEngine == MOH_GAME_STANDARD ? "MOH" : "MOH Underground");
+    
+    Level->VRAM = VRAMInit(Level->ImageList);
+    Level->Font = FontInit(Level->VRAM);
+    TSPCreateNodeBBoxVAO(Level->TSPList);
+    TSPCreateCollisionVAO(Level->TSPList);
+    BSDCreateVAOs(Level->BSD,Level->VRAM);
+    BSDFixRenderObjectPosition(Level);
+    CamInit(&Camera,Level->BSD);
+    LevelManager->CurrentLevel = Level;
     return true;
     
 }
 int LevelGetGameEngine()
 {
-    return TSPIsVersion3(Level->TSPList) ? MOH_GAME_UNDERGROUND : MOH_GAME_STANDARD;
+    return LevelManager->GameEngine;
 }
 /*
     Late level initialization for all the subsystems that
@@ -1206,18 +1095,8 @@ int LevelGetGameEngine()
 void LevelLateInit()
 {
     ShaderManagerInit();
-    Level->VRAM = VRAMInit(Level->ImageList);
-    Level->Font = FontInit();
-//     DPrintf("OpenGL Version:%s\n",glGetString(GL_VERSION));
-    /* TEMP! */
-    
-    TSPCreateNodeBBoxVAO(Level->TSPList);
-    TSPCreateCollisionVAO(Level->TSPList);
-    BSDCreateVAOs(Level->BSD);
-//     BSD2PVAOPointList(Level->BSDTwoP);
-    BSDFixRenderObjectPosition(Level);
 }
-void LevelCleanUp()
+void LevelCleanUp(Level_t *Level)
 {
     BSDFree(Level->BSD);
 //     BSD2PFree(Level->BSDTwoP);
@@ -1227,16 +1106,58 @@ void LevelCleanUp()
     FontFree(Level->Font);
     free(Level);
 }
+void LevelManagerCleanUp()
+{
+    if( LevelManager->CurrentLevel != NULL ) {
+        LevelCleanUp(LevelManager->CurrentLevel);
+    }
+    free(LevelManager);
+}
 
 void Quit()
 {
+    LevelManagerCleanUp();
     GUIFree(GUI);
-    LevelCleanUp();
+//     LevelCleanUp(Level);
     ShaderManagerFree();
     free(VidConf.Driver);
     free(ComTime);
     SDL_Quit();
     exit(0);
+}
+
+int LevelManagerSetPath(LevelManager_t *LevelManager,char *Path)
+{
+    if( !LevelManager ) {
+        DPrintf("LevelManagerSetPath:Called without a valid struct\n");
+        return 0;
+    }
+    if( !Path ) {
+        DPrintf("LevelManagerSetPath:Called without a valid path\n");
+        return 0;
+    }
+    LevelManager->BasePath = StringCopy(Path);
+    //Attempt to load the level...
+    if( LevelManager->CurrentLevel ){
+        LevelCleanUp(LevelManager->CurrentLevel);
+    }
+    LevelManager->CurrentLevel = NULL;
+    if( !LevelInit(LevelManager,1,1 ) ) {
+        if( !LevelInit(LevelManager,2,1) ) {
+            DPrintf("LevelManagerSetPath:Invalid path...\n");
+            LevelManager->IsPathSet = 0;
+            return 0;
+        }
+    }
+    LevelManager->IsPathSet = 1;
+    return 1;
+}
+void LevelManagerInit()
+{
+    LevelManager = malloc(sizeof(LevelManager_t));
+    LevelManager->CurrentLevel = NULL;
+    //No path has been provided to it yet.
+    LevelManager->IsPathSet = 0;
 }
 /*
  * Requires 3 things:
@@ -1248,22 +1169,24 @@ void Quit()
 int main(int argc,char **argv)
 {
     srand(time(NULL));
-    if( argc != 4 ) {
-        printf("%s <MOH Directory> <Mission Number> <Level Number> will load level files from that mission.\n",argv[0]);
-        return -1;
-    }
-    if( !LevelInit(argv[1],argv[2],argv[3]) ) {
-        printf("Couldn't load data.\n");
-        return -1;
-    }
+//     if( argc != 4 ) {
+//         printf("%s <MOH Directory> <Mission Number> <Level Number> will load level files from that mission.\n",argv[0]);
+//         return -1;
+//     }
+    LevelManagerInit();
+//     if( !LevelInit(argv[1],argv[2],argv[3]) ) {
+//         printf("Couldn't load data.\n");
+//         return -1;
+//     }
 
 #if _ENABLEVIDEOOUT
     SysVidInit(1366,768,false);
     ComTime = malloc(sizeof(ComTimeInfo_t));
     memset(ComTime,0,sizeof(ComTimeInfo_t));
     InitGLView();
-    CamInit(&Camera);
-    LevelLateInit();
+    ShaderManagerInit();
+//     CamInit(&Camera);
+//     LevelLateInit();
     /* TEMP! */
     while( 1 ) {
         SysCheckKeyEvents();

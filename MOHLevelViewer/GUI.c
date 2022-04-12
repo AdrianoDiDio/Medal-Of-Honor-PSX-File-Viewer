@@ -28,15 +28,6 @@ void GUIFree(GUI_t *GUI)
     free(GUI);
 }
 
-void GUIToggle(GUI_t *GUI)
-{
-    GUI->IsActive = !GUI->IsActive;
-    if( GUI->IsActive ) {
-        SysShowCursor();
-    } else {
-        SysHideCursor();
-    }
-}
 /*
  * Process a new event from the SDL system only when
  * it is active.
@@ -44,11 +35,50 @@ void GUIToggle(GUI_t *GUI)
  */
 int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
 {
-    if( !GUI->IsActive ) {
+    if( !GUI->NumActiveWindows ) {
         return 0;
     }
     ImGui_ImplSDL2_ProcessEvent(Event);
     return 1;
+}
+
+/*
+ Utilities functions to detect GUI status.
+ Push => Signal that a window is visible and update the cursor status to handle it.
+ Pop => Signal that a window has been closed and if there are no windows opened then it hides the cursor since it is not needed anymore.
+ */
+void GUIPushWindow(GUI_t *GUI)
+{
+    if( !GUI->NumActiveWindows ) {
+        SysShowCursor();
+    }
+    GUI->NumActiveWindows++;
+}
+void GUIPopWindow(GUI_t *GUI)
+{
+    GUI->NumActiveWindows--;
+    if( !GUI->NumActiveWindows ) {
+        SysHideCursor();
+    }
+}
+void GUIToggle(GUI_t *GUI,int HandleValue)
+{
+    if( HandleValue ) {
+        GUIPushWindow(GUI);
+    } else {
+        GUIPopWindow(GUI);
+    }
+}
+void GUIToggleDebugWindow(GUI_t *GUI)
+{
+    GUI->DebugWindowHandle = !GUI->DebugWindowHandle;
+    GUIToggle(GUI,GUI->DebugWindowHandle);
+}
+void GUIToggleSettingsWindow(GUI_t *GUI)
+{
+    GUI->SettingsWindowHandle = !GUI->SettingsWindowHandle;
+    GUIToggle(GUI,GUI->SettingsWindowHandle);
+
 }
 void GUIBeginFrame()
 {
@@ -65,35 +95,49 @@ void GUIEndFrame()
 
 void GUIDrawDebugWindow(GUI_t *GUI)
 {
-    if( igBegin("Debug Settings",(bool *) &GUI->IsActive,0) ) {
+    char Buffer[256];
+#if 1
+//     if( !LevelManager->CurrentLevel ) {
+//         return;
+//     }
+    if( !GUI->DebugWindowHandle ) {
+        return;
+    }
+    sprintf(Buffer,"NumActiveWindows:%i\n",GUI->NumActiveWindows);
+    if( igBegin("Debug Settings",(bool *) &GUI->DebugWindowHandle,0) ) {
 //             if( Level->IsPathSet && Level->Loaded ) {
-        igText(Level->EngineName);
+//         igText(Level->EngineName);
         igSeparator();
 //             }
         igText("Debug Settings");
-        igCheckbox("WireFrame Mode",&Level->Settings.WireFrame);
-        igCheckbox("Show Level",&Level->Settings.ShowMap);
-        igCheckbox("Show Collision Data",&Level->Settings.ShowCollisionData);
-        igCheckbox("Show BSP Tree",&Level->Settings.ShowAABBTree);
-        igCheckbox("Show BSD nodes as Points",&Level->Settings.ShowBSDNodes);
-        igCheckbox("Show BSD RenderObjects as Points",&Level->Settings.ShowBSDRenderObject);
-        igCheckbox("Draw BSD RenderObjects",&Level->Settings.DrawBSDRenderObjects);
-        igCheckbox("Enable BSD RenderObjects ShowCase Rendering",&Level->Settings.DrawBSDShowCaseRenderObject);
-        igCheckbox("Frustum Culling",&Level->Settings.EnableFrustumCulling);
-        igCheckbox("Lighting",&Level->Settings.EnableLighting);
-        igCheckbox("Semi-Transparency",&Level->Settings.EnableSemiTransparency);
-        if( igCheckbox("Animated Lights",&Level->Settings.EnableAnimatedLights) ) {
-            if( !Level->Settings.EnableAnimatedLights ) {
-                TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,1);
-            }
-        }
+        igText(Buffer);
+//         igCheckbox("WireFrame Mode",&Level->Settings.WireFrame);
+//         igCheckbox("Show Level",&Level->Settings.ShowMap);
+//         igCheckbox("Show Collision Data",&Level->Settings.ShowCollisionData);
+//         igCheckbox("Show BSP Tree",&Level->Settings.ShowAABBTree);
+//         igCheckbox("Show BSD nodes as Points",&Level->Settings.ShowBSDNodes);
+//         igCheckbox("Show BSD RenderObjects as Points",&Level->Settings.ShowBSDRenderObject);
+//         igCheckbox("Draw BSD RenderObjects",&Level->Settings.DrawBSDRenderObjects);
+//         igCheckbox("Enable BSD RenderObjects ShowCase Rendering",&Level->Settings.DrawBSDShowCaseRenderObject);
+//         igCheckbox("Frustum Culling",&Level->Settings.EnableFrustumCulling);
+//         igCheckbox("Lighting",&Level->Settings.EnableLighting);
+//         igCheckbox("Semi-Transparency",&Level->Settings.EnableSemiTransparency);
+//         if( igCheckbox("Animated Lights",&Level->Settings.EnableAnimatedLights) ) {
+//             if( !Level->Settings.EnableAnimatedLights ) {
+//                 TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,1);
+//             }
+//         }
         igSeparator();
     }
-    //If the user has closed it make sure to reset the cursor state.
-    if( !GUI->IsActive ) {
-        SysHideCursor();
+    if( !GUI->DebugWindowHandle ) {
+        GUIToggle(GUI,GUI->DebugWindowHandle);
     }
+    //If the user has closed it make sure to reset the cursor state.
+//     if( !GUI->IsActive ) {
+//         SysHideCursor();
+//     }
     igEnd();
+#endif
 }
 int OvOpen = 1;
 void GUIDrawHelpOverlay()
@@ -118,18 +162,93 @@ void GUIDrawHelpOverlay()
     }
     igEnd();
 }
-void GUIDraw(GUI_t *GUI)
+
+
+
+void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
 {
-    if( !GUI->IsActive ) {
-        GUIBeginFrame();
-        GUIDrawHelpOverlay();
-        GUIEndFrame();
+    ImGuiIO* IO;
+    ImVec2 MaxSize;
+    ImVec2 MinSize;
+    char *DirectoryPath;
+    
+    IO = igGetIO();
+    MaxSize.x = IO->DisplaySize.x * 0.8f;
+    MaxSize.y = IO->DisplaySize.y * 0.8f;
+    MinSize.x = MaxSize.x * 0.25f;
+    MinSize.y = MaxSize.y * 0.25f;
+    
+    if( !GUI->DirSelectFileDialog ) {
+        GUI->DirSelectFileDialog = IGFD_Create();
+        GUIPushWindow(GUI);
+    }
+
+    if (IGFD_DisplayDialog(GUI->DirSelectFileDialog, "Dir Select", ImGuiWindowFlags_NoCollapse, MinSize, MaxSize)) {
+        if (IGFD_IsOk(GUI->DirSelectFileDialog)) {
+                DirectoryPath = IGFD_GetFilePathName(GUI->DirSelectFileDialog);
+                DPrintf("Selected directory %s\n",DirectoryPath);
+                if( !LevelManagerSetPath(LevelManager,DirectoryPath) ) {
+                    igOpenPopup_Str("Wrong Folder",0);
+                }
+                if (DirectoryPath) { 
+                    free(DirectoryPath);
+                }
+        }
+        GUIPopWindow(GUI);
+        IGFD_CloseDialog(GUI->DirSelectFileDialog);
+    } else {
+        IGFD_OpenDialog2(GUI->DirSelectFileDialog,"Dir Select","Select dir",NULL,".",1,NULL,ImGuiFileDialogFlags_DontShowHiddenFiles);
+    }
+}
+void GUIDrawSettingsWindow(GUI_t *GUI)
+{
+#if 1
+//     if( !LevelManager->CurrentLevel ) {
+//         return;
+//     }
+    if( !GUI->SettingsWindowHandle ) {
         return;
     }
+    if( igBegin("Settings",(bool *) &GUI->SettingsWindowHandle,0) ) {
+        igText("Video Settings");
+        igSeparator();
+    }
+    igEnd();
+    if( !GUI->SettingsWindowHandle ) {
+        GUIToggle(GUI,GUI->SettingsWindowHandle);
+    }
+#endif
+}
+
+void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
+{
+    ImVec2 ButtonSize;
     GUIBeginFrame();
+    if( !LevelManager->IsPathSet ) {
+        GUIGetMOHPath(GUI,LevelManager);
+    }
+    ButtonSize.x = 120;
+    ButtonSize.y = 0;
+    if( igBeginPopupModal("Wrong Folder",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
+        igText("Selected path doesn't seems to contain any game file...\nPlease select a folder containing MOH or MOH:Undergound");
+        if (igButton("OK", ButtonSize) ) { 
+            igCloseCurrentPopup(); 
+        }
+        igEndPopup();
+    }
     GUIDrawDebugWindow(GUI);
-    igShowDemoWindow(NULL);
+    GUIDrawSettingsWindow(GUI);
     GUIEndFrame();
+//     if( !GUI->IsActive ) {
+//         GUIBeginFrame();
+//         GUIDrawHelpOverlay();
+//         GUIEndFrame();
+//         return;
+//     }
+//     GUIBeginFrame();
+//     GUIDrawDebugWindow(GUI);
+//     igShowDemoWindow(NULL);
+//     GUIEndFrame();
 }
 GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
 {
@@ -137,9 +256,11 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     ImGuiIO *IO;
     
     GUI = malloc(sizeof(GUI_t));
-    
+    memset(GUI,0,sizeof(GUI_t));
     GUI->Context = igCreateContext(NULL);
-    GUI->IsActive = 0;
+//     GUI->DebugWindowHandle = 0;
+//     GUI->NumActiveWindows = 0;
+    GUI->DirSelectFileDialog = NULL;
     IO = igGetIO();
     ImGui_ImplSDL2_InitForOpenGL(VideoSurface, &GLContext);
     ImGui_ImplOpenGL3_Init("#version 330 core");
