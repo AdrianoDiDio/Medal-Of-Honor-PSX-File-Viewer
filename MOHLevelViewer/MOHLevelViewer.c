@@ -456,12 +456,19 @@ bool VidOpenWindow()
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     VideoSurface = SDL_CreateWindow(VidConf.Title,SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                     VidConf.Width, VidConf.Height, SDL_WINDOW_OPENGL);
+                     VidConf.Width, VidConf.Height, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
 //     SDL_SetWindowTitle(VideoSurface,);
     Context = SDL_GL_CreateContext(VideoSurface);
     
-    GUI = GUIInit(VideoSurface,Context);
+    float hdpi;
+    float ddpi;
+    float vdpi;
+    VidConf.DPIScale = 1.f;
+//     if( !SDL_GetDisplayDPI(0, &ddpi, &VidConf.DPIScale, &vdpi) ) {
+//         VidConf.DPIScale /= 96.f;
+//     }
     
+    GUI = GUIInit(VideoSurface,Context);
     VidConf.Initialized = true;
     SDL_GL_SetSwapInterval(1);
     

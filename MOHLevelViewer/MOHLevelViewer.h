@@ -106,6 +106,7 @@ const char *Title;
     mat4    ViewMatrix;
     mat4    ModelViewMatrix;
     mat4    MVPMatrix;
+    float   DPIScale;
 } VidDriver_t;
 
 typedef struct ComTimeInfo_s

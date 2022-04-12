@@ -61,7 +61,7 @@ void GUIPopWindow(GUI_t *GUI)
         SysHideCursor();
     }
 }
-void GUIToggle(GUI_t *GUI,int HandleValue)
+void GUIToggleHandle(GUI_t *GUI,int HandleValue)
 {
     if( HandleValue ) {
         GUIPushWindow(GUI);
@@ -72,14 +72,15 @@ void GUIToggle(GUI_t *GUI,int HandleValue)
 void GUIToggleDebugWindow(GUI_t *GUI)
 {
     GUI->DebugWindowHandle = !GUI->DebugWindowHandle;
-    GUIToggle(GUI,GUI->DebugWindowHandle);
+    GUIToggleHandle(GUI,GUI->DebugWindowHandle);
 }
 void GUIToggleSettingsWindow(GUI_t *GUI)
 {
     GUI->SettingsWindowHandle = !GUI->SettingsWindowHandle;
-    GUIToggle(GUI,GUI->SettingsWindowHandle);
+    GUIToggleHandle(GUI,GUI->SettingsWindowHandle);
 
 }
+
 void GUIBeginFrame()
 {
     ImGui_ImplOpenGL3_NewFrame();
@@ -130,7 +131,7 @@ void GUIDrawDebugWindow(GUI_t *GUI)
         igSeparator();
     }
     if( !GUI->DebugWindowHandle ) {
-        GUIToggle(GUI,GUI->DebugWindowHandle);
+        GUIToggleHandle(GUI,GUI->DebugWindowHandle);
     }
     //If the user has closed it make sure to reset the cursor state.
 //     if( !GUI->IsActive ) {
@@ -170,32 +171,47 @@ void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
     ImGuiIO* IO;
     ImVec2 MaxSize;
     ImVec2 MinSize;
+    ImGuiViewport *Viewport;
+    ImVec2 WorkPosition;
+    ImVec2 WindowPosition;
+    ImVec2 WindowPivot;
     char *DirectoryPath;
     
+    Viewport = igGetMainViewport();
+    WorkPosition = Viewport->WorkPos;
+    WindowPosition.x = 0;
+    WindowPosition.y = 0;
+    WindowPivot.x = 0.f;
+    WindowPivot.y = 0.f;
+    
     IO = igGetIO();
-    MaxSize.x = IO->DisplaySize.x * 0.8f;
-    MaxSize.y = IO->DisplaySize.y * 0.8f;
-    MinSize.x = MaxSize.x * 0.25f;
-    MinSize.y = MaxSize.y * 0.25f;
+    MaxSize.x = Viewport->Size.x;
+    MaxSize.y = Viewport->Size.y;
+    MinSize.x = MaxSize.x*0.25f;
+    MinSize.y = MaxSize.y*0.25f;
     
     if( !GUI->DirSelectFileDialog ) {
         GUI->DirSelectFileDialog = IGFD_Create();
         GUIPushWindow(GUI);
     }
-
-    if (IGFD_DisplayDialog(GUI->DirSelectFileDialog, "Dir Select", ImGuiWindowFlags_NoCollapse, MinSize, MaxSize)) {
+    igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
+    if (IGFD_DisplayDialog(GUI->DirSelectFileDialog, "Dir Select", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize, MinSize, MaxSize)) {
+//         GUIPushWindow(GUI);
         if (IGFD_IsOk(GUI->DirSelectFileDialog)) {
                 DirectoryPath = IGFD_GetFilePathName(GUI->DirSelectFileDialog);
                 DPrintf("Selected directory %s\n",DirectoryPath);
                 if( !LevelManagerSetPath(LevelManager,DirectoryPath) ) {
                     igOpenPopup_Str("Wrong Folder",0);
+                    GUIPushWindow(GUI);
+                } else {
+                    //Close it if we managed to load it.
+                    GUIPopWindow(GUI);
+                    IGFD_CloseDialog(GUI->DirSelectFileDialog);
                 }
                 if (DirectoryPath) { 
                     free(DirectoryPath);
                 }
         }
-        GUIPopWindow(GUI);
-        IGFD_CloseDialog(GUI->DirSelectFileDialog);
     } else {
         IGFD_OpenDialog2(GUI->DirSelectFileDialog,"Dir Select","Select dir",NULL,".",1,NULL,ImGuiFileDialogFlags_DontShowHiddenFiles);
     }
@@ -215,7 +231,7 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
     }
     igEnd();
     if( !GUI->SettingsWindowHandle ) {
-        GUIToggle(GUI,GUI->SettingsWindowHandle);
+        GUIToggleHandle(GUI,GUI->SettingsWindowHandle);
     }
 #endif
 }
@@ -223,15 +239,25 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
 void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
 {
     ImVec2 ButtonSize;
+    ImVec2 ModalPosition;
+    ImVec2 Pivot;
+    ImGuiIO *IO;
     GUIBeginFrame();
     if( !LevelManager->IsPathSet ) {
         GUIGetMOHPath(GUI,LevelManager);
     }
+    IO = igGetIO();
     ButtonSize.x = 120;
     ButtonSize.y = 0;
+    Pivot.x = 0.5f;
+    Pivot.y = 0.5f;
+    ModalPosition.x = IO->DisplaySize.x * 0.5;
+    ModalPosition.y = IO->DisplaySize.y * 0.5;
+    igSetNextWindowPos(ModalPosition, ImGuiCond_Always, Pivot);
     if( igBeginPopupModal("Wrong Folder",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
         igText("Selected path doesn't seems to contain any game file...\nPlease select a folder containing MOH or MOH:Undergound");
-        if (igButton("OK", ButtonSize) ) { 
+        if (igButton("OK", ButtonSize) ) {
+            GUIPopWindow(GUI);
             igCloseCurrentPopup(); 
         }
         igEndPopup();
@@ -246,15 +272,14 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
 //         return;
 //     }
 //     GUIBeginFrame();
-//     GUIDrawDebugWindow(GUI);
-//     igShowDemoWindow(NULL);
+//     GUIDrawDebugWindow(GUI);igShowDemoWindow(NULL);
 //     GUIEndFrame();
 }
 GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
 {
     GUI_t *GUI;
     ImGuiIO *IO;
-    
+    ImGuiStyle *Style;
     GUI = malloc(sizeof(GUI_t));
     memset(GUI,0,sizeof(GUI_t));
     GUI->Context = igCreateContext(NULL);
@@ -265,7 +290,9 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     ImGui_ImplSDL2_InitForOpenGL(VideoSurface, &GLContext);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     igStyleColorsDark(NULL);
-    ImFontAtlas_AddFontFromFileTTF(IO->Fonts,"Fonts/DroidSans.ttf",16.0,NULL,NULL);
+    ImFontAtlas_AddFontFromFileTTF(IO->Fonts,"Fonts/DroidSans.ttf",floor(16.f * VidConf.DPIScale),NULL,NULL);
+    Style = igGetStyle();
+    ImGuiStyle_ScaleAllSizes(Style,VidConf.DPIScale);
     IO->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     return GUI;
 }
