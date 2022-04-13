@@ -1405,12 +1405,12 @@ void TSPDrawTransparentFaces(TSP_t *TSP,LevelSettings_t Settings)
     glBlendColor(1.f, 1.f, 1.f, 1.f);
     glUseProgram(0);
 }
-void TSPDrawList(Level_t *Level)
+void TSPDrawList(LevelManager_t *LevelManager)
 {
     TSP_t *TSPData;
     TSP_t *Iterator;
 
-    TSPData = Level->TSPList;
+    TSPData = LevelManager->CurrentLevel->TSPList;
     
     if( !TSPData ) {
         printf("DrawTSP:Invalid TSP data\n");
@@ -1420,15 +1420,15 @@ void TSPDrawList(Level_t *Level)
     for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);  
-        DrawNode(&Iterator->Node[0],Level->Settings);
+        DrawNode(&Iterator->Node[0],LevelManager->Settings);
         glDisable(GL_CULL_FACE);
     }
 
     // Alpha pass.
     for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
-        TSPDrawTransparentFaces(Iterator,Level->Settings);
+        TSPDrawTransparentFaces(Iterator,LevelManager->Settings);
     }
-    if( Level->Settings.ShowCollisionData ) {
+    if( LevelManager->Settings.ShowCollisionData ) {
         for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
             DrawTSPCollisionData(Iterator);
         }

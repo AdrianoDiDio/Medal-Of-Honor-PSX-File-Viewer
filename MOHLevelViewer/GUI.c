@@ -104,31 +104,35 @@ void GUIDrawDebugWindow(GUI_t *GUI)
     if( !GUI->DebugWindowHandle ) {
         return;
     }
-    sprintf(Buffer,"NumActiveWindows:%i\n",GUI->NumActiveWindows);
+    
     if( igBegin("Debug Settings",(bool *) &GUI->DebugWindowHandle,0) ) {
-//             if( Level->IsPathSet && Level->Loaded ) {
-//         igText(Level->EngineName);
-        igSeparator();
-//             }
-        igText("Debug Settings");
-        igText(Buffer);
-//         igCheckbox("WireFrame Mode",&Level->Settings.WireFrame);
-//         igCheckbox("Show Level",&Level->Settings.ShowMap);
-//         igCheckbox("Show Collision Data",&Level->Settings.ShowCollisionData);
-//         igCheckbox("Show BSP Tree",&Level->Settings.ShowAABBTree);
-//         igCheckbox("Show BSD nodes as Points",&Level->Settings.ShowBSDNodes);
-//         igCheckbox("Show BSD RenderObjects as Points",&Level->Settings.ShowBSDRenderObject);
-//         igCheckbox("Draw BSD RenderObjects",&Level->Settings.DrawBSDRenderObjects);
-//         igCheckbox("Enable BSD RenderObjects ShowCase Rendering",&Level->Settings.DrawBSDShowCaseRenderObject);
-//         igCheckbox("Frustum Culling",&Level->Settings.EnableFrustumCulling);
-//         igCheckbox("Lighting",&Level->Settings.EnableLighting);
-//         igCheckbox("Semi-Transparency",&Level->Settings.EnableSemiTransparency);
-//         if( igCheckbox("Animated Lights",&Level->Settings.EnableAnimatedLights) ) {
-//             if( !Level->Settings.EnableAnimatedLights ) {
-//                 TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,1);
-//             }
-//         }
-        igSeparator();
+        if( LevelManager->CurrentLevel ) {
+            igText(LevelManager->EngineName);
+            igSeparator();
+            igText("Debug Settings");
+            igCheckbox("WireFrame Mode",&LevelManager->Settings.WireFrame);
+            igCheckbox("Show Level",&LevelManager->Settings.ShowMap);
+            igCheckbox("Show Collision Data",&LevelManager->Settings.ShowCollisionData);
+            igCheckbox("Show BSP Tree",&LevelManager->Settings.ShowAABBTree);
+            igCheckbox("Show BSD nodes as Points",&LevelManager->Settings.ShowBSDNodes);
+            igCheckbox("Show BSD RenderObjects as Points",&LevelManager->Settings.ShowBSDRenderObject);
+            igCheckbox("Draw BSD RenderObjects",&LevelManager->Settings.DrawBSDRenderObjects);
+            igCheckbox("Enable BSD RenderObjects ShowCase Rendering",&LevelManager->Settings.DrawBSDShowCaseRenderObject);
+            igCheckbox("Frustum Culling",&LevelManager->Settings.EnableFrustumCulling);
+            igCheckbox("Lighting",&LevelManager->Settings.EnableLighting);
+            igCheckbox("Semi-Transparency",&LevelManager->Settings.EnableSemiTransparency);
+            if( igCheckbox("Animated Lights",&LevelManager->Settings.EnableAnimatedLights) ) {
+                if( !LevelManager->Settings.EnableAnimatedLights ) {
+                    TSPUpdateAnimatedFaces(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->BSD,1);
+                }
+            }
+        }
+       igSeparator();
+       igText("Debug Statistics");
+       igSeparator();
+       sprintf(Buffer,"NumActiveWindows:%i\n",GUI->NumActiveWindows);
+       igText(Buffer);
+       igText(ComTime->FPSString);
     }
     if( !GUI->DebugWindowHandle ) {
         GUIToggleHandle(GUI,GUI->DebugWindowHandle);
@@ -190,10 +194,10 @@ void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
     MinSize.x = MaxSize.x*0.25f;
     MinSize.y = MaxSize.y*0.25f;
     
-    if( !GUI->DirSelectFileDialog ) {
-        GUI->DirSelectFileDialog = IGFD_Create();
-        GUIPushWindow(GUI);
-    }
+//     if( !GUI->DirSelectFileDialog ) {
+//         GUI->DirSelectFileDialog = IGFD_Create();
+//         GUIPushWindow(GUI);
+//     }
     igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
     if (IGFD_DisplayDialog(GUI->DirSelectFileDialog, "Dir Select", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize, MinSize, MaxSize)) {
 //         GUIPushWindow(GUI);
@@ -242,6 +246,10 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
     ImVec2 ModalPosition;
     ImVec2 Pivot;
     ImGuiIO *IO;
+    
+    if( !GUI->NumActiveWindows ) {
+        return;
+    }
     GUIBeginFrame();
     if( !LevelManager->IsPathSet ) {
         GUIGetMOHPath(GUI,LevelManager);
@@ -284,8 +292,6 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     memset(GUI,0,sizeof(GUI_t));
     GUI->Context = igCreateContext(NULL);
 //     GUI->DebugWindowHandle = 0;
-//     GUI->NumActiveWindows = 0;
-    GUI->DirSelectFileDialog = NULL;
     IO = igGetIO();
     ImGui_ImplSDL2_InitForOpenGL(VideoSurface, &GLContext);
     ImGui_ImplOpenGL3_Init("#version 330 core");
@@ -294,5 +300,7 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     Style = igGetStyle();
     ImGuiStyle_ScaleAllSizes(Style,VidConf.DPIScale);
     IO->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+    GUI->DirSelectFileDialog = IGFD_Create();
+    GUI->NumActiveWindows = 1;
     return GUI;
 }

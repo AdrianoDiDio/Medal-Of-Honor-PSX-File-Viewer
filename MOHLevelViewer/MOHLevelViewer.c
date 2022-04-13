@@ -464,9 +464,9 @@ bool VidOpenWindow()
     float ddpi;
     float vdpi;
     VidConf.DPIScale = 1.f;
-//     if( !SDL_GetDisplayDPI(0, &ddpi, &VidConf.DPIScale, &vdpi) ) {
-//         VidConf.DPIScale /= 96.f;
-//     }
+     if( !SDL_GetDisplayDPI(0, &ddpi, &VidConf.DPIScale, &vdpi) ) {
+         VidConf.DPIScale /= 96.f;
+     }
     
     GUI = GUIInit(VideoSurface,Context);
     VidConf.Initialized = true;
@@ -610,36 +610,39 @@ void SysCheckKeyEvents()
 
 bool ComUpdateDelta()
 {
-    long now = SysMilliseconds();
-    ComTime->UpdateLength = now - ComTime->LastLoopTime;
-    int TimeSlice = /*floor*/((1/MAX_FPS) * 1000);
+    long Now;
+    int TimeSlice;
+    
+    Now = SysMilliseconds();
+    TimeSlice = /*floor*/((1/MAX_FPS) * 1000);
 
-    ComTime->Optimal_Time = 1000 / MAX_FPS;
-    ComTime->UpdateLength = now - ComTime->LastLoopTime;
-    ComTime->Delta = ComTime->UpdateLength / ( ComTime->Optimal_Time);
+    ComTime->UpdateLength = Now - ComTime->LastLoopTime;
+    ComTime->OptimalTime = 1000 / MAX_FPS;
+    ComTime->UpdateLength = Now - ComTime->LastLoopTime;
+    ComTime->Delta = ComTime->UpdateLength / ( ComTime->OptimalTime);
 
     if( ComTime->UpdateLength < TimeSlice ) {
         return false;
     }
 
     // update the frame counter
-    ComTime->LastFpsTime += ComTime->UpdateLength;
-    ComTime->Fps++;
-    ComTime->LastLoopTime = now;
+    ComTime->LastFPSTime += ComTime->UpdateLength;
+    ComTime->FPS++;
+    ComTime->LastLoopTime = Now;
     // update our FPS counter if a second has passed since
     // we last recorded
-    if (ComTime->LastFpsTime >= 1000 ) {
-        sprintf(ComTime->FpsString,"FPS:%i | Ms: %.2f ms | Last FPS Time:%f | Delta:%f",
-                ComTime->Fps,
-                1000.f/(float)ComTime->Fps,
-                ComTime->LastFpsTime,ComTime->Delta);
-        sprintf(ComTime->FpsSimpleString,"FPS %i Ms %.2f ms",
-                ComTime->Fps,
-                1000.f/(float)ComTime->Fps);
-        DPrintf("%s\n",ComTime->FpsString);
+    if (ComTime->LastFPSTime >= 1000 ) {
+        sprintf(ComTime->FPSString,"FPS:%i\nMs: %.2f ms\nLast FPS Time:%f\nDelta:%f",
+                ComTime->FPS,
+                1000.f/(float)ComTime->FPS,
+                ComTime->LastFPSTime,ComTime->Delta);
+        sprintf(ComTime->FPSSimpleString,"FPS %i Ms %.2f ms",
+                ComTime->FPS,
+                1000.f/(float)ComTime->FPS);
+        DPrintf("%s\n",ComTime->FPSString);
         DPrintf("Current Camera Position:%f;%f;%f\n",Camera.Position.x,Camera.Position.y,Camera.Position.z);
-        ComTime->LastFpsTime = 0;
-        ComTime->Fps = 0;
+        ComTime->LastFPSTime = 0;
+        ComTime->FPS = 0;
     }
     return true;
 }
@@ -839,7 +842,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
     
     Level = LevelManager->CurrentLevel;
     
-    if( Level->Settings.EnableAnimatedLights ) {
+    if( LevelManager->Settings.EnableAnimatedLights ) {
         BSDUpdateAnimatedLights(Level->BSD);
         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,0);
     }
@@ -875,7 +878,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
      /* TEMP! */
      BSDCheckCompartmentTrigger(Level,Camera.Position);
 //      BSD2PDraw(Level);
-     BSDDraw(Level);
+     BSDDraw(LevelManager);
      
      temp[0] = 1;
      temp[1] = 0;
@@ -902,7 +905,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
      
      glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
      glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
-     TSPDrawList(Level);
+     TSPDrawList(LevelManager);
      
      temp[0] = 1;
      temp[1] = 0;
@@ -922,7 +925,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
      
      //Emulate PSX Coordinate system...
      glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-     BSDDrawSky(Level);
+     BSDDrawSky(LevelManager);
 }
 
 void GLFrame()
@@ -934,20 +937,20 @@ void GLFrame()
     glEnable(GL_DEPTH_TEST);
 }
 
-void SetDefaultSettings(Level_t *Level)
+void SetDefaultSettings(LevelSettings_t *LevelSettings)
 {
-    Level->Settings.ShowMap = true;
-    Level->Settings.ShowBSDNodes = true;
-    Level->Settings.ShowBSDRenderObject = true;
-    Level->Settings.DrawBSDRenderObjects = true;
-    Level->Settings.DrawBSDShowCaseRenderObject = false;
-    Level->Settings.EnableFrustumCulling = true;
-    Level->Settings.EnableLighting = true;
-    Level->Settings.EnableSemiTransparency = true;
-    Level->Settings.EnableAnimatedLights = true;
-    Level->Settings.WireFrame = false;
-    Level->Settings.ShowAABBTree = false;
-    Level->Settings.ShowCollisionData = false;
+    LevelSettings->ShowMap = true;
+    LevelSettings->ShowBSDNodes = true;
+    LevelSettings->ShowBSDRenderObject = true;
+    LevelSettings->DrawBSDRenderObjects = true;
+    LevelSettings->DrawBSDShowCaseRenderObject = false;
+    LevelSettings->EnableFrustumCulling = true;
+    LevelSettings->EnableLighting = true;
+    LevelSettings->EnableSemiTransparency = true;
+    LevelSettings->EnableAnimatedLights = true;
+    LevelSettings->WireFrame = false;
+    LevelSettings->ShowAABBTree = false;
+    LevelSettings->ShowCollisionData = false;
 }
 
 void DumpLevel(Level_t* Level)
@@ -1016,6 +1019,23 @@ void DumpLevel(Level_t* Level)
     fclose(PlyLevelOutFile);
     fclose(PlyObjectOutFile);
 }
+void LevelCleanUp(Level_t *Level)
+{
+    BSDFree(Level->BSD);
+//     BSD2PFree(Level->BSDTwoP);
+    TSPFreeList(Level->TSPList);
+    TIMImageListFree(Level->ImageList);
+    free(Level->VRAM);
+    FontFree(Level->Font);
+    free(Level);
+}
+void LevelManagerCleanUp()
+{
+    if( LevelManager->CurrentLevel != NULL ) {
+        LevelCleanUp(LevelManager->CurrentLevel);
+    }
+    free(LevelManager);
+}
 
 bool LevelInit(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber)
 {
@@ -1025,12 +1045,16 @@ bool LevelInit(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber)
     TSP_t *TSP;
     Level_t *Level;
     
+    //Attempt to load the level...
+    if( LevelManager->CurrentLevel ){
+        LevelCleanUp(LevelManager->CurrentLevel);
+    }
+    
     Level = malloc(sizeof(Level_t));
     Level->Font = NULL;
     Level->VRAM = NULL;
     Level->TSPList = NULL;
     Level->ImageList = NULL;
-    SetDefaultSettings(Level);
     Level->MissionNumber = MissionNumber;
     Level->LevelNumber = LevelNumber;
 
@@ -1078,7 +1102,7 @@ bool LevelInit(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber)
     //Step.4 Resume loading the BSD after we successfully loaded the TSP.
     DPrintf("LoadLevel: Detected game %s\n",LevelManager->GameEngine == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
     BSDLoad(Level,LevelManager->GameEngine,BSDFile);
-    sprintf(Level->EngineName,"Engine %s",LevelManager->GameEngine == MOH_GAME_STANDARD ? "MOH" : "MOH Underground");
+    sprintf(LevelManager->EngineName,"Engine %s",LevelManager->GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
     
     Level->VRAM = VRAMInit(Level->ImageList);
     Level->Font = FontInit(Level->VRAM);
@@ -1102,23 +1126,6 @@ int LevelGetGameEngine()
 void LevelLateInit()
 {
     ShaderManagerInit();
-}
-void LevelCleanUp(Level_t *Level)
-{
-    BSDFree(Level->BSD);
-//     BSD2PFree(Level->BSDTwoP);
-    TSPFreeList(Level->TSPList);
-    TIMImageListFree(Level->ImageList);
-    free(Level->VRAM);
-    FontFree(Level->Font);
-    free(Level);
-}
-void LevelManagerCleanUp()
-{
-    if( LevelManager->CurrentLevel != NULL ) {
-        LevelCleanUp(LevelManager->CurrentLevel);
-    }
-    free(LevelManager);
 }
 
 void Quit()
@@ -1144,11 +1151,7 @@ int LevelManagerSetPath(LevelManager_t *LevelManager,char *Path)
         return 0;
     }
     LevelManager->BasePath = StringCopy(Path);
-    //Attempt to load the level...
-    if( LevelManager->CurrentLevel ){
-        LevelCleanUp(LevelManager->CurrentLevel);
-    }
-    LevelManager->CurrentLevel = NULL;
+
     if( !LevelInit(LevelManager,1,1 ) ) {
         if( !LevelInit(LevelManager,2,1) ) {
             DPrintf("LevelManagerSetPath:Invalid path...\n");
@@ -1163,6 +1166,7 @@ void LevelManagerInit()
 {
     LevelManager = malloc(sizeof(LevelManager_t));
     LevelManager->CurrentLevel = NULL;
+    SetDefaultSettings(&LevelManager->Settings);
     //No path has been provided to it yet.
     LevelManager->IsPathSet = 0;
 }

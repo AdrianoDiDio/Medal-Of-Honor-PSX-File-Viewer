@@ -1587,7 +1587,7 @@ bool BSDPointInNode(Vec3_t Position,BSDNode_t *Node)
 //TODO:Spawn the RenderObject when loading node data!
 //     Some nodes don't have a corresponding RenderObject like the PlayerSpawn.
 //     BSDSpawnEntity(int UBlockId,Vec3_t NodePos) => Store into a list and transform to vao.
-void BSDDraw(Level_t *Level)
+void BSDDraw(LevelManager_t *LevelManager)
 {
     Shader_t *Shader;
     BSDRenderObjectDrawable_t *RenderObjectIterator;
@@ -1595,6 +1595,9 @@ void BSDDraw(Level_t *Level)
     int MVPMatrixId;
     int EnableLightingId;
     int i;
+    Level_t *Level;
+    
+    Level = LevelManager->CurrentLevel;
     
     if( 1 ) {
         for( int i = 0; i < Level->BSD->NodeData.Header.NumNodes; i++ ) {
@@ -1611,7 +1614,7 @@ void BSDDraw(Level_t *Level)
             }
         }
     }
-    if( Level->Settings.ShowBSDNodes ) {    
+    if( LevelManager->Settings.ShowBSDNodes ) {    
         Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
         glUseProgram(Shader->ProgramId);
 
@@ -1624,7 +1627,7 @@ void BSDDraw(Level_t *Level)
         glUseProgram(0);
     }
     
-    if( Level->Settings.ShowBSDRenderObject ) {    
+    if( LevelManager->Settings.ShowBSDRenderObject ) {    
         Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
         glUseProgram(Shader->ProgramId);
 
@@ -1638,12 +1641,12 @@ void BSDDraw(Level_t *Level)
     }
     
     
-    if( Level->Settings.DrawBSDRenderObjects ) {
+    if( LevelManager->Settings.DrawBSDRenderObjects ) {
         Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
         glUseProgram(Shader->ProgramId);
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
         EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
-        glUniform1i(EnableLightingId, Level->Settings.EnableLighting);
+        glUniform1i(EnableLightingId, LevelManager->Settings.EnableLighting);
         glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page.TextureId);
 
         for( RenderObjectIterator = Level->BSD->RenderObjectDrawableList; RenderObjectIterator; 
@@ -1703,7 +1706,7 @@ void BSDDraw(Level_t *Level)
         glUseProgram(0);
     }
     
-    if( Level->Settings.DrawBSDShowCaseRenderObject ) {
+    if( LevelManager->Settings.DrawBSDShowCaseRenderObject ) {
         Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
         glUseProgram(Shader->ProgramId);
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
@@ -1762,10 +1765,13 @@ void BSDDraw(Level_t *Level)
     }
 }
 
-void BSDDrawSky(Level_t *Level)
+void BSDDrawSky(LevelManager_t *LevelManager)
 {
     Shader_t *Shader;
     int MVPMatrixId;
+    Level_t *Level;
+    
+    Level = LevelManager->CurrentLevel;
     glDepthMask(0);
     if( BSDIsMoonEnabled(Level->BSD) ) {
         Shader = ShaderCache("MoonShader","Shaders/MoonVertexShader.glsl","Shaders/MoonFragmentShader.glsl");

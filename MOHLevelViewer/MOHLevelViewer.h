@@ -111,16 +111,16 @@ const char *Title;
 
 typedef struct ComTimeInfo_s
 {
-    int	  Fps;
+    int	  FPS;
     float Delta;
     //Frame to frame time
     //updated each second.
-    float LastFpsTime;
+    float LastFPSTime;
     float LastLoopTime;
-    float Optimal_Time;
+    float OptimalTime;
     float UpdateLength;
-    char  FpsString[256];
-    char  FpsSimpleString[256];
+    char  FPSString[256];
+    char  FPSSimpleString[256];
 } ComTimeInfo_t;
 
 
@@ -181,7 +181,6 @@ typedef struct Level_s {
     TIMImage_t *ImageList;
     VRAM_t *VRAM;
     Font_t *Font;
-    LevelSettings_t Settings;
     // At any time there can only be 4 tsp to be rendered.
     int     TSPNumberRenderList[4];
 } Level_t;
