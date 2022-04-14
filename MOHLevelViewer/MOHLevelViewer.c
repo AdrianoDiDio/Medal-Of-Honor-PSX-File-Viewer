@@ -551,9 +551,6 @@ void SysCheckKeyEvents()
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F2 ) {
             GUIToggleSettingsWindow(GUI);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F3 ) {
-            LevelManagerSetPath(LevelManager,"/home/adriano/Scaricati/Medal of Honor/MOH Original/Medal of Honor.iso01");
-        }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit();
         }
@@ -1038,6 +1035,9 @@ void LevelManagerCleanUp()
     if( LevelManager->CurrentLevel != NULL ) {
         LevelCleanUp(LevelManager->CurrentLevel);
     }
+    if( LevelManager->IsPathSet ) {
+        free(LevelManager->BasePath);
+    }
     free(LevelManager);
 }
 
@@ -1172,6 +1172,7 @@ void LevelManagerInit()
 {
     LevelManager = malloc(sizeof(LevelManager_t));
     LevelManager->CurrentLevel = NULL;
+    LevelManager->BasePath = NULL;
     SetDefaultSettings(&LevelManager->Settings);
     //No path has been provided to it yet.
     LevelManager->IsPathSet = 0;

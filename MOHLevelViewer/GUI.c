@@ -24,7 +24,7 @@ void GUIFree(GUI_t *GUI)
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     igDestroyContext(NULL);
-    //IGFD_Destroy(Dialog)
+    IGFD_Destroy(GUI->DirSelectFileDialog);
     free(GUI);
 }
 
@@ -296,9 +296,9 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     ImGui_ImplSDL2_InitForOpenGL(VideoSurface, &GLContext);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     igStyleColorsDark(NULL);
-//     ImFontAtlas_AddFontFromFileTTF(IO->Fonts,"Fonts/DroidSans.ttf",floor(16.f * VidConf.DPIScale),NULL,NULL);
-//     Style = igGetStyle();
-//     ImGuiStyle_ScaleAllSizes(Style,VidConf.DPIScale);
+    ImFontAtlas_AddFontFromFileTTF(IO->Fonts,"Fonts/DroidSans.ttf",floor(16.f * VidConf.DPIScale),NULL,NULL);
+    Style = igGetStyle();
+    ImGuiStyle_ScaleAllSizes(Style,VidConf.DPIScale);
     IO->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     GUI->DirSelectFileDialog = IGFD_Create();
     GUI->NumActiveWindows = 1;
