@@ -87,7 +87,7 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
         ShaderInfoLog[InfoLogLength] = '\0';
         DPrintf("Compile Error:%s\n", ShaderInfoLog);
     }
-    
+    free(ShaderSource);
     DPrintf("Compiling Fragment Shader: %s\n", FragmentShaderFile);
     ShaderSource = ShaderRead(FragmentShaderFile);
     glShaderSource(FragmentShaderId, 1, (const GLchar**) &ShaderSource, NULL);
@@ -127,6 +127,7 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
     ShaderList= Result;
     
     NumShaders++;
+    free(ShaderSource);
     glDetachShader(ProgramId, VertexShaderId);
     glDetachShader(ProgramId, FragmentShaderId);
     glDeleteShader(VertexShaderId);

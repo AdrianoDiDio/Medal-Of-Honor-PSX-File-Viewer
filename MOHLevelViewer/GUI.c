@@ -23,7 +23,7 @@ void GUIFree(GUI_t *GUI)
 {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
-    igDestroyContext(GUI->Context);
+    igDestroyContext(NULL);
     //IGFD_Destroy(Dialog)
     free(GUI);
 }
@@ -104,8 +104,8 @@ void GUIDrawDebugWindow(GUI_t *GUI)
     if( !GUI->DebugWindowHandle ) {
         return;
     }
-    
-    if( igBegin("Debug Settings",(bool *) &GUI->DebugWindowHandle,0) ) {
+    DPrintf("Called igBegin with handle %i\n",GUI->DebugWindowHandle);
+    if( igBegin("Debug Settings",&GUI->DebugWindowHandle,0) ) {
         if( LevelManager->CurrentLevel ) {
             igText(LevelManager->EngineName);
             igSeparator();
@@ -229,7 +229,7 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
     if( !GUI->SettingsWindowHandle ) {
         return;
     }
-    if( igBegin("Settings",(bool *) &GUI->SettingsWindowHandle,0) ) {
+    if( igBegin("Settings",&GUI->SettingsWindowHandle,0) ) {
         igText("Video Settings");
         igSeparator();
     }
@@ -290,15 +290,15 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     ImGuiStyle *Style;
     GUI = malloc(sizeof(GUI_t));
     memset(GUI,0,sizeof(GUI_t));
-    GUI->Context = igCreateContext(NULL);
+    /*GUI->Context = */igCreateContext(NULL);
 //     GUI->DebugWindowHandle = 0;
     IO = igGetIO();
     ImGui_ImplSDL2_InitForOpenGL(VideoSurface, &GLContext);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     igStyleColorsDark(NULL);
-    ImFontAtlas_AddFontFromFileTTF(IO->Fonts,"Fonts/DroidSans.ttf",floor(16.f * VidConf.DPIScale),NULL,NULL);
-    Style = igGetStyle();
-    ImGuiStyle_ScaleAllSizes(Style,VidConf.DPIScale);
+//     ImFontAtlas_AddFontFromFileTTF(IO->Fonts,"Fonts/DroidSans.ttf",floor(16.f * VidConf.DPIScale),NULL,NULL);
+//     Style = igGetStyle();
+//     ImGuiStyle_ScaleAllSizes(Style,VidConf.DPIScale);
     IO->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     GUI->DirSelectFileDialog = IGFD_Create();
     GUI->NumActiveWindows = 1;

@@ -464,9 +464,9 @@ bool VidOpenWindow()
     float ddpi;
     float vdpi;
     VidConf.DPIScale = 1.f;
-     if( !SDL_GetDisplayDPI(0, &ddpi, &VidConf.DPIScale, &vdpi) ) {
-         VidConf.DPIScale /= 96.f;
-     }
+//      if( !SDL_GetDisplayDPI(0, &ddpi, &VidConf.DPIScale, &vdpi) ) {
+//          VidConf.DPIScale /= 96.f;
+//      }
     
     GUI = GUIInit(VideoSurface,Context);
     VidConf.Initialized = true;
@@ -550,6 +550,9 @@ void SysCheckKeyEvents()
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F2 ) {
             GUIToggleSettingsWindow(GUI);
+        }
+        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F3 ) {
+            LevelManagerSetPath(LevelManager,"/home/adriano/Scaricati/Medal of Honor/MOH Original/Medal of Honor.iso01");
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit();
@@ -1021,6 +1024,7 @@ void DumpLevel(Level_t* Level)
 }
 void LevelCleanUp(Level_t *Level)
 {
+    DPrintf("LevelCleanUp:Deallocating previous allocated Level struct\n");
     BSDFree(Level->BSD);
 //     BSD2PFree(Level->BSDTwoP);
     TSPFreeList(Level->TSPList);
@@ -1058,8 +1062,9 @@ bool LevelInit(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber)
     Level->MissionNumber = MissionNumber;
     Level->LevelNumber = LevelNumber;
 
+    DPrintf("BasePath:%s Size:%i\n",LevelManager->BasePath,strlen(LevelManager->BasePath));
+    DPrintf("Writing %li bytes on 512 bytes buffer\n",sizeof(Level->MissionPath));
     snprintf(Level->MissionPath,sizeof(Level->MissionPath),"%s/DATA/MSN%i/LVL%i",LevelManager->BasePath,Level->MissionNumber,Level->LevelNumber);
-    
     DPrintf("LevelInit:Working directory:%s\n",LevelManager->BasePath);
     DPrintf("LevelInit:Loading level %s Mission %i Level %i\n",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 
@@ -1067,7 +1072,6 @@ bool LevelInit(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber)
     //0 is hardcoded...for the images it doesn't make any difference between 0 and 1
     //but if we need to load all the level sounds then 0 means Standard Mode while 1 American (All voices are translated to english!).
     snprintf(Buffer,sizeof(Buffer),"%s/%i_%i0.TAF",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
-
     Level->ImageList = TIMGetAllImages(Buffer);
     
     if( !Level->ImageList ) {
@@ -1085,9 +1089,10 @@ bool LevelInit(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber)
     //Step.3 Load all the TSP file based on the data read from the BSD file.
     //Note that we are going to load all the tsp file since we do not know 
     //where in the bsd file it signals to stream/load the next tsp.
-    for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.TargetInitialCompartment; i++ ) {
+    for( i = Level->BSD->TSPInfo.StartingComparment - 1; i < Level->BSD->TSPInfo.TargetInitialCompartment; i++ ) {
        Level->TSPNumberRenderList[i] = i;
     }
+
     for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.NumTSP; i++ ) {
         snprintf(Buffer,sizeof(Buffer),"%s/TSP0/%i_%i_C%i.TSP",Level->MissionPath,Level->MissionNumber,Level->LevelNumber,i);
         TSP = TSPLoad(Buffer,i);
@@ -1112,6 +1117,7 @@ bool LevelInit(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber)
     BSDFixRenderObjectPosition(Level);
     CamInit(&Camera,Level->BSD);
     LevelManager->CurrentLevel = Level;
+    DPrintf("LevelManager:Allocated level struct\n");
     return true;
     
 }
