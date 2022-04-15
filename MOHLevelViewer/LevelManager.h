@@ -20,6 +20,16 @@
 #ifndef __LEVELMANAGER_H_
 #define __LEVELMANAGER_H_
 
+typedef struct MissionLevel_s {
+    char *LevelName;
+    int LevelNumber;
+} MissionLevel_t;
+typedef struct Mission_s {
+    char *MissionName;
+    int   MissionNumber;
+    int   NumLevels;
+    MissionLevel_t *Levels;
+} Mission_t;
 
 typedef struct LevelManager_s {
     char    *BasePath;
@@ -32,8 +42,15 @@ typedef struct LevelManager_s {
 } LevelManager_t;
 
 void    LevelManagerInit();
+void    LevelManagerLoadLevel(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber);
+int     LevelManagerIsLevelLoaded(LevelManager_t *LevelManager);
 int     LevelManagerGetGameEngine(LevelManager_t *LevelManager);
 int     LevelManagerSetPath(LevelManager_t *LevelManager,char *Path);
 void    LevelManagerDraw(LevelManager_t *LevelManager);
+void    LevelManagerCleanUp();
 
+extern Mission_t MOHMissionList[];
+extern int NumMOHMissions;
+extern Mission_t MOHUMissionList[];
+extern int NumMOHUMissions;
 #endif//__LEVELMANAGER_H_

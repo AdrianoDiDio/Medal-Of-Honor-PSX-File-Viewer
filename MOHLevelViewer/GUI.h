@@ -24,6 +24,7 @@ typedef struct GUI_s {
     ImGuiFileDialog *DirSelectFileDialog;
     bool DebugWindowHandle;
     bool SettingsWindowHandle;
+    bool LevelSelectWindowHandle;
     int NumActiveWindows;
 } GUI_t;
 
@@ -33,6 +34,7 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext);
 
 void GUIToggleDebugWindow(GUI_t *GUI);
 void GUIToggleSettingsWindow(GUI_t *GUI);
+void GUIToggleLevelSelectWindow(GUI_t *GUI);
 int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
 void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager);
 void GUIFree(GUI_t *GUI);

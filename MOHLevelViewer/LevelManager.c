@@ -19,6 +19,389 @@
 
 #include "MOHLevelViewer.h"
 
+Mission_t MOHMissionList[] = {
+    {
+        "Rescue The G3 Officer",
+        1,
+        3,
+        (MissionLevel_t[]) {
+            {
+                "Find The Downed Plane",
+                1
+            },
+            {
+                "Search The Town",
+                2
+            },
+            {
+                "Sewer Chase",
+                3
+            }
+        }
+    },
+    {
+        "Destroy The Mighty Railgun Greta",
+        2,
+        4,
+        (MissionLevel_t[]) {
+            {
+                "Sneak Into Railstation",
+                1
+            },
+            {
+                "Find The Gift Package",
+                2
+            },
+            {
+                "Rail Canyon",
+                3
+            },
+            {
+                "Meeting Greta",
+                4
+            }
+        }
+    },
+    {
+        "Scuttle Das Boot U-4901",
+        3,
+        4,
+        (MissionLevel_t[]) {
+            {
+                "Escape The Wolfram",
+                1
+            },
+            {
+                "The Rooftops Of Dachsmag",
+                2
+            },
+            {
+                "The Hunters Den",
+                3
+            },
+            {
+                "Dive",
+                4
+            }
+        }
+    },
+    {
+        "Attack Impenetrable Fort Schmerzen",
+        4,
+        3,
+        (MissionLevel_t[]) {
+            {
+                "The Siegfried Forest",
+                1
+            },
+            {
+                "Officers Quarters",
+                2
+            },
+            {
+                "Mustard Gas Production",
+                3
+            }
+        }
+    },
+    {
+        "Sabotage The Rjukan Hydro Plant",
+        7,
+        3,
+        (MissionLevel_t[]) {
+            {
+                "Mountain Pass",
+                1
+            },
+            {
+                "Merkers Upper Mine",
+                2
+            },
+            {
+                "Treasures Caverns",
+                3
+            }
+        }
+    },
+    {
+        "Capture The Secret German Treasure",
+        5,
+        4,
+        (MissionLevel_t[]) {
+            {
+                "The Roaring Penstocks",
+                1
+            },
+            {
+                "Generators Of Destruction",
+                2
+            },
+            {
+                "Betrayal In The Telemark",
+                3
+            },
+            {
+                "Heavy Water",
+                4
+            }
+        }
+    },
+    {
+        "Escape The V2 Rocket Plant",
+        9,
+        3,
+        (MissionLevel_t[]) {
+            {
+                "Buzz Bomb Assembly",
+                1
+            },
+            {
+                "Vengeance Production",
+                2
+            },
+            {
+                "Gotterdammerung",
+                4
+            }
+        }
+    },
+    {
+        "Multiplayer",
+        12,
+        7,
+        (MissionLevel_t[]) {
+            {
+                "Game Werks",
+                1
+            },
+            {
+                "The Short Line",
+                2
+            },
+            {
+                "Tail Of 2 Cities",
+                3
+            },
+            {
+                "Follow Your Nose",
+                4
+            },
+            {
+                "Castle Von Trapped",
+                5
+            },
+            {
+                "Trouble Shooting",
+                6
+            },
+            {
+                "Site Seeing",
+                7
+            }
+        }
+    }
+};
+
+Mission_t MOHUMissionList[] = {
+    {
+        "Occupied!",
+        2,
+        4,
+        (MissionLevel_t[]) {
+            {
+                "Midnight Rendez-Vous",
+                1
+            },
+            {
+                "Amongst the Dead",
+                2
+            },
+            {
+                "Without A Trace",
+                3
+            },
+            {
+                "Tread Carefully",
+                4
+            }
+        }
+    },
+    {
+        "Hunting The Desert Fox",
+        3,
+        4,
+        (MissionLevel_t[]) {
+            {
+                "Casablanca",
+                1
+            },
+            {
+                "Lighting The Torch",
+                2
+            },
+            {
+                "Burning Sands",
+                3
+            },
+            {
+                "Ally In The Desert",
+                4
+            }
+        }
+    },
+    {
+        "Undercover In Crete",
+        4,
+        3,
+        (MissionLevel_t[]) {
+            {
+                "Getting The Story",
+                1
+            },
+            {
+                "What Lies At Knossos",
+                2
+            },
+            {
+                "Labyrinth",
+                3
+            }
+        }
+    },
+    {
+        "Wewelsburg: Dark Camelot",
+        5,
+        3,
+        (MissionLevel_t[]) {
+            {
+                "Ascent To The Castle",
+                1
+            },
+            {
+                "Dark Valhalla",
+                2
+            },
+            {
+                "A Vicious Cycle",
+                3
+            }
+        }
+    },
+    {
+        "Last Rites At Monte Cassino",
+        6,
+        3,
+        (MissionLevel_t[]) {
+            {
+                "Roundabout",
+                1
+            },
+            {
+                "Prisoners Of War",
+                2
+            },
+            {
+                "Mayhem In The Monastery",
+                3
+            }
+        }
+    },
+    {
+        "A Mittelwerk Saboteur",
+        7,
+        3,
+        (MissionLevel_t[]) {
+            {
+                "Plans for Destruction",
+                1
+            },
+            {
+                "Sabotage!",
+                2
+            },
+            {
+                "Sidecar Shootout",
+                3
+            }
+        }
+    },
+    {
+        "Liberation!",
+        8,
+        4,
+        (MissionLevel_t[]) {
+            {
+                "Final Uprising",
+                1
+            },
+            {
+                "Street By Street!",
+                2
+            },
+            {
+                "Operation Marketplace",
+                3
+            },
+            {
+                "The End Of The Line",
+                4
+            }
+        }
+    },
+    {
+        "Bonus - Panzerknacker Unleashed!",
+        9,
+        3,
+        (MissionLevel_t[]) {
+            {
+                "Where Beagles Dare",
+                1
+            },
+            {
+                "Rotten To The Corps",
+                2
+            },
+            {
+                "I, Panzerknacker",
+                3
+            }
+        }
+    },
+    {
+        "Multiplayer",
+        12,
+        6,
+        (MissionLevel_t[]) {
+            {
+                "Aztec Turtle House",
+                1
+            },
+            {
+                "The Shoot Hole IV",
+                2
+            },
+            {
+                "Metro Plex",
+                3
+            },
+            {
+                "The Missionary",
+                4
+            },
+            {
+                "Squaresville",
+                5
+            },
+            {
+                "Shostakovich Nightmare",
+                6
+            }
+        }
+    }
+};
+int NumMOHMissions = sizeof(MOHMissionList) / sizeof(MOHMissionList[0]);
+int NumMOHUMissions = sizeof(MOHUMissionList) / sizeof(MOHUMissionList[0]);
+
 int LevelManagerIsLevelLoaded(LevelManager_t *LevelManager)
 {
     if( !LevelManager ) {
@@ -173,7 +556,10 @@ int LevelManagerSetPath(LevelManager_t *LevelManager,char *Path)
     LevelManager->IsPathSet = 1;
     return 1;
 }
-
+void LevelManagerLoadLevel(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber)
+{
+    LevelInit(LevelManager->CurrentLevel,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
+}
 void LevelManagerInit()
 {
     LevelManager = malloc(sizeof(LevelManager_t));

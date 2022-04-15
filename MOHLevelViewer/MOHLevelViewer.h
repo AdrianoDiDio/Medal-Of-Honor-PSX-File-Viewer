@@ -66,6 +66,10 @@
 #define Attribute(x)
 #endif
 
+#ifndef M_PI
+#define M_PI (3.14159265358979323846)
+#endif
+
 #ifndef PI_OVER_360
 #define PI_OVER_360 0.0087266462599716478846184538424431
 #endif
@@ -176,6 +180,7 @@ bool    GLInitCompatibilityProfile(const char *Driver);
 Vec3_t  Vec3Build(float x,float y,float z);
 void    Vec3RotateXAxis(float Theta,Vec3_t *Vector);
 void    GLSet3D();
+void    CamInit(ViewParm_t *Camera,BSD_t *BSD);
 void    CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility);
 void    CamUpdateVectors(ViewParm_t *Camera);
 float   Rand01();

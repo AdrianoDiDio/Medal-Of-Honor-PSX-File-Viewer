@@ -80,7 +80,12 @@ void GUIToggleSettingsWindow(GUI_t *GUI)
     GUIToggleHandle(GUI,GUI->SettingsWindowHandle);
 
 }
+void GUIToggleLevelSelectWindow(GUI_t *GUI)
+{
+    GUI->LevelSelectWindowHandle = !GUI->LevelSelectWindowHandle;
+    GUIToggleHandle(GUI,GUI->LevelSelectWindowHandle);
 
+}
 void GUIBeginFrame()
 {
     ImGui_ImplOpenGL3_NewFrame();
@@ -104,9 +109,8 @@ void GUIDrawDebugWindow(GUI_t *GUI)
     if( !GUI->DebugWindowHandle ) {
         return;
     }
-    DPrintf("Called igBegin with handle %i\n",GUI->DebugWindowHandle);
     if( igBegin("Debug Settings",&GUI->DebugWindowHandle,0) ) {
-        if( LevelManager->CurrentLevel ) {
+        if( LevelManagerIsLevelLoaded(LevelManager) ) {
             igText(LevelManager->EngineName);
             igSeparator();
             igText("Debug Settings");
@@ -144,7 +148,7 @@ void GUIDrawDebugWindow(GUI_t *GUI)
     igEnd();
 #endif
 }
-int OvOpen = 1;
+
 void GUIDrawHelpOverlay()
 {
     int WindowFlags;
@@ -153,7 +157,8 @@ void GUIDrawHelpOverlay()
     ImVec2 WindowPosition;
     ImVec2 WindowPivot;
     
-    WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+    WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
+                    ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
     Viewport = igGetMainViewport();
     WorkPosition = Viewport->WorkPos;
     WindowPosition.x = (WorkPosition.x + 10.f);
@@ -164,6 +169,8 @@ void GUIDrawHelpOverlay()
 
     if( igBegin("Help", NULL, WindowFlags) ) {
         igText("Press F1 to enable/disable debug settings");
+        igText("Press F2 to open video settings");
+        igText("Press F3 to open the level selection window");
     }
     igEnd();
 }
@@ -240,6 +247,57 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
 #endif
 }
 
+void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager)
+{
+    ImVec2 ButtonSize;
+    MissionLevel_t *Iterator;
+    if( !GUI->LevelSelectWindowHandle ) {
+        return;
+    }
+    ButtonSize.x = 0;
+    ButtonSize.y = 0;
+    if( igBegin("Level Select",&GUI->LevelSelectWindowHandle,0) ) {
+        if( !LevelManagerIsLevelLoaded(LevelManager) ) {
+            igText("Level has not been loaded yet!");
+        } else {
+            igText("Game Engine");
+            igSeparator();
+            if( LevelManagerGetGameEngine(LevelManager) == MOH_GAME_STANDARD ) {
+                for( int i = 0; i < NumMOHMissions; i++ ) {
+                    if( igTreeNode_Str(MOHMissionList[i].MissionName) ) {
+                        for( int j = 0; j < MOHMissionList[i].NumLevels; j++ ) {
+                            if( igTreeNodeEx_Str(MOHMissionList[i].Levels[j].LevelName,ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen) ) {
+                                if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+                                    LevelManagerLoadLevel(LevelManager,MOHMissionList[i].MissionNumber,MOHMissionList[i].Levels[j].LevelNumber);
+                                }
+    //                             igTreePop();
+                            }
+                        }
+                        igTreePop();
+                    }
+                }
+            } else {
+                for( int i = 0; i < NumMOHUMissions; i++ ) {
+                    if( igTreeNode_Str(MOHUMissionList[i].MissionName) ) {
+                        for( int j = 0; j < MOHUMissionList[i].NumLevels; j++ ) {
+                            if( igTreeNodeEx_Str(MOHUMissionList[i].Levels[j].LevelName,ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen) ) {
+                                if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+                                    LevelManagerLoadLevel(LevelManager,MOHUMissionList[i].MissionNumber,MOHUMissionList[i].Levels[j].LevelNumber);
+                                }
+    //                             igTreePop();
+                            }
+                        }
+                        igTreePop();
+                    }
+                }
+            }
+        }
+    }
+    igEnd();
+    if( !GUI->LevelSelectWindowHandle ) {
+        GUIToggleHandle(GUI,GUI->LevelSelectWindowHandle);
+    }
+}
 void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
 {
     ImVec2 ButtonSize;
@@ -248,6 +306,9 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
     ImGuiIO *IO;
     
     if( !GUI->NumActiveWindows ) {
+        GUIBeginFrame();
+        GUIDrawHelpOverlay(GUI);
+        GUIEndFrame();
         return;
     }
     GUIBeginFrame();
@@ -272,6 +333,8 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
     }
     GUIDrawDebugWindow(GUI);
     GUIDrawSettingsWindow(GUI);
+    GUIDrawLevelSelectWindow(GUI,LevelManager);
+//     igShowDemoWindow(NULL);
     GUIEndFrame();
 //     if( !GUI->IsActive ) {
 //         GUIBeginFrame();
@@ -280,7 +343,7 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
 //         return;
 //     }
 //     GUIBeginFrame();
-//     GUIDrawDebugWindow(GUI);igShowDemoWindow(NULL);
+//     GUIDrawDebugWindow(GUI);
 //     GUIEndFrame();
 }
 GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
@@ -296,7 +359,7 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     ImGui_ImplSDL2_InitForOpenGL(VideoSurface, &GLContext);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     igStyleColorsDark(NULL);
-    ImFontAtlas_AddFontFromFileTTF(IO->Fonts,"Fonts/DroidSans.ttf",floor(16.f * VidConf.DPIScale),NULL,NULL);
+    ImFontAtlas_AddFontFromFileTTF(IO->Fonts,"Fonts/DroidSans.ttf",floor(14.f * VidConf.DPIScale),NULL,NULL);
     Style = igGetStyle();
     ImGuiStyle_ScaleAllSizes(Style,VidConf.DPIScale);
     IO->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;

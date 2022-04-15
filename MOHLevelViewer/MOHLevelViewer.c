@@ -464,9 +464,9 @@ bool VidOpenWindow()
     float ddpi;
     float vdpi;
     VidConf.DPIScale = 1.f;
-//      if( !SDL_GetDisplayDPI(0, &ddpi, &VidConf.DPIScale, &vdpi) ) {
-//          VidConf.DPIScale /= 96.f;
-//      }
+    if( !SDL_GetDisplayDPI(0, &ddpi, &VidConf.DPIScale, &vdpi) ) {
+        VidConf.DPIScale /= 96.f;
+    }
     
     GUI = GUIInit(VideoSurface,Context);
     VidConf.Initialized = true;
@@ -550,6 +550,9 @@ void SysCheckKeyEvents()
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F2 ) {
             GUIToggleSettingsWindow(GUI);
+        }
+        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F3 ) {
+            GUIToggleLevelSelectWindow(GUI);
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit();
