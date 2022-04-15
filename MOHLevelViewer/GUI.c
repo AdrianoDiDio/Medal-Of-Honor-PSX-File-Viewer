@@ -247,49 +247,62 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
 #endif
 }
 
+void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,Mission_t *Missions,int NumMissions)
+{
+    int TreeNodeFlags;
+    int i;
+    int j;
+    int DisableNode;
+    for( i = 0; i < NumMissions; i++ ) {
+        if( igTreeNode_Str(Missions[i].MissionName) ) {
+            for( j = 0; j < Missions[i].NumLevels; j++ ) {
+                DisableNode = 0;
+                TreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+                if( LevelManagerIsLevelLoaded(LevelManager) ) {
+                    if( LevelManager->CurrentLevel->MissionNumber == Missions[i].MissionNumber
+                        && LevelManager->CurrentLevel->LevelNumber == Missions[i].Levels[j].LevelNumber ) {
+                        TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
+                        DisableNode = 1;
+                    }
+                }
+                if( DisableNode ) {
+                    igBeginDisabled(1);
+                }
+                if( igTreeNodeEx_Str(Missions[i].Levels[j].LevelName,TreeNodeFlags) ) {
+                    if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+                        LevelManagerLoadLevel(LevelManager,Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber);
+                    }
+                }
+                if( DisableNode ) {
+                    igEndDisabled();
+                }
+            }
+            igTreePop();
+        }
+    }
+}
 void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager)
 {
     ImVec2 ButtonSize;
+    int TreeNodeFlags;
+    int GameEngine;
     MissionLevel_t *Iterator;
     if( !GUI->LevelSelectWindowHandle ) {
         return;
     }
     ButtonSize.x = 0;
     ButtonSize.y = 0;
+
     if( igBegin("Level Select",&GUI->LevelSelectWindowHandle,0) ) {
         if( !LevelManagerIsLevelLoaded(LevelManager) ) {
             igText("Level has not been loaded yet!");
         } else {
-            igText("Game Engine");
+            igText(LevelManager->EngineName);
             igSeparator();
             if( LevelManagerGetGameEngine(LevelManager) == MOH_GAME_STANDARD ) {
-                for( int i = 0; i < NumMOHMissions; i++ ) {
-                    if( igTreeNode_Str(MOHMissionList[i].MissionName) ) {
-                        for( int j = 0; j < MOHMissionList[i].NumLevels; j++ ) {
-                            if( igTreeNodeEx_Str(MOHMissionList[i].Levels[j].LevelName,ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen) ) {
-                                if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
-                                    LevelManagerLoadLevel(LevelManager,MOHMissionList[i].MissionNumber,MOHMissionList[i].Levels[j].LevelNumber);
-                                }
-    //                             igTreePop();
-                            }
-                        }
-                        igTreePop();
-                    }
-                }
+                GUIDrawLevelTree(GUI,LevelManager,MOHMissionsList,NumMOHMissions);
             } else {
-                for( int i = 0; i < NumMOHUMissions; i++ ) {
-                    if( igTreeNode_Str(MOHUMissionList[i].MissionName) ) {
-                        for( int j = 0; j < MOHUMissionList[i].NumLevels; j++ ) {
-                            if( igTreeNodeEx_Str(MOHUMissionList[i].Levels[j].LevelName,ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen) ) {
-                                if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
-                                    LevelManagerLoadLevel(LevelManager,MOHUMissionList[i].MissionNumber,MOHUMissionList[i].Levels[j].LevelNumber);
-                                }
-    //                             igTreePop();
-                            }
-                        }
-                        igTreePop();
-                    }
-                }
+                GUIDrawLevelTree(GUI,LevelManager,MOHUMissionsList,NumMOHUMissions);
             }
         }
     }

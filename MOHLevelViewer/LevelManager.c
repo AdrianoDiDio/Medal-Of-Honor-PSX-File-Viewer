@@ -19,7 +19,7 @@
 
 #include "MOHLevelViewer.h"
 
-Mission_t MOHMissionList[] = {
+Mission_t MOHMissionsList[] = {
     {
         "Rescue The G3 Officer",
         1,
@@ -202,7 +202,7 @@ Mission_t MOHMissionList[] = {
     }
 };
 
-Mission_t MOHUMissionList[] = {
+Mission_t MOHUMissionsList[] = {
     {
         "Occupied!",
         2,
@@ -399,8 +399,8 @@ Mission_t MOHUMissionList[] = {
         }
     }
 };
-int NumMOHMissions = sizeof(MOHMissionList) / sizeof(MOHMissionList[0]);
-int NumMOHUMissions = sizeof(MOHUMissionList) / sizeof(MOHUMissionList[0]);
+int NumMOHMissions = sizeof(MOHMissionsList) / sizeof(MOHMissionsList[0]);
+int NumMOHUMissions = sizeof(MOHUMissionsList) / sizeof(MOHUMissionsList[0]);
 
 int LevelManagerIsLevelLoaded(LevelManager_t *LevelManager)
 {
@@ -552,12 +552,22 @@ int LevelManagerSetPath(LevelManager_t *LevelManager,char *Path)
         }
     }
     LevelManager->GameEngine = GameEngine;
-    sprintf(LevelManager->EngineName,"Engine %s",GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
+    sprintf(LevelManager->EngineName,"%s",GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
     LevelManager->IsPathSet = 1;
     return 1;
 }
 void LevelManagerLoadLevel(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber)
 {
+    if( !LevelManager->IsPathSet ) {
+        DPrintf("LevelManagerLoadLevel:Called without a valid path set\n");
+        return;
+    }
+    if( LevelManagerIsLevelLoaded(LevelManager) ) {
+        if( LevelManager->CurrentLevel->MissionNumber == MissionNumber && LevelManager->CurrentLevel->LevelNumber == LevelNumber ) {
+            DPrintf("LevelManagerLoadLevel:Attempted to load the same level...\n");
+            return;
+        }
+    }
     LevelInit(LevelManager->CurrentLevel,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
 }
 void LevelManagerInit()

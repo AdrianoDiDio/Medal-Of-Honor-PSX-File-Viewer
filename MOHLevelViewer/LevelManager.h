@@ -49,8 +49,8 @@ int     LevelManagerSetPath(LevelManager_t *LevelManager,char *Path);
 void    LevelManagerDraw(LevelManager_t *LevelManager);
 void    LevelManagerCleanUp();
 
-extern Mission_t MOHMissionList[];
+extern Mission_t MOHMissionsList[];
 extern int NumMOHMissions;
-extern Mission_t MOHUMissionList[];
+extern Mission_t MOHUMissionsList[];
 extern int NumMOHUMissions;
 #endif//__LEVELMANAGER_H_
