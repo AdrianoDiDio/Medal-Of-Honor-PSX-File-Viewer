@@ -51,6 +51,8 @@
 #include "BSD.h"
 #include "TSP.h"
 #include "BSDTwoPlayers.h"
+#include "Level.h"
+#include "LevelManager.h"
 
 #ifdef __linux__
 #define PATHSEPARATOR '/'
@@ -152,49 +154,6 @@ typedef enum
     DIR_RIGHTWARD
 } Direction_t;
 
-
-
-typedef struct LevelSettings_s {
-    bool WireFrame;
-    bool ShowCollisionData;
-    bool ShowAABBTree;
-    bool ShowMap;
-    bool ShowBSDNodes;
-    bool ShowBSDRenderObject;
-    bool DrawBSDRenderObjects;
-    bool DrawBSDShowCaseRenderObject;
-    bool EnableFrustumCulling;
-    bool EnableLighting;
-    bool EnableSemiTransparency;
-    bool EnableAnimatedLights;
-} LevelSettings_t;
-
-typedef struct Level_s {
-    char    BasePath[256];
-    char    MissionPath[256];
-    char    EngineName[256];
-    int     MissionNumber;
-    int     LevelNumber;
-    BSD_t  *BSD;
-    BSD2P_t *BSDTwoP;
-    TSP_t  *TSPList;
-    TIMImage_t *ImageList;
-    VRAM_t *VRAM;
-    Font_t *Font;
-    // At any time there can only be 4 tsp to be rendered.
-    int     TSPNumberRenderList[4];
-} Level_t;
-
-typedef struct LevelManager_s {
-    char    *BasePath;
-    char    MissionPath[256];
-    char    EngineName[256];
-    Level_t *CurrentLevel;
-    LevelSettings_t Settings;
-    int     IsPathSet;
-    int     GameEngine;
-} LevelManager_t;
-
 VidDriver_t VidConf;
 ViewParm_t Camera;
 ComTimeInfo_t *ComTime;
@@ -219,8 +178,6 @@ void    Vec3RotateXAxis(float Theta,Vec3_t *Vector);
 void    GLSet3D();
 void    CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility);
 void    CamUpdateVectors(ViewParm_t *Camera);
-int     LevelGetGameEngine();
-int     LevelManagerSetPath(LevelManager_t *LevelManager,char *Path);
 float   Rand01();
 int     RandRangeI(int Min,int Max);
 void    SysShowCursor();

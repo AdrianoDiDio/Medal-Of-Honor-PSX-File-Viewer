@@ -826,108 +826,6 @@ void InitGLView()
     GLSetDefaultState();
 }
 
-void LevelManagerDraw(LevelManager_t *LevelManager)
-{
-    Level_t *Level;
-    vec3 temp;
-
-    //LevelManager has not received a valid path yet.
-    if( !LevelManager->IsPathSet ) {
-        return;
-    }
-    //Level has not been loaded in yet.
-    if( !LevelManager->CurrentLevel ) {
-        return;
-    }
-    
-    Level = LevelManager->CurrentLevel;
-    
-    if( LevelManager->Settings.EnableAnimatedLights ) {
-        BSDUpdateAnimatedLights(Level->BSD);
-        TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,0);
-    }
-    
-    glm_perspective(glm_rad(110.f),(float) VidConf.Width/ (float) VidConf.Height,1.f, 4096.f,VidConf.PMatrixM4);
-
-     temp[0] = 1;
-     temp[1] = 0;
-     temp[2] = 0;
-     glm_mat4_identity(VidConf.ModelViewMatrix);
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
-     temp[0] = 0;
-     temp[1] = 1;
-     temp[2] = 0;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
-     temp[0] = 0;
-     temp[1] = 0;
-     temp[2] = 1;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
-     temp[0] = -Camera.Position.x;
-     temp[1] = -Camera.Position.y;
-     temp[2] = -Camera.Position.z;
-     glm_translate(VidConf.ModelViewMatrix,temp);
-     
-     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-     
-     //Emulate PSX Coordinate system...
-     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-     
-     glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
-     glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
-     
-     /* TEMP! */
-     BSDCheckCompartmentTrigger(Level,Camera.Position);
-//      BSD2PDraw(Level);
-     BSDDraw(LevelManager);
-     
-     temp[0] = 1;
-     temp[1] = 0;
-     temp[2] = 0;
-     glm_mat4_identity(VidConf.ModelViewMatrix);
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
-     temp[0] = 0;
-     temp[1] = 1;
-     temp[2] = 0;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
-     temp[0] = 0;
-     temp[1] = 0;
-     temp[2] = 1;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
-     temp[0] = -Camera.Position.x;
-     temp[1] = -Camera.Position.y;
-     temp[2] = -Camera.Position.z;
-     glm_translate(VidConf.ModelViewMatrix,temp);
-     
-     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-     
-     //Emulate PSX Coordinate system...
-     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-     
-     glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
-     glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
-     TSPDrawList(LevelManager);
-     
-     temp[0] = 1;
-     temp[1] = 0;
-     temp[2] = 0;
-     glm_mat4_identity(VidConf.ModelViewMatrix);
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
-     temp[0] = 0;
-     temp[1] = 1;
-     temp[2] = 0;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
-     temp[0] = 0;
-     temp[1] = 0;
-     temp[2] = 1;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
-     
-     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-     
-     //Emulate PSX Coordinate system...
-     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-     BSDDrawSky(LevelManager);
-}
-
 void GLFrame()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -937,21 +835,7 @@ void GLFrame()
     glEnable(GL_DEPTH_TEST);
 }
 
-void SetDefaultSettings(LevelSettings_t *LevelSettings)
-{
-    LevelSettings->ShowMap = true;
-    LevelSettings->ShowBSDNodes = true;
-    LevelSettings->ShowBSDRenderObject = true;
-    LevelSettings->DrawBSDRenderObjects = true;
-    LevelSettings->DrawBSDShowCaseRenderObject = false;
-    LevelSettings->EnableFrustumCulling = true;
-    LevelSettings->EnableLighting = true;
-    LevelSettings->EnableSemiTransparency = true;
-    LevelSettings->EnableAnimatedLights = true;
-    LevelSettings->WireFrame = false;
-    LevelSettings->ShowAABBTree = false;
-    LevelSettings->ShowCollisionData = false;
-}
+
 
 void DumpLevel(Level_t* Level)
 {
@@ -979,7 +863,7 @@ void DumpLevel(Level_t* Level)
 
     sprintf(MissionDir,"MSN%iLVL%i",Level->MissionNumber,Level->LevelNumber);
     sprintf(ExportDir,"Export");
-    asprintf(&EngineName,"%s",(LevelGetGameEngine() == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
+    asprintf(&EngineName,"%s",(LevelManagerGetGameEngine(LevelManager) == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
     asprintf(&EngineDir,"%s%c%s",ExportDir,PATHSEPARATOR,EngineName);
     asprintf(&OutDir,"%s%c%s%c",EngineDir,PATHSEPARATOR,MissionDir,PATHSEPARATOR);
     asprintf(&PlyDir,"%s%cPly%c",OutDir,PATHSEPARATOR,PATHSEPARATOR);
@@ -1019,112 +903,7 @@ void DumpLevel(Level_t* Level)
     fclose(PlyLevelOutFile);
     fclose(PlyObjectOutFile);
 }
-void LevelCleanUp(Level_t *Level)
-{
-    DPrintf("LevelCleanUp:Deallocating previous allocated Level struct\n");
-    BSDFree(Level->BSD);
-//     BSD2PFree(Level->BSDTwoP);
-    TSPFreeList(Level->TSPList);
-    TIMImageListFree(Level->ImageList);
-    free(Level->VRAM);
-    FontFree(Level->Font);
-    free(Level);
-}
-void LevelManagerCleanUp()
-{
-    if( LevelManager->CurrentLevel != NULL ) {
-        LevelCleanUp(LevelManager->CurrentLevel);
-    }
-    if( LevelManager->IsPathSet ) {
-        free(LevelManager->BasePath);
-    }
-    free(LevelManager);
-}
 
-bool LevelInit(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber)
-{
-    FILE *BSDFile;
-    char Buffer[512];
-    int i;
-    TSP_t *TSP;
-    Level_t *Level;
-    
-    //Attempt to load the level...
-    if( LevelManager->CurrentLevel ){
-        LevelCleanUp(LevelManager->CurrentLevel);
-    }
-    
-    Level = malloc(sizeof(Level_t));
-    Level->Font = NULL;
-    Level->VRAM = NULL;
-    Level->TSPList = NULL;
-    Level->ImageList = NULL;
-    Level->MissionNumber = MissionNumber;
-    Level->LevelNumber = LevelNumber;
-
-    DPrintf("BasePath:%s Size:%i\n",LevelManager->BasePath,strlen(LevelManager->BasePath));
-    DPrintf("Writing %li bytes on 512 bytes buffer\n",sizeof(Level->MissionPath));
-    snprintf(Level->MissionPath,sizeof(Level->MissionPath),"%s/DATA/MSN%i/LVL%i",LevelManager->BasePath,Level->MissionNumber,Level->LevelNumber);
-    DPrintf("LevelInit:Working directory:%s\n",LevelManager->BasePath);
-    DPrintf("LevelInit:Loading level %s Mission %i Level %i\n",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
-
-    //Step.1 Load all the tims from taf.
-    //0 is hardcoded...for the images it doesn't make any difference between 0 and 1
-    //but if we need to load all the level sounds then 0 means Standard Mode while 1 American (All voices are translated to english!).
-    snprintf(Buffer,sizeof(Buffer),"%s/%i_%i0.TAF",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
-    Level->ImageList = TIMGetAllImages(Buffer);
-    
-    if( !Level->ImageList ) {
-        DPrintf("LevelInit:Failed to load TAF file %s\n",Buffer);
-        return false;
-    }
-    //Step.2 Partially load the BSD file in order to get the TSP info.
-    BSDFile = BSDEarlyInit(Level);
-    if( !BSDFile ) {
-        DPrintf("LevelInit:Failed to load BSD file\n");
-        return false;
-    }
-    
-    //Read the TSP FILES
-    //Step.3 Load all the TSP file based on the data read from the BSD file.
-    //Note that we are going to load all the tsp file since we do not know 
-    //where in the bsd file it signals to stream/load the next tsp.
-    for( i = Level->BSD->TSPInfo.StartingComparment - 1; i < Level->BSD->TSPInfo.TargetInitialCompartment; i++ ) {
-       Level->TSPNumberRenderList[i] = i;
-    }
-
-    for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.NumTSP; i++ ) {
-        snprintf(Buffer,sizeof(Buffer),"%s/TSP0/%i_%i_C%i.TSP",Level->MissionPath,Level->MissionNumber,Level->LevelNumber,i);
-        TSP = TSPLoad(Buffer,i);
-        if( !TSP ) {
-            DPrintf("LoadLevel:Failed to load TSP File %s\n",Buffer);
-            return false;
-        }
-        TSP->Next = Level->TSPList;
-        Level->TSPList = TSP;
-    }
-    LevelManager->GameEngine = TSPIsVersion3(Level->TSPList) ? MOH_GAME_UNDERGROUND : MOH_GAME_STANDARD;
-    //Step.4 Resume loading the BSD after we successfully loaded the TSP.
-    DPrintf("LoadLevel: Detected game %s\n",LevelManager->GameEngine == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
-    BSDLoad(Level,LevelManager->GameEngine,BSDFile);
-    sprintf(LevelManager->EngineName,"Engine %s",LevelManager->GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
-    
-    Level->VRAM = VRAMInit(Level->ImageList);
-    Level->Font = FontInit(Level->VRAM);
-    TSPCreateNodeBBoxVAO(Level->TSPList);
-    TSPCreateCollisionVAO(Level->TSPList);
-    BSDCreateVAOs(Level->BSD,Level->VRAM);
-    BSDFixRenderObjectPosition(Level);
-    CamInit(&Camera,Level->BSD);
-    LevelManager->CurrentLevel = Level;
-    DPrintf("LevelManager:Allocated level struct\n");
-    return true;
-    
-}
-int LevelGetGameEngine()
-{
-    return LevelManager->GameEngine;
-}
 /*
     Late level initialization for all the subsystems that
     requires a valid OpenGL context.
@@ -1146,37 +925,6 @@ void Quit()
     exit(0);
 }
 
-int LevelManagerSetPath(LevelManager_t *LevelManager,char *Path)
-{
-    if( !LevelManager ) {
-        DPrintf("LevelManagerSetPath:Called without a valid struct\n");
-        return 0;
-    }
-    if( !Path ) {
-        DPrintf("LevelManagerSetPath:Called without a valid path\n");
-        return 0;
-    }
-    LevelManager->BasePath = StringCopy(Path);
-
-    if( !LevelInit(LevelManager,1,1 ) ) {
-        if( !LevelInit(LevelManager,2,1) ) {
-            DPrintf("LevelManagerSetPath:Invalid path...\n");
-            LevelManager->IsPathSet = 0;
-            return 0;
-        }
-    }
-    LevelManager->IsPathSet = 1;
-    return 1;
-}
-void LevelManagerInit()
-{
-    LevelManager = malloc(sizeof(LevelManager_t));
-    LevelManager->CurrentLevel = NULL;
-    LevelManager->BasePath = NULL;
-    SetDefaultSettings(&LevelManager->Settings);
-    //No path has been provided to it yet.
-    LevelManager->IsPathSet = 0;
-}
 /*
  * Requires 3 things:
     - MOH DATA Location

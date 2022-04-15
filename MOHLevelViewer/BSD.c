@@ -220,7 +220,7 @@ void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
 
         glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
         
-        if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
+        if( LevelManagerGetGameEngine(LevelManager) == MOH_GAME_UNDERGROUND ) {
             BSDDumpFaceV2DataToFile(BSD,RenderObjectIterator,ModelMatrix,OutFile);
         } else {
             BSDDumpFaceDataToFile(BSD,RenderObjectIterator,ModelMatrix,OutFile);
@@ -401,7 +401,7 @@ void BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile)
 
         glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
         
-        if( LevelGetGameEngine() == MOH_GAME_UNDERGROUND ) {
+        if( LevelManagerGetGameEngine(LevelManager) == MOH_GAME_UNDERGROUND ) {
             BSDDumpFaceV2DataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,OutFile);
         } else {
             BSDDumpFaceDataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,OutFile);

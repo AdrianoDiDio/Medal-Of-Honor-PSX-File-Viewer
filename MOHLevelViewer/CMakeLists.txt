@@ -4,7 +4,7 @@ project(MOHLevelViewer)
 
 set(SOURCE_FILES ShaderManager.c VAO.c GUI.c TSP.c 
                  TIM.c Font.c BSD.c BSDTwoPlayers.c 
-                 VRAM.c MOHLevelViewer.c
+                 VRAM.c Level.c LevelManager.c MOHLevelViewer.c
 )
 
 set(IMGUI_SOURCE_FILES Libs/cimgui/cimgui.cpp 
