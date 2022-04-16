@@ -251,7 +251,7 @@ Mission_t MOHUMissionsList[] = {
     },
     {
         "Undercover In Crete",
-        4,
+        5,
         3,
         (MissionLevel_t[]) {
             {
@@ -270,7 +270,7 @@ Mission_t MOHUMissionsList[] = {
     },
     {
         "Wewelsburg: Dark Camelot",
-        5,
+        4,
         3,
         (MissionLevel_t[]) {
             {
