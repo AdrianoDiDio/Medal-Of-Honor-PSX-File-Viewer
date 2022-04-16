@@ -456,7 +456,7 @@ bool VidOpenWindow()
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     VideoSurface = SDL_CreateWindow(VidConf.Title,SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                     VidConf.Width, VidConf.Height, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
+                     VidConf.Width, VidConf.Height, SDL_WINDOW_OPENGL );
 //     SDL_SetWindowTitle(VideoSurface,);
     Context = SDL_GL_CreateContext(VideoSurface);
     
@@ -949,7 +949,7 @@ int main(int argc,char **argv)
 //     }
 
 #if _ENABLEVIDEOOUT
-    SysVidInit(1366,768,false);
+    SysVidInit(1920,900,false);
     ComTime = malloc(sizeof(ComTimeInfo_t));
     memset(ComTime,0,sizeof(ComTimeInfo_t));
     InitGLView();

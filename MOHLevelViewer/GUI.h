@@ -19,13 +19,19 @@
 #ifndef __GUI_H_
 #define __GUI_H_
 
-typedef struct GUI_s {
+typedef struct GUIProgressBar_s {
     ImGuiContext *Context;
+    int CurrentPercentage;
+    int IsActive;
+} GUIProgressBar_t;
+typedef struct GUI_s {
+    ImGuiContext *DefaultContext;
     ImGuiFileDialog *DirSelectFileDialog;
     bool DebugWindowHandle;
     bool SettingsWindowHandle;
     bool LevelSelectWindowHandle;
     int NumActiveWindows;
+    GUIProgressBar_t *ProgressBar;
 } GUI_t;
 
 struct LevelManager_s;
@@ -36,6 +42,7 @@ void GUIToggleDebugWindow(GUI_t *GUI);
 void GUIToggleSettingsWindow(GUI_t *GUI);
 void GUIToggleLevelSelectWindow(GUI_t *GUI);
 int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
+void GUIProgressBarIncrement(GUI_t *GUI,int Increment,char *Message);
 void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager);
 void GUIFree(GUI_t *GUI);
 #endif//__GUI_H_

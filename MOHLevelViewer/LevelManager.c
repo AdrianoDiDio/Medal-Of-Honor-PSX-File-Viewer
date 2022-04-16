@@ -543,7 +543,6 @@ int LevelManagerSetPath(LevelManager_t *LevelManager,char *Path)
         return 0;
     }
     LevelManager->BasePath = StringCopy(Path);
-
     if( !LevelInit(LevelManager->CurrentLevel,LevelManager->BasePath,1,1,&GameEngine) ) {
         if( !LevelInit(LevelManager->CurrentLevel,LevelManager->BasePath,2,1,&GameEngine) ) {
             DPrintf("LevelManagerSetPath:Invalid path...\n");

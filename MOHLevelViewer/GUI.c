@@ -19,12 +19,19 @@
 
 #include "MOHLevelViewer.h"
 
-void GUIFree(GUI_t *GUI)
+void GUIReleaseContext(ImGuiContext *Context)
 {
+    igSetCurrentContext(Context);
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
-    igDestroyContext(NULL);
+    igDestroyContext(Context);
+}
+void GUIFree(GUI_t *GUI)
+{
+    GUIReleaseContext(GUI->DefaultContext);
+    GUIReleaseContext(GUI->ProgressBar->Context);
     IGFD_Destroy(GUI->DirSelectFileDialog);
+    free(GUI->ProgressBar);
     free(GUI);
 }
 
@@ -176,42 +183,90 @@ void GUIDrawHelpOverlay()
 }
 
 
+void GUIProgressBarBegin(GUI_t *GUI)
+{
+    igSetCurrentContext(GUI->ProgressBar->Context);
+    GUI->ProgressBar->IsActive = 0;
+    GUI->ProgressBar->CurrentPercentage = 0;
+}
 
+void GUIProgressBarUpdate(GUI_t *GUI,int Increment,char *Message)
+{
+    ImGuiViewport *Viewport;
+    ImVec2 ScreenCenter;
+    ImVec2 Pivot;
+    ImVec2 Size;
+    
+    Viewport = igGetMainViewport();
+    ImGuiViewport_GetCenter(&ScreenCenter,Viewport);
+    DPrintf("Center:%f;%f\n",ScreenCenter.x,ScreenCenter.y);
+    Pivot.x = 0.5f;
+    Pivot.y = 0.5f;
+    //Update it
+    //Clear Screen init progress bar
+    glClear(GL_COLOR_BUFFER_BIT );
+    
+    GUIBeginFrame();
+    
+    if( !GUI->ProgressBar->IsActive ) {
+        igOpenPopup_Str("Loading...",0);
+        GUI->ProgressBar->IsActive = 1;
+    }
+    
+    Size.x = 0.f;
+    Size.y = 0.f;
+    igSetNextWindowPos(ScreenCenter, ImGuiCond_Always, Pivot);
+    GUI->ProgressBar->CurrentPercentage += Increment;
+    if (igBeginPopupModal("Loading...", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        igProgressBar((GUI->ProgressBar->CurrentPercentage / 100.f) * ComTime->Delta/* * IO->DeltaTime*/,Size,Message);
+        igEnd();
+    }
+    GUIEndFrame();
+    SysSwapBuffers();
+}
+
+void GUIProgressBarEnd(GUI_t *GUI)
+{
+    igSetCurrentContext(GUI->DefaultContext);
+    GUI->ProgressBar->IsActive = 0;
+    GUI->ProgressBar->CurrentPercentage = 0;
+}
 void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
 {
-    ImGuiIO* IO;
     ImVec2 MaxSize;
     ImVec2 MinSize;
     ImGuiViewport *Viewport;
-    ImVec2 WorkPosition;
     ImVec2 WindowPosition;
     ImVec2 WindowPivot;
     char *DirectoryPath;
+    int LoadStatus;
     
     Viewport = igGetMainViewport();
-    WorkPosition = Viewport->WorkPos;
-    WindowPosition.x = 0;
-    WindowPosition.y = 0;
+    WindowPosition.x = Viewport->WorkPos.x;
+    WindowPosition.y = Viewport->WorkPos.y;
     WindowPivot.x = 0.f;
     WindowPivot.y = 0.f;
-    
-    IO = igGetIO();
     MaxSize.x = Viewport->Size.x;
     MaxSize.y = Viewport->Size.y;
-    MinSize.x = MaxSize.x*0.25f;
-    MinSize.y = MaxSize.y*0.25f;
-    
-//     if( !GUI->DirSelectFileDialog ) {
+    MinSize.x = -1;
+    MinSize.y = -1;
+
+    //     if( !GUI->DirSelectFileDialog ) {
 //         GUI->DirSelectFileDialog = IGFD_Create();
 //         GUIPushWindow(GUI);
 //     }
+    igSetNextWindowSize(MaxSize,0);
     igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
-    if (IGFD_DisplayDialog(GUI->DirSelectFileDialog, "Dir Select", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize, MinSize, MaxSize)) {
+    if (IGFD_DisplayDialog(GUI->DirSelectFileDialog, "Dir Select", ImGuiWindowFlags_NoCollapse  | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings, 
+        MinSize, MaxSize)) {
 //         GUIPushWindow(GUI);
         if (IGFD_IsOk(GUI->DirSelectFileDialog)) {
                 DirectoryPath = IGFD_GetFilePathName(GUI->DirSelectFileDialog);
                 DPrintf("Selected directory %s\n",DirectoryPath);
-                if( !LevelManagerSetPath(LevelManager,DirectoryPath) ) {
+                GUIProgressBarBegin(GUI);
+                LoadStatus = LevelManagerSetPath(LevelManager,DirectoryPath);
+                GUIProgressBarEnd(GUI);
+                if( !LoadStatus ) {
                     igOpenPopup_Str("Wrong Folder",0);
                     GUIPushWindow(GUI);
                 } else {
@@ -253,24 +308,37 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,Mission_t *Mission
     int i;
     int j;
     int DisableNode;
+    int CurrentMission;
+    int CurrentLevel;
+    
+    CurrentMission = -1;
+    CurrentLevel = -1;
+    if( LevelManagerIsLevelLoaded(LevelManager) ) {
+        CurrentMission = LevelManager->CurrentLevel->MissionNumber;
+        CurrentLevel = LevelManager->CurrentLevel->LevelNumber;
+    }
     for( i = 0; i < NumMissions; i++ ) {
-        if( igTreeNode_Str(Missions[i].MissionName) ) {
+        TreeNodeFlags = ImGuiTreeNodeFlags_None;
+        if(  CurrentMission == Missions[i].MissionNumber ) {
+            TreeNodeFlags |= ImGuiTreeNodeFlags_DefaultOpen;
+        }
+        if( igTreeNodeEx_Str(Missions[i].MissionName,TreeNodeFlags) ) {
             for( j = 0; j < Missions[i].NumLevels; j++ ) {
                 DisableNode = 0;
-                TreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-                if( LevelManagerIsLevelLoaded(LevelManager) ) {
-                    if( LevelManager->CurrentLevel->MissionNumber == Missions[i].MissionNumber
-                        && LevelManager->CurrentLevel->LevelNumber == Missions[i].Levels[j].LevelNumber ) {
-                        TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
-                        DisableNode = 1;
-                    }
+                TreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
+                if( CurrentMission == Missions[i].MissionNumber && CurrentLevel == Missions[i].Levels[j].LevelNumber ) {
+                    TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
+                    DisableNode = 1;
                 }
                 if( DisableNode ) {
                     igBeginDisabled(1);
                 }
                 if( igTreeNodeEx_Str(Missions[i].Levels[j].LevelName,TreeNodeFlags) ) {
                     if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+                        GUIProgressBarBegin(GUI);
                         LevelManagerLoadLevel(LevelManager,Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber);
+                        GUIProgressBarEnd(GUI);
+
                     }
                 }
                 if( DisableNode ) {
@@ -283,15 +351,9 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,Mission_t *Mission
 }
 void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager)
 {
-    ImVec2 ButtonSize;
-    int TreeNodeFlags;
-    int GameEngine;
-    MissionLevel_t *Iterator;
     if( !GUI->LevelSelectWindowHandle ) {
         return;
     }
-    ButtonSize.x = 0;
-    ButtonSize.y = 0;
 
     if( igBegin("Level Select",&GUI->LevelSelectWindowHandle,0) ) {
         if( !LevelManagerIsLevelLoaded(LevelManager) ) {
@@ -347,7 +409,6 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
     GUIDrawDebugWindow(GUI);
     GUIDrawSettingsWindow(GUI);
     GUIDrawLevelSelectWindow(GUI,LevelManager);
-//     igShowDemoWindow(NULL);
     GUIEndFrame();
 //     if( !GUI->IsActive ) {
 //         GUIBeginFrame();
@@ -359,16 +420,14 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
 //     GUIDrawDebugWindow(GUI);
 //     GUIEndFrame();
 }
-GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
+
+void GUIContextInit(ImGuiContext *Context,SDL_Window *Window,SDL_GLContext *GLContext)
 {
-    GUI_t *GUI;
     ImGuiIO *IO;
     ImGuiStyle *Style;
-    GUI = malloc(sizeof(GUI_t));
-    memset(GUI,0,sizeof(GUI_t));
-    /*GUI->Context = */igCreateContext(NULL);
-//     GUI->DebugWindowHandle = 0;
+
     IO = igGetIO();
+    igSetCurrentContext(Context);
     ImGui_ImplSDL2_InitForOpenGL(VideoSurface, &GLContext);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     igStyleColorsDark(NULL);
@@ -376,7 +435,24 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     Style = igGetStyle();
     ImGuiStyle_ScaleAllSizes(Style,VidConf.DPIScale);
     IO->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+}
+GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
+{
+    GUI_t *GUI;
+    ImFont *SharedFont;
+    GUI = malloc(sizeof(GUI_t));
+    memset(GUI,0,sizeof(GUI_t));
+    GUI->ProgressBar = malloc(sizeof(GUIProgressBar_t));
+    GUI->DefaultContext = igCreateContext(NULL);
+    GUI->ProgressBar->Context = igCreateContext(NULL);
+    
+    GUIContextInit(GUI->ProgressBar->Context,Window,GLContext);
+    GUIContextInit(GUI->DefaultContext,Window,GLContext);
+    
+//     GUI->DebugWindowHandle = 0;
+
     GUI->DirSelectFileDialog = IGFD_Create();
     GUI->NumActiveWindows = 1;
+
     return GUI;
 }

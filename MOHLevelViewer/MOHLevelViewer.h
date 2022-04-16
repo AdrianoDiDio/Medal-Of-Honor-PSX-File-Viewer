@@ -185,6 +185,7 @@ void    CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility);
 void    CamUpdateVectors(ViewParm_t *Camera);
 float   Rand01();
 int     RandRangeI(int Min,int Max);
+void    SysSwapBuffers();
 void    SysShowCursor();
 void    SysHideCursor();
 void    Quit();
