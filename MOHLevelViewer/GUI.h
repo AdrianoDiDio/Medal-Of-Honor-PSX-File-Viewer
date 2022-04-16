@@ -23,6 +23,7 @@ typedef struct GUIProgressBar_s {
     ImGuiContext *Context;
     int CurrentPercentage;
     int IsActive;
+    char *DialogTitle;
 } GUIProgressBar_t;
 typedef struct GUI_s {
     ImGuiContext *DefaultContext;
@@ -42,6 +43,8 @@ void GUIToggleDebugWindow(GUI_t *GUI);
 void GUIToggleSettingsWindow(GUI_t *GUI);
 void GUIToggleLevelSelectWindow(GUI_t *GUI);
 int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
+void GUIProgressBarReset(GUI_t *GUI);
+void GUIProgressBarSetTitle(GUIProgressBar_t *GUIProgressBar,char *Title);
 void GUIProgressBarIncrement(GUI_t *GUI,int Increment,char *Message);
 void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager);
 void GUIFree(GUI_t *GUI);

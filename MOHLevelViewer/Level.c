@@ -90,7 +90,8 @@ bool LevelInit(Level_t *Level,char *BasePath,int MissionNumber,int LevelNumber,i
         DPrintf("LevelInit:Fatal error...called without a valid level...\n");
         return false;
     }
-    GUIProgressBarUpdate(GUI,2,"Unloading Previous Level");
+    GUIProgressBarReset(GUI);
+    GUIProgressBarIncrement(GUI,2,"Unloading Previous Level");
     if( LevelIsLoaded(Level) ) {
         LevelUnload(Level);
     }
@@ -107,7 +108,7 @@ bool LevelInit(Level_t *Level,char *BasePath,int MissionNumber,int LevelNumber,i
     DPrintf("LevelInit:Working directory:%s\n",BasePath);
     DPrintf("LevelInit:Loading level %s Mission %i Level %i\n",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 
-    GUIProgressBarUpdate(GUI,10,"Loading all images");
+    GUIProgressBarIncrement(GUI,10,"Loading all images");
     //Step.1 Load all the tims from taf.
     //0 is hardcoded...for the images it doesn't make any difference between 0 and 1
     //but if we need to load all the level sounds then 0 means Standard Mode while 1 American (All voices are translated to english!).
@@ -118,7 +119,7 @@ bool LevelInit(Level_t *Level,char *BasePath,int MissionNumber,int LevelNumber,i
         DPrintf("LevelInit:Failed to load TAF file %s\n",Buffer);
         return false;
     }
-    GUIProgressBarUpdate(GUI,5,"Early Loading BSD File");
+    GUIProgressBarIncrement(GUI,5,"Early Loading BSD File");
     //Step.2 Partially load the BSD file in order to get the TSP info.
     BSDFile = BSDEarlyInit(Level);
     if( !BSDFile ) {
@@ -135,7 +136,7 @@ bool LevelInit(Level_t *Level,char *BasePath,int MissionNumber,int LevelNumber,i
     }
     for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.NumTSP; i++ ) {
         snprintf(Buffer,sizeof(Buffer),"%s/TSP0/%i_%i_C%i.TSP",Level->MissionPath,Level->MissionNumber,Level->LevelNumber,i);
-        GUIProgressBarUpdate(GUI,10,"Loading TSP");
+        GUIProgressBarIncrement(GUI,10,"Loading TSP");
         TSP = TSPLoad(Buffer,i);
         if( !TSP ) {
             DPrintf("LevelInit:Failed to load TSP File %s\n",Buffer);
@@ -148,22 +149,22 @@ bool LevelInit(Level_t *Level,char *BasePath,int MissionNumber,int LevelNumber,i
     if( GameEngine ) {
         *GameEngine = LocalGameEngine;
     }
-    GUIProgressBarUpdate(GUI,5,"Loading BSD");
+    GUIProgressBarIncrement(GUI,5,"Loading BSD");
     //Step.4 Resume loading the BSD after we successfully loaded the TSP.
     DPrintf("LevelInit: Detected game %s\n",LocalGameEngine == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
     BSDLoad(Level,LocalGameEngine,BSDFile);
-    GUIProgressBarUpdate(GUI,5,"Loading VRAM");
+    GUIProgressBarIncrement(GUI,5,"Loading VRAM");
     Level->VRAM = VRAMInit(Level->ImageList);
-    GUIProgressBarUpdate(GUI,5,"Loading Font");
+    GUIProgressBarIncrement(GUI,5,"Loading Font");
     Level->Font = FontInit(Level->VRAM);
-    GUIProgressBarUpdate(GUI,5,"Generating VAOs");
+    GUIProgressBarIncrement(GUI,5,"Generating VAOs");
     TSPCreateNodeBBoxVAO(Level->TSPList);
     TSPCreateCollisionVAO(Level->TSPList);
     BSDCreateVAOs(Level->BSD,Level->VRAM);
     BSDFixRenderObjectPosition(Level);
     CamInit(&Camera,Level->BSD);
     DPrintf("LevelInit:Allocated level struct\n");
-//     GUIProgressBarUpdate(GUI,99,"Done");
+//     GUIProgressBarIncrement(GUI,99,"Done");
     return true;
     
 }

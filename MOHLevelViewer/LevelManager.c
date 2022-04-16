@@ -106,25 +106,6 @@ Mission_t MOHMissionsList[] = {
     },
     {
         "Sabotage The Rjukan Hydro Plant",
-        7,
-        3,
-        (MissionLevel_t[]) {
-            {
-                "Mountain Pass",
-                1
-            },
-            {
-                "Merkers Upper Mine",
-                2
-            },
-            {
-                "Treasures Caverns",
-                3
-            }
-        }
-    },
-    {
-        "Capture The Secret German Treasure",
         5,
         4,
         (MissionLevel_t[]) {
@@ -143,6 +124,25 @@ Mission_t MOHMissionsList[] = {
             {
                 "Heavy Water",
                 4
+            }
+        }
+    },
+    {
+        "Capture The Secret German Treasure",
+        7,
+        3,
+        (MissionLevel_t[]) {
+            {
+                "Mountain Pass",
+                1
+            },
+            {
+                "Merkers Upper Mine",
+                2
+            },
+            {
+                "Treasures Caverns",
+                3
             }
         }
     },

@@ -86,7 +86,7 @@
 #define MIN( x, y ) ( ( ( x ) < ( y ) ) ? ( x ) : ( y ) )
 #endif
 
-#define MAX_FPS 60
+#define MAX_FPS 120
 
 typedef enum
 {
@@ -168,6 +168,7 @@ SDL_Renderer *SDLRenderer;
 
 void    DumpLevel(Level_t* Level);
 void    DPrintf(char *Fmt, ...) Attribute((format(printf,1,2)));
+int     asprintf(char **Strp, const char *Fmt, ...);
 char   *StringCopy(const char *From);
 int     GetFileLength(FILE *Fp);
 char   *ReadTextFile(char *File,int Length);
