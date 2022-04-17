@@ -27,6 +27,8 @@
 
 #define MAX_FPS 120
 
+//TODO(Adriano):Instance them and pass the pointer around without relying on any global variable...
+
 
 typedef enum
 {

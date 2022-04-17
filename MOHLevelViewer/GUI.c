@@ -205,14 +205,14 @@ void GUIProgressBarBegin(GUI_t *GUI,char *Title)
 {
     igSetCurrentContext(GUI->ProgressBar->Context);
     GUI->ProgressBar->IsOpen = 0;
-    GUI->ProgressBar->CurrentPercentage = 0;
+    GUI->ProgressBar->CurrentPercentage = 0.f;
     GUISetProgressBarDialogTitle(GUI,Title);
 }
 void GUIProgressBarReset(GUI_t *GUI)
 {
     GUI->ProgressBar->CurrentPercentage = 0;
 }
-void GUIProgressBarIncrement(GUI_t *GUI,int Increment,char *Message)
+void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
 {
     ImGuiViewport *Viewport;
     ImVec2 ScreenCenter;
@@ -253,7 +253,7 @@ void GUIProgressBarEnd(GUI_t *GUI)
 {
     igSetCurrentContext(GUI->DefaultContext);
     GUI->ProgressBar->IsOpen = 0;
-    GUI->ProgressBar->CurrentPercentage = 0;
+    GUI->ProgressBar->CurrentPercentage = 0.f;
 }
 void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
 {

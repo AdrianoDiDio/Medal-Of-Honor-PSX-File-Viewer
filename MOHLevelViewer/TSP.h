@@ -21,10 +21,9 @@
 
 #include "Common.h"
 #include "VAO.h"
-#include "BSD.h"
 
-struct LevelManager_t;
-
+typedef struct LevelManager_s LevelManager_t;
+typedef struct BSD_s BSD_t;
 typedef enum {
     TSP_FX_NONE = 1,
     TSP_FX_TRANSPARENCY = 2,

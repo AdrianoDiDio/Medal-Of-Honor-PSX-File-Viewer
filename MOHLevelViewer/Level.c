@@ -88,6 +88,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int Le
     int i;
     TSP_t *TSP;
     int LocalGameEngine;
+    float BasePercentage;
     
     //Attempt to load the level...
     if( !Level ){
@@ -95,7 +96,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int Le
         return false;
     }
     GUIProgressBarReset(GUI);
-    GUIProgressBarIncrement(GUI,2,"Unloading Previous Level");
+    GUIProgressBarIncrement(GUI,5,"Unloading Previous Level");
     if( LevelIsLoaded(Level) ) {
         LevelUnload(Level);
     }
@@ -112,7 +113,8 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int Le
     DPrintf("LevelInit:Working directory:%s\n",BasePath);
     DPrintf("LevelInit:Loading level %s Mission %i Level %i\n",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 
-    GUIProgressBarIncrement(GUI,10,"Loading all images");
+    BasePercentage = 10.f;
+    GUIProgressBarIncrement(GUI,BasePercentage,"Loading all images");
     //Step.1 Load all the tims from taf.
     //0 is hardcoded...for the images it doesn't make any difference between 0 and 1
     //but if we need to load all the level sounds then 0 means Standard Mode while 1 American (All voices are translated to english!).
@@ -123,14 +125,16 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int Le
         DPrintf("LevelInit:Failed to load TAF file %s\n",Buffer);
         return false;
     }
-    GUIProgressBarIncrement(GUI,5,"Early Loading BSD File");
+    BasePercentage += 10;
+    GUIProgressBarIncrement(GUI,BasePercentage,"Early Loading BSD File");
     //Step.2 Partially load the BSD file in order to get the TSP info.
     BSDFile = BSDEarlyInit(Level);
     if( !BSDFile ) {
         DPrintf("LevelInit:Failed to load BSD file\n");
         return false;
     }
-
+    float NumStepsLeft = (Level->BSD->TSPInfo.NumTSP) + 5;
+    float Increment = (100.f - BasePercentage) / NumStepsLeft;
     //Read the TSP FILES
     //Step.3 Load all the TSP file based on the data read from the BSD file.
     //Note that we are going to load all the tsp file since we do not know 
@@ -138,9 +142,10 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int Le
     for( i = Level->BSD->TSPInfo.StartingComparment - 1; i < Level->BSD->TSPInfo.TargetInitialCompartment; i++ ) {
        Level->TSPNumberRenderList[i] = i;
     }
+    
     for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.NumTSP; i++ ) {
         snprintf(Buffer,sizeof(Buffer),"%s/TSP0/%i_%i_C%i.TSP",Level->MissionPath,Level->MissionNumber,Level->LevelNumber,i);
-        GUIProgressBarIncrement(GUI,10,"Loading TSP");
+        GUIProgressBarIncrement(GUI,Increment,Buffer);
         TSP = TSPLoad(Buffer,i);
         if( !TSP ) {
             DPrintf("LevelInit:Failed to load TSP File %s\n",Buffer);
@@ -153,18 +158,19 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int Le
     if( GameEngine ) {
         *GameEngine = LocalGameEngine;
     }
-    GUIProgressBarIncrement(GUI,5,"Loading BSD");
+    GUIProgressBarIncrement(GUI,Increment,"Loading BSD");
     //Step.4 Resume loading the BSD after we successfully loaded the TSP.
     DPrintf("LevelInit: Detected game %s\n",LocalGameEngine == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
     BSDLoad(Level,LocalGameEngine,BSDFile);
-    GUIProgressBarIncrement(GUI,5,"Loading VRAM");
+    GUIProgressBarIncrement(GUI,Increment,"Loading VRAM");
     Level->VRAM = VRAMInit(Level->ImageList);
-    GUIProgressBarIncrement(GUI,5,"Loading Font");
+    GUIProgressBarIncrement(GUI,Increment,"Loading Font");
     Level->Font = FontInit(Level->VRAM);
-    GUIProgressBarIncrement(GUI,5,"Generating VAOs");
+    GUIProgressBarIncrement(GUI,Increment,"Generating VAOs");
     TSPCreateNodeBBoxVAO(Level->TSPList);
     TSPCreateCollisionVAO(Level->TSPList);
     BSDCreateVAOs(Level->BSD,Level->VRAM);
+    GUIProgressBarIncrement(GUI,Increment,"Fixing Objects Position");
     BSDFixRenderObjectPosition(Level);
     CamInit(&Camera,Level->BSD);
     DPrintf("LevelInit:Allocated level struct\n");
