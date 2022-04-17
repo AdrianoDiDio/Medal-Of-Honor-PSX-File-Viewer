@@ -531,21 +531,22 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
      BSDDrawSky(LevelManager);
 }
 
-int LevelManagerSetPath(LevelManager_t *LevelManager,char *Path)
+int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path)
 {
     int GameEngine;
     if( !LevelManager ) {
-        DPrintf("LevelManagerSetPath:Called without a valid struct\n");
+        DPrintf("LevelManagerInitWithPath:Called without a valid struct\n");
         return 0;
     }
     if( !Path ) {
-        DPrintf("LevelManagerSetPath:Called without a valid path\n");
+        DPrintf("LevelManagerInitWithPath:Called without a valid path\n");
         return 0;
     }
     LevelManager->BasePath = StringCopy(Path);
-    if( !LevelInit(LevelManager->CurrentLevel,LevelManager->BasePath,1,1,&GameEngine) ) {
-        if( !LevelInit(LevelManager->CurrentLevel,LevelManager->BasePath,2,1,&GameEngine) ) {
-            DPrintf("LevelManagerSetPath:Invalid path...\n");
+    if( !LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->BasePath,1,1,&GameEngine) ) {
+        GUISetProgressBarDialogTitle(GUI,"Mission 2 Level 1");
+        if( !LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->BasePath,2,1,&GameEngine) ) {
+            DPrintf("LevelManagerInitWithPath:Invalid path...\n");
             LevelManager->IsPathSet = 0;
             return 0;
         }
@@ -555,7 +556,7 @@ int LevelManagerSetPath(LevelManager_t *LevelManager,char *Path)
     LevelManager->IsPathSet = 1;
     return 1;
 }
-void LevelManagerLoadLevel(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber)
+void LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNumber,int LevelNumber)
 {
     if( !LevelManager->IsPathSet ) {
         DPrintf("LevelManagerLoadLevel:Called without a valid path set\n");
@@ -567,7 +568,7 @@ void LevelManagerLoadLevel(LevelManager_t *LevelManager,int MissionNumber,int Le
             return;
         }
     }
-    LevelInit(LevelManager->CurrentLevel,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
+    LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
 }
 void LevelManagerInit()
 {

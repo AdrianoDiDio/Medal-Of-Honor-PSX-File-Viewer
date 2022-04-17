@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 project(MOHLevelViewer)
 
@@ -6,7 +6,7 @@ set(SOURCE_FILES ShaderManager.c VAO.c GUI.c TSP.c
                  TIM.c Font.c BSD.c BSDTwoPlayers.c 
                  VRAM.c Level.c LevelManager.c MOHLevelViewer.c
 )
-
+                 
 set(IMGUI_SOURCE_FILES Libs/cimgui/cimgui.cpp 
                        Libs/cimgui/imgui/imgui.cpp 
                        Libs/cimgui/imgui/imgui_draw.cpp 
@@ -20,7 +20,6 @@ set(IMGUI_SOURCE_FILES Libs/cimgui/cimgui.cpp
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
-
 
 if(WIN32)
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wl,-subsystem,windows)

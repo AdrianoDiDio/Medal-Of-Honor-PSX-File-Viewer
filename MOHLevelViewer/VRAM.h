@@ -36,6 +36,7 @@ typedef struct VRam_s {
 } VRAM_t;
 
 VRAM_t *VRAMInit(TIMImage_t *ImageList);
+void VRAMFree(VRAM_t *VRAM);
 int VRAMGetTexturePageX(int VRAMPage);
 int VRAMGetTexturePageY(int VRAMPage,int ColorMode);
 int VRAMGetCLUTPage(int CLUTPosX,int CLUTPosY);

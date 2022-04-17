@@ -45,7 +45,7 @@ void LevelUnload(Level_t *Level)
         TIMImageListFree(Level->ImageList);
     }
     if( Level->VRAM ) {
-        free(Level->VRAM);
+        VRAMFree(Level->VRAM);
     }
     if( Level->Font ) {
         FontFree(Level->Font);
@@ -77,7 +77,7 @@ void LevelSetDefaultSettings(LevelSettings_t *LevelSettings)
     LevelSettings->ShowCollisionData = false;
 }
 
-bool LevelInit(Level_t *Level,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine)
+bool LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine)
 {
     FILE *BSDFile;
     char Buffer[512];

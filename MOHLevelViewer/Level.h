@@ -51,7 +51,7 @@ typedef struct Level_s {
     int     TSPNumberRenderList[4];
 } Level_t;
 
-bool    LevelInit(Level_t *Level,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine);
+bool    LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine);
 void    LevelSetDefaultSettings(LevelSettings_t *LevelSettings);
 int     LevelIsLoaded(Level_t *Level);
 void    LevelUnload(Level_t *Level);

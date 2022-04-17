@@ -186,20 +186,22 @@ void GUIDrawHelpOverlay()
     igEnd();
 }
 
-void GUIProgressBarSetTitle(GUIProgressBar_t *GUIProgressBar,char *Title)
+void GUISetProgressBarDialogTitle(GUI_t *GUI,char *Title)
 {
     if( GUI->ProgressBar->DialogTitle ) {
         free(GUI->ProgressBar->DialogTitle);
     }
     GUI->ProgressBar->DialogTitle = (Title != NULL) ? StringCopy(Title) : "Loading...";
+    //NOTE(Adriano):Forces a refresh...since changing the title disrupts the rendering process.
+    GUI->ProgressBar->IsOpen = 0;
 }
 
 void GUIProgressBarBegin(GUI_t *GUI,char *Title)
 {
     igSetCurrentContext(GUI->ProgressBar->Context);
-    GUI->ProgressBar->IsActive = 0;
+    GUI->ProgressBar->IsOpen = 0;
     GUI->ProgressBar->CurrentPercentage = 0;
-    GUIProgressBarSetTitle(GUI->ProgressBar,Title);
+    GUISetProgressBarDialogTitle(GUI,Title);
 }
 void GUIProgressBarReset(GUI_t *GUI)
 {
@@ -225,9 +227,9 @@ void GUIProgressBarIncrement(GUI_t *GUI,int Increment,char *Message)
 
     GUIBeginFrame();
     
-    if( !GUI->ProgressBar->IsActive ) {
+    if( !GUI->ProgressBar->IsOpen ) {
         igOpenPopup_Str(GUI->ProgressBar->DialogTitle,0);
-        GUI->ProgressBar->IsActive = 1;
+        GUI->ProgressBar->IsOpen = 1;
     }
     
     Size.x = 0.f;
@@ -245,7 +247,7 @@ void GUIProgressBarIncrement(GUI_t *GUI,int Increment,char *Message)
 void GUIProgressBarEnd(GUI_t *GUI)
 {
     igSetCurrentContext(GUI->DefaultContext);
-    GUI->ProgressBar->IsActive = 0;
+    GUI->ProgressBar->IsOpen = 0;
     GUI->ProgressBar->CurrentPercentage = 0;
 }
 void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
@@ -281,7 +283,7 @@ void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
                 DirectoryPath = IGFD_GetFilePathName(GUI->DirSelectFileDialog);
                 DPrintf("Selected directory %s\n",DirectoryPath);
                 GUIProgressBarBegin(GUI,"Loading Mission 1 Level 1");
-                LoadStatus = LevelManagerSetPath(LevelManager,DirectoryPath);
+                LoadStatus = LevelManagerInitWithPath(LevelManager,GUI,DirectoryPath);
                 GUIProgressBarEnd(GUI);
                 if( !LoadStatus ) {
                     igOpenPopup_Str("Wrong Folder",0);
@@ -356,7 +358,7 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,Mission_t *Mission
                     if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
                         asprintf(&Buffer,"Loading Mission %i Level %i...",Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber);
                         GUIProgressBarBegin(GUI,Buffer);
-                        LevelManagerLoadLevel(LevelManager,Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber);
+                        LevelManagerLoadLevel(LevelManager,GUI,Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber);
                         GUIProgressBarEnd(GUI);
                         free(Buffer);
 

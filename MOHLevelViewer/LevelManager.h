@@ -42,10 +42,10 @@ typedef struct LevelManager_s {
 } LevelManager_t;
 
 void    LevelManagerInit();
-void    LevelManagerLoadLevel(LevelManager_t *LevelManager,int MissionNumber,int LevelNumber);
+void    LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNumber,int LevelNumber);
 int     LevelManagerIsLevelLoaded(LevelManager_t *LevelManager);
 int     LevelManagerGetGameEngine(LevelManager_t *LevelManager);
-int     LevelManagerSetPath(LevelManager_t *LevelManager,char *Path);
+int     LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path);
 void    LevelManagerDraw(LevelManager_t *LevelManager);
 void    LevelManagerCleanUp();
 

@@ -18,6 +18,11 @@
 */ 
 #include "MOHLevelViewer.h"
 
+void VRAMFree(VRAM_t *VRAM)
+{
+    SDL_FreeSurface(VRAM->Page.Surface);
+    free(VRAM);
+}
 void VRAMWritePNG(SDL_Surface *ImageSurface,char *OutName)
 {
     FILE *PNGImage;
@@ -179,6 +184,7 @@ void VRAMPutTexture(VRAM_t *VRAM,TIMImage_t *Image)
     Byte *Data = TIMToOpenGL32(Image);
     Src = SDL_CreateRGBSurfaceFrom(Data,Image->Width,Image->Height,32,4 * Image->Width,0x000000FF,0x0000FF00,0x00FF0000, 0xFF000000);
     SDL_BlitScaled(Src,NULL,VRAM->Page.Surface,&SrcRect);
+    SDL_FreeSurface(Src);
     free(Data);
 }
 void VRAMPutRawTexture(VRAM_t *VRAM,TIMImage_t *Image)

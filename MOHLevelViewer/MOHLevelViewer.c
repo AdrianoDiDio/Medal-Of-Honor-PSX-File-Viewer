@@ -440,7 +440,6 @@ bool VidInitSDL()
 
 bool VidOpenWindow()
 {
-    SDL_GLContext Context;
     //Make sure we have an OpenGL context.
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
@@ -459,12 +458,8 @@ bool VidOpenWindow()
                      VidConf.Width, VidConf.Height, SDL_WINDOW_OPENGL );
 //     SDL_SetWindowTitle(VideoSurface,);
     Context = SDL_GL_CreateContext(VideoSurface);
-    
-    float hdpi;
-    float ddpi;
-    float vdpi;
     VidConf.DPIScale = 1.f;
-    if( !SDL_GetDisplayDPI(0, &ddpi, &VidConf.DPIScale, &vdpi) ) {
+    if( !SDL_GetDisplayDPI(0, NULL, &VidConf.DPIScale, NULL) ) {
         VidConf.DPIScale /= 96.f;
     }
     
@@ -474,7 +469,13 @@ bool VidOpenWindow()
     
     return true;
 }
-
+void SysVidShutdown()
+{
+    SDL_GL_DeleteContext(Context);
+    SDL_DestroyWindow(VideoSurface);
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    SDL_Quit();
+}
 void SysHideCursor()
 {
     SDL_ShowCursor(false);
@@ -924,6 +925,7 @@ void Quit()
     ShaderManagerFree();
     free(VidConf.Driver);
     free(ComTime);
+    SysVidShutdown();
     SDL_Quit();
     exit(0);
 }

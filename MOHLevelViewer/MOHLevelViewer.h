@@ -164,6 +164,7 @@ ComTimeInfo_t *ComTime;
 LevelManager_t *LevelManager;
 GUI_t *GUI;
 SDL_Window *VideoSurface;
+SDL_GLContext Context;
 SDL_Renderer *SDLRenderer;
 
 void    DumpLevel(Level_t* Level);
