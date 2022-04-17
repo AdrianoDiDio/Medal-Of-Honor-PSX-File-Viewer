@@ -20,10 +20,11 @@
 #ifndef __BSD_H_
 #define __BSD_H_
 
-#include "MOHLevelViewer.h"
+#include "Common.h"
 #include "VAO.h"
 #include "VRAM.h"
 
+typedef struct LevelManager_s LevelManager_t;
 #define MOH_BSD_NUM_ENTRY 26
 
 #define MOH_RENDER_OBJECT_SIZE 256

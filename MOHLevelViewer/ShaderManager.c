@@ -16,8 +16,9 @@
     along with MOHLevelViewer.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */ 
-#include "MOHLevelViewer.h"
+#include "Common.h"
 #include "ShaderManager.h"
+#include "MOHLevelViewer.h"
 
 void ShaderManagerFree()
 {

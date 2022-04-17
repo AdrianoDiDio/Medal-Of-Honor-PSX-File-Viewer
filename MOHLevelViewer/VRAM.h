@@ -19,7 +19,7 @@
 #ifndef __VRAM_H_
 #define __VRAM_H_
 
-#include "MOHLevelViewer.h"
+#include "Common.h"
 #include "TIM.h"
 
 typedef struct VRamPage_s {

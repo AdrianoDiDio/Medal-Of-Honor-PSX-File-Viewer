@@ -19,7 +19,7 @@
 #ifndef __TIM_H_
 #define __TIM_H_
 
-#include "MOHLevelViewer.h"
+#include "Common.h"
 
 typedef enum {
     BPP_4 = 8,

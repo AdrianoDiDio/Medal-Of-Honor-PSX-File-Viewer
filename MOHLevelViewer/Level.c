@@ -22,7 +22,7 @@
 #include "TSP.h"
 #include "BSDTwoPlayers.h"
 #include "GUI.h"
-
+#include "MOHLevelViewer.h"
 int LevelIsLoaded(Level_t *Level)
 {
     if( !Level ) {

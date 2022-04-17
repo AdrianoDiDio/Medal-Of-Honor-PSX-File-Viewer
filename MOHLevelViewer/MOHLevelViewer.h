@@ -19,69 +19,16 @@
 #ifndef __MOHLEVELVIEWER_H_
 #define __MOHLEVELVIEWER_H_ 
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <math.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <assert.h>
-#include <errno.h>
-
-#include <png.h>
-#include <SDL2/SDL.h>
-#include <GL/glew.h>
-
-#include <cglm/cglm.h>
-
-#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#include "cimgui.h"
-#include "cimgui_impl.h"
-#include "ImGuiFileDialog.h"
-
-#include "Types.h"
-
-#ifdef __linux__
-#define PATHSEPARATOR '/'
-#else
-#define PATHSEPARATOR '\\'
-#endif
-
-#ifdef __GNUC__
-#define Attribute(x) __attribute__(x)
-#else
-#define Attribute(x)
-#endif
-
-#ifndef M_PI
-#define M_PI (3.14159265358979323846)
-#endif
-
-#ifndef PI_OVER_360
-#define PI_OVER_360 0.0087266462599716478846184538424431
-#endif
-
-#define DEGTORAD( x ) ( (x * M_PI) / 180.0)
-#define RADTODEG( x ) ( (x * 180.0) / M_PI)
-
-#define Square( x ) ( ( x ) * ( x ) )
-
-#define GetProcAddr(Name) SDL_GL_GetProcAddress(Name);
-
-#ifndef MAX
-#define MAX( x, y ) ( ( ( x ) > ( y ) ) ? ( x ) : ( y ) )
-#define MIN( x, y ) ( ( ( x ) < ( y ) ) ? ( x ) : ( y ) )
-#endif
+#include "Common.h"
+#include "BSD.h"
+#include "Level.h"
+#include "LevelManager.h"
+#include "GUI.h"
 
 #define MAX_FPS 120
 
 //TODO(Adriano):Instance them and pass the pointer around without relying on any global variable...
-typedef struct LevelManager_s LevelManager_t;
-typedef struct GUI_s GUI_t;
-typedef struct Level_s Level_t;
-typedef struct BSD_s BSD_t;
+
 
 typedef enum
 {

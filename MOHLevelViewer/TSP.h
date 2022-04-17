@@ -19,8 +19,11 @@
 #ifndef __TSPVIEWER_H_
 #define __TSPVIEWER_H_
 
-#include "MOHLevelViewer.h"
+#include "Common.h"
 #include "VAO.h"
+#include "BSD.h"
+
+struct LevelManager_t;
 
 typedef enum {
     TSP_FX_NONE = 1,

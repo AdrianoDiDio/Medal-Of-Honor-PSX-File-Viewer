@@ -16,6 +16,7 @@
     along with MOHLevelViewer.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */ 
+#include "Common.h"
 #include "MOHLevelViewer.h"
 #include "BSD.h"
 #include "GUI.h"

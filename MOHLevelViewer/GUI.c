@@ -22,6 +22,7 @@
 #include "TSP.h"
 #include "Level.h"
 #include "LevelManager.h"
+#include "MOHLevelViewer.h"
 
 void GUIReleaseContext(ImGuiContext *Context)
 {

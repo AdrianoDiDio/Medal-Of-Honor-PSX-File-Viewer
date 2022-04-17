@@ -20,7 +20,7 @@
 #ifndef __FONT_H_
 #define __FONT_H_
 
-#include "MOHLevelViewer.h"
+#include "Common.h"
 #include "VRAM.h"
 #include "VAO.h"
 

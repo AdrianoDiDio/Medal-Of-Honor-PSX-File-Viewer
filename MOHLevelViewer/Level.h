@@ -20,10 +20,13 @@
 #ifndef __LEVEL_H_
 #define __LEVEL_H_
 
-#include "MOHLevelViewer.h"
+#include "Common.h"
+#include "GUI.h"
+#include "TSP.h"
 #include "BSD.h"
 #include "BSDTwoPlayers.h"
-#include "TSP.h"
+#include "VRAM.h"
+#include "TIM.h"
 #include "Font.h"
 
 typedef struct LevelSettings_s {

@@ -18,7 +18,7 @@
 */
 
 #include "LevelManager.h"
-
+#include "MOHLevelViewer.h"
 Mission_t MOHMissionsList[] = {
     {
         "Rescue The G3 Officer",

@@ -19,7 +19,7 @@
 #ifndef __GUI_H_
 #define __GUI_H_
 
-#include "MOHLevelViewer.h"
+#include "Common.h"
 
 typedef struct GUIProgressBar_s {
     ImGuiContext *Context;
