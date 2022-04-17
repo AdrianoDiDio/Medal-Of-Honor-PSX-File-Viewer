@@ -19,6 +19,8 @@
 #ifndef __TIM_H_
 #define __TIM_H_
 
+#include "MOHLevelViewer.h"
+
 typedef enum {
     BPP_4 = 8,
     BPP_4_NO_CLUT = 0,

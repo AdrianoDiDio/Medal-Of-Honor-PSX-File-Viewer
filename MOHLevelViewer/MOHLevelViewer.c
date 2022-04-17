@@ -17,6 +17,10 @@
 ===========================================================================
 */ 
 #include "MOHLevelViewer.h"
+#include "BSD.h"
+#include "GUI.h"
+#include "LevelManager.h"
+#include "ShaderManager.h"
 
 Color4f_t    c_Black = {   0,    0,   0,   1.f};
 Color4f_t    c_Red    = {   1.f,  0,   0,   1.f};

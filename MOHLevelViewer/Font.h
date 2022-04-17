@@ -20,6 +20,10 @@
 #ifndef __FONT_H_
 #define __FONT_H_
 
+#include "MOHLevelViewer.h"
+#include "VRAM.h"
+#include "VAO.h"
+
 #define MOH_FONT_TEXTURE_VRAM_PAGE 15
 #define NUM_MOH_FONT_CHARS 50
 #define NUM_MOH_FONT_CHAR_PER_COLUMN 25

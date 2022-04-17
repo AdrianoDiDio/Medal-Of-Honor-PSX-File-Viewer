@@ -17,7 +17,11 @@
 ===========================================================================
 */
 
-#include "MOHLevelViewer.h"
+#include "Level.h"
+#include "BSD.h"
+#include "TSP.h"
+#include "BSDTwoPlayers.h"
+#include "GUI.h"
 
 int LevelIsLoaded(Level_t *Level)
 {

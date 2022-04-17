@@ -17,7 +17,7 @@
 ===========================================================================
 */ 
 
-#include "MOHLevelViewer.h"
+#include "TIM.h"
 
 void TIMImageListFree(TIMImage_t *ImageList)
 {

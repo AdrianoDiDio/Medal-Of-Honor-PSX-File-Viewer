@@ -16,7 +16,8 @@
     along with MOHLevelViewer.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */ 
-#include "MOHLevelViewer.h"
+
+#include "VRAM.h"
 
 void VRAMFree(VRAM_t *VRAM)
 {

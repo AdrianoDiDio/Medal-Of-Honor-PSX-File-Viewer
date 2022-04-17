@@ -17,7 +17,11 @@
 ===========================================================================
 */
 
-#include "MOHLevelViewer.h"
+#include "GUI.h"
+#include "VRAM.h"
+#include "TSP.h"
+#include "Level.h"
+#include "LevelManager.h"
 
 void GUIReleaseContext(ImGuiContext *Context)
 {

@@ -17,7 +17,7 @@
 ===========================================================================
 */
 
-#include "MOHLevelViewer.h"
+#include "LevelManager.h"
 
 Mission_t MOHMissionsList[] = {
     {

@@ -17,6 +17,7 @@
 ===========================================================================
 */ 
 #include "MOHLevelViewer.h"
+#include "ShaderManager.h"
 
 void ShaderManagerFree()
 {

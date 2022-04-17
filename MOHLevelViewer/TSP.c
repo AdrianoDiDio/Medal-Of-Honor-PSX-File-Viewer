@@ -17,7 +17,9 @@
 ===========================================================================
 */ 
 
-#include "MOHLevelViewer.h"
+#include "TSP.h"
+#include "LevelManager.h"
+#include "ShaderManager.h"
 
 void TSPFree(TSP_t *TSP)
 {

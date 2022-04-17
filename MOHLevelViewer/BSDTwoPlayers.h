@@ -20,6 +20,8 @@
 #ifndef __BSD_TWOPLAYERS_H_
 #define __BSD_TWOPLAYERS_H_
 
+#include "BSD.h"
+
 //Actually this is true for both SinglePlayer/TwoPlayers.
 #define BSD2P_ENTRY_TABLE_POSITION 0x53C
 #define BSD2P_ENTRY_TABLE_SIZE     0x68

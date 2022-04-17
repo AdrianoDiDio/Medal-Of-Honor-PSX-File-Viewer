@@ -19,6 +19,9 @@
 #ifndef __TSPVIEWER_H_
 #define __TSPVIEWER_H_
 
+#include "MOHLevelViewer.h"
+#include "VAO.h"
+
 typedef enum {
     TSP_FX_NONE = 1,
     TSP_FX_TRANSPARENCY = 2,

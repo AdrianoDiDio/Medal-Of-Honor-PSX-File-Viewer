@@ -19,6 +19,8 @@
 #ifndef __GUI_H_
 #define __GUI_H_
 
+#include "MOHLevelViewer.h"
+
 typedef struct GUIProgressBar_s {
     ImGuiContext *Context;
     int CurrentPercentage;

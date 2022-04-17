@@ -42,17 +42,6 @@
 #include "ImGuiFileDialog.h"
 
 #include "Types.h"
-#include "ShaderManager.h"
-#include "VAO.h"
-#include "GUI.h"
-#include "TIM.h"
-#include "VRAM.h"
-#include "Font.h"
-#include "BSD.h"
-#include "TSP.h"
-#include "BSDTwoPlayers.h"
-#include "Level.h"
-#include "LevelManager.h"
 
 #ifdef __linux__
 #define PATHSEPARATOR '/'
@@ -87,6 +76,12 @@
 #endif
 
 #define MAX_FPS 120
+
+//TODO(Adriano):Instance them and pass the pointer around without relying on any global variable...
+typedef struct LevelManager_s LevelManager_t;
+typedef struct GUI_s GUI_t;
+typedef struct Level_s Level_t;
+typedef struct BSD_s BSD_t;
 
 typedef enum
 {

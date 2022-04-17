@@ -19,7 +19,8 @@
 #ifndef __VRAM_H_
 #define __VRAM_H_
 
-
+#include "MOHLevelViewer.h"
+#include "TIM.h"
 
 typedef struct VRamPage_s {
     unsigned int TextureId;

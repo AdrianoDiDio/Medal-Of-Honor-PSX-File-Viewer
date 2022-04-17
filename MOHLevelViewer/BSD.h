@@ -20,6 +20,10 @@
 #ifndef __BSD_H_
 #define __BSD_H_
 
+#include "MOHLevelViewer.h"
+#include "VAO.h"
+#include "VRAM.h"
+
 #define MOH_BSD_NUM_ENTRY 26
 
 #define MOH_RENDER_OBJECT_SIZE 256

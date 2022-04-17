@@ -18,6 +18,8 @@
 */ 
 
 #include "MOHLevelViewer.h"
+#include "LevelManager.h"
+#include "ShaderManager.h"
 
 Color1i_t StarsColors[8] = {
     {4034953344},

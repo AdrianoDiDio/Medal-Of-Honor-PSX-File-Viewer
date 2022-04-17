@@ -17,7 +17,9 @@
 ===========================================================================
 */ 
  
-#include "MOHLevelViewer.h"
+#include "Font.h"
+#include "LevelManager.h"
+#include "ShaderManager.h"
 
 /*
     FONT DESCRIPTION

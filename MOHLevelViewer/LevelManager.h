@@ -20,6 +20,9 @@
 #ifndef __LEVELMANAGER_H_
 #define __LEVELMANAGER_H_
 
+#include "Level.h"
+#include "GUI.h"
+
 typedef struct MissionLevel_s {
     char *LevelName;
     int LevelNumber;

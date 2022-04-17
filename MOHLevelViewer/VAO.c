@@ -17,6 +17,7 @@
 ===========================================================================
 */ 
 #include "MOHLevelViewer.h"
+#include "VAO.h"
 
 void VAOFree(VAO_t *VAO)
 {

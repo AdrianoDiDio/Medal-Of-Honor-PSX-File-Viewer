@@ -17,7 +17,9 @@
 ===========================================================================
 */ 
 
-#include "MOHLevelViewer.h"
+#include "BSDTwoPlayers.h"
+#include "ShaderManager.h"
+#include "LevelManager.h"
 
 void BSD2PFree(BSD2P_t *BSD)
 {
