@@ -18,9 +18,9 @@
 */ 
  
 #include "Font.h"
-#include "LevelManager.h"
 #include "ShaderManager.h"
 #include "MOHLevelViewer.h"
+
 /*
     FONT DESCRIPTION
 
@@ -172,7 +172,7 @@ void FontDrawChar(char c,float x,float y,Color4f_t Color)
     glBindVertexArray(0);
 }
 
-void FontDrawString(Level_t *Level,char *String,float x,float y,Color4f_t Color)
+void FontDrawString(VRAM_t *VRAM,char *String,float x,float y,Color4f_t Color)
 {
 
     float Spacing = 10.f;
@@ -181,7 +181,7 @@ void FontDrawString(Level_t *Level,char *String,float x,float y,Color4f_t Color)
     currentX = x;
     
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glBindTexture(GL_TEXTURE_2D, Level->VRAM->Page.TextureId);
+    glBindTexture(GL_TEXTURE_2D, VRAM->Page.TextureId);
     while( *String ) {
         if( *String == ' ' ) {
             currentX += Spacing;

@@ -19,6 +19,7 @@
 
 #include "VRAM.h"
 #include "MOHLevelViewer.h"
+
 void VRAMFree(VRAM_t *VRAM)
 {
     SDL_FreeSurface(VRAM->Page.Surface);

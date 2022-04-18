@@ -18,9 +18,9 @@
 */ 
 
 #include "BSDTwoPlayers.h"
-#include "ShaderManager.h"
-#include "LevelManager.h"
 #include "MOHLevelViewer.h"
+#include "ShaderManager.h"
+
 void BSD2PFree(BSD2P_t *BSD)
 {
     free(BSD->NodeData.Table);

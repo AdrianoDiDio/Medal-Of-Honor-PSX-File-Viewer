@@ -37,13 +37,13 @@ typedef struct GUI_s {
     GUIProgressBar_t *ProgressBar;
 } GUI_t;
 
-struct LevelManager_s;
 typedef struct LevelManager_s LevelManager_t;
-GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext);
 
+GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext);
 void GUIToggleDebugWindow(GUI_t *GUI);
 void GUIToggleSettingsWindow(GUI_t *GUI);
 void GUIToggleLevelSelectWindow(GUI_t *GUI);
+void GUISetMOHPath(GUI_t *GUI);
 int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
 void GUIProgressBarReset(GUI_t *GUI);
 void GUISetProgressBarDialogTitle(GUI_t *GUI,char *Title);

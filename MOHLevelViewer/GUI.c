@@ -20,8 +20,6 @@
 #include "GUI.h"
 #include "VRAM.h"
 #include "TSP.h"
-#include "Level.h"
-#include "LevelManager.h"
 #include "MOHLevelViewer.h"
 
 void GUIReleaseContext(ImGuiContext *Context)
@@ -100,6 +98,12 @@ void GUIToggleLevelSelectWindow(GUI_t *GUI)
     GUI->LevelSelectWindowHandle = !GUI->LevelSelectWindowHandle;
     GUIToggleHandle(GUI,GUI->LevelSelectWindowHandle);
 
+}
+
+void GUISetMOHPath(GUI_t *GUI)
+{
+    GUIPushWindow(GUI);
+    LevelManager->IsPathSet = 0;
 }
 void GUIBeginFrame()
 {
@@ -187,6 +191,7 @@ void GUIDrawHelpOverlay()
         igText("Press F1 to enable/disable debug settings");
         igText("Press F2 to open video settings");
         igText("Press F3 to open the level selection window");
+        igText("Press F4 to change the game path");
     }
     igEnd();
 }
@@ -401,6 +406,7 @@ void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager)
         GUIToggleHandle(GUI,GUI->LevelSelectWindowHandle);
     }
 }
+
 void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
 {
     ImVec2 ButtonSize;
@@ -410,7 +416,7 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
     
     if( !GUI->NumActiveWindows ) {
         GUIBeginFrame();
-        GUIDrawHelpOverlay(GUI);
+        GUIDrawHelpOverlay();
         GUIEndFrame();
         return;
     }

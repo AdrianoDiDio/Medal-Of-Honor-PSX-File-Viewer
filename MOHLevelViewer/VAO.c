@@ -16,8 +16,8 @@
     along with MOHLevelViewer.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */ 
-#include "Common.h"
 #include "VAO.h"
+#include "Common.h"
 #include "MOHLevelViewer.h"
 
 void VAOFree(VAO_t *VAO)

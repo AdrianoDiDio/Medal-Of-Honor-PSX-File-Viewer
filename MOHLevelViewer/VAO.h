@@ -19,6 +19,8 @@
 #ifndef __VAO_H_
 #define __VAO_H_ 
 
+#include "Common.h"
+
 #define BUFFER_OFFSET(i) ((GLvoid*)(i * sizeof(GL_FLOAT)))
 #define BUFFER_INT_OFFSET(i) ((GLvoid*)(i * sizeof(GL_INT)))
 

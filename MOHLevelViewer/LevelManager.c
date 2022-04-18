@@ -19,6 +19,7 @@
 
 #include "LevelManager.h"
 #include "MOHLevelViewer.h"
+
 Mission_t MOHMissionsList[] = {
     {
         "Rescue The G3 Officer",
@@ -541,6 +542,9 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path)
     if( !Path ) {
         DPrintf("LevelManagerInitWithPath:Called without a valid path\n");
         return 0;
+    }
+    if( LevelManager->BasePath ) {
+        free(LevelManager->BasePath);
     }
     LevelManager->BasePath = StringCopy(Path);
     if( !LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->BasePath,1,1,&GameEngine) ) {

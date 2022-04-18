@@ -17,10 +17,10 @@
 ===========================================================================
 */ 
 
-#include "Common.h"
-#include "LevelManager.h"
-#include "ShaderManager.h"
+#include "BSD.h"
 #include "MOHLevelViewer.h"
+#include "ShaderManager.h"
+
 Color1i_t StarsColors[8] = {
     {4034953344},
     {2155888736},
@@ -1484,9 +1484,9 @@ bool BSDPointInSphere(Vec3_t Point,BSDPosition_t Center,float Radius)
     Node.z = Center.z;
     Vec3RotateXAxis(DEGTORAD(180.f),&Node);
     
-    DeltaX = abs(Point.x - Node.x);
-    DeltaY = abs(Point.y - Node.y);
-    DeltaZ = abs(Point.z - Node.z);
+    DeltaX = fabs(Point.x - Node.x);
+    DeltaY = fabs(Point.y - Node.y);
+    DeltaZ = fabs(Point.z - Node.z);
     
     return ( DeltaX*DeltaX + DeltaY*DeltaY + DeltaZ*DeltaZ <= Radius*Radius );
 }
@@ -1546,9 +1546,9 @@ bool BSDPointInBox(Vec3_t Point,BSDPosition_t Center,BSDPosition_t NodeRotation,
     Node.z = Center.z;
     Vec3RotateXAxis(DEGTORAD(180.f),&Node);
     
-    HalfSizeX = abs(Width) / 2.f;
-    HalfSizeY = abs(Height)/ 2.f;
-    HalfSizeZ = abs(Depth) / 2.f;
+    HalfSizeX = fabs(Width) / 2.f;
+    HalfSizeY = fabs(Height)/ 2.f;
+    HalfSizeZ = fabs(Depth) / 2.f;
 
     Delta[0] = Point.x - Node.x;
     Delta[1] = Point.y - Node.y;
@@ -1565,7 +1565,7 @@ bool BSDPointInBox(Vec3_t Point,BSDPosition_t Center,BSDPosition_t NodeRotation,
         glm_mat4_mulv3(RotationMatrix, Delta, 1, Delta);
     }
     
-    if( abs(Delta[0]) <= HalfSizeX && abs(Delta[1]) <= HalfSizeY && abs(Delta[2]) <= HalfSizeZ ) {
+    if( fabs(Delta[0]) <= HalfSizeX && fabs(Delta[1]) <= HalfSizeY && fabs(Delta[2]) <= HalfSizeZ ) {
         return true;
     }
     return false;

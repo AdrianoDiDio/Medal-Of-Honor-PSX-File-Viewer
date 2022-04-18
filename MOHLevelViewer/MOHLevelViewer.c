@@ -16,11 +16,7 @@
     along with MOHLevelViewer.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */ 
-#include "Common.h"
 #include "MOHLevelViewer.h"
-#include "BSD.h"
-#include "GUI.h"
-#include "LevelManager.h"
 #include "ShaderManager.h"
 
 Color4f_t    c_Black = {   0,    0,   0,   1.f};
@@ -559,6 +555,9 @@ void SysCheckKeyEvents()
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F3 ) {
             GUIToggleLevelSelectWindow(GUI);
+        }
+        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
+            GUISetMOHPath(GUI);
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit();

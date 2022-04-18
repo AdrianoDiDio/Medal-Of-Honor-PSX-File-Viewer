@@ -20,6 +20,9 @@
 #ifndef __BSD_TWOPLAYERS_H_
 #define __BSD_TWOPLAYERS_H_
 
+#include "Common.h"
+#include "VAO.h"
+#include "VRAM.h"
 #include "BSD.h"
 
 //Actually this is true for both SinglePlayer/TwoPlayers.
@@ -51,7 +54,6 @@ typedef struct BSD2P_s {
 //     BSDTSPStreamNode_t *TSPStreamNodeList;
 } BSD2P_t;
 
-struct Level_s;
 typedef struct Level_s Level_t;
 void      BSD2PVAOPointList(BSD2P_t *BSD);
 void      BSD2PDraw(Level_t *Level);
