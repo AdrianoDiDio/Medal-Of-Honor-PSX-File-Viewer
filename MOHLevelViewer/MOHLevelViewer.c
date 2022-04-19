@@ -439,6 +439,31 @@ bool VidInitSDL()
     return false;
 }
 
+void VidGetAvailableVideoModes()
+{
+    int NumAvailableVideoModes;
+    SDL_DisplayMode Mode;
+    int i;
+    
+    //NOTE(Adriano):We are forcing this to display 0.
+    NumAvailableVideoModes = SDL_GetNumDisplayModes(0);
+    VidConf.VideoModeList = malloc(NumAvailableVideoModes * sizeof(VideoMode_t));
+    //Pickup the maximum supported resolution as the default one.
+    VidConf.CurrentVideoMode = 0;
+    for( i = 0; i < NumAvailableVideoModes; i++ ) {
+        SDL_GetDisplayMode(0,i,&Mode);
+        if( Mode.w == 800 && Mode.h == 600 && Mode.refresh_rate == 120) {
+            VidConf.CurrentVideoMode = i;
+        }
+        VidConf.VideoModeList[i].Width = Mode.w;
+        VidConf.VideoModeList[i].Height = Mode.h;
+        VidConf.VideoModeList[i].RefreshRate = Mode.refresh_rate;
+        VidConf.VideoModeList[i].BPP = SDL_BITSPERPIXEL(Mode.format);
+        asprintf(&VidConf.VideoModeList[i].Description, "%ix%i@%iHz",VidConf.VideoModeList[i].Width,VidConf.VideoModeList[i].Height,
+                 VidConf.VideoModeList[i].RefreshRate);
+    }
+    VidConf.NumVideoModes = NumAvailableVideoModes;
+}
 bool VidOpenWindow()
 {
     //Make sure we have an OpenGL context.
@@ -455,15 +480,15 @@ bool VidOpenWindow()
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    VideoSurface = SDL_CreateWindow(VidConf.Title,SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                     VidConf.Width, VidConf.Height, SDL_WINDOW_OPENGL );
+    VideoSurface = SDL_CreateWindow(VidConf.Title,SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                     VidConf.VideoModeList[VidConf.CurrentVideoMode].Width, VidConf.VideoModeList[VidConf.CurrentVideoMode].Height, SDL_WINDOW_OPENGL );
 //     SDL_SetWindowTitle(VideoSurface,);
     Context = SDL_GL_CreateContext(VideoSurface);
     VidConf.DPIScale = 1.f;
     if( !SDL_GetDisplayDPI(0, NULL, &VidConf.DPIScale, NULL) ) {
         VidConf.DPIScale /= 96.f;
     }
-    
+        
     GUI = GUIInit(VideoSurface,Context);
     VidConf.Initialized = true;
     SDL_GL_SetSwapInterval(1);
@@ -500,6 +525,17 @@ void SysSwapBuffers()
     SDL_GL_SwapWindow(VideoSurface);
 }
 
+int SysGetCurrentVideoWidth()
+{
+    assert(VidConf.CurrentVideoMode != -1);
+    return VidConf.VideoModeList[VidConf.CurrentVideoMode].Width;
+}
+int SysGetCurrentVideoHeight()
+{
+    assert(VidConf.CurrentVideoMode != -1);
+    return VidConf.VideoModeList[VidConf.CurrentVideoMode].Height;
+}
+
 void InitSDL(const char *Title,int Width,int Height,bool Fullscreen)
 {
     GLenum GlewError;
@@ -518,6 +554,11 @@ void InitSDL(const char *Title,int Width,int Height,bool Fullscreen)
         DPrintf("Failed on initializing SDL.\n");
     }
     
+    VidGetAvailableVideoModes();
+    
+    VidConf.Width = SysGetCurrentVideoWidth();
+    VidConf.Height = SysGetCurrentVideoHeight();
+
     if ( !VidOpenWindow() ) {
         DPrintf("Failed on opening a new window.\n");
     }
@@ -955,7 +996,7 @@ int main(int argc,char **argv)
 //     }
 
 #if _ENABLEVIDEOOUT
-    SysVidInit(1920,900,false);
+    SysVidInit(800,600,false);
     ComTime = malloc(sizeof(ComTimeInfo_t));
     memset(ComTime,0,sizeof(ComTimeInfo_t));
     InitGLView();

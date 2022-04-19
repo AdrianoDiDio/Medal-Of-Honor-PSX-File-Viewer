@@ -36,8 +36,16 @@ typedef enum
     MOH_GAME_UNDERGROUND
 } MOHGame;
 
-typedef struct VidDriver_s
-{
+typedef struct VideoMode_s {
+    int Width;
+    int Height;
+    int RefreshRate;
+    int BPP;
+    
+    char *Description;
+} VideoMode_t;
+
+typedef struct VidDriver_s {
 const char *Title;
     int    Width;
     int    Height;
@@ -55,10 +63,12 @@ const char *Title;
     mat4    ModelViewMatrix;
     mat4    MVPMatrix;
     float   DPIScale;
+    VideoMode_t *VideoModeList;
+    int     NumVideoModes;
+    int     CurrentVideoMode;
 } VidDriver_t;
 
-typedef struct ComTimeInfo_s
-{
+typedef struct ComTimeInfo_s {
     int	  FPS;
     float Delta;
     //Frame to frame time
@@ -73,8 +83,7 @@ typedef struct ComTimeInfo_s
 
 
 
-typedef struct ViewParm_s
-{
+typedef struct ViewParm_s {
     Vec3_t Position;
     Vec3_t Angle;
     Vec3_t  OldPosition;
@@ -86,8 +95,7 @@ typedef struct ViewParm_s
     vec4    FrustumCornerList[8];
 } ViewParm_t;
 
-typedef enum
-{
+typedef enum {
     LOOK_LEFT,
     LOOK_RIGHT,
     LOOK_UP,

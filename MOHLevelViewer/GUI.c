@@ -314,16 +314,33 @@ void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
 void GUIDrawSettingsWindow(GUI_t *GUI)
 {
 #if 1
+    int i;
 //     if( !LevelManager->CurrentLevel ) {
 //         return;
 //     }
     if( !GUI->SettingsWindowHandle ) {
         return;
     }
+    ImVec2 Size;
+    Size.x = Size.y = 0.f;
+    static int CurrentIndex = 0;
+    int PreviewIndex = VidConf.CurrentVideoMode != -1 ? VidConf.CurrentVideoMode : 0;
     if( igBegin("Settings",&GUI->SettingsWindowHandle,0) ) {
         igText("Video Settings");
         igSeparator();
-        
+        if( igBeginCombo("VideoModes", VidConf.VideoModeList[PreviewIndex].Description, 0) ) {
+            for( i = 0; i < VidConf.NumVideoModes; i++ ) {
+                int IsSelected = ((VidConf.VideoModeList[i].Width == VidConf.Width) && 
+                    (VidConf.VideoModeList[i].Height == VidConf.Height)) ? 1 : 0;
+                if( igSelectable_Bool(VidConf.VideoModeList[i].Description,IsSelected,0,Size ) ) {
+                    CurrentIndex = i;
+                }
+                if( IsSelected ) {
+                    igSetItemDefaultFocus();
+                }
+            }
+            igEndCombo();
+        }        
     }
     igEnd();
     if( !GUI->SettingsWindowHandle ) {
@@ -443,6 +460,7 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
     GUIDrawDebugWindow(GUI);
     GUIDrawSettingsWindow(GUI);
     GUIDrawLevelSelectWindow(GUI,LevelManager);
+//     igShowDemoWindow(NULL);
     GUIEndFrame();
 //     if( !GUI->IsActive ) {
 //         GUIBeginFrame();

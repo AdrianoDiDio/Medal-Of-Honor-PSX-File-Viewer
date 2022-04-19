@@ -17,8 +17,8 @@ set(IMGUI_SOURCE_FILES Libs/cimgui/cimgui.cpp
                        Libs/cimgui/imgui/backends/imgui_impl_sdl.cpp
                        Libs/ImGuiFileDialog/ImGuiFileDialog.cpp
 )
-
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
+#set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX foo)
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 
 if(WIN32)
