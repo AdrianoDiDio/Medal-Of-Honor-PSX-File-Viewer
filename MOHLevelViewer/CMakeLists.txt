@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
+include(FetchContent)
 
 project(MOHLevelViewer)
 
@@ -18,6 +19,20 @@ set(IMGUI_SOURCE_FILES Libs/cimgui/cimgui.cpp
                        Libs/ImGuiFileDialog/ImGuiFileDialog.cpp
 )
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
+
+FetchContent_Declare(
+    PVS_CMakeModule
+    GIT_REPOSITORY "https://github.com/viva64/pvs-studio-cmake-module.git"
+    GIT_TAG        "master" 
+)
+FetchContent_MakeAvailable(PVS_CMakeModule)
+include("${pvs_cmakemodule_SOURCE_DIR}/PVS-Studio.cmake")
+pvs_studio_add_target(TARGET example1.analyze ALL
+                      OUTPUT FORMAT errorfile
+                      ANALYZE ${PROJECT_NAME}
+                      MODE GA:1,2
+                      LOG target.err)
+                    
 #set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX foo)
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 

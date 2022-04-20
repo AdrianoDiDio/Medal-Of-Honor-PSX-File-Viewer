@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 /*
 ===========================================================================
     Copyright (C) 2018-2022 Adriano Di Dio.
@@ -599,7 +601,7 @@ void BSDUpdateStarsColors(BSD_t *BSD)
 
 int BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index)
 {
-    if( Index < 0 || Index > BSD_ANIMATED_LIGHTS_TABLE_SIZE ) {
+    if( Index < 0 || Index >= BSD_ANIMATED_LIGHTS_TABLE_SIZE ) {
         DPrintf("BSDGetCurrentAnimatedLightColorByIndex:Invalid index %i\n",Index);
         return 0;
     }

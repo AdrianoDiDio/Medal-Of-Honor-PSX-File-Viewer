@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 /*
 ===========================================================================
     Copyright (C) 2018-2022 Adriano Di Dio.
@@ -328,7 +330,8 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
     if( igBegin("Settings",&GUI->SettingsWindowHandle,0) ) {
         igText("Video Settings");
         igSeparator();
-        if( igBeginCombo("VideoModes", VidConf.VideoModeList[PreviewIndex].Description, 0) ) {
+        igText("Video Mode");
+        if( igBeginCombo("##Resolution", VidConf.VideoModeList[PreviewIndex].Description, 0) ) {
             for( i = 0; i < VidConf.NumVideoModes; i++ ) {
                 int IsSelected = ((VidConf.VideoModeList[i].Width == VidConf.Width) && 
                     (VidConf.VideoModeList[i].Height == VidConf.Height)) ? 1 : 0;
@@ -340,7 +343,10 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
                 }
             }
             igEndCombo();
-        }        
+        }   
+        igSeparator();
+        if( igCheckbox("Fullscreen Mode",&VidConf.FullScreen) ) {
+        }
     }
     igEnd();
     if( !GUI->SettingsWindowHandle ) {

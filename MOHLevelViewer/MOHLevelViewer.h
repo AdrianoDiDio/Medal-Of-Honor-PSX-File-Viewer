@@ -49,7 +49,7 @@ typedef struct VidDriver_s {
 const char *Title;
     int    Width;
     int    Height;
-    bool   Fullscreen;
+    bool   FullScreen;
     void  *GLLibHandle;
     //..Use this one.
     char   *Driver;

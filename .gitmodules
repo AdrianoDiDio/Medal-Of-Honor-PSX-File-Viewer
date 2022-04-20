@@ -1,7 +1,7 @@
 [submodule "MOHLevelViewer/Libs/ImGuiFileDialog"]
 	path = MOHLevelViewer/Libs/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog.git
-	branch = Lib_Only_C_Memory_leaks
+	branch = Lib_Only
 [submodule "MOHLevelViewer/Libs/cimgui"]
 	path = MOHLevelViewer/Libs/cimgui
 	url = https://github.com/cimgui/cimgui

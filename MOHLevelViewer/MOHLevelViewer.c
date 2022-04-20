@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 /*
 ===========================================================================
     Copyright (C) 2018-2022 Adriano Di Dio.
@@ -497,6 +499,11 @@ bool VidOpenWindow()
 }
 void SysVidShutdown()
 {
+    int i;
+    for( i = 0; i < VidConf.NumVideoModes; i++ ) {
+        free(VidConf.VideoModeList[i].Description);
+    }
+    free(VidConf.VideoModeList);
     SDL_GL_DeleteContext(Context);
     SDL_DestroyWindow(VideoSurface);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -536,7 +543,7 @@ int SysGetCurrentVideoHeight()
     return VidConf.VideoModeList[VidConf.CurrentVideoMode].Height;
 }
 
-void InitSDL(const char *Title,int Width,int Height,bool Fullscreen)
+void InitSDL(const char *Title,int Width,int Height,bool FullScreen)
 {
     GLenum GlewError;
     if ( !VidConf.Initialized ) {
@@ -547,7 +554,7 @@ void InitSDL(const char *Title,int Width,int Height,bool Fullscreen)
     DPrintf("Title:%s\n",Title);
     VidConf.Width = Width;
     VidConf.Height = Height;
-    VidConf.Fullscreen = Fullscreen;
+    VidConf.FullScreen = FullScreen;
     VidConf.Resizable = false;
 
     if ( !VidInitSDL() ) {
@@ -578,9 +585,9 @@ void InitSDL(const char *Title,int Width,int Height,bool Fullscreen)
     return;
 }
 
-void SysVidInit(int Width, int Height, bool Fullscreen)
+void SysVidInit(int Width, int Height, bool FullScreen)
 {
-    InitSDL("MOH Level Viewer",Width,Height,Fullscreen);
+    InitSDL("MOH Level Viewer",Width,Height,FullScreen);
 }
 
 void SysCheckKeyEvents()
@@ -996,7 +1003,7 @@ int main(int argc,char **argv)
 //     }
 
 #if _ENABLEVIDEOOUT
-    SysVidInit(800,600,false);
+    SysVidInit(1920,800,false);
     ComTime = malloc(sizeof(ComTimeInfo_t));
     memset(ComTime,0,sizeof(ComTimeInfo_t));
     InitGLView();
