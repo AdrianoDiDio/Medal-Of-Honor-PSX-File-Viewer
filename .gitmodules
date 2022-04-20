@@ -2,6 +2,8 @@
 	path = MOHLevelViewer/Libs/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog.git
 	branch = Lib_Only
+	update = merge
 [submodule "MOHLevelViewer/Libs/cimgui"]
 	path = MOHLevelViewer/Libs/cimgui
 	url = https://github.com/cimgui/cimgui
+    update = merge
