@@ -483,7 +483,8 @@ bool VidOpenWindow()
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     VideoSurface = SDL_CreateWindow(VidConf.Title,SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                     VidConf.VideoModeList[VidConf.CurrentVideoMode].Width, VidConf.VideoModeList[VidConf.CurrentVideoMode].Height, SDL_WINDOW_OPENGL );
+                     VidConf.VideoModeList[VidConf.CurrentVideoMode].Width, VidConf.VideoModeList[VidConf.CurrentVideoMode].Height, 
+                     SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 //     SDL_SetWindowTitle(VideoSurface,);
     Context = SDL_GL_CreateContext(VideoSurface);
     VidConf.DPIScale = 1.f;
@@ -595,6 +596,11 @@ void SysCheckKeyEvents()
     SDL_Event Event;
     float CamSpeed = 80.f;
     while( SDL_PollEvent(&Event) ) {
+        
+        if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+            VidConf.Width = Event.window.data1;
+            VidConf.Height = Event.window.data2;
+        }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F1 ) {
             GUIToggleDebugWindow(GUI);
         }
@@ -884,6 +890,7 @@ void InitGLView()
 
 void GLFrame()
 {
+    glViewport(0,0,VidConf.Width,VidConf.Height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     LevelManagerDraw(LevelManager);
     glDisable (GL_DEPTH_TEST);

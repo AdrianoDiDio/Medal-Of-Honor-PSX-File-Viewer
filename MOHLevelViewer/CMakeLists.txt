@@ -27,11 +27,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(PVS_CMakeModule)
 include("${pvs_cmakemodule_SOURCE_DIR}/PVS-Studio.cmake")
-pvs_studio_add_target(TARGET example1.analyze ALL
-                      OUTPUT FORMAT errorfile
+pvs_studio_add_target(TARGET MOHLevelViewer.Analyze ALL
+                      LOG FORMAT fullhtml
                       ANALYZE ${PROJECT_NAME}
-                      MODE GA:1,2
-                      LOG target.err)
+                      MODE GA:1,2)
                     
 #set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX foo)
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)

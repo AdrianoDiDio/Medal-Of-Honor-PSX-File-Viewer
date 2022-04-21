@@ -35,6 +35,10 @@ void VRAMWritePNG(SDL_Surface *ImageSurface,char *OutName)
     Byte **RowPointer;
     int y;
 
+    if( ImageSurface == NULL ) {
+        printf("Couldn't dump %s\n",OutName);
+        return;
+    }
     
     PNGImage = fopen(OutName,"wb");
     
@@ -43,10 +47,6 @@ void VRAMWritePNG(SDL_Surface *ImageSurface,char *OutName)
         return;
     }
     
-    if( ImageSurface == NULL ) {
-        printf("Couldn't dump %s\n",OutName);
-        return;
-    }
     
     PNGPtr = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (PNGPtr == NULL) {
@@ -57,6 +57,7 @@ void VRAMWritePNG(SDL_Surface *ImageSurface,char *OutName)
     PNGInfoPtr = png_create_info_struct (PNGPtr);
     if (PNGInfoPtr == NULL) {
         printf("PNG: Couldn't create info struct!\n");
+        return;
     }
 
     png_set_IHDR (PNGPtr,

@@ -115,7 +115,6 @@ LevelManager_t *LevelManager;
 GUI_t *GUI;
 SDL_Window *VideoSurface;
 SDL_GLContext Context;
-SDL_Renderer *SDLRenderer;
 
 void    DumpLevel(Level_t* Level);
 void    DPrintf(char *Fmt, ...) Attribute((format(printf,1,2)));
