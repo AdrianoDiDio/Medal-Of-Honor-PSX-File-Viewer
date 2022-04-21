@@ -455,6 +455,27 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
     
     glm_perspective(glm_rad(110.f),(float) VidConf.Width/ (float) VidConf.Height,1.f, 4096.f,VidConf.PMatrixM4);
 
+         
+    temp[0] = 1;
+     temp[1] = 0;
+     temp[2] = 0;
+     glm_mat4_identity(VidConf.ModelViewMatrix);
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
+     temp[0] = 0;
+     temp[1] = 1;
+     temp[2] = 0;
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
+     temp[0] = 0;
+     temp[1] = 0;
+     temp[2] = 1;
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
+     
+     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
+     
+     //Emulate PSX Coordinate system...
+     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
+     BSDDrawSky(LevelManager);
+     
      temp[0] = 1;
      temp[1] = 0;
      temp[2] = 0;
@@ -485,6 +506,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
      BSDCheckCompartmentTrigger(Level,Camera.Position);
 //      BSD2PDraw(Level);
      BSDDraw(LevelManager);
+
      
      temp[0] = 1;
      temp[1] = 0;
@@ -513,25 +535,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
      glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
      TSPDrawList(LevelManager);
      
-     temp[0] = 1;
-     temp[1] = 0;
-     temp[2] = 0;
-     glm_mat4_identity(VidConf.ModelViewMatrix);
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
-     temp[0] = 0;
-     temp[1] = 1;
-     temp[2] = 0;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
-     temp[0] = 0;
-     temp[1] = 0;
-     temp[2] = 1;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
-     
-     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-     
-     //Emulate PSX Coordinate system...
-     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-     BSDDrawSky(LevelManager);
+
 }
 
 int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path)
