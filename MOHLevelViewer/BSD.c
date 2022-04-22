@@ -1088,6 +1088,7 @@ void BSDCreateVAOs(BSD_t *BSD,VRAM_t *VRAM)
             DPrintf("Failed setting vao...Invalid NumFace %i\n",RenderObjectData->NumFaces);
             continue;
         }
+
         if( BSD->GameEngine == MOH_GAME_UNDERGROUND ) {
             BSDCreateFaceV2VAO(RenderObjectData,VRAM);
         } else {
@@ -1614,6 +1615,10 @@ void BSDDraw(LevelManager_t *LevelManager)
             if( BSDPointInNode(Camera.Position,&Level->BSD->NodeData.Node[i]) ) {
                 DPrintf("Camera is inside node %i => %s\n",i,BSDNodeGetEnumStringFromNodeId(Level->BSD->NodeData.Node[i].Id));
                 DPrintf("Node CollisionVolumeType:%s\n",BSDGetCollisionVolumeStringFromType(Level->BSD->NodeData.Node[i].CollisionVolumeType));
+                if( Level->BSD->NodeData.Node[i].Type == 5 ) {
+                    //TODO:Update the TSP faces based on the node dynamic index that maps to the dynamic block inside TSP file.
+                    DPrintf("Node has dynamic face index set to %i\n",Level->BSD->NodeData.Node[i].DynamicBlockIndex);
+                }
                 break;
             }
         }
@@ -2100,6 +2105,8 @@ int BSDGetTSPDynamicIndexOffsetFromNodeType(int Type)
     switch( Type ) {
         case 3:
             return 90;
+        case 5:
+            return 88;
         case 6:
             return 108;
         default:
