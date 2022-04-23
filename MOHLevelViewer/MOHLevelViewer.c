@@ -466,6 +466,38 @@ void VidGetAvailableVideoModes()
     }
     VidConf.NumVideoModes = NumAvailableVideoModes;
 }
+
+SDL_DisplayMode *SDLGetCurrentDisplayMode()
+{
+    static SDL_DisplayMode Result;
+    VideoMode_t *CurrentMode;
+    int NumModes;
+    int i;
+    
+    NumModes = SDL_GetNumDisplayModes(0);
+    CurrentMode = &VidConf.VideoModeList[VidConf.CurrentVideoMode];
+    for( i = 0; i < NumModes; i++ ) {
+        SDL_GetDisplayMode(0,i,&Result);
+        if( Result.w == CurrentMode->Width && Result.h == CurrentMode->Height &&
+            SDL_BITSPERPIXEL(Result.format) == CurrentMode->BPP && Result.refresh_rate == CurrentMode->RefreshRate ) {
+                return &Result;
+            }
+    }
+    return NULL;
+}
+void SysSetCurrentVideoSettings()
+{
+    if( SDL_GetWindowFlags (VideoSurface) & SDL_WINDOW_FULLSCREEN ) {
+        //Was fullscreen reset it...
+        SDL_SetWindowFullscreen(VideoSurface,0);
+    }
+    SDL_SetWindowSize(VideoSurface,VidConf.VideoModeList[VidConf.CurrentVideoMode].Width,VidConf.VideoModeList[VidConf.CurrentVideoMode].Height);
+    SDL_SetWindowDisplayMode(VideoSurface,SDLGetCurrentDisplayMode());
+    if( VidConf.FullScreen ) {
+        SDL_SetWindowFullscreen(VideoSurface,SDL_WINDOW_FULLSCREEN);
+    }
+}
+
 bool VidOpenWindow()
 {
     //Make sure we have an OpenGL context.
@@ -485,7 +517,8 @@ bool VidOpenWindow()
     VideoSurface = SDL_CreateWindow(VidConf.Title,SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                      VidConf.VideoModeList[VidConf.CurrentVideoMode].Width, VidConf.VideoModeList[VidConf.CurrentVideoMode].Height, 
                      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-//     SDL_SetWindowTitle(VideoSurface,);
+    
+    SysSetCurrentVideoSettings();
     Context = SDL_GL_CreateContext(VideoSurface);
     VidConf.DPIScale = 1.f;
     if( !SDL_GetDisplayDPI(0, NULL, &VidConf.DPIScale, NULL) ) {

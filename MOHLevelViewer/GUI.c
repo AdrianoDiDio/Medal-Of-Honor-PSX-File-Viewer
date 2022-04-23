@@ -337,6 +337,8 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
                     (VidConf.VideoModeList[i].Height == VidConf.Height)) ? 1 : 0;
                 if( igSelectable_Bool(VidConf.VideoModeList[i].Description,IsSelected,0,Size ) ) {
                     CurrentIndex = i;
+                    VidConf.CurrentVideoMode = i;
+                    SysSetCurrentVideoSettings();
                 }
                 if( IsSelected ) {
                     igSetItemDefaultFocus();
@@ -346,6 +348,7 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
         }   
         igSeparator();
         if( igCheckbox("Fullscreen Mode",&VidConf.FullScreen) ) {
+            SysSetCurrentVideoSettings();
         }
     }
     igEnd();

@@ -139,6 +139,7 @@ int     RandRangeI(int Min,int Max);
 void    SysSwapBuffers();
 void    SysShowCursor();
 void    SysHideCursor();
+void    SysSetCurrentVideoSettings();
 void    Quit();
 
 #endif //__MOHLEVELVIEWER_H_
