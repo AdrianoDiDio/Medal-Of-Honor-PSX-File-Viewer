@@ -124,6 +124,7 @@ void    DumpLevel(Level_t* Level);
 void    DPrintf(char *Fmt, ...) Attribute((format(printf,1,2)));
 int     asprintf(char **Strp, const char *Fmt, ...);
 char   *StringCopy(const char *From);
+int     StringToInt(char *String);
 int     GetFileLength(FILE *Fp);
 char   *ReadTextFile(char *File,int Length);
 int     GetCurrentFilePosition(FILE *Fp);

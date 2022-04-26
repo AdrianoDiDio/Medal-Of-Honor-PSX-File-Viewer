@@ -24,6 +24,8 @@
 typedef struct Config_s {
     char *Name;
     char *Value;
+    int   IValue;
+    float FValue;
     char *Description;
     struct Config_s *Next;
 } Config_t;
@@ -32,6 +34,8 @@ extern Config_t *ConfigList;
 
 void ConfigInit();
 int ConfigSet(char *Name,char *Value);
+int ConfigSetNumber(char *Name,float Value);
+Config_t *ConfigGet(char *Name);
 int ConfigRegister(char *Name,char *Value,char *Description);
 void ConfigSaveSettings();
 void ConfigFree();

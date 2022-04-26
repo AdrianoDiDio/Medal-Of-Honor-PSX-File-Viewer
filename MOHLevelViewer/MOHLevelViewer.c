@@ -33,6 +33,7 @@ Color4f_t    c_Grey =  {   0.75, 0.75,0.75,1.f};
 Config_t *VidConfigWidth;
 Config_t *VidConfigHeight;
 Config_t *VidConfigRefreshRate;
+Config_t *VidConfigFullScreen;
 
 int StartSeconds = 0;
 
@@ -214,12 +215,14 @@ char *ReadTextFile(char *File,int Length)
     FileSize = Length != 0 ? Length : GetFileLength(Fp);
     Result = malloc(FileSize + 1);
     Ret = fread(Result,1, FileSize,Fp);
+    fclose(Fp);
+    
     if( Ret != FileSize ) {
         DPrintf("Failed to read file %s\n",File);
+        free(Result);
         return NULL;
     }
     Result[Ret] = '\0';
-    fclose(Fp);
     return Result;
 }
 
@@ -257,7 +260,6 @@ float Vec3Length(Vec3_t Vector)
 
 void Vec3RotateXAxis(float Theta,Vec3_t *Vector)
 {
-    Vector->x = Vector->x;
     Vector->y = Vector->y*cos(Theta) - Vector->z*sin(Theta);
     Vector->z = Vector->y*sin(Theta) + Vector->z*cos(Theta);
 }
@@ -463,9 +465,6 @@ void VidGetAvailableVideoModes()
     VidConf.CurrentVideoMode = 0;
     for( i = 0; i < NumAvailableVideoModes; i++ ) {
         SDL_GetDisplayMode(0,i,&Mode);
-        if( Mode.w == 800 && Mode.h == 600 && Mode.refresh_rate == 120) {
-            VidConf.CurrentVideoMode = i;
-        }
         VidConf.VideoModeList[i].Width = Mode.w;
         VidConf.VideoModeList[i].Height = Mode.h;
         VidConf.VideoModeList[i].RefreshRate = Mode.refresh_rate;
@@ -476,6 +475,27 @@ void VidGetAvailableVideoModes()
     VidConf.NumVideoModes = NumAvailableVideoModes;
 }
 
+void VidSetCurrentVideoMode()
+{
+    int i;
+    
+
+    VidConf.CurrentVideoMode = -1;
+    for( i = 0; i < VidConf.NumVideoModes; i++ ) {
+        if( VidConf.VideoModeList[i].Width == VidConfigWidth->IValue && VidConf.VideoModeList[i].Height == VidConfigHeight->IValue && 
+            VidConf.VideoModeList[i].RefreshRate == VidConfigRefreshRate->IValue ) {
+            VidConf.CurrentVideoMode = i;
+        }
+    }
+    if( VidConf.CurrentVideoMode == -1 ) {
+        //User did not set any preference...pick the highest one from the list.
+        VidConf.CurrentVideoMode = 0;
+        ConfigSetNumber("VideoWidth",VidConf.VideoModeList[0].Width);
+        ConfigSetNumber("VideoHeight",VidConf.VideoModeList[0].Height);
+        ConfigSetNumber("VideoRefreshRate",VidConf.VideoModeList[0].RefreshRate);
+    }
+
+}
 SDL_DisplayMode *SDLGetCurrentDisplayMode()
 {
     static SDL_DisplayMode Result;
@@ -501,7 +521,7 @@ void SysSetCurrentVideoSettings()
         SDL_SetWindowFullscreen(VideoSurface,0);
     }
     SDL_SetWindowSize(VideoSurface,VidConf.VideoModeList[VidConf.CurrentVideoMode].Width,VidConf.VideoModeList[VidConf.CurrentVideoMode].Height);
-    if( VidConf.FullScreen ) {
+    if( VidConfigFullScreen->IValue ) {
         SDL_SetWindowDisplayMode(VideoSurface,SDLGetCurrentDisplayMode());
         SDL_SetWindowFullscreen(VideoSurface,SDL_WINDOW_FULLSCREEN);
     }
@@ -586,7 +606,7 @@ int SysGetCurrentVideoHeight()
     return VidConf.VideoModeList[VidConf.CurrentVideoMode].Height;
 }
 
-void InitSDL(const char *Title,int Width,int Height,bool FullScreen)
+void InitSDL(const char *Title)
 {
     GLenum GlewError;
     if ( !VidConf.Initialized ) {
@@ -595,9 +615,9 @@ void InitSDL(const char *Title,int Width,int Height,bool FullScreen)
 
     VidConf.Title = Title == NULL ? "Unnamed" : Title;
     DPrintf("Title:%s\n",Title);
-    VidConf.Width = Width;
-    VidConf.Height = Height;
-    VidConf.FullScreen = FullScreen;
+//     VidConf.Width = Width;
+//     VidConf.Height = Height;
+//     VidConf.FullScreen = 0;
     VidConf.Resizable = false;
 
     if ( !VidInitSDL() ) {
@@ -605,6 +625,7 @@ void InitSDL(const char *Title,int Width,int Height,bool FullScreen)
     }
     
     VidGetAvailableVideoModes();
+    VidSetCurrentVideoMode();
     
     VidConf.Width = SysGetCurrentVideoWidth();
     VidConf.Height = SysGetCurrentVideoHeight();
@@ -628,9 +649,9 @@ void InitSDL(const char *Title,int Width,int Height,bool FullScreen)
     return;
 }
 
-void SysVidInit(int Width, int Height, bool FullScreen)
+void SysVidInit()
 {
-    InitSDL("MOH Level Viewer",Width,Height,FullScreen);
+    InitSDL("MOH Level Viewer");
 }
 
 void SysCheckKeyEvents()
@@ -642,6 +663,8 @@ void SysCheckKeyEvents()
         if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
             VidConf.Width = Event.window.data1;
             VidConf.Height = Event.window.data2;
+            ConfigSetNumber("VideoWidth",VidConf.Width);
+            ConfigSetNumber("VideoHeight",VidConf.Height);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F1 ) {
             GUIToggleDebugWindow(GUI);
@@ -1049,6 +1072,10 @@ int main(int argc,char **argv)
     
     ConfigInit();
     
+    VidConfigWidth = ConfigGet("VideoWidth");
+    VidConfigHeight = ConfigGet("VideoHeight");
+    VidConfigRefreshRate = ConfigGet("VideoRefreshRate");
+    VidConfigFullScreen = ConfigGet("VideoFullScreen");
 //     VidConfigWidth = ConfigRegister("VidWidth","1920");
 //     VidConfigHeight = ConfigRegister("VidHeight","800");
 //     if( !LevelInit(argv[1],argv[2],argv[3]) ) {
@@ -1057,7 +1084,7 @@ int main(int argc,char **argv)
 //     }
 
 #if _ENABLEVIDEOOUT
-    SysVidInit(1920,800,false);
+    SysVidInit();
     ComTime = malloc(sizeof(ComTimeInfo_t));
     memset(ComTime,0,sizeof(ComTimeInfo_t));
     InitGLView();

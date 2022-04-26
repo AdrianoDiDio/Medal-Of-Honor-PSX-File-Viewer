@@ -29,6 +29,7 @@ FetchContent_MakeAvailable(PVS_CMakeModule)
 include("${pvs_cmakemodule_SOURCE_DIR}/PVS-Studio.cmake")
 pvs_studio_add_target(TARGET MOHLevelViewer.Analyze ALL
                       LOG FORMAT fullhtml
+                      SUPPRESS_BASE suppress_base.json
                       ANALYZE ${PROJECT_NAME}
                       MODE GA:1,2)
                     

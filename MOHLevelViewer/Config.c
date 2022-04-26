@@ -83,6 +83,7 @@ void ConfigTokenizeSettings(char *String)
         DPrintf("ConfigTokenizeSettings:Found key %s but not value.\n",ConfigLine[0]);
     } else {
         DPrintf("Setting config %s to %s\n",ConfigLine[0],ConfigLine[1]);
+        ConfigSet(ConfigLine[0],ConfigLine[1]);
     }
     if( ConfigLine[0] ) {
         free(ConfigLine[0]);
@@ -188,6 +189,19 @@ Config_t *ConfigGet(char *Name)
     return NULL;
 }
 
+void ConfigUpdateValue(Config_t *Config,char *Value)
+{
+    if( !Config ) {
+        DPrintf("ConfigUpdateValue:Invalid config.\n");
+        return;
+    }
+    if( Config->Value ) {
+        free(Config->Value);
+    }
+    Config->Value = StringCopy(Value);
+    Config->IValue = StringToInt(Value);
+    Config->FValue = atof(Value);
+}
 /*
  Sets the Value of a config by Name.
  If the config was found, it's value is updated and persisted inside
@@ -207,14 +221,29 @@ int ConfigSet(char *Name,char *Value)
     }
     for(Config = ConfigList; Config; Config = Config->Next ){
         if( !strcmp(Config->Name,Name) ) {
-            free(Config->Value);
-            Config->Value = StringCopy(Value);
+            ConfigUpdateValue(Config,Value);
             ConfigSaveSettings();
             return 1;
         }
     }
     DPrintf("ConfigSet:No config named \"%s\" was found in the list.\n",Name);
     return 0;
+}
+
+int ConfigSetNumber(char *Name,float Value)
+{
+    char SmallBuf[64];
+    int Truncated;
+    
+    Truncated = (int) Value;
+    //If truncating the variable results in the same variable
+    //then it is probably just an int.
+    if( Value == Truncated ) {
+        sprintf(SmallBuf,"%i",Truncated);
+    } else {
+        sprintf(SmallBuf,"%f",Value);
+    }
+    return ConfigSet(Name,SmallBuf);
 }
 int ConfigRegister(char *Name,char *Value,char *Description)
 {
@@ -231,7 +260,8 @@ int ConfigRegister(char *Name,char *Value,char *Description)
     }
     
     Config->Name = StringCopy(Name);
-    Config->Value = StringCopy(Value);
+    Config->Value = NULL;
+    ConfigUpdateValue(Config,Value);
     if( Description ) {
         Config->Description = StringCopy(Description);
     } else {
@@ -247,16 +277,22 @@ void ConfigRegisterDefaultSettings()
 {
     ConfigRegister("VideoWidth","800",NULL);
     ConfigRegister("VideoHeight","600",NULL);
+    ConfigRegister("VideoRefreshRate","60",NULL);
+    ConfigRegister("VideoFullScreen","0",NULL);
+
     ConfigRegister("BasePath","","Sets the path from which the game will be loaded");
 }
-
+void ConfigDumpSettings()
+{
+    Config_t *Config;
+    
+    for(Config = ConfigList; Config; Config = Config->Next ){
+        DPrintf("Config:%s Value:%s %i %f\n",Config->Name,Config->Value,Config->IValue,Config->FValue);
+    }
+    
+}
 void ConfigInit()
 {
     ConfigRegisterDefaultSettings();
     ConfigReadSettings();
-    ConfigSet(NULL,NULL);
-//     ConfigSet("VideoWidth","444");
-//     Config_t *VidWidth = ConfigGet("VideoWidth");
-//     VidWidth->Value = "666";
-//     ConfigSaveSettings();
 }

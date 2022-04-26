@@ -21,8 +21,8 @@
 
 #include "Common.h"
 
-#define BUFFER_OFFSET(i) ((GLvoid*)(i * sizeof(GL_FLOAT)))
-#define BUFFER_INT_OFFSET(i) ((GLvoid*)(i * sizeof(GL_INT)))
+#define BUFFER_OFFSET(i) ((GLvoid*)(i * sizeof(GLfloat)))
+#define BUFFER_INT_OFFSET(i) ((GLvoid*)(i * sizeof(GLint)))
 
 typedef struct VAO_s
 {
