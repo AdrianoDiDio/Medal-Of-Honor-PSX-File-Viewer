@@ -104,6 +104,13 @@ void ConfigReadSettings()
     PrefPath = SysGetConfigPath();
     asprintf(&PrefFile,"%sConfig.cfg",PrefPath);
     ConfigBuffer = ReadTextFile(PrefFile,0);
+    
+    //Settings didn't exists save the default ones.
+    if( !ConfigBuffer ) {
+        free(PrefFile);
+        ConfigSaveSettings();
+        return;
+    }
 
     ConfigLineIndex = 0;
     Temp = ConfigBuffer;
@@ -159,6 +166,7 @@ void ConfigSaveSettings()
     
     ConfigFile = fopen(PrefFile,"w+");
     
+    fprintf(ConfigFile,"/*\n\t\t\t%s\n*/\n",CONFIG_FILE_HEADER);
     for(Config = ConfigList; Config; Config = Config->Next ){
         if( Config->Description ) {
             fprintf(ConfigFile,"//%s\n",Config->Description);
@@ -179,9 +187,24 @@ Config_t *ConfigGet(char *Name)
     }
     return NULL;
 }
+
+/*
+ Sets the Value of a config by Name.
+ If the config was found, it's value is updated and persisted inside
+ the default config file.
+ Returns 1 if operation succeeded 0 otherwise.
+ */
 int ConfigSet(char *Name,char *Value)
 {
     Config_t *Config;
+    if( !Name ) {
+        DPrintf("ConfigSet:Invalid name\n");
+        return 0;
+    }
+    if( !Value ) {
+        DPrintf("ConfigSet:Invalid value\n");
+        return 0;
+    }
     for(Config = ConfigList; Config; Config = Config->Next ){
         if( !strcmp(Config->Name,Name) ) {
             free(Config->Value);
@@ -190,6 +213,7 @@ int ConfigSet(char *Name,char *Value)
             return 1;
         }
     }
+    DPrintf("ConfigSet:No config named \"%s\" was found in the list.\n",Name);
     return 0;
 }
 int ConfigRegister(char *Name,char *Value,char *Description)
@@ -230,6 +254,7 @@ void ConfigInit()
 {
     ConfigRegisterDefaultSettings();
     ConfigReadSettings();
+    ConfigSet(NULL,NULL);
 //     ConfigSet("VideoWidth","444");
 //     Config_t *VidWidth = ConfigGet("VideoWidth");
 //     VidWidth->Value = "666";
