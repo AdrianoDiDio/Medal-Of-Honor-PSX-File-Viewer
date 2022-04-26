@@ -104,6 +104,10 @@ void GUIToggleLevelSelectWindow(GUI_t *GUI)
 
 void GUISetMOHPath(GUI_t *GUI)
 {
+    if( !LevelManager->IsPathSet ) {
+        //NOTE(Adriano):Default behaviour is to open the dialog at startup when there is not a valid pat set yet.
+        return;
+    }
     GUIPushWindow(GUI);
     LevelManager->IsPathSet = 0;
 }
@@ -325,28 +329,29 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
     }
     ImVec2 Size;
     Size.x = Size.y = 0.f;
-    static int CurrentIndex = 0;
     int PreviewIndex = VidConf.CurrentVideoMode != -1 ? VidConf.CurrentVideoMode : 0;
     if( igBegin("Settings",&GUI->SettingsWindowHandle,0) ) {
         igText("Video Settings");
         igSeparator();
-        igText("Video Mode");
-        if( igBeginCombo("##Resolution", VidConf.VideoModeList[PreviewIndex].Description, 0) ) {
-            for( i = 0; i < VidConf.NumVideoModes; i++ ) {
-                int IsSelected = ((VidConf.VideoModeList[i].Width == VidConf.Width) && 
-                    (VidConf.VideoModeList[i].Height == VidConf.Height)) ? 1 : 0;
-                if( igSelectable_Bool(VidConf.VideoModeList[i].Description,IsSelected,0,Size ) ) {
-                    CurrentIndex = i;
-                    VidConf.CurrentVideoMode = i;
-                    SysSetCurrentVideoSettings();
+        //NOTE(Adriano):Only in Fullscreen mode we can select the video mode we want.
+        if( VidConf.FullScreen ) {
+            igText("Video Mode");
+            if( igBeginCombo("##Resolution", VidConf.VideoModeList[PreviewIndex].Description, 0) ) {
+                for( i = 0; i < VidConf.NumVideoModes; i++ ) {
+                    int IsSelected = ((VidConf.VideoModeList[i].Width == VidConf.Width) && 
+                        (VidConf.VideoModeList[i].Height == VidConf.Height)) ? 1 : 0;
+                    if( igSelectable_Bool(VidConf.VideoModeList[i].Description,IsSelected,0,Size ) ) {
+                        VidConf.CurrentVideoMode = i;
+                        SysSetCurrentVideoSettings();
+                    }
+                    if( IsSelected ) {
+                        igSetItemDefaultFocus();
+                    }
                 }
-                if( IsSelected ) {
-                    igSetItemDefaultFocus();
-                }
+                igEndCombo();
             }
-            igEndCombo();
-        }   
-        igSeparator();
+            igSeparator();
+        }
         if( igCheckbox("Fullscreen Mode",&VidConf.FullScreen) ) {
             SysSetCurrentVideoSettings();
         }

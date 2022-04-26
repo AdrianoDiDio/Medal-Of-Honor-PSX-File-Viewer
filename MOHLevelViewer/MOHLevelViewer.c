@@ -20,6 +20,7 @@
 */ 
 #include "MOHLevelViewer.h"
 #include "ShaderManager.h"
+#include "Config.h"
 
 Color4f_t    c_Black = {   0,    0,   0,   1.f};
 Color4f_t    c_Red    = {   1.f,  0,   0,   1.f};
@@ -28,6 +29,10 @@ Color4f_t    c_Blue    = {   0,    0,   1.f, 1.f};
 Color4f_t    c_Yellow = {  1.f,  1.f, 0,   1.f};
 Color4f_t    c_White    = {   1.f,  1.f, 1.f, 1.f};
 Color4f_t    c_Grey =  {   0.75, 0.75,0.75,1.f};
+
+Config_t *VidConfigWidth;
+Config_t *VidConfigHeight;
+Config_t *VidConfigRefreshRate;
 
 int StartSeconds = 0;
 
@@ -400,6 +405,10 @@ void CamUpdate(ViewParm_t *Camera,int Orientation, float Sensitivity)
     }
 }
 
+char *SysGetConfigPath()
+{
+    return SDL_GetPrefPath(NULL,"MOHLevelViewer");
+}
 int SysMilliseconds()
 {
     struct timeval tp;
@@ -492,8 +501,8 @@ void SysSetCurrentVideoSettings()
         SDL_SetWindowFullscreen(VideoSurface,0);
     }
     SDL_SetWindowSize(VideoSurface,VidConf.VideoModeList[VidConf.CurrentVideoMode].Width,VidConf.VideoModeList[VidConf.CurrentVideoMode].Height);
-    SDL_SetWindowDisplayMode(VideoSurface,SDLGetCurrentDisplayMode());
     if( VidConf.FullScreen ) {
+        SDL_SetWindowDisplayMode(VideoSurface,SDLGetCurrentDisplayMode());
         SDL_SetWindowFullscreen(VideoSurface,SDL_WINDOW_FULLSCREEN);
     }
 }
@@ -1037,6 +1046,11 @@ int main(int argc,char **argv)
 //         return -1;
 //     }
     LevelManagerInit();
+    
+    ConfigInit();
+    
+//     VidConfigWidth = ConfigRegister("VidWidth","1920");
+//     VidConfigHeight = ConfigRegister("VidHeight","800");
 //     if( !LevelInit(argv[1],argv[2],argv[3]) ) {
 //         printf("Couldn't load data.\n");
 //         return -1;

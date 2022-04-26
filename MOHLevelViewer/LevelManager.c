@@ -204,7 +204,7 @@ Mission_t MOHMissionsList[] = {
         }
     }
 };
-
+int NumMOHMissions = sizeof(MOHMissionsList) / sizeof(MOHMissionsList[0]);
 Mission_t MOHUMissionsList[] = {
     {
         "Occupied!",
@@ -402,8 +402,9 @@ Mission_t MOHUMissionsList[] = {
         }
     }
 };
-int NumMOHMissions = sizeof(MOHMissionsList) / sizeof(MOHMissionsList[0]);
 int NumMOHUMissions = sizeof(MOHUMissionsList) / sizeof(MOHUMissionsList[0]);
+
+Config_t *LevelManagerBasePath;
 
 int LevelManagerIsLevelLoaded(LevelManager_t *LevelManager)
 {

@@ -20,14 +20,13 @@
 #define __MOHLEVELVIEWER_H_ 
 
 #include "Common.h"
+#include "Config.h"
 #include "BSD.h"
 #include "Level.h"
 #include "LevelManager.h"
 #include "GUI.h"
 
 #define MAX_FPS 120
-
-//TODO(Adriano):Instance them and pass the pointer around without relying on any global variable...
 
 
 typedef enum
@@ -116,6 +115,11 @@ GUI_t *GUI;
 SDL_Window *VideoSurface;
 SDL_GLContext Context;
 
+
+extern Config_t *VidConfigWidth;
+extern Config_t *VidConfigHeight;
+extern Config_t *VidConfigRefreshRate;
+
 void    DumpLevel(Level_t* Level);
 void    DPrintf(char *Fmt, ...) Attribute((format(printf,1,2)));
 int     asprintf(char **Strp, const char *Fmt, ...);
@@ -136,6 +140,7 @@ void    CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility);
 void    CamUpdateVectors(ViewParm_t *Camera);
 float   Rand01();
 int     RandRangeI(int Min,int Max);
+char   *SysGetConfigPath();
 void    SysSwapBuffers();
 void    SysShowCursor();
 void    SysHideCursor();

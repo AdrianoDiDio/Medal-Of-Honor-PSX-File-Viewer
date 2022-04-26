@@ -22,6 +22,7 @@
 
 #include "GUI.h"
 #include "Level.h"
+#include "Config.h"
 
 typedef struct MissionLevel_s {
     char *LevelName;
@@ -56,4 +57,6 @@ extern Mission_t MOHMissionsList[];
 extern int NumMOHMissions;
 extern Mission_t MOHUMissionsList[];
 extern int NumMOHUMissions;
+
+extern Config_t *LevelManagerBasePath;
 #endif//__LEVELMANAGER_H_
