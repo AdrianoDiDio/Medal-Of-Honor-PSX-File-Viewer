@@ -56,6 +56,7 @@ void FontFree(Font_t *Font)
     for( i = 0; i < NUM_MOH_FONT_CHARS; i++ ) {
         free(Font->Characters[i]);
     }
+    free(Font);
 }
 int FontGetStride()
 {

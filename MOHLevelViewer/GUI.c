@@ -101,15 +101,24 @@ void GUIToggleLevelSelectWindow(GUI_t *GUI)
     GUIToggleHandle(GUI,GUI->LevelSelectWindowHandle);
 
 }
-
+/*
+ TODO(Adriano):
+ Turn this into a generic function to save file,accept a callback to a function that
+ will be called when the dialog was closed with a selected path!
+ */
 void GUISetMOHPath(GUI_t *GUI)
 {
-    if( !LevelManager->IsPathSet ) {
-        //NOTE(Adriano):Default behaviour is to open the dialog at startup when there is not a valid pat set yet.
+//     if( !LevelManager->IsPathSet ) {
+//         //NOTE(Adriano):Default behaviour is to open the dialog at startup when there is not a valid pat set yet.
+//         return;
+//     }
+    if( IGFD_IsOpened(GUI->DirSelectFileDialog) ) {
         return;
     }
+    DPrintf("Opening dialog\n");
+    IGFD_OpenDialog2(GUI->DirSelectFileDialog,"Dir Select","Select dir",NULL,".",1,NULL,ImGuiFileDialogFlags_DontShowHiddenFiles);
     GUIPushWindow(GUI);
-    LevelManager->IsPathSet = 0;
+//     LevelManager->IsPathSet = 0;
 }
 void GUIBeginFrame()
 {
@@ -158,11 +167,16 @@ void GUIDrawDebugWindow(GUI_t *GUI)
         }
        igSeparator();
        igText("Debug Statistics");
+       igText("NumActiveWindows:%i",GUI->NumActiveWindows);
        igSeparator();
        igText(ComTime->FPSString);
        igText("OpenGL Version: %s",glGetString(GL_VERSION));
        SDL_GetVersion(&Version);
        igText("SDL Version: %u.%u.%u",Version.major,Version.minor,Version.patch);
+       igSeparator();
+       igText("Display Informations");
+       igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);
+       igText("Refresh Rate:%i",VidConfigRefreshRate->IValue);
     }
     if( !GUI->DebugWindowHandle ) {
         GUIToggleHandle(GUI,GUI->DebugWindowHandle);
@@ -276,6 +290,10 @@ void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
     char *DirectoryPath;
     int LoadStatus;
     
+    if( !IGFD_IsOpened(GUI->DirSelectFileDialog) ) {
+        return;
+    }
+    
     Viewport = igGetMainViewport();
     WindowPosition.x = Viewport->WorkPos.x;
     WindowPosition.y = Viewport->WorkPos.y;
@@ -312,9 +330,13 @@ void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
                 if (DirectoryPath) { 
                     free(DirectoryPath);
                 }
+        } else {
+            if( LevelManager->IsPathSet ) {
+                //User has cancelled the path change operation.
+                GUIPopWindow(GUI);
+                IGFD_CloseDialog(GUI->DirSelectFileDialog);
+            }
         }
-    } else {
-        IGFD_OpenDialog2(GUI->DirSelectFileDialog,"Dir Select","Select dir",NULL,".",1,NULL,ImGuiFileDialogFlags_DontShowHiddenFiles);
     }
 }
 void GUIDrawSettingsWindow(GUI_t *GUI)
@@ -452,9 +474,11 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
         return;
     }
     GUIBeginFrame();
-    if( !LevelManager->IsPathSet ) {
-        GUIGetMOHPath(GUI,LevelManager);
-    }
+    //TODO(Adriano):Handle this as a separate window with his own handle instead of relying on the
+    //LevelManager itself...on init it should be open and then closed when done.
+//     if( !LevelManager->IsPathSet ) {
+    GUIGetMOHPath(GUI,LevelManager);
+//     }
     IO = igGetIO();
     ButtonSize.x = 120;
     ButtonSize.y = 0;
@@ -518,7 +542,9 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
 //     GUI->DebugWindowHandle = 0;
 
     GUI->DirSelectFileDialog = IGFD_Create();
-    GUI->NumActiveWindows = 1;
+    GUI->NumActiveWindows = 0;
 
+    GUISetMOHPath(GUI);
+    assert(IGFD_IsOpened(GUI->DirSelectFileDialog));
     return GUI;
 }
