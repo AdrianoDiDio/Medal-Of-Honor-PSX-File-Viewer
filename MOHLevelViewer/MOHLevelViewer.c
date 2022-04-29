@@ -1119,7 +1119,6 @@ int main(int argc,char **argv)
 //         printf("%s <MOH Directory> <Mission Number> <Level Number> will load level files from that mission.\n",argv[0]);
 //         return -1;
 //     }
-    LevelManagerInit();
     
     ConfigInit();
     
@@ -1140,6 +1139,8 @@ int main(int argc,char **argv)
     memset(ComTime,0,sizeof(ComTimeInfo_t));
     InitGLView();
     ShaderManagerInit();
+    LevelManagerInit(GUI);
+
 //     CamInit(&Camera);
 //     LevelLateInit();
     /* TEMP! */

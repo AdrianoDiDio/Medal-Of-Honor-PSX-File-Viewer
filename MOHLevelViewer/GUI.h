@@ -45,6 +45,8 @@ void GUIToggleSettingsWindow(GUI_t *GUI);
 void GUIToggleLevelSelectWindow(GUI_t *GUI);
 void GUISetMOHPath(GUI_t *GUI);
 int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
+void GUIProgressBarBegin(GUI_t *GUI,char *Title);
+void GUIProgressBarEnd(GUI_t *GUI);
 void GUIProgressBarReset(GUI_t *GUI);
 void GUISetProgressBarDialogTitle(GUI_t *GUI,char *Title);
 void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message);

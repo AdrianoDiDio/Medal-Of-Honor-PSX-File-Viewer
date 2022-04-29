@@ -238,6 +238,9 @@ void GUIProgressBarBegin(GUI_t *GUI,char *Title)
 }
 void GUIProgressBarReset(GUI_t *GUI)
 {
+    if(!GUI) {
+        return;
+    }
     GUI->ProgressBar->CurrentPercentage = 0;
 }
 void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
@@ -246,7 +249,14 @@ void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
     ImVec2 ScreenCenter;
     ImVec2 Pivot;
     ImVec2 Size;
-
+    ImGuiIO *IO;
+    float Delta;
+    
+    if( !GUI ) {
+        return;
+    }
+    
+    IO = igGetIO();
     
     Viewport = igGetMainViewport();
     ImGuiViewport_GetCenter(&ScreenCenter,Viewport);
@@ -269,8 +279,10 @@ void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
     Size.y = 0.f;
     igSetNextWindowPos(ScreenCenter, ImGuiCond_Always, Pivot);
     GUI->ProgressBar->CurrentPercentage += Increment;
+    DPrintf("PBar:Increment++:%f %f\n",GUI->ProgressBar->CurrentPercentage,Increment);
     if (igBeginPopupModal(GUI->ProgressBar->DialogTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        igProgressBar((GUI->ProgressBar->CurrentPercentage / 100.f) * ComTime->Delta/* * IO->DeltaTime*/,Size,Message);
+        Delta = (ComTime->Delta != 0.f) ? ComTime->Delta : 1;
+        igProgressBar((GUI->ProgressBar->CurrentPercentage / 100.f) * Delta/* * IO->DeltaTime*/,Size,Message);
         igEnd();
     }
     GUIEndFrame();
@@ -327,6 +339,7 @@ void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
                     GUIPushWindow(GUI);
                 } else {
                     //Close it if we managed to load it.
+                    ConfigSet("GameBasePath",DirectoryPath);
                     GUIPopWindow(GUI);
                     IGFD_CloseDialog(GUI->DirSelectFileDialog);
                 }
@@ -546,7 +559,5 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     GUI->DirSelectFileDialog = IGFD_Create();
     GUI->NumActiveWindows = 0;
 
-    GUISetMOHPath(GUI);
-    assert(IGFD_IsOpened(GUI->DirSelectFileDialog));
     return GUI;
 }
