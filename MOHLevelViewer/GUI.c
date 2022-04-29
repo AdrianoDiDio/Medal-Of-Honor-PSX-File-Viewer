@@ -105,6 +105,9 @@ void GUIToggleLevelSelectWindow(GUI_t *GUI)
  TODO(Adriano):
  Turn this into a generic function to save file,accept a callback to a function that
  will be called when the dialog was closed with a selected path!
+ Rename this function as GUIOpenDirSelectDialog(GUI,OnSuccess).
+ There can be only one dialog...if for example a dialog is already opened this function
+ should return -1 and tell the user that another dialog is already running.
  */
 void GUISetMOHPath(GUI_t *GUI)
 {
@@ -356,15 +359,14 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
         igText("Video Settings");
         igSeparator();
         //NOTE(Adriano):Only in Fullscreen mode we can select the video mode we want.
-        if( VidConf.FullScreen ) {
+        if( VidConfigFullScreen->IValue ) {
             igText("Video Mode");
             if( igBeginCombo("##Resolution", VidConf.VideoModeList[PreviewIndex].Description, 0) ) {
                 for( i = 0; i < VidConf.NumVideoModes; i++ ) {
                     int IsSelected = ((VidConf.VideoModeList[i].Width == VidConf.Width) && 
                         (VidConf.VideoModeList[i].Height == VidConf.Height)) ? 1 : 0;
                     if( igSelectable_Bool(VidConf.VideoModeList[i].Description,IsSelected,0,Size ) ) {
-                        VidConf.CurrentVideoMode = i;
-                        SysSetCurrentVideoSettings();
+                        SysSetCurrentVideoSettings(i);
                     }
                     if( IsSelected ) {
                         igSetItemDefaultFocus();
@@ -374,8 +376,8 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
             }
             igSeparator();
         }
-        if( igCheckbox("Fullscreen Mode",&VidConf.FullScreen) ) {
-            SysSetCurrentVideoSettings();
+        if( igCheckbox("Fullscreen Mode",&VidConfigFullScreen->IValue) ) {
+            SysSetCurrentVideoSettings(-1);
         }
     }
     igEnd();

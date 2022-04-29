@@ -35,6 +35,14 @@ Config_t *VidConfigHeight;
 Config_t *VidConfigRefreshRate;
 Config_t *VidConfigFullScreen;
 
+VidDriver_t VidConf;
+ViewParm_t Camera;
+ComTimeInfo_t *ComTime;
+LevelManager_t *LevelManager;
+GUI_t *GUI;
+SDL_Window *VideoSurface;
+SDL_GLContext Context;
+
 int StartSeconds = 0;
 
 float Rand01()
@@ -475,25 +483,63 @@ void VidGetAvailableVideoModes()
     VidConf.NumVideoModes = NumAvailableVideoModes;
 }
 
-void VidSetCurrentVideoMode()
+/*
+ Given a target resolution from the settings, if we are going to init the windows as fullscreen
+ we need to pick an exact match in the SDL video mode list.
+ If PreferredModeIndex is equals to -1 then it will use the config values otherwise the one
+ from the selected video mode in the mode array.
+ */
+void VidSetFullScreenVideoMode(int PreferredModeIndex)
 {
     int i;
+    int ClosestDistance;
+    int Delta;
+    int DistanceX;
+    int DistanceY;
+    int TargetWidth;
+    int TargetHeight;
+    int TargetRefreshRate;
+    int BestMode;
     
-
-    VidConf.CurrentVideoMode = -1;
+    ClosestDistance = 9999;
+    BestMode = -1;
+    
+    if( PreferredModeIndex != -1 ) {
+        TargetWidth = VidConf.VideoModeList[PreferredModeIndex].Width;
+        TargetHeight = VidConf.VideoModeList[PreferredModeIndex].Height;
+        TargetRefreshRate = VidConf.VideoModeList[PreferredModeIndex].RefreshRate;
+    } else {
+        TargetWidth = VidConfigWidth->IValue;
+        TargetHeight = VidConfigHeight->IValue;
+        TargetRefreshRate = VidConfigRefreshRate->IValue;
+    }
+//     VidConf.CurrentVideoMode = -1;
+    DPrintf("VidSetCurrentFullScreenVideoMode:Users wants to go with %ix%i Fullscreen\n",VidConfigWidth->IValue,VidConfigHeight->IValue);
     for( i = 0; i < VidConf.NumVideoModes; i++ ) {
-        if( VidConf.VideoModeList[i].Width == VidConfigWidth->IValue && VidConf.VideoModeList[i].Height == VidConfigHeight->IValue && 
-            VidConf.VideoModeList[i].RefreshRate == VidConfigRefreshRate->IValue ) {
-            VidConf.CurrentVideoMode = i;
+        //Ideally we want to match the one in the config!
+        if( VidConf.VideoModeList[i].RefreshRate != TargetRefreshRate ) {
+            continue;
+        }
+        DistanceX = TargetWidth - VidConf.VideoModeList[i].Width;
+        DistanceY = TargetHeight - VidConf.VideoModeList[i].Height;
+
+        Delta = Square(DistanceX) + Square(DistanceY);
+        
+        if( Delta < ClosestDistance ) {
+            ClosestDistance = Delta;
+            BestMode = i;
         }
     }
-    if( VidConf.CurrentVideoMode == -1 ) {
+    if( BestMode == -1 ) {
         //User did not set any preference...pick the highest one from the list.
-        VidConf.CurrentVideoMode = 0;
-        ConfigSetNumber("VideoWidth",VidConf.VideoModeList[0].Width);
-        ConfigSetNumber("VideoHeight",VidConf.VideoModeList[0].Height);
-        ConfigSetNumber("VideoRefreshRate",VidConf.VideoModeList[0].RefreshRate);
+        BestMode = 0;
     }
+    DPrintf("VidSetCurrentFullScreenVideoMode:Users obtained %ix%i RefreshRate:%i\n",VidConf.VideoModeList[BestMode].Width,
+            VidConf.VideoModeList[BestMode].Height,VidConf.VideoModeList[BestMode].RefreshRate);
+    ConfigSetNumber("VideoWidth",VidConf.VideoModeList[BestMode].Width);
+    ConfigSetNumber("VideoHeight",VidConf.VideoModeList[BestMode].Height);
+    ConfigSetNumber("VideoRefreshRate",VidConf.VideoModeList[BestMode].RefreshRate);
+    VidConf.CurrentVideoMode = BestMode;
 
 }
 SDL_DisplayMode *SDLGetCurrentDisplayMode()
@@ -514,16 +560,22 @@ SDL_DisplayMode *SDLGetCurrentDisplayMode()
     }
     return NULL;
 }
-void SysSetCurrentVideoSettings()
+void SysSetCurrentVideoSettings(int PreferredModeIndex)
 {
     if( SDL_GetWindowFlags (VideoSurface) & SDL_WINDOW_FULLSCREEN ) {
         //Was fullscreen reset it...
         SDL_SetWindowFullscreen(VideoSurface,0);
     }
-    SDL_SetWindowSize(VideoSurface,VidConf.VideoModeList[VidConf.CurrentVideoMode].Width,VidConf.VideoModeList[VidConf.CurrentVideoMode].Height);
+    SDL_SetWindowSize(VideoSurface,VidConfigWidth->IValue,VidConfigHeight->IValue);
     if( VidConfigFullScreen->IValue ) {
-        SDL_SetWindowDisplayMode(VideoSurface,SDLGetCurrentDisplayMode());
+        VidSetFullScreenVideoMode(PreferredModeIndex);
+        if( SDL_SetWindowDisplayMode(VideoSurface,SDLGetCurrentDisplayMode() ) < 0 ) {
+            ConfigSetNumber("VideoFullScreen",0);
+            SysSetCurrentVideoSettings(PreferredModeIndex);
+            return;
+        }
         SDL_SetWindowFullscreen(VideoSurface,SDL_WINDOW_FULLSCREEN);
+        ConfigSetNumber("VideoFullScreen",1);
     }
 }
 
@@ -544,10 +596,10 @@ bool VidOpenWindow()
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     VideoSurface = SDL_CreateWindow(VidConf.Title,SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                     VidConf.VideoModeList[VidConf.CurrentVideoMode].Width, VidConf.VideoModeList[VidConf.CurrentVideoMode].Height, 
+                     VidConfigWidth->IValue, VidConfigHeight->IValue, 
                      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     
-    SysSetCurrentVideoSettings();
+    SysSetCurrentVideoSettings(-1);
     Context = SDL_GL_CreateContext(VideoSurface);
     VidConf.DPIScale = 1.f;
     if( !SDL_GetDisplayDPI(0, NULL, &VidConf.DPIScale, NULL) ) {
@@ -625,10 +677,9 @@ void InitSDL(const char *Title)
     }
     
     VidGetAvailableVideoModes();
-    VidSetCurrentVideoMode();
     
-    VidConf.Width = SysGetCurrentVideoWidth();
-    VidConf.Height = SysGetCurrentVideoHeight();
+    VidConf.Width = VidConfigWidth->IValue;
+    VidConf.Height = VidConfigHeight->IValue;
 
     if ( !VidOpenWindow() ) {
         DPrintf("Failed on opening a new window.\n");

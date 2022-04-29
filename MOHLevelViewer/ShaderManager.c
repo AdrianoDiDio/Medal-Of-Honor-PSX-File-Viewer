@@ -22,6 +22,9 @@
 #include "ShaderManager.h"
 #include "MOHLevelViewer.h"
 
+Shader_t *ShaderList;
+int NumShaders;
+
 void ShaderManagerFree()
 {
     Shader_t *Temp;

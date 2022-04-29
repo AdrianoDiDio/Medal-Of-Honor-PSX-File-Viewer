@@ -107,18 +107,19 @@ typedef enum {
     DIR_RIGHTWARD
 } Direction_t;
 
-VidDriver_t VidConf;
-ViewParm_t Camera;
-ComTimeInfo_t *ComTime;
-LevelManager_t *LevelManager;
-GUI_t *GUI;
-SDL_Window *VideoSurface;
-SDL_GLContext Context;
+extern VidDriver_t VidConf;
+extern ViewParm_t Camera;
+extern ComTimeInfo_t *ComTime;
+extern LevelManager_t *LevelManager;
+extern GUI_t *GUI;
+extern SDL_Window *VideoSurface;
+extern SDL_GLContext Context;
 
 
 extern Config_t *VidConfigWidth;
 extern Config_t *VidConfigHeight;
 extern Config_t *VidConfigRefreshRate;
+extern Config_t *VidConfigFullScreen;
 
 void    DumpLevel(Level_t* Level);
 void    DPrintf(char *Fmt, ...) Attribute((format(printf,1,2)));
@@ -145,7 +146,7 @@ char   *SysGetConfigPath();
 void    SysSwapBuffers();
 void    SysShowCursor();
 void    SysHideCursor();
-void    SysSetCurrentVideoSettings();
+void    SysSetCurrentVideoSettings(int PreferredModeIndex);
 void    Quit();
 
 #endif //__MOHLEVELVIEWER_H_
