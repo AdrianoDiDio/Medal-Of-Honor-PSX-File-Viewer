@@ -555,20 +555,23 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path)
         free(LevelManager->BasePath);
     }
     LevelManager->BasePath = StringCopy(Path);
+    LevelManager->IsPathSet = 0;
     if( !LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->BasePath,1,1,&GameEngine) ) {
         if( GUI != NULL ) {
             GUISetProgressBarDialogTitle(GUI,"Mission 2 Level 1");
         }
         if( !LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->BasePath,2,1,&GameEngine) ) {
             DPrintf("LevelManagerInitWithPath:Invalid path...\n");
-            LevelManager->IsPathSet = 0;
         } else {
-            LevelManager->GameEngine = GameEngine;
-            sprintf(LevelManager->EngineName,"%s",GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
             LevelManager->IsPathSet = 1;
         }
+    } else {
+        LevelManager->IsPathSet = 1;
     }
-
+    if( LevelManager->IsPathSet != 0 ) {
+        LevelManager->GameEngine = GameEngine;
+        sprintf(LevelManager->EngineName,"%s",GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
+    }
     GUIProgressBarEnd(GUI);
     return LevelManager->IsPathSet;
 }
