@@ -280,7 +280,7 @@ void ConfigRegisterDefaultSettings()
     ConfigRegister("VideoRefreshRate","60",NULL);
     ConfigRegister("VideoFullScreen","0",NULL);
 
-    ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded");
+    ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to being set to empty.");
 }
 void ConfigDumpSettings()
 {

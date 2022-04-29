@@ -550,6 +550,7 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path)
         DPrintf("LevelManagerInitWithPath:Called without a valid path\n");
         return 0;
     }
+    GUIProgressBarBegin(GUI,"Loading Mission 1 Level 1");
     if( LevelManager->BasePath ) {
         free(LevelManager->BasePath);
     }
@@ -561,16 +562,19 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path)
         if( !LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->BasePath,2,1,&GameEngine) ) {
             DPrintf("LevelManagerInitWithPath:Invalid path...\n");
             LevelManager->IsPathSet = 0;
-            return 0;
+        } else {
+            LevelManager->GameEngine = GameEngine;
+            sprintf(LevelManager->EngineName,"%s",GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
+            LevelManager->IsPathSet = 1;
         }
     }
-    LevelManager->GameEngine = GameEngine;
-    sprintf(LevelManager->EngineName,"%s",GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
-    LevelManager->IsPathSet = 1;
-    return 1;
+
+    GUIProgressBarEnd(GUI);
+    return LevelManager->IsPathSet;
 }
 void LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNumber,int LevelNumber)
 {
+    char *Buffer;
     if( !LevelManager->IsPathSet ) {
         DPrintf("LevelManagerLoadLevel:Called without a valid path set\n");
         return;
@@ -581,7 +585,11 @@ void LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNu
             return;
         }
     }
+    asprintf(&Buffer,"Loading Mission %i Level %i...",MissionNumber,LevelNumber);
+    GUIProgressBarBegin(GUI,Buffer);
     LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
+    GUIProgressBarEnd(GUI);
+    free(Buffer);
 }
 void LevelManagerInit(GUI_t *GUI)
 {
@@ -592,7 +600,6 @@ void LevelManagerInit(GUI_t *GUI)
     memset(LevelManager->CurrentLevel,0,sizeof(Level_t));
     LevelManagerBasePath = ConfigGet("GameBasePath");
     if( LevelManagerBasePath->Value[0] ) {
-        GUIProgressBarBegin(GUI,"Loading Mission 1 Level 1");
         if( !LevelManagerInitWithPath(LevelManager,GUI,LevelManagerBasePath->Value) ) {
             ConfigSet("GameBasePath","");
             GUISetMOHPath(GUI);
@@ -600,7 +607,6 @@ void LevelManagerInit(GUI_t *GUI)
             LevelManager->IsPathSet = 1;
             SysHideCursor();
         }
-        GUIProgressBarEnd(GUI);
     } else {
         //No path has been provided to it yet.
         LevelManager->IsPathSet = 0;

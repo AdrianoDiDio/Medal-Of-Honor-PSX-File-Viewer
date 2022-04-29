@@ -331,9 +331,7 @@ void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
         if (IGFD_IsOk(GUI->DirSelectFileDialog)) {
                 DirectoryPath = IGFD_GetFilePathName(GUI->DirSelectFileDialog);
                 DPrintf("Selected directory %s\n",DirectoryPath);
-                GUIProgressBarBegin(GUI,"Loading Mission 1 Level 1");
                 LoadStatus = LevelManagerInitWithPath(LevelManager,GUI,DirectoryPath);
-                GUIProgressBarEnd(GUI);
                 if( !LoadStatus ) {
                     igOpenPopup_Str("Wrong Folder",0);
                     GUIPushWindow(GUI);
@@ -408,7 +406,6 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,Mission_t *Mission
     int DisableNode;
     int CurrentMission;
     int CurrentLevel;
-    char *Buffer;
     
     CurrentMission = -1;
     CurrentLevel = -1;
@@ -434,12 +431,7 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,Mission_t *Mission
                 }
                 if( igTreeNodeEx_Str(Missions[i].Levels[j].LevelName,TreeNodeFlags) ) {
                     if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
-                        asprintf(&Buffer,"Loading Mission %i Level %i...",Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber);
-                        GUIProgressBarBegin(GUI,Buffer);
                         LevelManagerLoadLevel(LevelManager,GUI,Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber);
-                        GUIProgressBarEnd(GUI);
-                        free(Buffer);
-
                     }
                 }
                 if( DisableNode ) {
