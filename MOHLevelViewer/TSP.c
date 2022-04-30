@@ -1382,9 +1382,6 @@ void TSPDrawTransparentFaces(TSP_t *TSP,LevelSettings_t Settings)
         for( TransparentFaceIterator = TSP->TransparentFaceList; TransparentFaceIterator; TransparentFaceIterator = TransparentFaceIterator->Next) {
             switch( TransparentFaceIterator->BlendingMode ) {
                 case 0:
-                    glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-                    glBlendFunc(GL_ONE, GL_SRC_ALPHA);
-                    break;
                 case 1:
                     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
                     glBlendFunc(GL_ONE, GL_SRC_ALPHA);
@@ -1728,7 +1725,6 @@ void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
     if( !TSP || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
         printf("TSPReadDynamicDataChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
-        fseek(InFile,TSP->Header.CollisionOffset,SEEK_SET);
         return;
     }
     if( TSP->Header.NumDynamicDataBlock == 0 ) {
@@ -2078,6 +2074,8 @@ int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *Property
         printf("Node Index %i\n",CurrentNode);
         Node = &CollisionData->KDTree[CurrentNode];
         if( Node->Child0 < 0 ) {
+            DPrintf("Node Child1:%i\n",Node->Child1);
+            assert(Node->Child1 >= 0);
             printf("Done...found a leaf...node %i FaceIndex:%i Child0:%i NumFaces:%i Child1:%i PropertySetFileIndex:%i\n",CurrentNode,
                    CollisionData->FaceIndexList[Node->Child1],
                    Node->Child0,~Node->Child0,Node->Child1,Node->PropertySetFileIndex);

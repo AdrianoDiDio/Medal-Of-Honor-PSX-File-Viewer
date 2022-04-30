@@ -78,6 +78,11 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
     
     Result = malloc(sizeof(Shader_t));
     
+    if( !Result ) {
+        DPrintf("ShaderCache:Failed to allocate struct\n");
+        return NULL;
+    }
+    
     VertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     FragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     
@@ -91,9 +96,12 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
     
     if ( InfoLogLength > 0 && ShaderTaskResult == 0 ){
         ShaderInfoLog = malloc(InfoLogLength + 1);
-        glGetShaderInfoLog(VertexShaderId, InfoLogLength, NULL, ShaderInfoLog);
-        ShaderInfoLog[InfoLogLength] = '\0';
-        DPrintf("Compile Error:%s\n", ShaderInfoLog);
+        if( ShaderInfoLog ) {
+            glGetShaderInfoLog(VertexShaderId, InfoLogLength, NULL, ShaderInfoLog);
+            ShaderInfoLog[InfoLogLength] = '\0';
+            DPrintf("Compile Error:%s\n", ShaderInfoLog);
+            free(ShaderInfoLog);
+        }
     }
     free(ShaderSource);
     DPrintf("Compiling Fragment Shader: %s\n", FragmentShaderFile);
@@ -106,9 +114,12 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
     
     if ( InfoLogLength > 0 && ShaderTaskResult == 0){
         ShaderInfoLog = malloc(InfoLogLength + 1);
-        glGetShaderInfoLog(FragmentShaderId, InfoLogLength, NULL, ShaderInfoLog);
-        ShaderInfoLog[InfoLogLength] = '\0';
-        DPrintf("Compile Error:%s\n", ShaderInfoLog);
+        if( ShaderInfoLog ) {
+            glGetShaderInfoLog(FragmentShaderId, InfoLogLength, NULL, ShaderInfoLog);
+            ShaderInfoLog[InfoLogLength] = '\0';
+            DPrintf("Compile Error:%s\n", ShaderInfoLog);
+            free(ShaderInfoLog);
+        }
     }
     
     DPrintf("Linking...\n");
@@ -123,9 +134,12 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
 
     if ( InfoLogLength > 0  && ShaderTaskResult == 0){
         ShaderInfoLog = malloc(InfoLogLength + 1);
-        glGetProgramInfoLog(ProgramId, InfoLogLength, NULL, ShaderInfoLog);
-        ShaderInfoLog[InfoLogLength] = '\0';
-        DPrintf("Linking Error:%s\n", ShaderInfoLog);
+        if( ShaderInfoLog ) {
+            glGetProgramInfoLog(ProgramId, InfoLogLength, NULL, ShaderInfoLog);
+            ShaderInfoLog[InfoLogLength] = '\0';
+            DPrintf("Linking Error:%s\n", ShaderInfoLog);
+            free(ShaderInfoLog);
+        }
     }
     
     Result->Name = StringCopy(ShaderName);

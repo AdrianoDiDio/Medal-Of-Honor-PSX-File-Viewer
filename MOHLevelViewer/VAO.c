@@ -53,6 +53,11 @@ VAO_t *VAOInitXYZUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int 
     
     VAO = malloc(sizeof(VAO_t));
     
+    if( !VAO ) {
+        DPrintf("VAOInitXYZUVRGB:Failed to allocate VAO struct\n");
+        return NULL;
+    }
+    
     glGenVertexArrays(1, &VAO->VAOId[0]);
     glBindVertexArray(VAO->VAOId[0]);
         
@@ -84,6 +89,11 @@ VAO_t *VAOInitXYZUVRGBCLUTColorModeInteger(int *Data,int DataSize,int Stride,int
     VAO_t *VAO;
     
     VAO = malloc(sizeof(VAO_t));
+    
+    if( !VAO ) {
+        DPrintf("VAOInitXYZUVRGBCLUTColorModeInteger:Failed to allocate VAO struct\n");
+        return NULL;
+    }
     
     glGenVertexArrays(1, &VAO->VAOId[0]);
     glBindVertexArray(VAO->VAOId[0]);
@@ -124,6 +134,11 @@ VAO_t *VAOInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int T
     
     VAO = malloc(sizeof(VAO_t));
     
+    if( !VAO ) {
+        DPrintf("VAOInitXYUVRGB:Failed to allocate VAO struct\n");
+        return NULL;
+    }
+    
     glGenVertexArrays(1, &VAO->VAOId[0]);
     glBindVertexArray(VAO->VAOId[0]);
         
@@ -156,6 +171,11 @@ VAO_t *VAOInitXYRGB(float *Data,int DataSize,int Stride,int VertexOffset,int Col
     
     VAO = malloc(sizeof(VAO_t));
     
+    if( !VAO ) {
+        DPrintf("VAOInitXYRGB:Failed to allocate VAO struct\n");
+        return NULL;
+    }
+    
     glGenVertexArrays(1, &VAO->VAOId[0]);
     glBindVertexArray(VAO->VAOId[0]);
         
@@ -186,6 +206,11 @@ VAO_t *VAOInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int Text
     
     VAO = malloc(sizeof(VAO_t));
     
+    if( !VAO ) {
+        DPrintf("VAOInitXYUV:Failed to allocate VAO struct\n");
+        return NULL;
+    }
+    
     glGenVertexArrays(1, &VAO->VAOId[0]);
     glBindVertexArray(VAO->VAOId[0]);
         
@@ -215,6 +240,11 @@ VAO_t *VAOInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int Tex
     VAO_t *VAO;
     
     VAO = malloc(sizeof(VAO_t));
+    
+    if( !VAO ) {
+        DPrintf("VAOInitXYZUV:Failed to allocate VAO struct\n");
+        return NULL;
+    }
     
     glGenVertexArrays(1, &VAO->VAOId[0]);
     glBindVertexArray(VAO->VAOId[0]);
@@ -247,6 +277,11 @@ VAO_t *VAOInitXYZRGB(float *Data,int DataSize,int Stride,int VertexOffset,int Co
     
     VAO = malloc(sizeof(VAO_t));
     
+    if( !VAO ) {
+        DPrintf("VAOInitXYZRGB:Failed to allocate VAO struct\n");
+        return NULL;
+    }
+    
     glGenVertexArrays(1, &VAO->VAOId[0]);
     glBindVertexArray(VAO->VAOId[0]);
         
@@ -276,6 +311,11 @@ VAO_t *VAOInitXYZRGBIBO(float *Data,int DataSize,int Stride,unsigned short *Inde
     VAO_t *VAO;
     
     VAO = malloc(sizeof(VAO_t));
+    
+    if( !VAO ) {
+        DPrintf("VAOInitXYZRGBIBO:Failed to allocate VAO struct\n");
+        return NULL;
+    }
     
     glGenVertexArrays(1, &VAO->VAOId[0]);
     glBindVertexArray(VAO->VAOId[0]);
@@ -310,6 +350,11 @@ VAO_t *VAOInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset,int Count
     VAO_t *VAO;
     
     VAO = malloc(sizeof(VAO_t));
+    
+    if( !VAO ) {
+        DPrintf("VAOInitXYZ:Failed to allocate VAO struct\n");
+        return NULL;
+    }
     
     glGenVertexArrays(1, &VAO->VAOId[0]);
     glBindVertexArray(VAO->VAOId[0]);

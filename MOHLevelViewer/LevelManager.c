@@ -597,22 +597,29 @@ void LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNu
 void LevelManagerInit(GUI_t *GUI)
 {
     LevelManager = malloc(sizeof(LevelManager_t));
+    if( !LevelManager ) {
+        DPrintf("LevelManagerInit:Failed to allocate memory for struct\n");
+        return;
+    }
     LevelManager->CurrentLevel = malloc(sizeof(Level_t));
+    if( !LevelManager->CurrentLevel ) {
+        DPrintf("LevelManagerInit:Failed to allocate memory for level struct\n");
+        return;
+    }
     LevelManager->BasePath = NULL;
+    //No path has been provided to it yet.
+    LevelManager->IsPathSet = 0;
     LevelSetDefaultSettings(&LevelManager->Settings);
     memset(LevelManager->CurrentLevel,0,sizeof(Level_t));
+    
     LevelManagerBasePath = ConfigGet("GameBasePath");
+    
     if( LevelManagerBasePath->Value[0] ) {
         if( !LevelManagerInitWithPath(LevelManager,GUI,LevelManagerBasePath->Value) ) {
             ConfigSet("GameBasePath","");
             GUISetMOHPath(GUI);
-        } else {
-            LevelManager->IsPathSet = 1;
-            SysHideCursor();
         }
     } else {
-        //No path has been provided to it yet.
-        LevelManager->IsPathSet = 0;
         GUISetMOHPath(GUI);
     }
 }

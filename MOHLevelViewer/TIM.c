@@ -28,7 +28,9 @@ void TIMImageListFree(TIMImage_t *ImageList)
     while( ImageList ) {
         Temp = ImageList;
         ImageList = ImageList->Next;
-        free(Temp->CLUT);
+        if( Temp->CLUT ) {
+            free(Temp->CLUT);
+        }
         free(Temp->Data);
         free(Temp);
     }
@@ -414,12 +416,16 @@ void WritePNGImage(char *OutName,TIMImage_t *Image)
     PNGPtr = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (PNGPtr == NULL) {
         printf("PNG: Couldn't create write struct!\n");
+        free(PNGImage);
         return;
     }
     
     PNGInfoPtr = png_create_info_struct (PNGPtr);
     if (PNGInfoPtr == NULL) {
         printf("PNG: Couldn't create info struct!\n");
+        png_destroy_write_struct (&PNGPtr, NULL);
+        free(PNGImage);
+        return;
     }
 
     png_set_IHDR (PNGPtr,
@@ -493,7 +499,7 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     printf("-- %s --\n",ResultImage->Name);
     printf("Magic is %i\n",ResultImage->Header.Magic);
     printf("Flags are %i\n",ResultImage->Header.BPP);
-
+    ImageSizeOffset = 1;
     switch(ResultImage->Header.BPP) {
         case BPP_4:
             printf("Found image with 4 BPP and CLUT!\n");
@@ -507,7 +513,7 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
             ImageSizeOffset = 2;
             break;
         case BPP_8_NO_CLUT:
-            printf("Found image with 4 BPP without CLUT!\n");
+            printf("Found image with 8 BPP without CLUT!\n");
             break;
         case BPP_16:
             printf("Found image with 16 BPP and CLUT!\n");
@@ -519,11 +525,13 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
             break;
         default:
             printf("Unknown BPP %i found in tim file.\n",ResultImage->Header.BPP);
+            free(ResultImage);
             return NULL;
     }
     
     if( ResultImage->Header.BPP == BPP_4_NO_CLUT || ResultImage->Header.BPP == BPP_8_NO_CLUT ) {
         printf("Unsupported BPP %i\n",ResultImage->Header.BPP);
+        free(ResultImage);
         return NULL;
     }
     
@@ -533,6 +541,8 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     
     if( ResultImage->Header.BPP == BPP_4 || ResultImage->Header.BPP == BPP_8 ) {
         GetPalette(TIMImage,ResultImage);
+    } else {
+        ResultImage->CLUT = NULL;
     }
     fread(&ResultImage->NumPixels,sizeof(ResultImage->NumPixels),1,TIMImage);
     fread(&ResultImage->FrameBufferX,sizeof(ResultImage->FrameBufferX),1,TIMImage);

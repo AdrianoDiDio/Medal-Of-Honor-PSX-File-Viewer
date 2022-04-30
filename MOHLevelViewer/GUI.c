@@ -538,8 +538,21 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     GUI_t *GUI;
 
     GUI = malloc(sizeof(GUI_t));
+    
+    if( !GUI ) {
+        DPrintf("GUIInit:Failed to allocate memory for struct\n");
+        return NULL;
+    }
+    
     memset(GUI,0,sizeof(GUI_t));
     GUI->ProgressBar = malloc(sizeof(GUIProgressBar_t));
+    
+    if( !GUI->ProgressBar ) {
+        DPrintf("GUIInit:Failed to allocate memory for ProgressBar struct\n");
+        free(GUI);
+        return NULL;
+    }
+    
     GUI->DefaultContext = igCreateContext(NULL);
     GUI->ProgressBar->Context = igCreateContext(NULL);
     GUI->ProgressBar->DialogTitle = NULL;

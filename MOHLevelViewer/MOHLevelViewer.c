@@ -217,11 +217,17 @@ char *ReadTextFile(char *File,int Length)
     Fp = fopen(File,"r");
     
     if( !Fp ) {
-        DPrintf("Shader file %s not found.\n",File);
+        DPrintf("ReadTextFile:File %s was not found.\n",File);
         return NULL;
     }
     FileSize = Length != 0 ? Length : GetFileLength(Fp);
     Result = malloc(FileSize + 1);
+    
+    if( !Result ) {
+        DPrintf("ReadTextFile:Failed to allocate buffer\n");
+        fclose(Fp);
+        return NULL;
+    }
     Ret = fread(Result,1, FileSize,Fp);
     fclose(Fp);
     
@@ -696,7 +702,7 @@ void InitSDL(const char *Title)
 
     
     VidConf.Driver = StringCopy("SDL");
-//     SysHideCursor();
+    SysHideCursor();
     return;
 }
 
@@ -795,7 +801,7 @@ bool ComUpdateDelta()
     TimeSlice = /*floor*/((1/MAX_FPS) * 1000);
 
     ComTime->UpdateLength = Now - ComTime->LastLoopTime;
-    ComTime->OptimalTime = 1000 / MAX_FPS;
+    ComTime->OptimalTime = (float) (1000 / MAX_FPS);
     ComTime->UpdateLength = Now - ComTime->LastLoopTime;
     ComTime->Delta = ComTime->UpdateLength / ( ComTime->OptimalTime);
 
@@ -913,7 +919,7 @@ void GLDebugOutput(GLenum Source, GLenum Type, unsigned int Id, GLenum Severity,
             DPrintf("Source: Shader Compiler"); 
             break;
         case GL_DEBUG_SOURCE_THIRD_PARTY:     
-            DPrintf("Source: API"); 
+            DPrintf("Source: Third Party"); 
             break;
         case GL_DEBUG_SOURCE_APPLICATION:     
             DPrintf("Source: Application"); 

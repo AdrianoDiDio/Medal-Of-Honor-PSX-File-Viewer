@@ -766,9 +766,9 @@ void BSDAddNodeToRenderObjecDrawabletList(BSD_t *BSD,int MissionNumber,unsigned 
     Object->Rotation.y = (Rotation.y  / 4096) * 360.f;
     Object->Rotation.z = (Rotation.z  / 4096) * 360.f;
     
-    Object->Scale.x = (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleX  / 16 ) / 4096;
-    Object->Scale.y = (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleY  / 16 ) / 4096;
-    Object->Scale.z = (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleZ  / 16 ) / 4096;
+    Object->Scale.x = (float) (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleX  / 16 ) / 4096.f;
+    Object->Scale.y = (float) (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleY  / 16 ) / 4096.f;
+    Object->Scale.z = (float) (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleZ  / 16 ) / 4096.f;
     
     Object->Next = BSD->RenderObjectDrawableList;
     BSD->RenderObjectDrawableList = Object;
@@ -1219,6 +1219,7 @@ unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId)
             RenderObjectId = 1335595487;
             break;
         case 3815705185:
+        case 1444155995:
             RenderObjectId = 137063914;
             break;
         case 1730263601:
@@ -1236,9 +1237,6 @@ unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId)
         case 2966651809:
             RenderObjectId = 1771441436;
             break;
-        case 1444155995:
-            RenderObjectId = 137063914;
-            break;
         case 1088149327:
             RenderObjectId = 1771441436;
             break;
@@ -1255,8 +1253,6 @@ unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId)
             RenderObjectId = 2018764808;
             break;
         case 1247503060:
-            RenderObjectId = 4294967295;
-            break;
         case 3545379694:
             RenderObjectId = 4294967295;
             break;

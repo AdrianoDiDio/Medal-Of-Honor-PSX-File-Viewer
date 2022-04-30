@@ -51,12 +51,15 @@ void VRAMWritePNG(SDL_Surface *ImageSurface,char *OutName)
     PNGPtr = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (PNGPtr == NULL) {
         printf("PNG: Couldn't create write struct!\n");
+        free(PNGImage);
         return;
     }
     
     PNGInfoPtr = png_create_info_struct (PNGPtr);
     if (PNGInfoPtr == NULL) {
         printf("PNG: Couldn't create info struct!\n");
+        png_destroy_write_struct (&PNGPtr, NULL);
+        free(PNGImage);
         return;
     }
 
@@ -302,7 +305,12 @@ VRAM_t *VRAMInit(TIMImage_t *ImageList)
     VRAM_t *VRAM;
     TIMImage_t *Iterator;
     
-    VRAM = malloc(sizeof(VRAM_t));    
+    VRAM = malloc(sizeof(VRAM_t));
+    
+    if( !VRAM ) {
+        DPrintf("VRAMInit:Failed to allocate memory for struct\n");
+        return NULL;
+    }
 
     VRAM->Page.Width = 4096.f;
     VRAM->Page.Height = 1024.f;
