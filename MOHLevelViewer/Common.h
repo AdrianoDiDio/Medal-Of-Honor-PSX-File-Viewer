@@ -37,6 +37,7 @@
 #include <cglm/cglm.h>
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+// #define IMGUI_USER_CONFIG "IMGUISettings.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "ImGuiFileDialog.h"

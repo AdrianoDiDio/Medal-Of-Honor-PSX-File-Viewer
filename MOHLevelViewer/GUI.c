@@ -24,8 +24,11 @@
 #include "TSP.h"
 #include "MOHLevelViewer.h"
 
+Config_t *GUIFont;
+Config_t *GUIFontSize;
+
 void GUIReleaseContext(ImGuiContext *Context)
-{
+{    
     igSetCurrentContext(Context);
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
@@ -39,6 +42,7 @@ void GUIFree(GUI_t *GUI)
     if( GUI->ProgressBar->DialogTitle ) {
         free(GUI->ProgressBar->DialogTitle);
     }
+    free(GUI->ConfigFilePath);
     free(GUI->ProgressBar);
     free(GUI);
 }
@@ -116,6 +120,11 @@ void GUISetMOHPath(GUI_t *GUI)
 //         return;
 //     }
     if( IGFD_IsOpened(GUI->DirSelectFileDialog) ) {
+//         if( LevelManager->IsPathSet ) {
+            //User has cancelled the path change operation.
+            GUIPopWindow(GUI);
+            IGFD_CloseDialog(GUI->DirSelectFileDialog);
+//         }
         return;
     }
     DPrintf("Opening dialog\n");
@@ -215,6 +224,7 @@ void GUIDrawHelpOverlay()
         igText("Press F2 to open video settings");
         igText("Press F3 to open the level selection window");
         igText("Press F4 to change the game path");
+        igText("Press Escape to exit the program");
     }
     igEnd();
 }
@@ -345,11 +355,11 @@ void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
                     free(DirectoryPath);
                 }
         } else {
-            if( LevelManager->IsPathSet ) {
+//             if( LevelManager->IsPathSet ) {
                 //User has cancelled the path change operation.
                 GUIPopWindow(GUI);
                 IGFD_CloseDialog(GUI->DirSelectFileDialog);
-            }
+//             }
         }
     }
 }
@@ -518,20 +528,29 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
 //     GUIEndFrame();
 }
 
-void GUIContextInit(ImGuiContext *Context,SDL_Window *Window,SDL_GLContext *GLContext)
+void GUIContextInit(ImGuiContext *Context,SDL_Window *Window,SDL_GLContext *GLContext,char *ConfigFilePath)
 {
     ImGuiIO *IO;
     ImGuiStyle *Style;
-
+    ImFont *Font;
+    
     IO = igGetIO();
     igSetCurrentContext(Context);
     ImGui_ImplSDL2_InitForOpenGL(VideoSurface, &GLContext);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     igStyleColorsDark(NULL);
-    ImFontAtlas_AddFontFromFileTTF(IO->Fonts,"Fonts/DroidSans.ttf",floor(14.f * VidConf.DPIScale),NULL,NULL);
+    //TODO(Adriano):Declare a new config key to select the GUI font...if this function fail then app will use the default one.
+    if( GUIFont->Value[0] ) {
+        Font = ImFontAtlas_AddFontFromFileTTF(IO->Fonts,GUIFont->Value,floor(GUIFontSize->FValue * VidConf.DPIScale),NULL,NULL);
+        if( !Font ) {
+            DPrintf("GUIContextInit:Invalid font file...using default\n");
+            ConfigSet("GUIFont","");
+        }
+    }
     Style = igGetStyle();
     ImGuiStyle_ScaleAllSizes(Style,VidConf.DPIScale);
     IO->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+    IO->IniFilename = ConfigFilePath;
 }
 GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
 {
@@ -546,18 +565,21 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     
     memset(GUI,0,sizeof(GUI_t));
     GUI->ProgressBar = malloc(sizeof(GUIProgressBar_t));
-    
+    asprintf(&GUI->ConfigFilePath,"%simgui.ini",SysGetConfigPath());
     if( !GUI->ProgressBar ) {
         DPrintf("GUIInit:Failed to allocate memory for ProgressBar struct\n");
         free(GUI);
         return NULL;
     }
     
+    GUIFont = ConfigGet("GUIFont");
+    GUIFontSize = ConfigGet("GUIFontSize");
+    
     GUI->DefaultContext = igCreateContext(NULL);
     GUI->ProgressBar->Context = igCreateContext(NULL);
     GUI->ProgressBar->DialogTitle = NULL;
-    GUIContextInit(GUI->ProgressBar->Context,Window,GLContext);
-    GUIContextInit(GUI->DefaultContext,Window,GLContext);
+    GUIContextInit(GUI->ProgressBar->Context,Window,GLContext,GUI->ConfigFilePath);
+    GUIContextInit(GUI->DefaultContext,Window,GLContext,GUI->ConfigFilePath);
     
 //     GUI->DebugWindowHandle = 0;
 

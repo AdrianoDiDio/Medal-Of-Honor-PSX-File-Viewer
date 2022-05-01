@@ -281,6 +281,9 @@ void ConfigRegisterDefaultSettings()
     ConfigRegister("VideoFullScreen","0",NULL);
 
     ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to being set to empty.");
+    
+    ConfigRegister("GUIFont","Fonts/DroidSans.ttf","Sets the file to be used as the GUI font,if not valid application will use the default one");
+    ConfigRegister("GUIFontSize","14.f","");
 }
 void ConfigDumpSettings()
 {

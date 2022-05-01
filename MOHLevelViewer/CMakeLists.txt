@@ -63,7 +63,9 @@ set(OpenGL_GL_PREFERENCE LEGACY)
 find_package(OpenGL REQUIRED)
 
 include_directories(Libs/cimgui/imgui)
+# include_directories(${CMAKE_SOURCE_DIR})
 add_library(cimgui SHARED ${IMGUI_SOURCE_FILES})
+target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${CMAKE_SOURCE_DIR}/IMGUIConfig.h\"")
 target_link_libraries(cimgui ${FREETYPE_LIBRARIES} ${SDL2_LIBRARIES})
 
 

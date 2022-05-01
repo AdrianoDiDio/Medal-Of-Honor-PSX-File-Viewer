@@ -20,6 +20,7 @@
 #define __GUI_H_
 
 #include "Common.h"
+#include "Config.h"
 
 typedef struct GUIProgressBar_s {
     ImGuiContext *Context;
@@ -30,6 +31,7 @@ typedef struct GUIProgressBar_s {
 typedef struct GUI_s {
     ImGuiContext *DefaultContext;
     ImGuiFileDialog *DirSelectFileDialog;
+    char *ConfigFilePath;
     bool DebugWindowHandle;
     bool SettingsWindowHandle;
     bool LevelSelectWindowHandle;
@@ -38,6 +40,9 @@ typedef struct GUI_s {
 } GUI_t;
 
 typedef struct LevelManager_s LevelManager_t;
+
+extern Config_t *GUIFont;
+extern Config_t *GUIFontSize;
 
 GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext);
 void GUIToggleDebugWindow(GUI_t *GUI);
