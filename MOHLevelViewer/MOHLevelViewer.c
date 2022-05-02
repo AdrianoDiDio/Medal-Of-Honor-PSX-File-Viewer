@@ -573,6 +573,7 @@ void SysSetCurrentVideoSettings(int PreferredModeIndex)
         SDL_SetWindowFullscreen(VideoSurface,0);
     }
     SDL_SetWindowSize(VideoSurface,VidConfigWidth->IValue,VidConfigHeight->IValue);
+    DPrintf("Going fullscreen:%i\n",VidConfigFullScreen->IValue);
     if( VidConfigFullScreen->IValue ) {
         VidSetFullScreenVideoMode(PreferredModeIndex);
         if( SDL_SetWindowDisplayMode(VideoSurface,SDLGetCurrentDisplayMode() ) < 0 ) {
@@ -581,8 +582,9 @@ void SysSetCurrentVideoSettings(int PreferredModeIndex)
             return;
         }
         SDL_SetWindowFullscreen(VideoSurface,SDL_WINDOW_FULLSCREEN);
-        ConfigSetNumber("VideoFullScreen",1);
     }
+    //Update the value and save changes on the file.
+    ConfigSetNumber("VideoFullScreen",VidConfigFullScreen->IValue);
 }
 
 bool VidOpenWindow()
@@ -733,7 +735,12 @@ void SysCheckKeyEvents()
             GUIToggleLevelSelectWindow(GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
-            GUISetMOHPath(GUI);
+            LevelManagerToggleFileDialog(LevelManager,GUI);
+//             if( GUIDirSelectDialogIsOpened(GUI) ) {
+//                 GUIDirSelectDialogClose(GUI);
+//             } else {
+//                 GUIDirSelectDialogOpen(GUI,LevelManagerOnDirSelected,LevelManagerOnDirSelectionCancelled);
+//             }
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit();
@@ -831,70 +838,6 @@ bool ComUpdateDelta()
     return true;
 }
 
-
-/*
-Projection Matrix.
-Where:
-t = l => XYMax
-r => xyMax
-n => zNear.
-f => zFar.
-Complete Matrix:
-2n/r-l	0		r+l/r-l	   0
-0		2n/t-b	t+b/t-b	   0
-0		0		-(f+n)/f-n -2fn/f-n
-0		0		-1		   0
-----------------------------------------
-TODO:
-Horizontal and Vertical field-of-view calculation.
-Assuming that V and H are respectively vertical and horizontal field of view in degrees.
-H = 2 * arctan(tan(V/2)* ratio);
-V = 2 * arctan(tan(H/2)* 1/ratio);
-
-*/
-void GLSetProjectionMatrix()
-{
-
-    //FIXME:Make those value adjustable.
-    float Fov = 110.0f; // In Degrees
-    float  XYMax;
-    float  XMin,YMin;
-    float	Width, Height, Depth;
-    float	zNear = 1.0f;
-    float  zFar = 4096.0f;
-
-
-    XYMax = zNear * tan( Fov * PI_OVER_360 );
-    XMin = YMin = -XYMax;
-
-    Width  = XYMax - XMin;
-    Height = XYMax - YMin;
-
-    Depth = zFar - zNear;
-
-    VidConf.PMatrix[0] = 2 * zNear / Width;
-    VidConf.PMatrix[1] = 0;
-    VidConf.PMatrix[2] = 0;
-    VidConf.PMatrix[3] = 0;
-
-    VidConf.PMatrix[4] = 0;
-    VidConf.PMatrix[5] = 2 * zNear / Height;
-    VidConf.PMatrix[6] = 0;
-    VidConf.PMatrix[7] = 0;
-
-    //DPrintf("%f-%f\n",(XYMax + XMin )  / Width,( XYMax + YMin ) / Height);
-    VidConf.PMatrix[8] = ( XYMax + XMin )  / Width;//This should be 0.
-    VidConf.PMatrix[9] = ( XYMax + YMin ) / Height;//This should be 0.
-    //DPrintf("%f\n",-(zFar + zNear) / Depth);
-    VidConf.PMatrix[10] = -(zFar + zNear) / Depth;
-    VidConf.PMatrix[11] = -1;
-
-    VidConf.PMatrix[12] = 0;
-    VidConf.PMatrix[13] = 0;
-    VidConf.PMatrix[14] = -2 * (zFar * zNear) / Depth;
-    VidConf.PMatrix[15] = 0;
-}
-
 /*
  Suppressed messages:
  Id = 131204 => Message:Texture state usage warning
@@ -966,7 +909,8 @@ void GLDebugOutput(GLenum Source, GLenum Type, unsigned int Id, GLenum Severity,
             DPrintf("Severity: High"); 
             break;
         case GL_DEBUG_SEVERITY_MEDIUM:       
-            DPrintf("Severity: Medium"); break;
+            DPrintf("Severity: Medium"); 
+            break;
         case GL_DEBUG_SEVERITY_LOW:          
             DPrintf("Severity: Low");
             break;
@@ -1132,12 +1076,6 @@ int main(int argc,char **argv)
     VidConfigHeight = ConfigGet("VideoHeight");
     VidConfigRefreshRate = ConfigGet("VideoRefreshRate");
     VidConfigFullScreen = ConfigGet("VideoFullScreen");
-//     VidConfigWidth = ConfigRegister("VidWidth","1920");
-//     VidConfigHeight = ConfigRegister("VidHeight","800");
-//     if( !LevelInit(argv[1],argv[2],argv[3]) ) {
-//         printf("Couldn't load data.\n");
-//         return -1;
-//     }
 
 #if _ENABLEVIDEOOUT
     SysVidInit();
@@ -1145,6 +1083,11 @@ int main(int argc,char **argv)
     memset(ComTime,0,sizeof(ComTimeInfo_t));
     InitGLView();
     ShaderManagerInit();
+    //NOTE(Adriano):Allow the game path to be set using command line argument.
+    //              If the path is not valid the game will discard it.
+    if( argc > 1 ) {
+        ConfigSet("GameBasePath",argv[1]);
+    }
     LevelManagerInit(GUI);
 
 //     CamInit(&Camera);
@@ -1155,7 +1098,7 @@ int main(int argc,char **argv)
         do {
         } while( !ComUpdateDelta() );
         GLFrame();
-        glFlush();
+//         glFlush();
         SysSwapBuffers();
     }
 #else

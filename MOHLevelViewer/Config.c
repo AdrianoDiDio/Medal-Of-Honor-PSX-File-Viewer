@@ -245,6 +245,13 @@ int ConfigSetNumber(char *Name,float Value)
     }
     return ConfigSet(Name,SmallBuf);
 }
+
+/*
+ Register a new configuration key using the given Name,Value and Description.
+ If the config has already been registered then 0 is returned,
+ otherwise a new config entry is created and added to the list and the return value will be 1.
+ If the config cannot be created due to memory allocation errors then -1 is returned.
+ */
 int ConfigRegister(char *Name,char *Value,char *Description)
 {
     Config_t *Config;

@@ -594,8 +594,40 @@ void LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNu
     GUIProgressBarEnd(GUI);
     free(Buffer);
 }
+
+void LevelManagerOnDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Path)
+{
+    int LoadStatus;
+    LoadStatus = LevelManagerInitWithPath(LevelManager,GUI,Path);
+    if( !LoadStatus ) {
+        GUISetErrorMessage(GUI,"Selected path doesn't seems to contain any game file...\nPlease select a folder containing MOH or MOH:Undergound.");
+    } else {
+        //Close it if we managed to load it.
+        ConfigSet("GameBasePath",Path);
+        GUIFileDialogClose(GUI,FileDialog);
+    }
+}
+void LevelManagerOnDirSelectionCancelled(GUIFileDialog_t *FileDialog,GUI_t *GUI)
+{
+    if( LevelManager->IsPathSet ) {
+        GUIFileDialogClose(GUI,FileDialog);
+    }
+}
+void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI)
+{
+    if( GUIFileDialogIsOpen(LevelManager->FileDialog) ) {
+        if( LevelManager->IsPathSet ) {
+            GUIFileDialogClose(GUI,LevelManager->FileDialog);
+        }
+    } else {
+        DPrintf("Opening dialog!!!\n");
+        GUIFileDialogOpen(GUI,LevelManager->FileDialog);
+    }
+
+}
 void LevelManagerInit(GUI_t *GUI)
 {
+    int OpenDialog;
     LevelManager = malloc(sizeof(LevelManager_t));
     if( !LevelManager ) {
         DPrintf("LevelManagerInit:Failed to allocate memory for struct\n");
@@ -606,6 +638,7 @@ void LevelManagerInit(GUI_t *GUI)
         DPrintf("LevelManagerInit:Failed to allocate memory for level struct\n");
         return;
     }
+    LevelManager->FileDialog = GUIFileDialogRegister(GUI,"Select Directory",NULL,LevelManagerOnDirSelected,LevelManagerOnDirSelectionCancelled);
     LevelManager->BasePath = NULL;
     //No path has been provided to it yet.
     LevelManager->IsPathSet = 0;
@@ -613,13 +646,17 @@ void LevelManagerInit(GUI_t *GUI)
     memset(LevelManager->CurrentLevel,0,sizeof(Level_t));
     
     LevelManagerBasePath = ConfigGet("GameBasePath");
-    
+    OpenDialog = 0;
     if( LevelManagerBasePath->Value[0] ) {
         if( !LevelManagerInitWithPath(LevelManager,GUI,LevelManagerBasePath->Value) ) {
             ConfigSet("GameBasePath","");
-            GUISetMOHPath(GUI);
+            OpenDialog = 1;
         }
     } else {
-        GUISetMOHPath(GUI);
+        OpenDialog = 1;
+    }
+    if( OpenDialog ) {
+        LevelManagerToggleFileDialog(LevelManager,GUI);
+//         GUIDirSelectDialogOpen(GUI,LevelManagerOnDirSelected,NULL);
     }
 }

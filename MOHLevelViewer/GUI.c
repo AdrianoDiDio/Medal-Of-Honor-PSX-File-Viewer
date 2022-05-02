@@ -34,13 +34,33 @@ void GUIReleaseContext(ImGuiContext *Context)
     ImGui_ImplSDL2_Shutdown();
     igDestroyContext(Context);
 }
+void GUIFreeDialogList(GUI_t *GUI)
+{
+    GUIFileDialog_t *Temp;
+    
+    while( GUI->FileDialogList ) {
+        free(GUI->FileDialogList->WindowTitle);
+        free(GUI->FileDialogList->Key);
+        if( GUI->FileDialogList->Filters ) {
+            free(GUI->FileDialogList->Filters);
+        }
+        IGFD_Destroy(GUI->FileDialogList->Window);
+        Temp = GUI->FileDialogList;
+        GUI->FileDialogList = GUI->FileDialogList->Next;
+        free(Temp);
+    }
+}
 void GUIFree(GUI_t *GUI)
 {
     GUIReleaseContext(GUI->DefaultContext);
     GUIReleaseContext(GUI->ProgressBar->Context);
-    IGFD_Destroy(GUI->DirSelectFileDialog);
+    GUIFreeDialogList(GUI);
+    
     if( GUI->ProgressBar->DialogTitle ) {
         free(GUI->ProgressBar->DialogTitle);
+    }
+    if( GUI->ErrorMessage ) {
+        free(GUI->ErrorMessage);
     }
     free(GUI->ConfigFilePath);
     free(GUI->ProgressBar);
@@ -104,33 +124,6 @@ void GUIToggleLevelSelectWindow(GUI_t *GUI)
     GUI->LevelSelectWindowHandle = !GUI->LevelSelectWindowHandle;
     GUIToggleHandle(GUI,GUI->LevelSelectWindowHandle);
 
-}
-/*
- TODO(Adriano):
- Turn this into a generic function to save file,accept a callback to a function that
- will be called when the dialog was closed with a selected path!
- Rename this function as GUIOpenDirSelectDialog(GUI,OnSuccess).
- There can be only one dialog...if for example a dialog is already opened this function
- should return -1 and tell the user that another dialog is already running.
- */
-void GUISetMOHPath(GUI_t *GUI)
-{
-//     if( !LevelManager->IsPathSet ) {
-//         //NOTE(Adriano):Default behaviour is to open the dialog at startup when there is not a valid pat set yet.
-//         return;
-//     }
-    if( IGFD_IsOpened(GUI->DirSelectFileDialog) ) {
-//         if( LevelManager->IsPathSet ) {
-            //User has cancelled the path change operation.
-            GUIPopWindow(GUI);
-            IGFD_CloseDialog(GUI->DirSelectFileDialog);
-//         }
-        return;
-    }
-    DPrintf("Opening dialog\n");
-    IGFD_OpenDialog2(GUI->DirSelectFileDialog,"Dir Select","Select dir",NULL,".",1,NULL,ImGuiFileDialogFlags_DontShowHiddenFiles);
-    GUIPushWindow(GUI);
-//     LevelManager->IsPathSet = 0;
 }
 void GUIBeginFrame()
 {
@@ -209,7 +202,7 @@ void GUIDrawHelpOverlay()
     ImVec2 WindowPosition;
     ImVec2 WindowPivot;
     
-    WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
+    WindowFlags = /*ImGuiWindowFlags_NoDecoration |*/ ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
                     ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
     Viewport = igGetMainViewport();
     WorkPosition = Viewport->WorkPos;
@@ -259,15 +252,12 @@ void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
     ImVec2 ScreenCenter;
     ImVec2 Pivot;
     ImVec2 Size;
-    ImGuiIO *IO;
     float Delta;
     
     if( !GUI ) {
         return;
     }
-    
-    IO = igGetIO();
-    
+        
     Viewport = igGetMainViewport();
     ImGuiViewport_GetCenter(&ScreenCenter,Viewport);
     DPrintf("Center:%f;%f\n",ScreenCenter.x,ScreenCenter.y);
@@ -289,7 +279,6 @@ void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
     Size.y = 0.f;
     igSetNextWindowPos(ScreenCenter, ImGuiCond_Always, Pivot);
     GUI->ProgressBar->CurrentPercentage += Increment;
-    DPrintf("PBar:Increment++:%f %f\n",GUI->ProgressBar->CurrentPercentage,Increment);
     if (igBeginPopupModal(GUI->ProgressBar->DialogTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         Delta = (ComTime->Delta != 0.f) ? ComTime->Delta : 1;
         igProgressBar((GUI->ProgressBar->CurrentPercentage / 100.f) * Delta/* * IO->DeltaTime*/,Size,Message);
@@ -305,64 +294,7 @@ void GUIProgressBarEnd(GUI_t *GUI)
     GUI->ProgressBar->IsOpen = 0;
     GUI->ProgressBar->CurrentPercentage = 0.f;
 }
-void GUIGetMOHPath(GUI_t *GUI,LevelManager_t *LevelManager)
-{
-    ImVec2 MaxSize;
-    ImVec2 MinSize;
-    ImGuiViewport *Viewport;
-    ImVec2 WindowPosition;
-    ImVec2 WindowPivot;
-    char *DirectoryPath;
-    int LoadStatus;
-    
-    if( !IGFD_IsOpened(GUI->DirSelectFileDialog) ) {
-        return;
-    }
-    
-    Viewport = igGetMainViewport();
-    WindowPosition.x = Viewport->WorkPos.x;
-    WindowPosition.y = Viewport->WorkPos.y;
-    WindowPivot.x = 0.f;
-    WindowPivot.y = 0.f;
-    MaxSize.x = Viewport->Size.x;
-    MaxSize.y = Viewport->Size.y;
-    MinSize.x = -1;
-    MinSize.y = -1;
 
-    //     if( !GUI->DirSelectFileDialog ) {
-//         GUI->DirSelectFileDialog = IGFD_Create();
-//         GUIPushWindow(GUI);
-//     }
-    igSetNextWindowSize(MaxSize,0);
-    igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
-    if (IGFD_DisplayDialog(GUI->DirSelectFileDialog, "Dir Select", ImGuiWindowFlags_NoCollapse  | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings, 
-        MinSize, MaxSize)) {
-//         GUIPushWindow(GUI);
-        if (IGFD_IsOk(GUI->DirSelectFileDialog)) {
-                DirectoryPath = IGFD_GetFilePathName(GUI->DirSelectFileDialog);
-                DPrintf("Selected directory %s\n",DirectoryPath);
-                LoadStatus = LevelManagerInitWithPath(LevelManager,GUI,DirectoryPath);
-                if( !LoadStatus ) {
-                    igOpenPopup_Str("Wrong Folder",0);
-                    GUIPushWindow(GUI);
-                } else {
-                    //Close it if we managed to load it.
-                    ConfigSet("GameBasePath",DirectoryPath);
-                    GUIPopWindow(GUI);
-                    IGFD_CloseDialog(GUI->DirSelectFileDialog);
-                }
-                if (DirectoryPath) { 
-                    free(DirectoryPath);
-                }
-        } else {
-//             if( LevelManager->IsPathSet ) {
-                //User has cancelled the path change operation.
-                GUIPopWindow(GUI);
-                IGFD_CloseDialog(GUI->DirSelectFileDialog);
-//             }
-        }
-    }
-}
 void GUIDrawSettingsWindow(GUI_t *GUI)
 {
 #if 1
@@ -397,7 +329,8 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
             }
             igSeparator();
         }
-        if( igCheckbox("Fullscreen Mode",&VidConfigFullScreen->IValue) ) {
+        if( igCheckbox("Fullscreen Mode",(bool *) &VidConfigFullScreen->IValue) ) {
+            DPrintf("VidConfigFullScreen:%i\n",VidConfigFullScreen->IValue);
             SysSetCurrentVideoSettings(-1);
         }
     }
@@ -477,6 +410,76 @@ void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager)
     }
 }
 
+void GUISetErrorMessage(GUI_t *GUI,char *Message)
+{
+    if( !GUI ) {
+        DPrintf("GUISetErrorMessage:Invalid GUI struct\n");
+        return;
+    }
+    if( !Message ) {
+        DPrintf("GUISetErrorMessage:Invalid Message.");
+        return;
+    }
+    
+    if( GUI->ErrorMessage ) {
+        free(GUI->ErrorMessage);
+    }
+    
+    GUI->ErrorMessage = StringCopy(Message);
+    igOpenPopup_Str("Error",0);
+    GUIPushWindow(GUI);
+}
+void GUIFileDialogRender(GUI_t *GUI,GUIFileDialog_t *FileDialog)
+{
+    ImVec2 MaxSize;
+    ImVec2 MinSize;
+    ImGuiViewport *Viewport;
+    ImVec2 WindowPosition;
+    ImVec2 WindowPivot;
+    char *DirectoryPath;
+    
+    if( !FileDialog ) {
+        return;
+    }
+    if( !IGFD_IsOpened(FileDialog->Window) ) {
+        return;
+    }
+    Viewport = igGetMainViewport();
+    WindowPosition.x = Viewport->WorkPos.x;
+    WindowPosition.y = Viewport->WorkPos.y;
+    WindowPivot.x = 0.f;
+    WindowPivot.y = 0.f;
+    MaxSize.x = Viewport->Size.x;
+    MaxSize.y = Viewport->Size.y;
+    MinSize.x = -1;
+    MinSize.y = -1;
+
+    igSetNextWindowSize(MaxSize,0);
+    igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
+    if (IGFD_DisplayDialog(FileDialog->Window, FileDialog->Key, 
+        ImGuiWindowFlags_NoCollapse  | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings, MinSize, MaxSize)) {
+        if (IGFD_IsOk(FileDialog->Window)) {
+                DirectoryPath = IGFD_GetFilePathName(FileDialog->Window);
+                if( DirectoryPath && FileDialog->OnDirSelected ) {
+                    FileDialog->OnDirSelected(FileDialog,GUI,DirectoryPath);
+                    free(DirectoryPath);
+                }
+        } else {
+            if( FileDialog->OnDirSelectionCancelled ) {
+                FileDialog->OnDirSelectionCancelled(FileDialog,GUI);
+            }
+        }
+    }
+
+}
+void GUIRenderFileDialogs(GUI_t *GUI)
+{
+    GUIFileDialog_t *Iterator;
+    
+    for( Iterator = GUI->FileDialogList; Iterator; Iterator = Iterator->Next ) {
+        GUIFileDialogRender(GUI,Iterator);
+    }
+}
 void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
 {
     ImVec2 ButtonSize;
@@ -491,11 +494,8 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
         return;
     }
     GUIBeginFrame();
-    //TODO(Adriano):Handle this as a separate window with his own handle instead of relying on the
-    //LevelManager itself...on init it should be open and then closed when done.
-//     if( !LevelManager->IsPathSet ) {
-    GUIGetMOHPath(GUI,LevelManager);
-//     }
+    
+    GUIRenderFileDialogs(GUI);
     IO = igGetIO();
     ButtonSize.x = 120;
     ButtonSize.y = 0;
@@ -504,30 +504,89 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
     ModalPosition.x = IO->DisplaySize.x * 0.5;
     ModalPosition.y = IO->DisplaySize.y * 0.5;
     igSetNextWindowPos(ModalPosition, ImGuiCond_Always, Pivot);
-    if( igBeginPopupModal("Wrong Folder",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
-        igText("Selected path doesn't seems to contain any game file...\nPlease select a folder containing MOH or MOH:Undergound");
-        if (igButton("OK", ButtonSize) ) {
-            GUIPopWindow(GUI);
-            igCloseCurrentPopup(); 
+    if( GUI->ErrorMessage ) {
+        if( igBeginPopupModal("Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
+            igText(GUI->ErrorMessage);
+            if (igButton("OK", ButtonSize) ) {
+                GUIPopWindow(GUI);
+                igCloseCurrentPopup(); 
+            }
+            igEndPopup();
         }
-        igEndPopup();
     }
     GUIDrawDebugWindow(GUI);
     GUIDrawSettingsWindow(GUI);
     GUIDrawLevelSelectWindow(GUI,LevelManager);
 //     igShowDemoWindow(NULL);
     GUIEndFrame();
-//     if( !GUI->IsActive ) {
-//         GUIBeginFrame();
-//         GUIDrawHelpOverlay();
-//         GUIEndFrame();
-//         return;
-//     }
-//     GUIBeginFrame();
-//     GUIDrawDebugWindow(GUI);
-//     GUIEndFrame();
 }
 
+int GUIFileDialogIsOpen(GUIFileDialog_t *Dialog)
+{
+    if( !Dialog ) {
+        DPrintf("GUIFileDialogIsOpen:Invalid dialog data\n");
+        return 0;
+    }
+    
+    return IGFD_IsOpened(Dialog->Window);
+}
+
+void GUIFileDialogOpen(GUI_t *GUI,GUIFileDialog_t *Dialog)
+{
+    if( !Dialog ) {
+        DPrintf("GUIFileDialogOpen:Invalid dialog data\n");
+        return;
+    }
+    
+    if( IGFD_IsOpened(Dialog->Window) ) {
+        return;
+    }
+    DPrintf("Opening Dialog with title %s Key %s\n",Dialog->WindowTitle,Dialog->Key);
+    IGFD_OpenDialog2(Dialog->Window,Dialog->Key,Dialog->WindowTitle,Dialog->Filters,".",1,NULL,ImGuiFileDialogFlags_DontShowHiddenFiles);
+    GUIPushWindow(GUI);
+}
+
+void GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *Dialog)
+{
+    if( !Dialog ) {
+        DPrintf("GUIFileDialogClose:Invalid dialog data\n");
+        return;
+    }
+    
+    if( !IGFD_IsOpened(Dialog->Window) ) {
+        return;
+    }
+    IGFD_CloseDialog(Dialog->Window);
+    GUIPopWindow(GUI);
+}
+
+GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filters,void (*OnDirSelected)(GUIFileDialog_t *,GUI_t *,char *),
+                                       void (*OnDirSelectionCancelled)(GUIFileDialog_t *,GUI_t*))
+{
+    GUIFileDialog_t *FileDialog;
+    
+    FileDialog = malloc(sizeof(GUIFileDialog_t));
+    
+    if( !FileDialog ) {
+        DPrintf("GUIFileDialogRegister:Couldn't allocate struct data.\n");
+        return NULL;
+    }
+    if( !WindowTitle) {
+        DPrintf("GUIFileDialogRegister:Invalid Window Title\n");
+        return NULL;
+    }
+    asprintf(&FileDialog->Key,"FileDialog%i",GUI->NumRegisteredFileDialog);
+    FileDialog->WindowTitle = StringCopy(WindowTitle);
+    FileDialog->Filters = Filters;
+    FileDialog->Window = IGFD_Create();
+    FileDialog->OnDirSelected = OnDirSelected;
+    FileDialog->OnDirSelectionCancelled = OnDirSelectionCancelled;
+    FileDialog->Next = GUI->FileDialogList;
+    GUI->FileDialogList = FileDialog;
+    GUI->NumRegisteredFileDialog++;
+    
+    return FileDialog;
+}
 void GUIContextInit(ImGuiContext *Context,SDL_Window *Window,SDL_GLContext *GLContext,char *ConfigFilePath)
 {
     ImGuiIO *IO;
@@ -539,7 +598,6 @@ void GUIContextInit(ImGuiContext *Context,SDL_Window *Window,SDL_GLContext *GLCo
     ImGui_ImplSDL2_InitForOpenGL(VideoSurface, &GLContext);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     igStyleColorsDark(NULL);
-    //TODO(Adriano):Declare a new config key to select the GUI font...if this function fail then app will use the default one.
     if( GUIFont->Value[0] ) {
         Font = ImFontAtlas_AddFontFromFileTTF(IO->Fonts,GUIFont->Value,floor(GUIFontSize->FValue * VidConf.DPIScale),NULL,NULL);
         if( !Font ) {
@@ -548,6 +606,7 @@ void GUIContextInit(ImGuiContext *Context,SDL_Window *Window,SDL_GLContext *GLCo
         }
     }
     Style = igGetStyle();
+    Style->WindowTitleAlign.x = 0.5f;
     ImGuiStyle_ScaleAllSizes(Style,VidConf.DPIScale);
     IO->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     IO->IniFilename = ConfigFilePath;
@@ -565,13 +624,17 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     
     memset(GUI,0,sizeof(GUI_t));
     GUI->ProgressBar = malloc(sizeof(GUIProgressBar_t));
+    GUI->ErrorMessage = NULL;
     asprintf(&GUI->ConfigFilePath,"%simgui.ini",SysGetConfigPath());
     if( !GUI->ProgressBar ) {
         DPrintf("GUIInit:Failed to allocate memory for ProgressBar struct\n");
         free(GUI);
         return NULL;
     }
+    GUI->NumRegisteredFileDialog = 0;
     
+    GUI->FileDialogList = NULL;
+
     GUIFont = ConfigGet("GUIFont");
     GUIFontSize = ConfigGet("GUIFontSize");
     
@@ -581,9 +644,6 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     GUIContextInit(GUI->ProgressBar->Context,Window,GLContext,GUI->ConfigFilePath);
     GUIContextInit(GUI->DefaultContext,Window,GLContext,GUI->ConfigFilePath);
     
-//     GUI->DebugWindowHandle = 0;
-
-    GUI->DirSelectFileDialog = IGFD_Create();
     GUI->NumActiveWindows = 0;
 
     return GUI;
