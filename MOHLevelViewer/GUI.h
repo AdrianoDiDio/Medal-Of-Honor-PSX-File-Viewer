@@ -60,22 +60,18 @@ typedef struct LevelManager_s LevelManager_t;
 
 extern Config_t *GUIFont;
 extern Config_t *GUIFontSize;
+extern Config_t *GUIShowFPS;
 
 GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext);
 void GUIToggleDebugWindow(GUI_t *GUI);
 void GUIToggleSettingsWindow(GUI_t *GUI);
 void GUIToggleLevelSelectWindow(GUI_t *GUI);
 void GUISetErrorMessage(GUI_t *GUI,char *Message);
-int GUIDirSelectDialogOpen(GUI_t *GUI,void (*OnDirSelected)(GUI_t *,char *),void (*OnDirSelectionCancelled)(GUI_t *));
-void GUIDirSelectDialogClose(GUI_t *GUI);
-int GUIDirSelectDialogIsOpened(GUI_t *GUI);
-
 GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filters,void (*OnDirSelected)(GUIFileDialog_t *,GUI_t *,char *),
                                        void (*OnDirSelectionCancelled)(GUIFileDialog_t *,GUI_t*));
 int GUIFileDialogIsOpen(GUIFileDialog_t *Dialog);
 void GUIFileDialogOpen(GUI_t *GUI,GUIFileDialog_t *Dialog);
 void GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *Dialog);
-// void GUISetMOHPath(GUI_t *GUI);
 int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
 void GUIProgressBarBegin(GUI_t *GUI,char *Title);
 void GUIProgressBarEnd(GUI_t *GUI);

@@ -291,6 +291,7 @@ void ConfigRegisterDefaultSettings()
     
     ConfigRegister("GUIFont","Fonts/DroidSans.ttf","Sets the file to be used as the GUI font,if not valid application will use the default one");
     ConfigRegister("GUIFontSize","14.f","");
+    ConfigRegister("GUIShowFPS","1","");
 }
 void ConfigDumpSettings()
 {

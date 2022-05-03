@@ -26,6 +26,7 @@
 
 Config_t *GUIFont;
 Config_t *GUIFontSize;
+Config_t *GUIShowFPS;
 
 void GUIReleaseContext(ImGuiContext *Context)
 {    
@@ -141,16 +142,14 @@ void GUIEndFrame()
 void GUIDrawDebugWindow(GUI_t *GUI)
 {
     SDL_version Version;
-#if 1
-//     if( !LevelManager->CurrentLevel ) {
-//         return;
-//     }
+    
     if( !GUI->DebugWindowHandle ) {
         return;
     }
-    if( igBegin("Debug Settings",&GUI->DebugWindowHandle,0) ) {
+    if( igBegin("Debug Settings",&GUI->DebugWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
         if( LevelManagerIsLevelLoaded(LevelManager) ) {
             igText(LevelManager->EngineName);
+            igText(LevelManager->BasePath);
             igSeparator();
             igText("Debug Settings");
             igCheckbox("WireFrame Mode",&LevelManager->Settings.WireFrame);
@@ -186,12 +185,7 @@ void GUIDrawDebugWindow(GUI_t *GUI)
     if( !GUI->DebugWindowHandle ) {
         GUIToggleHandle(GUI,GUI->DebugWindowHandle);
     }
-    //If the user has closed it make sure to reset the cursor state.
-//     if( !GUI->IsActive ) {
-//         SysHideCursor();
-//     }
     igEnd();
-#endif
 }
 
 void GUIDrawHelpOverlay()
@@ -210,7 +204,7 @@ void GUIDrawHelpOverlay()
     WindowPosition.y = (WorkPosition.y + 10.f);
     WindowPivot.x = 0.f;
     WindowPivot.y = 0.f;
-    igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
+    igSetNextWindowPos(WindowPosition, ImGuiCond_Once, WindowPivot);
 
     if( igBegin("Help", NULL, WindowFlags) ) {
         igText("Press F1 to enable/disable debug settings");
@@ -220,6 +214,32 @@ void GUIDrawHelpOverlay()
         igText("Press Escape to exit the program");
     }
     igEnd();
+}
+
+void GUIDrawFPSOverlay()
+{
+    ImGuiViewport *Viewport;
+    ImVec2 WorkPosition;
+    ImVec2 WorkSize;
+    ImVec2 WindowPosition;
+    ImVec2 WindowPivot;
+    int WindowFlags;
+    
+    WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
+                    ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+    Viewport = igGetMainViewport();
+    WorkPosition = Viewport->WorkPos;
+    WorkSize = Viewport->WorkSize;
+    WindowPosition.x = (WorkPosition.x + WorkSize.x - 10.f);
+    WindowPosition.y = (WorkPosition.y + 10.f);
+    WindowPivot.x = 1.f;
+    WindowPivot.y = 0.f;
+    igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
+
+    if( igBegin("FPS", NULL, WindowFlags) ) {
+        igText(ComTime->FPSString);
+    }
+    igEnd(); 
 }
 
 void GUISetProgressBarDialogTitle(GUI_t *GUI,char *Title)
@@ -487,24 +507,28 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
     ImVec2 Pivot;
     ImGuiIO *IO;
     
+    GUIBeginFrame();
+    
+    if( GUIShowFPS->IValue ) {
+        GUIDrawFPSOverlay();
+    }
+    
     if( !GUI->NumActiveWindows ) {
-        GUIBeginFrame();
         GUIDrawHelpOverlay();
         GUIEndFrame();
         return;
     }
-    GUIBeginFrame();
     
     GUIRenderFileDialogs(GUI);
-    IO = igGetIO();
-    ButtonSize.x = 120;
-    ButtonSize.y = 0;
-    Pivot.x = 0.5f;
-    Pivot.y = 0.5f;
-    ModalPosition.x = IO->DisplaySize.x * 0.5;
-    ModalPosition.y = IO->DisplaySize.y * 0.5;
-    igSetNextWindowPos(ModalPosition, ImGuiCond_Always, Pivot);
     if( GUI->ErrorMessage ) {
+        IO = igGetIO();
+        ButtonSize.x = 120;
+        ButtonSize.y = 0;
+        Pivot.x = 0.5f;
+        Pivot.y = 0.5f;
+        ModalPosition.x = IO->DisplaySize.x * 0.5;
+        ModalPosition.y = IO->DisplaySize.y * 0.5;
+        igSetNextWindowPos(ModalPosition, ImGuiCond_Once, Pivot);
         if( igBeginPopupModal("Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
             igText(GUI->ErrorMessage);
             if (igButton("OK", ButtonSize) ) {
@@ -559,20 +583,27 @@ void GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *Dialog)
     IGFD_CloseDialog(Dialog->Window);
     GUIPopWindow(GUI);
 }
-
+/*
+ Register a new file dialog.
+ Filters can be NULL if we want a dir selection dialog or have a value based on ImGuiFileDialog documentation if we want to
+ select a certain type of file.
+ OnDirSelected and OnDirSelectionCancelled are two callback that can be set to NULL if we are not interested in the result.
+ NOTE that setting them to NULL or the cancel callback to NULL doesn't close the dialog.
+ */
 GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filters,void (*OnDirSelected)(GUIFileDialog_t *,GUI_t *,char *),
                                        void (*OnDirSelectionCancelled)(GUIFileDialog_t *,GUI_t*))
 {
     GUIFileDialog_t *FileDialog;
     
+    if( !WindowTitle) {
+        DPrintf("GUIFileDialogRegister:Invalid Window Title\n");
+        return NULL;
+    }
+
     FileDialog = malloc(sizeof(GUIFileDialog_t));
     
     if( !FileDialog ) {
         DPrintf("GUIFileDialogRegister:Couldn't allocate struct data.\n");
-        return NULL;
-    }
-    if( !WindowTitle) {
-        DPrintf("GUIFileDialogRegister:Invalid Window Title\n");
         return NULL;
     }
     asprintf(&FileDialog->Key,"FileDialog%i",GUI->NumRegisteredFileDialog);
@@ -637,6 +668,7 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
 
     GUIFont = ConfigGet("GUIFont");
     GUIFontSize = ConfigGet("GUIFontSize");
+    GUIShowFPS = ConfigGet("GUIShowFPS");
     
     GUI->DefaultContext = igCreateContext(NULL);
     GUI->ProgressBar->Context = igCreateContext(NULL);
