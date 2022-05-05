@@ -24,6 +24,12 @@
 #include "Level.h"
 #include "Config.h"
 
+typedef enum {
+    LEVEL_MANAGER_EXPORT_TYPE_OBJ,
+    LEVEL_MANAGER_EXPORT_TYPE_PLY,
+    LEVEL_MANAGER_EXPORT_TYPE_UNKNOWN
+} LevelManagerExportTypes_t;
+
 typedef struct MissionLevel_s {
     char *LevelName;
     int LevelNumber;
@@ -47,6 +53,11 @@ typedef struct LevelManager_s {
     int     GameEngine;
 } LevelManager_t;
 
+typedef struct LevelManagerExporter_s {
+    LevelManager_t *LevelManager;
+    int  OutputFormat;
+} LevelManagerExporter_t;
+
 void    LevelManagerInit();
 void    LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNumber,int LevelNumber);
 int     LevelManagerIsLevelLoaded(LevelManager_t *LevelManager);
@@ -54,8 +65,7 @@ int     LevelManagerGetGameEngine(LevelManager_t *LevelManager);
 int     LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path);
 void    LevelManagerDraw(LevelManager_t *LevelManager);
 void    LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI);
-void    LevelManagerExportToObj(LevelManager_t* LevelManager,GUI_t *GUI);
-void    LevelManagerExportToPly(LevelManager_t* LevelManager,GUI_t *GUI);
+void    LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,int OutputFormat);
 void    LevelManagerCleanUp();
 
 extern Mission_t MOHMissionsList[];

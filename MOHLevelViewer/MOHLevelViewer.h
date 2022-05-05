@@ -33,7 +33,7 @@ typedef enum
 {
     MOH_GAME_STANDARD,
     MOH_GAME_UNDERGROUND
-} MOHGame;
+} MOHGame_t;
 
 typedef struct VideoMode_s {
     int Width;

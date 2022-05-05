@@ -430,49 +430,51 @@ void LevelManagerCleanUp()
     }
     free(LevelManager);
 }
-
-void LevelManagerOnObjExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Directory,char *File,void *UserData)
+void LevelManagerExportToObj(LevelManager_t *LevelManager,GUI_t *GUI,char *Directory)
 {
     char *EngineName;
     char *ObjectFile;
     char *FileName;
     char MaterialNameTag[64];
     FILE *OutFile;
-    LevelManager_t *LevelManager;
-    
-    LevelManager = (LevelManager_t *) UserData;
     
     if( !LevelManager ) {
-        DPrintf("LevelManagerOnObjExportDirSelected:Invalid user data\n");
+        DPrintf("LevelManagerExportToObj:Invalid user data\n");
         return;
     }
     
     if( !LevelManager->IsPathSet ) {
-        DPrintf("LevelManagerOnObjExportDirSelected:Game path is not set!\n");
+        DPrintf("LevelManagerExportToObj:Game path is not set!\n");
         return;
     }
     asprintf(&EngineName,"%s",(LevelManager->GameEngine == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
     asprintf(&FileName,"%s-MSN%iLVL%i.obj",EngineName,LevelManager->CurrentLevel->MissionNumber,LevelManager->CurrentLevel->LevelNumber);
     asprintf(&ObjectFile,"%s%c%s",Directory,PATHSEPARATOR,FileName);
     
-    DPrintf("LevelManagerOnObjExportDirSelected:Dumping it...%s\n",ObjectFile);
+    DPrintf("LevelManagerExportToObj:Dumping it...%s\n",ObjectFile);
     OutFile = fopen(ObjectFile,"w");
     if( !OutFile ) {
-        DPrintf("LevelManagerOnObjExportDirSelected:Failed to open %s for writing\n",ObjectFile);
+        DPrintf("LevelManagerExportToObj:Failed to open %s for writing\n",ObjectFile);
         return;
     }
+    GUISetProgressBarDialogTitle(GUI,"Exporting to Obj...");
+    GUIProgressBarIncrement(GUI,5,"Writing material file.");
     sprintf(MaterialNameTag,"mtllib vram.mtl\n");
     fwrite(MaterialNameTag,strlen(MaterialNameTag),1,OutFile);
+    GUIProgressBarIncrement(GUI,35,"Writing TSP data.");
     TSPDumpDataToFile(LevelManager->CurrentLevel->TSPList,OutFile);
+    GUIProgressBarIncrement(GUI,55,"Writing BSD data.");
     BSDDumpDataToFile(LevelManager->CurrentLevel->BSD,OutFile);
+    GUIProgressBarIncrement(GUI,95,"Exporting VRAM.");
     VRAMDumpDataToFile(LevelManager->CurrentLevel->VRAM,Directory);
-    GUIFileDialogClose(GUI,FileDialog);
+    GUIProgressBarIncrement(GUI,100,"Done.");
     free(EngineName);
     free(FileName);
     free(ObjectFile);
     fclose(OutFile);
 }
-void LevelManagerOnPlyExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Directory,char *File,void *UserData)
+
+void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,char *Directory)
 {
     char *EngineName;
     char *PlyLevelFile;
@@ -482,17 +484,14 @@ void LevelManagerOnPlyExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,c
     char *TextureFile;
     FILE *PlyLevelOutFile;
     FILE *PlyObjectOutFile;
-    LevelManager_t *LevelManager;
-    
-    LevelManager = (LevelManager_t *) UserData;
     
     if( !LevelManager ) {
-        DPrintf("LevelManagerOnPlyExportDirSelected:Invalid user data\n");
+        DPrintf("LevelManagerExportToPly:Invalid user data\n");
         return;
     }
     
     if( !LevelManager->IsPathSet ) {
-        DPrintf("LevelManagerOnObjExportDirSelected:Game path is not set!\n");
+        DPrintf("LevelManagerExportToPly:Game path is not set!\n");
         return;
     }
     asprintf(&EngineName,"%s",(LevelManager->GameEngine == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
@@ -501,22 +500,25 @@ void LevelManagerOnPlyExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,c
     asprintf(&PlyLevelFile,"%s%c%s",Directory,PATHSEPARATOR,LevelFileName);
     asprintf(&PlyObjectFile,"%s%c%s",Directory,PATHSEPARATOR,ObjectFileName);
     asprintf(&TextureFile,"%s%cvram.png",Directory,PATHSEPARATOR);
-    DPrintf("LevelManagerOnPlyExportDirSelected:Dumping it...%s / %s\n",PlyLevelFile,PlyObjectFile);
+    DPrintf("LevelManagerExportToPly:Dumping it...%s / %s\n",PlyLevelFile,PlyObjectFile);
     PlyLevelOutFile = fopen(PlyLevelFile,"w");
     if( !PlyLevelOutFile ) {
-        DPrintf("LevelManagerOnPlyExportDirSelected:Failed to open %s for writing\n",PlyLevelFile);
+        DPrintf("LevelManagerExportToPly:Failed to open %s for writing\n",PlyLevelFile);
         return;
     }
     PlyObjectOutFile = fopen(PlyObjectFile,"w");
     if( !PlyObjectOutFile ) {
-        DPrintf("LevelManagerOnPlyExportDirSelected:Failed to open %s for writing\n",PlyObjectFile);
+        DPrintf("LevelManagerExportToPly:Failed to open %s for writing\n",PlyObjectFile);
         return;
     }
+    GUISetProgressBarDialogTitle(GUI,"Exporting to Ply...");
+    GUIProgressBarIncrement(GUI,5,"Writing TSP data.");
     TSPDumpDataToPlyFile(LevelManager->CurrentLevel->TSPList,PlyLevelOutFile);
+    GUIProgressBarIncrement(GUI,55,"Writing BSD data.");
     BSDDumpDataToPlyFile(LevelManager->CurrentLevel->BSD,PlyObjectOutFile);
+    GUIProgressBarIncrement(GUI,95,"Exporting VRAM.");
     VRAMSave(LevelManager->CurrentLevel->VRAM,TextureFile);
-    GUIFileDialogClose(GUI,FileDialog);
-    
+    GUIProgressBarIncrement(GUI,100,"Done.");
     free(EngineName);
     free(PlyLevelFile);
     free(PlyObjectFile);
@@ -527,9 +529,36 @@ void LevelManagerOnPlyExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,c
     fclose(PlyObjectOutFile);
 
 }
+
+void LevelManagerOnExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Directory,char *File,void *UserData)
+{
+    LevelManagerExporter_t *Exporter;
+    LevelManager_t *LevelManager;
+    Exporter = (LevelManagerExporter_t *) UserData;
+    LevelManager = Exporter->LevelManager;
+        
+    GUIProgressBarBegin(GUI,"Exporting...");
+
+    switch( Exporter->OutputFormat ) {
+        case LEVEL_MANAGER_EXPORT_TYPE_OBJ:
+            LevelManagerExportToObj(LevelManager,GUI,Directory);
+            break;
+        case LEVEL_MANAGER_EXPORT_TYPE_PLY:
+            LevelManagerExportToPly(LevelManager,GUI,Directory);
+            break;
+        default:
+            DPrintf("LevelManagerOnDirSelected:Invalid output format\n");
+            break;
+    }
+        
+    GUIProgressBarEnd(GUI);
+
+    GUIFileDialogClose(GUI,FileDialog);
+    free(Exporter);
+}
+
 void LevelManagerOnExportDirCancelled(GUIFileDialog_t *FileDialog,GUI_t *GUI)
 {
-    DPrintf("Cancelling\n");
     GUIFileDialogClose(GUI,FileDialog);
 }
 void LevelManagerOnDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Path,char *File,void *UserData)
@@ -551,36 +580,29 @@ void LevelManagerOnDirSelectionCancelled(GUIFileDialog_t *FileDialog,GUI_t *GUI)
     }
 }
 
-void LevelManagerExportToObj(LevelManager_t* LevelManager,GUI_t *GUI)
+void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,int OutputFormat)
 {
+    LevelManagerExporter_t *Exporter;
     
     if( !LevelManager ) {
-        DPrintf("LevelManagerExportToObj:Invalid LevelManager\n");
+        DPrintf("LevelManagerExport:Invalid LevelManager\n");
         return;
     }
     if( !GUI ) {
-        DPrintf("LevelManagerExportToObj:Invalid GUI data\n");
+        DPrintf("LevelManagerExport:Invalid GUI data\n");
         return;
     }
-    GUIFileDialogSetTitle(LevelManager->ExportFileDialog,"Export To Obj");
-    GUIFileDialogSetCallbacks(LevelManager->ExportFileDialog,LevelManagerOnObjExportDirSelected,LevelManagerOnExportDirCancelled);
-    GUIFileDialogOpenWithUserData(GUI,LevelManager->ExportFileDialog,LevelManager);
-}
+    Exporter = malloc(sizeof(LevelManagerExporter_t));
+    if( !Exporter ) {
+        DPrintf("LevelManagerExport:Failed\n");
+        return;
+    }
+    Exporter->LevelManager = LevelManager;
+    Exporter->OutputFormat = OutputFormat;
 
-void LevelManagerExportToPly(LevelManager_t* LevelManager,GUI_t *GUI)
-{
-    
-    if( !LevelManager ) {
-        DPrintf("LevelManagerExportToPly:Invalid LevelManager\n");
-        return;
-    }
-    if( !GUI ) {
-        DPrintf("LevelManagerExportToPly:Invalid GUI data\n");
-        return;
-    }
-    GUIFileDialogSetTitle(LevelManager->ExportFileDialog,"Export To Ply");
-    GUIFileDialogSetCallbacks(LevelManager->ExportFileDialog,LevelManagerOnPlyExportDirSelected,LevelManagerOnExportDirCancelled);
-    GUIFileDialogOpenWithUserData(GUI,LevelManager->ExportFileDialog,LevelManager);
+    GUIFileDialogSetTitle(LevelManager->ExportFileDialog,"Export");
+    GUIFileDialogSetCallbacks(LevelManager->ExportFileDialog,LevelManagerOnExportDirSelected,LevelManagerOnExportDirCancelled);
+    GUIFileDialogOpenWithUserData(GUI,LevelManager->ExportFileDialog,Exporter);
 }
 
 void LevelManagerDraw(LevelManager_t *LevelManager)

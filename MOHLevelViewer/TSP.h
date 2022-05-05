@@ -28,7 +28,7 @@ typedef enum {
     TSP_FX_NONE = 1,
     TSP_FX_TRANSPARENCY = 2,
     TSP_FX_ANIMATED = 4,
-} TSPRenderingFaceFlags;
+} TSPRenderingFaceFlags_t;
 
 typedef struct TSPVec3_s {
     short x;

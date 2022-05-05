@@ -175,11 +175,11 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
         ButtonSize.x = 0.f;
         ButtonSize.y = 0.f;
         if( igButton("Export to OBJ",ButtonSize) ) {
-            LevelManagerExportToObj(LevelManager,GUI);
+            LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_TYPE_OBJ);
         }
         igSameLine(0.f,10.f);
         if( igButton("Export to Ply",ButtonSize) ) {
-            LevelManagerExportToPly(LevelManager,GUI);
+            LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_TYPE_PLY);
         }
         igSeparator();
         igText("Debug Statistics");

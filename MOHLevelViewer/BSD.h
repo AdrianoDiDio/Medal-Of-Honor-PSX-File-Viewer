@@ -59,7 +59,7 @@ typedef enum  {
     BSD_ANIMATED_OBJECT = 376079867,
     BSD_DESTRUCTIBLE_WINDOW = 3542063242
     //Object Id 8499 could either be Audio Source / Timers / Random entity spawner ...
-} BSDNodeId;
+} BSDNodeId_t;
 
 typedef enum {
     BSD_RENDER_OBJECT_CARRY_AUX_ELEMENTS = 0, //Contains all the RenderObject that can be carried such as enemy helmet,grenade,rocket, etc.
@@ -74,7 +74,7 @@ typedef enum {
     BSD_RENDER_OBJECT_EXPLOSIVE_CHARGE = 6008,
     BSD_RENDER_OBJECT_RADIO = 6009,
     BSD_RENDER_OBJECT_V2_ROCKET = 6004
-} BSDRenderObjectType;
+} BSDRenderObjectType_t;
 
 typedef enum {
     BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_1 = 1878462241,
@@ -90,12 +90,12 @@ typedef enum {
     BSD_RENDER_OBJECT_WEAPON_GERMAN_GRENADE = 3097846808,
     BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_3 = 2691923848,
     BSD_RENDER_OBJECT_WEAPON_M1_GARAND = 1326598003
-} BSDRenderObjectWeaponId;
+} BSDRenderObjectWeaponId_t;
 
 typedef enum {
     BSD_NODE_TABLE,
     BSD_UNKNOWN
-} BSDEntry;
+} BSDEntryType_t;
 
 
 typedef struct BSDPosition_s {
