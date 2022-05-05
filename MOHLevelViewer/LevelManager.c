@@ -431,7 +431,157 @@ void LevelManagerCleanUp()
     free(LevelManager);
 }
 
+void LevelManagerOnObjExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Directory,char *File,void *UserData)
+{
+    char *EngineName;
+    char *ObjectFile;
+    char *FileName;
+    char MaterialNameTag[64];
+    FILE *OutFile;
+    LevelManager_t *LevelManager;
+    
+    LevelManager = (LevelManager_t *) UserData;
+    
+    if( !LevelManager ) {
+        DPrintf("LevelManagerOnObjExportDirSelected:Invalid user data\n");
+        return;
+    }
+    
+    if( !LevelManager->IsPathSet ) {
+        DPrintf("LevelManagerOnObjExportDirSelected:Game path is not set!\n");
+        return;
+    }
+    asprintf(&EngineName,"%s",(LevelManager->GameEngine == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
+    asprintf(&FileName,"%s-MSN%iLVL%i.obj",EngineName,LevelManager->CurrentLevel->MissionNumber,LevelManager->CurrentLevel->LevelNumber);
+    asprintf(&ObjectFile,"%s%c%s",Directory,PATHSEPARATOR,FileName);
+    
+    DPrintf("LevelManagerOnObjExportDirSelected:Dumping it...%s\n",ObjectFile);
+    OutFile = fopen(ObjectFile,"w");
+    if( !OutFile ) {
+        DPrintf("LevelManagerOnObjExportDirSelected:Failed to open %s for writing\n",ObjectFile);
+        return;
+    }
+    sprintf(MaterialNameTag,"mtllib vram.mtl\n");
+    fwrite(MaterialNameTag,strlen(MaterialNameTag),1,OutFile);
+    TSPDumpDataToFile(LevelManager->CurrentLevel->TSPList,OutFile);
+    BSDDumpDataToFile(LevelManager->CurrentLevel->BSD,OutFile);
+    VRAMDumpDataToFile(LevelManager->CurrentLevel->VRAM,Directory);
+    GUIFileDialogClose(GUI,FileDialog);
+    free(EngineName);
+    free(FileName);
+    free(ObjectFile);
+    fclose(OutFile);
+}
+void LevelManagerOnPlyExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Directory,char *File,void *UserData)
+{
+    char *EngineName;
+    char *PlyLevelFile;
+    char *PlyObjectFile;
+    char *LevelFileName;
+    char *ObjectFileName;
+    char *TextureFile;
+    FILE *PlyLevelOutFile;
+    FILE *PlyObjectOutFile;
+    LevelManager_t *LevelManager;
+    
+    LevelManager = (LevelManager_t *) UserData;
+    
+    if( !LevelManager ) {
+        DPrintf("LevelManagerOnPlyExportDirSelected:Invalid user data\n");
+        return;
+    }
+    
+    if( !LevelManager->IsPathSet ) {
+        DPrintf("LevelManagerOnObjExportDirSelected:Game path is not set!\n");
+        return;
+    }
+    asprintf(&EngineName,"%s",(LevelManager->GameEngine == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
+    asprintf(&LevelFileName,"%s-MSN%iLVL%i_Level.ply",EngineName,LevelManager->CurrentLevel->MissionNumber,LevelManager->CurrentLevel->LevelNumber);
+    asprintf(&ObjectFileName,"%s-MSN%iLVL%i_Object.ply",EngineName,LevelManager->CurrentLevel->MissionNumber,LevelManager->CurrentLevel->LevelNumber);
+    asprintf(&PlyLevelFile,"%s%c%s",Directory,PATHSEPARATOR,LevelFileName);
+    asprintf(&PlyObjectFile,"%s%c%s",Directory,PATHSEPARATOR,ObjectFileName);
+    asprintf(&TextureFile,"%s%cvram.png",Directory,PATHSEPARATOR);
+    DPrintf("LevelManagerOnPlyExportDirSelected:Dumping it...%s / %s\n",PlyLevelFile,PlyObjectFile);
+    PlyLevelOutFile = fopen(PlyLevelFile,"w");
+    if( !PlyLevelOutFile ) {
+        DPrintf("LevelManagerOnPlyExportDirSelected:Failed to open %s for writing\n",PlyLevelFile);
+        return;
+    }
+    PlyObjectOutFile = fopen(PlyObjectFile,"w");
+    if( !PlyObjectOutFile ) {
+        DPrintf("LevelManagerOnPlyExportDirSelected:Failed to open %s for writing\n",PlyObjectFile);
+        return;
+    }
+    TSPDumpDataToPlyFile(LevelManager->CurrentLevel->TSPList,PlyLevelOutFile);
+    BSDDumpDataToPlyFile(LevelManager->CurrentLevel->BSD,PlyObjectOutFile);
+    VRAMSave(LevelManager->CurrentLevel->VRAM,TextureFile);
+    GUIFileDialogClose(GUI,FileDialog);
+    
+    free(EngineName);
+    free(PlyLevelFile);
+    free(PlyObjectFile);
+    free(LevelFileName);
+    free(ObjectFileName);
+    free(TextureFile);
+    fclose(PlyLevelOutFile);
+    fclose(PlyObjectOutFile);
 
+}
+void LevelManagerOnExportDirCancelled(GUIFileDialog_t *FileDialog,GUI_t *GUI)
+{
+    DPrintf("Cancelling\n");
+    GUIFileDialogClose(GUI,FileDialog);
+}
+void LevelManagerOnDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Path,char *File,void *UserData)
+{
+    int LoadStatus;
+    LoadStatus = LevelManagerInitWithPath(LevelManager,GUI,Path);
+    if( !LoadStatus ) {
+        GUISetErrorMessage(GUI,"Selected path doesn't seems to contain any game file...\nPlease select a folder containing MOH or MOH:Undergound.");
+    } else {
+        //Close it if we managed to load it.
+        ConfigSet("GameBasePath",Path);
+        GUIFileDialogClose(GUI,FileDialog);
+    }
+}
+void LevelManagerOnDirSelectionCancelled(GUIFileDialog_t *FileDialog,GUI_t *GUI)
+{
+    if( LevelManager->IsPathSet ) {
+        GUIFileDialogClose(GUI,FileDialog);
+    }
+}
+
+void LevelManagerExportToObj(LevelManager_t* LevelManager,GUI_t *GUI)
+{
+    
+    if( !LevelManager ) {
+        DPrintf("LevelManagerExportToObj:Invalid LevelManager\n");
+        return;
+    }
+    if( !GUI ) {
+        DPrintf("LevelManagerExportToObj:Invalid GUI data\n");
+        return;
+    }
+    GUIFileDialogSetTitle(LevelManager->ExportFileDialog,"Export To Obj");
+    GUIFileDialogSetCallbacks(LevelManager->ExportFileDialog,LevelManagerOnObjExportDirSelected,LevelManagerOnExportDirCancelled);
+    GUIFileDialogOpenWithUserData(GUI,LevelManager->ExportFileDialog,LevelManager);
+}
+
+void LevelManagerExportToPly(LevelManager_t* LevelManager,GUI_t *GUI)
+{
+    
+    if( !LevelManager ) {
+        DPrintf("LevelManagerExportToPly:Invalid LevelManager\n");
+        return;
+    }
+    if( !GUI ) {
+        DPrintf("LevelManagerExportToPly:Invalid GUI data\n");
+        return;
+    }
+    GUIFileDialogSetTitle(LevelManager->ExportFileDialog,"Export To Ply");
+    GUIFileDialogSetCallbacks(LevelManager->ExportFileDialog,LevelManagerOnPlyExportDirSelected,LevelManagerOnExportDirCancelled);
+    GUIFileDialogOpenWithUserData(GUI,LevelManager->ExportFileDialog,LevelManager);
+}
 
 void LevelManagerDraw(LevelManager_t *LevelManager)
 {
@@ -595,24 +745,6 @@ void LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNu
     free(Buffer);
 }
 
-void LevelManagerOnDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Path)
-{
-    int LoadStatus;
-    LoadStatus = LevelManagerInitWithPath(LevelManager,GUI,Path);
-    if( !LoadStatus ) {
-        GUISetErrorMessage(GUI,"Selected path doesn't seems to contain any game file...\nPlease select a folder containing MOH or MOH:Undergound.");
-    } else {
-        //Close it if we managed to load it.
-        ConfigSet("GameBasePath",Path);
-        GUIFileDialogClose(GUI,FileDialog);
-    }
-}
-void LevelManagerOnDirSelectionCancelled(GUIFileDialog_t *FileDialog,GUI_t *GUI)
-{
-    if( LevelManager->IsPathSet ) {
-        GUIFileDialogClose(GUI,FileDialog);
-    }
-}
 void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI)
 {
     if( GUIFileDialogIsOpen(LevelManager->FileDialog) ) {
@@ -639,6 +771,8 @@ void LevelManagerInit(GUI_t *GUI)
         return;
     }
     LevelManager->FileDialog = GUIFileDialogRegister(GUI,"Select Directory",NULL,LevelManagerOnDirSelected,LevelManagerOnDirSelectionCancelled);
+    LevelManager->ExportFileDialog = GUIFileDialogRegister(GUI,"Export Level",NULL,NULL,LevelManagerOnExportDirCancelled);
+
     LevelManager->BasePath = NULL;
     //No path has been provided to it yet.
     LevelManager->IsPathSet = 0;

@@ -84,13 +84,16 @@ void VRAMWritePNG(SDL_Surface *ImageSurface,char *OutName)
     png_free (PNGPtr, RowPointer);
     fclose(PNGImage);
 }
-
+void VRAMSave(VRAM_t *VRAM,char *File)
+{
+    VRAMWritePNG(VRAM->Page.Surface,File);
+}
 void VRAMDump(VRAM_t *VRAM)
 {
     char OutName[256];
     CreateDirIfNotExists("VRAM");
     sprintf(OutName,"VRAM/VRAM.png");
-    VRAMWritePNG(VRAM->Page.Surface,OutName);
+    VRAMSave(VRAM,OutName);
 }
 
 void VRAMDumpDataToFile(VRAM_t *VRAM,char *OutBaseDir)
@@ -100,11 +103,11 @@ void VRAMDumpDataToFile(VRAM_t *VRAM,char *OutBaseDir)
     char Buffer[256];
     FILE *MaterialFile;
     
-    sprintf(OutName,"%svram.mtl",OutBaseDir);
+    sprintf(OutName,"%s%cvram.mtl",OutBaseDir,PATHSEPARATOR);
     MaterialFile = fopen(OutName,"w");
 
-    sprintf(OutName,"%svram.png",OutBaseDir);
-    VRAMWritePNG(VRAM->Page.Surface,OutName);
+    sprintf(OutName,"%s%cvram.png",OutBaseDir,PATHSEPARATOR);
+    VRAMSave(VRAM,OutName);
     sprintf(Buffer,"newmtl vram\nKa 1.000 1.000 1.000\nKd 1.000 1.000 1.000\nKs 1.000 1.000 1.000\nmap_Kd vram.png\n");
     fwrite(Buffer,strlen(Buffer),1,MaterialFile);
     fclose(MaterialFile);

@@ -23,12 +23,19 @@
 #include "MOHLevelViewer.h"
 #include "ShaderManager.h"
 
-Color1i_t StarsColors[8] = {
+Color1i_t StarsColors[7] = {
+    //R   G   B
+    //128;128;128
     {4034953344},
+    //96;64;128
     {2155888736},
+    //32;240;64
     {1077997600},
+    //96;96;240
     {4293943392},
+    //255;255;255
     {2164260863},
+    //64;128;64
     {4282417216},
     {0}
 };
@@ -45,7 +52,6 @@ void BSDDumpProperty(BSD_t *BSD,int PropertyIndex)
         DPrintf("BSDDumpProperty:Invalid BSD File\n");
         return;
     }
-    
     DPrintf("BSDDumpProperty:Property %i has %i nodes\n",PropertyIndex,BSD->PropertySetFile.Property[PropertyIndex].NumNodes);
     for( i = 0; i <  BSD->PropertySetFile.Property[PropertyIndex].NumNodes; i++ ) {
         DPrintf("BSDDumpProperty Property Node %i\n", BSD->PropertySetFile.Property[PropertyIndex].NodeList[i]);
@@ -63,7 +69,7 @@ void BSDDumpFaceDataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDra
     float TextureWidth;
     float TextureHeight;
     int i;
-        
+    
     RenderObjectElement = &BSD->RenderObjectTable.RenderObject[RenderObjectDrawable->RenderObjectIndex];
     TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
     TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
@@ -1055,7 +1061,7 @@ void BSDCreateStarsVAO(BSD_t *BSD)
         R = (BSD->SkyData.StarRadius*256) * sqrt(Rand01());
         Theta = Rand01() * 2 * M_PI;
         Phi = acos(2.0 * Rand01() - 1.0);/*BSDRand01() * M_PI;*/
-        RandColor = StarsColors[RandRangeI(0,7)];
+        RandColor = StarsColors[RandRangeI(0,6)];
         BSD->SkyData.StarsColors[i] = RandColor;
         VertexData[VertexPointer] =  (R * sin(Phi) * cos(Theta) );
         VertexData[VertexPointer+1] = (R * sin(Theta) * sin(Phi) ) - (BSD->SkyData.StarRadius*264);

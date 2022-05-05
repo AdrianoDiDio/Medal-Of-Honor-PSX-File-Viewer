@@ -40,6 +40,7 @@ typedef struct LevelManager_s {
     char    MissionPath[256];
     char    EngineName[256];
     GUIFileDialog_t *FileDialog;
+    GUIFileDialog_t *ExportFileDialog;
     Level_t *CurrentLevel;
     LevelSettings_t Settings;
     int     IsPathSet;
@@ -53,6 +54,8 @@ int     LevelManagerGetGameEngine(LevelManager_t *LevelManager);
 int     LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path);
 void    LevelManagerDraw(LevelManager_t *LevelManager);
 void    LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI);
+void    LevelManagerExportToObj(LevelManager_t* LevelManager,GUI_t *GUI);
+void    LevelManagerExportToPly(LevelManager_t* LevelManager,GUI_t *GUI);
 void    LevelManagerCleanUp();
 
 extern Mission_t MOHMissionsList[];

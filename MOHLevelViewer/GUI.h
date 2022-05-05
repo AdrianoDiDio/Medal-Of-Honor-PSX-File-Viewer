@@ -22,6 +22,12 @@
 #include "Common.h"
 #include "Config.h"
 
+typedef struct GUI_s GUI_t;
+typedef struct GUIFileDialog_s GUIFileDialog_t;
+
+typedef void (*DirSelectedCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Directory,char *File,void *UserData);
+typedef void (*DirSelectionCancelledCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI);
+
 typedef struct GUIProgressBar_s {
     ImGuiContext *Context;
     float CurrentPercentage;
@@ -29,16 +35,13 @@ typedef struct GUIProgressBar_s {
     char *DialogTitle;
 } GUIProgressBar_t;
 
-typedef struct GUI_s GUI_t;
 typedef struct GUIFileDialog_s {
     char *WindowTitle;
     char *Key;
     char *Filters;
-    
     ImGuiFileDialog *Window;
-    void  (*OnDirSelected)(struct GUIFileDialog_s *FileDialog,GUI_t *GUI,char *Directory);
-    void  (*OnDirSelectionCancelled)(struct GUIFileDialog_s *FileDialog,GUI_t *GUI);
-    
+    DirSelectedCallback_t OnDirSelected;
+    DirSelectionCancelledCallback_t OnDirSelectionCancelled;    
     struct GUIFileDialog_s *Next;
 } GUIFileDialog_t;
 typedef struct GUI_s {
@@ -67,11 +70,14 @@ void GUIToggleDebugWindow(GUI_t *GUI);
 void GUIToggleSettingsWindow(GUI_t *GUI);
 void GUIToggleLevelSelectWindow(GUI_t *GUI);
 void GUISetErrorMessage(GUI_t *GUI,char *Message);
-GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filters,void (*OnDirSelected)(GUIFileDialog_t *,GUI_t *,char *),
-                                       void (*OnDirSelectionCancelled)(GUIFileDialog_t *,GUI_t*));
-int GUIFileDialogIsOpen(GUIFileDialog_t *Dialog);
-void GUIFileDialogOpen(GUI_t *GUI,GUIFileDialog_t *Dialog);
-void GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *Dialog);
+GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filters,DirSelectedCallback_t OnDirSelected,
+                                       DirSelectionCancelledCallback_t OnDirSelectionCancelled);
+void GUIFileDialogSetTitle(GUIFileDialog_t *FileDialog,char *Title);
+void GUIFileDialogSetCallbacks(GUIFileDialog_t *FileDialog,DirSelectedCallback_t OnDirSelected,DirSelectionCancelledCallback_t OnDirSelectionCancelled);
+int GUIFileDialogIsOpen(GUIFileDialog_t *FileDialog);
+void GUIFileDialogOpen(GUI_t *GUI,GUIFileDialog_t *FileDialog);
+void GUIFileDialogOpenWithUserData(GUI_t *GUI,GUIFileDialog_t *FileDialog,void *UserData);
+void GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *FileDialog);
 int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
 void GUIProgressBarBegin(GUI_t *GUI,char *Title);
 void GUIProgressBarEnd(GUI_t *GUI);

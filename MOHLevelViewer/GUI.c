@@ -139,8 +139,9 @@ void GUIEndFrame()
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 }
 
-void GUIDrawDebugWindow(GUI_t *GUI)
+void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
 {
+    ImVec2 ButtonSize;
     SDL_version Version;
     
     if( !GUI->DebugWindowHandle ) {
@@ -169,19 +170,31 @@ void GUIDrawDebugWindow(GUI_t *GUI)
                 }
             }
         }
-       igSeparator();
-       igText("Debug Statistics");
-       igText("NumActiveWindows:%i",GUI->NumActiveWindows);
-       igSeparator();
-       igText(ComTime->FPSString);
-       igText("OpenGL Version: %s",glGetString(GL_VERSION));
-       SDL_GetVersion(&Version);
-       igText("SDL Version: %u.%u.%u",Version.major,Version.minor,Version.patch);
-       igSeparator();
-       igText("Display Informations");
-       igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);
-       igText("Refresh Rate:%i",VidConfigRefreshRate->IValue);
+        igSeparator();
+        igText("Export the current level and objects");
+        ButtonSize.x = 0.f;
+        ButtonSize.y = 0.f;
+        if( igButton("Export to OBJ",ButtonSize) ) {
+            LevelManagerExportToObj(LevelManager,GUI);
+        }
+        igSameLine(0.f,10.f);
+        if( igButton("Export to Ply",ButtonSize) ) {
+            LevelManagerExportToPly(LevelManager,GUI);
+        }
+        igSeparator();
+        igText("Debug Statistics");
+        igText("NumActiveWindows:%i",GUI->NumActiveWindows);
+        igSeparator();
+        igText(ComTime->FPSString);
+        igText("OpenGL Version: %s",glGetString(GL_VERSION));
+        SDL_GetVersion(&Version);
+        igText("SDL Version: %u.%u.%u",Version.major,Version.minor,Version.patch);
+        igSeparator();
+        igText("Display Informations");
+        igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);
+        igText("Refresh Rate:%i",VidConfigRefreshRate->IValue);
     }
+    
     if( !GUI->DebugWindowHandle ) {
         GUIToggleHandle(GUI,GUI->DebugWindowHandle);
     }
@@ -457,6 +470,8 @@ void GUIFileDialogRender(GUI_t *GUI,GUIFileDialog_t *FileDialog)
     ImVec2 WindowPosition;
     ImVec2 WindowPivot;
     char *DirectoryPath;
+    char *FileName;
+    void *UserData;
     
     if( !FileDialog ) {
         return;
@@ -479,10 +494,17 @@ void GUIFileDialogRender(GUI_t *GUI,GUIFileDialog_t *FileDialog)
     if (IGFD_DisplayDialog(FileDialog->Window, FileDialog->Key, 
         ImGuiWindowFlags_NoCollapse  | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings, MinSize, MaxSize)) {
         if (IGFD_IsOk(FileDialog->Window)) {
-                DirectoryPath = IGFD_GetFilePathName(FileDialog->Window);
-                if( DirectoryPath && FileDialog->OnDirSelected ) {
-                    FileDialog->OnDirSelected(FileDialog,GUI,DirectoryPath);
+                FileName = IGFD_GetFilePathName(FileDialog->Window);
+                DirectoryPath = IGFD_GetCurrentPath(FileDialog->Window);
+                UserData = IGFD_GetUserDatas(FileDialog->Window);
+                if( FileDialog->OnDirSelected ) {
+                    FileDialog->OnDirSelected(FileDialog,GUI,DirectoryPath,FileName,UserData);
+                }
+                if( DirectoryPath ) {
                     free(DirectoryPath);
+                }
+                if( FileName ) {
+                    free(FileName);
                 }
         } else {
             if( FileDialog->OnDirSelectionCancelled ) {
@@ -528,7 +550,7 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
         Pivot.y = 0.5f;
         ModalPosition.x = IO->DisplaySize.x * 0.5;
         ModalPosition.y = IO->DisplaySize.y * 0.5;
-        igSetNextWindowPos(ModalPosition, ImGuiCond_Once, Pivot);
+        igSetNextWindowPos(ModalPosition, ImGuiCond_Always, Pivot);
         if( igBeginPopupModal("Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
             igText(GUI->ErrorMessage);
             if (igButton("OK", ButtonSize) ) {
@@ -538,7 +560,7 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
             igEndPopup();
         }
     }
-    GUIDrawDebugWindow(GUI);
+    GUIDrawDebugWindow(GUI,LevelManager);
     GUIDrawSettingsWindow(GUI);
     GUIDrawLevelSelectWindow(GUI,LevelManager);
 //     igShowDemoWindow(NULL);
@@ -554,33 +576,36 @@ int GUIFileDialogIsOpen(GUIFileDialog_t *Dialog)
     
     return IGFD_IsOpened(Dialog->Window);
 }
-
-void GUIFileDialogOpen(GUI_t *GUI,GUIFileDialog_t *Dialog)
+void GUIFileDialogOpenWithUserData(GUI_t *GUI,GUIFileDialog_t *FileDialog,void *UserData)
 {
-    if( !Dialog ) {
+    if( !FileDialog ) {
         DPrintf("GUIFileDialogOpen:Invalid dialog data\n");
         return;
     }
     
-    if( IGFD_IsOpened(Dialog->Window) ) {
+    if( IGFD_IsOpened(FileDialog->Window) ) {
         return;
     }
-    DPrintf("Opening Dialog with title %s Key %s\n",Dialog->WindowTitle,Dialog->Key);
-    IGFD_OpenDialog2(Dialog->Window,Dialog->Key,Dialog->WindowTitle,Dialog->Filters,".",1,NULL,ImGuiFileDialogFlags_DontShowHiddenFiles);
+    IGFD_OpenDialog2(FileDialog->Window,FileDialog->Key,FileDialog->WindowTitle,FileDialog->Filters,".",1,
+                     UserData,ImGuiFileDialogFlags_DontShowHiddenFiles);
     GUIPushWindow(GUI);
 }
-
-void GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *Dialog)
+void GUIFileDialogOpen(GUI_t *GUI,GUIFileDialog_t *FileDialog)
 {
-    if( !Dialog ) {
+    GUIFileDialogOpenWithUserData(GUI,FileDialog,NULL);
+}
+
+void GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *FileDialog)
+{
+    if( !FileDialog ) {
         DPrintf("GUIFileDialogClose:Invalid dialog data\n");
         return;
     }
     
-    if( !IGFD_IsOpened(Dialog->Window) ) {
+    if( !IGFD_IsOpened(FileDialog->Window) ) {
         return;
     }
-    IGFD_CloseDialog(Dialog->Window);
+    IGFD_CloseDialog(FileDialog->Window);
     GUIPopWindow(GUI);
 }
 /*
@@ -590,8 +615,8 @@ void GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *Dialog)
  OnDirSelected and OnDirSelectionCancelled are two callback that can be set to NULL if we are not interested in the result.
  NOTE that setting them to NULL or the cancel callback to NULL doesn't close the dialog.
  */
-GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filters,void (*OnDirSelected)(GUIFileDialog_t *,GUI_t *,char *),
-                                       void (*OnDirSelectionCancelled)(GUIFileDialog_t *,GUI_t*))
+GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filters,DirSelectedCallback_t OnDirSelected,
+                                       DirSelectionCancelledCallback_t OnDirSelectionCancelled)
 {
     GUIFileDialog_t *FileDialog;
     
@@ -608,7 +633,11 @@ GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filter
     }
     asprintf(&FileDialog->Key,"FileDialog%i",GUI->NumRegisteredFileDialog);
     FileDialog->WindowTitle = StringCopy(WindowTitle);
-    FileDialog->Filters = Filters;
+    if( Filters ) {
+        FileDialog->Filters = StringCopy(Filters);
+    } else {
+        FileDialog->Filters = NULL;
+    }
     FileDialog->Window = IGFD_Create();
     FileDialog->OnDirSelected = OnDirSelected;
     FileDialog->OnDirSelectionCancelled = OnDirSelectionCancelled;
@@ -617,6 +646,33 @@ GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filter
     GUI->NumRegisteredFileDialog++;
     
     return FileDialog;
+}
+void GUIFileDialogSetTitle(GUIFileDialog_t *FileDialog,char *Title)
+{
+    if(!FileDialog) {
+        DPrintf("GUIFileDialogSetCallbacks:Invalid dialog\n");
+        return;
+    }
+    if( !Title ) {
+        DPrintf("GUIFileDialogSetCallbacks:Invalid title\n");
+        return;
+    }
+    if( FileDialog->WindowTitle ) {
+        free(FileDialog->WindowTitle);
+    }
+    FileDialog->WindowTitle = StringCopy(Title);
+}
+/*
+
+*/
+void GUIFileDialogSetCallbacks(GUIFileDialog_t *FileDialog,DirSelectedCallback_t OnDirSelected,DirSelectionCancelledCallback_t OnDirSelectionCancelled)
+{
+    if(!FileDialog) {
+        DPrintf("GUIFileDialogSetCallbacks:Invalid dialog\n");
+        return;
+    }
+    FileDialog->OnDirSelected = OnDirSelected;
+    FileDialog->OnDirSelectionCancelled = OnDirSelectionCancelled;
 }
 void GUIContextInit(ImGuiContext *Context,SDL_Window *Window,SDL_GLContext *GLContext,char *ConfigFilePath)
 {
