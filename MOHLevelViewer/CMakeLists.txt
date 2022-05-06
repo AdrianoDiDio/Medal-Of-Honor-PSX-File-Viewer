@@ -36,19 +36,8 @@ pvs_studio_add_target(TARGET MOHLevelViewer.Analyze ALL
 #set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX foo)
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 
-if(WIN32)
-  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wl,-subsystem,windows)
-  add_definitions("-DIMGUI_IMPL_API=extern \"C\" __declspec\(dllexport\)")
-else()
-  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -fsanitize=address )
-  target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
-  add_definitions("-DIMGUI_IMPL_API=extern \"C\" ")
-endif()
-
-add_compile_definitions("IMGUI_IMPL_OPENGL_LOADER_GLEW")
-
-target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:-D_DEBUG -g>")
-target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:-O3>")
+include_directories(Libs/cimgui/imgui)
+# include_directories(${CMAKE_SOURCE_DIR})
 
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
@@ -62,11 +51,29 @@ include_directories(${PNG_INCLUDE_DIRS})
 set(OpenGL_GL_PREFERENCE LEGACY)
 find_package(OpenGL REQUIRED)
 
-include_directories(Libs/cimgui/imgui)
-# include_directories(${CMAKE_SOURCE_DIR})
 add_library(cimgui SHARED ${IMGUI_SOURCE_FILES})
 target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${CMAKE_SOURCE_DIR}/IMGUIConfig.h\"")
 target_link_libraries(cimgui ${FREETYPE_LIBRARIES} ${SDL2_LIBRARIES})
+
+if(WIN32)
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wl,-subsystem,windows)
+  add_definitions("-DIMGUI_IMPL_API=extern \"C\" __declspec\(dllexport\)")
+  target_link_libraries(${PROJECT_NAME} -static-libgcc mingw32 glew32)
+  target_link_libraries(cimgui -static-libstdc++ -static-libgcc -static)
+else()
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -fsanitize=address )
+  target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
+  add_definitions("-DIMGUI_IMPL_API=extern \"C\" ")
+endif()
+
+add_compile_definitions("IMGUI_IMPL_OPENGL_LOADER_GLEW")
+
+target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:-D_DEBUG -g>")
+target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:-O3>")
+
+
+
+
 
 
 include_directories(${OPENGL_INCLUDE_DIRS})
