@@ -309,7 +309,7 @@ Medal Of Honor uses a structure that contains several fields in order to update 
 | short | 2 bytes  | TSB (Texture Data) |
 | [UV](#uv-coordinatesuv) | 2 bytes  | UV2 |  
 
-Medal Of Honor:Underground stores this information as a list of short that references the [Texture Data](#texture-info) that will be applied  
+Medal Of Honor:Underground stores this information as a list of short that references the [Texture Data](#texture-info) that will be applied
 to a particular face.  
 ### Collision Data
 
@@ -716,9 +716,10 @@ Each Property contains the following data:
 
 
 ### Build
-> cd MOHLevelViewer && make
+> cd MOHLevelViewer && mkdir Build && cmake .. && cmake --build . --target MOHLevelViewer
 ### Usage
-> ./MOHLevelViewer <MOH Game Directory> MissionNumber LevelNumber
+> ./MOHLevelViewer <Optional Game Directory>
+**NOTE: The configuration is stored in the User preference folder (.local/share/MOHLevelViewer on Linux and AppData on Windows).  
 
 #### Controls
 
