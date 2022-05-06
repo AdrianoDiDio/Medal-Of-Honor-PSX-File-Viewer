@@ -720,7 +720,7 @@ Each Property contains the following data:
 ### Usage
 > ./MOHLevelViewer `<Optional Game Directory>`  
 
-**NOTE: The configuration is stored in the User preference folder (.local/share/MOHLevelViewer on Linux and AppData on Windows).  
+**NOTE: The configuration is stored in the User preference folder (.local/share/MOHLevelViewer on Linux and AppData on Windows).**  
 
 #### Controls
 
