@@ -294,12 +294,12 @@ Every block starts with an header that contains the following fields:
 | short | 2 bytes  | Face Data Offset  |
 | short | n bytes  | Array of Faces Index |
 
-**Note that Face Index is an index to the TSP face index**  
+**Note that Face Index is an index to the TSP face index only on Medal Of Honor, Medal Of Honor:Underground uses this as the Face offset.**  
 Face data multiplier is used to indicate that we need to load at FaceDataOffset n faces where n=NumberofFacesIndex * FaceDataMultiplier.
 
 #### Dynamic Face Data
-After the index list we have the actual face data that can be used to
-swap the original texture from the TSP face and contains the following data:
+After the index list we have the actual face data that can be used to swap the original texture from the TSP face.  
+Medal Of Honor uses a structure that contains several fields in order to update a specific face:  
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
@@ -307,8 +307,10 @@ swap the original texture from the TSP face and contains the following data:
 | short | 2 bytes  | CBA (Clut Data)  |
 | [UV](#uv-coordinatesuv) | 2 bytes  | UV1 |
 | short | 2 bytes  | TSB (Texture Data) |
-| [UV](#uv-coordinatesuv) | 2 bytes  | UV2 |
+| [UV](#uv-coordinatesuv) | 2 bytes  | UV2 |  
 
+Medal Of Honor:Underground stores this information as a list of short that references the [Texture Data](#texture-info) that will be applied  
+to a particular face.  
 ### Collision Data
 
 Collision data is found after the face block and has the following header:

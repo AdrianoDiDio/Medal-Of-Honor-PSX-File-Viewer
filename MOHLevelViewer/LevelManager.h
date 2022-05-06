@@ -25,10 +25,10 @@
 #include "Config.h"
 
 typedef enum {
-    LEVEL_MANAGER_EXPORT_TYPE_OBJ,
-    LEVEL_MANAGER_EXPORT_TYPE_PLY,
-    LEVEL_MANAGER_EXPORT_TYPE_UNKNOWN
-} LevelManagerExportTypes_t;
+    LEVEL_MANAGER_EXPORT_FORMAT_OBJ,
+    LEVEL_MANAGER_EXPORT_FORMAT_PLY,
+    LEVEL_MANAGER_EXPORT_FORMAT_UNKNOWN
+} LevelManagerExportFormats_t;
 
 typedef struct MissionLevel_s {
     char *LevelName;

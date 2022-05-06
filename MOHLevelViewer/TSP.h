@@ -28,6 +28,7 @@ typedef enum {
     TSP_FX_NONE = 1,
     TSP_FX_TRANSPARENCY = 2,
     TSP_FX_ANIMATED = 4,
+    TSP_FX_DYNAMIC = 8
 } TSPRenderingFaceFlags_t;
 
 typedef struct TSPVec3_s {
@@ -70,7 +71,9 @@ typedef struct TSPRenderingFace_s {
     int BlendingMode;
     unsigned int OriginalColor[3];
     int ColorIndex[3];
+    int DynamicDataIndex;
     int Flags;
+    int SwapV1V2;
     struct TSPRenderingFace_s *Next;
 } TSPRenderingFace_t;
 
@@ -95,6 +98,7 @@ typedef struct TSPFaceV3_s {
     unsigned int Vert1;
     unsigned int Vert2;
     int SwapV1V2;
+    int FileOffset;
 } TSPFaceV3_t;
 
 //36 Bytes.
@@ -148,6 +152,9 @@ typedef struct TSPDynamicData_s {
     TSPDynamicDataHeader_t Header;
     short *FaceIndexList;
     TSPDynamicFaceData_t *FaceDataList;
+    short *FaceDataListV3;
+    int CurrentStride;
+    int LastUpdateTime;
 } TSPDynamicData_t;
 
 typedef struct TSPCollisionHeader_s {
@@ -245,14 +252,15 @@ typedef struct Level_s Level_t;
 
 TSP_t  *TSPLoad(char *FName,int TSPNumber);
 void    TSPDrawList(LevelManager_t *Level);
-void TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,int Reset);
+void    TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,int Reset);
+void    TSPUpdateDynamicFaces(TSP_t *TSPList,int DynamicDataIndex);
 void    TSPCreateVAO(TSP_t *TSP);
-void TSPCreateNodeBBoxVAO(TSP_t *TSPList);
-void TSPCreateCollisionVAO(TSP_t *TSPList);
-int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY);
-bool TSPIsVersion3(TSP_t *TSP);
-void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile);
-void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile);
-void TSPFree(TSP_t *TSP);
-void TSPFreeList(TSP_t *List);
+void    TSPCreateNodeBBoxVAO(TSP_t *TSPList);
+void    TSPCreateCollisionVAO(TSP_t *TSPList);
+int     TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY);
+bool    TSPIsVersion3(TSP_t *TSP);
+void    TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile);
+void    TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile);
+void    TSPFree(TSP_t *TSP);
+void    TSPFreeList(TSP_t *List);
 #endif //__TSPVIEWER_H_

@@ -132,6 +132,7 @@ typedef struct BSDNode_s {
     int MessageData; //Offset to a list of Message Ids
     Byte DynamicBlockIndex;
     //TODO:At 0x5c in every pickup object is stored the amount of ammo...
+    int IsVisited;
 } BSDNode_t;
 
 typedef struct BSDTSPStreamNode_s {
@@ -383,6 +384,8 @@ Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD,Vec3_t *Rotation);
 void    BSDCreateVAOs(BSD_t *BSD,VRAM_t *VRAM);
 void    BSDDraw(LevelManager_t *LevelManager);
 void    BSDDrawSky(LevelManager_t *LevelManager);
+void    BSDClearNodesFlag(BSD_t *BSD);
+int     BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD);
 unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId);
 unsigned int BSDMPNodeIdToRenderObjectId(unsigned int NodeId);
 int     BSDGetRenderObjectIndexById(BSD_t *BSD,int Id);

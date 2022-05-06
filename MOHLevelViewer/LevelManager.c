@@ -420,6 +420,14 @@ int LevelManagerGetGameEngine(LevelManager_t *LevelManager)
     return LevelManager->GameEngine;
 }
 
+void LevelManagerFreeExporterData(GUIFileDialog_t *FileDialog)
+{
+    LevelManagerExporter_t *Exporter;
+    Exporter = (LevelManagerExporter_t *) GUIFileDialogGetUserData(FileDialog);
+    if( Exporter ) {
+        free(Exporter);
+    }
+}
 void LevelManagerCleanUp()
 {
     if( LevelManager->CurrentLevel != NULL ) {
@@ -427,6 +435,10 @@ void LevelManagerCleanUp()
     }
     if( LevelManager->BasePath ) {
         free(LevelManager->BasePath);
+    }
+    //If the user didn't close the dialog free the user data that we passed to it.
+    if( GUIFileDialogIsOpen(LevelManager->ExportFileDialog) ) {
+        LevelManagerFreeExporterData(LevelManager->ExportFileDialog);
     }
     free(LevelManager);
 }
@@ -496,7 +508,7 @@ void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,char *Direc
     }
     asprintf(&EngineName,"%s",(LevelManager->GameEngine == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
     asprintf(&LevelFileName,"%s-MSN%iLVL%i_Level.ply",EngineName,LevelManager->CurrentLevel->MissionNumber,LevelManager->CurrentLevel->LevelNumber);
-    asprintf(&ObjectFileName,"%s-MSN%iLVL%i_Object.ply",EngineName,LevelManager->CurrentLevel->MissionNumber,LevelManager->CurrentLevel->LevelNumber);
+    asprintf(&ObjectFileName,"%s-MSN%iLVL%i_Objects.ply",EngineName,LevelManager->CurrentLevel->MissionNumber,LevelManager->CurrentLevel->LevelNumber);
     asprintf(&PlyLevelFile,"%s%c%s",Directory,PATHSEPARATOR,LevelFileName);
     asprintf(&PlyObjectFile,"%s%c%s",Directory,PATHSEPARATOR,ObjectFileName);
     asprintf(&TextureFile,"%s%cvram.png",Directory,PATHSEPARATOR);
@@ -530,6 +542,7 @@ void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,char *Direc
 
 }
 
+
 void LevelManagerOnExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Directory,char *File,void *UserData)
 {
     LevelManagerExporter_t *Exporter;
@@ -540,27 +553,28 @@ void LevelManagerOnExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char
     GUIProgressBarBegin(GUI,"Exporting...");
 
     switch( Exporter->OutputFormat ) {
-        case LEVEL_MANAGER_EXPORT_TYPE_OBJ:
+        case LEVEL_MANAGER_EXPORT_FORMAT_OBJ:
             LevelManagerExportToObj(LevelManager,GUI,Directory);
             break;
-        case LEVEL_MANAGER_EXPORT_TYPE_PLY:
+        case LEVEL_MANAGER_EXPORT_FORMAT_PLY:
             LevelManagerExportToPly(LevelManager,GUI,Directory);
             break;
         default:
-            DPrintf("LevelManagerOnDirSelected:Invalid output format\n");
+            DPrintf("LevelManagerOnExportDirSelected:Invalid output format\n");
             break;
     }
         
     GUIProgressBarEnd(GUI);
-
     GUIFileDialogClose(GUI,FileDialog);
     free(Exporter);
 }
 
 void LevelManagerOnExportDirCancelled(GUIFileDialog_t *FileDialog,GUI_t *GUI)
 {
+    LevelManagerFreeExporterData(FileDialog);
     GUIFileDialogClose(GUI,FileDialog);
 }
+
 void LevelManagerOnDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Path,char *File,void *UserData)
 {
     int LoadStatus;
@@ -592,16 +606,15 @@ void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,int OutputFormat
         DPrintf("LevelManagerExport:Invalid GUI data\n");
         return;
     }
-    Exporter = malloc(sizeof(LevelManagerExporter_t));
+    Exporter = malloc(sizeof(LevelManager_t));
     if( !Exporter ) {
-        DPrintf("LevelManagerExport:Failed\n");
+        DPrintf("LevelManagerExport:Couldn't allocate data for the exporter\n");
         return;
     }
     Exporter->LevelManager = LevelManager;
     Exporter->OutputFormat = OutputFormat;
 
     GUIFileDialogSetTitle(LevelManager->ExportFileDialog,"Export");
-    GUIFileDialogSetCallbacks(LevelManager->ExportFileDialog,LevelManagerOnExportDirSelected,LevelManagerOnExportDirCancelled);
     GUIFileDialogOpenWithUserData(GUI,LevelManager->ExportFileDialog,Exporter);
 }
 
@@ -609,7 +622,8 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
 {
     Level_t *Level;
     vec3 temp;
-
+    int DynamicData;
+    
     //LevelManager has not received a valid path yet.
     if( !LevelManager->IsPathSet ) {
         return;
@@ -620,6 +634,13 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
     }
     
     Level = LevelManager->CurrentLevel;
+    
+    BSDClearNodesFlag(Level->BSD);
+    
+    while( (DynamicData = BSDGetCurrentCameraNodeDynamicData(Level->BSD) ) != -1 ) {
+        DPrintf("Updating ddata %i\n",DynamicData);
+        TSPUpdateDynamicFaces(Level->TSPList,DynamicData);
+    }
     
     if( LevelManager->Settings.EnableAnimatedLights ) {
         BSDUpdateAnimatedLights(Level->BSD);
@@ -792,8 +813,9 @@ void LevelManagerInit(GUI_t *GUI)
         DPrintf("LevelManagerInit:Failed to allocate memory for level struct\n");
         return;
     }
-    LevelManager->FileDialog = GUIFileDialogRegister(GUI,"Select Directory",NULL,LevelManagerOnDirSelected,LevelManagerOnDirSelectionCancelled);
-    LevelManager->ExportFileDialog = GUIFileDialogRegister(GUI,"Export Level",NULL,NULL,LevelManagerOnExportDirCancelled);
+    LevelManager->FileDialog = GUIFileDialogRegister(GUI,"Select Directory",NULL,
+                                                     LevelManagerOnDirSelected,LevelManagerOnDirSelectionCancelled);
+    LevelManager->ExportFileDialog = GUIFileDialogRegister(GUI,"Export Level",NULL,LevelManagerOnExportDirSelected,LevelManagerOnExportDirCancelled);
 
     LevelManager->BasePath = NULL;
     //No path has been provided to it yet.

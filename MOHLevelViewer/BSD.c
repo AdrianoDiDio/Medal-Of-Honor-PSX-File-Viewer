@@ -23,6 +23,32 @@
 #include "MOHLevelViewer.h"
 #include "ShaderManager.h"
 
+/*
+ TODO(Adriano):
+    Add a custom flag to each Node.
+    Each Frame => BSDClearNodeFlags
+    IsCameraInNode => Set Node Flags
+    BSDClearNodeFlags()
+    {
+        for( Node in NodeList ) {
+            Node->Flags = 0
+        }
+    }
+    BSDGetCurrentDynamicIndex(Camera)
+    {
+        for( Node in NodeList ) {
+            If( Camera In Node And Type = 5 ) {
+                Node->Checked = 1;
+                return Index;
+            }
+        }
+        return -1;
+    }
+    Usage in LevelManager:
+    while( BSDGetCurrentDynamicIndex(Camera) != -1 ) {
+        TSPUpdateDynamicIndex(Index);
+    }
+ */
 Color1i_t StarsColors[7] = {
     //R   G   B
     //128;128;128
@@ -1591,6 +1617,34 @@ bool BSDPointInNode(Vec3_t Position,BSDNode_t *Node)
     }
 }
 
+void BSDClearNodesFlag(BSD_t *BSD)
+{
+    int i;
+    for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
+        BSD->NodeData.Node[i].IsVisited = 0;
+    }
+}
+
+int BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD)
+{
+    int i;
+    for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
+        if( BSD->NodeData.Node[i].IsVisited ) {
+            continue;
+        }
+        if( BSD->NodeData.Node[i].MessageData == -1 ) {
+            continue;
+        }
+        
+        if( BSDPointInNode(Camera.Position,&BSD->NodeData.Node[i]) ) {
+            if( BSD->NodeData.Node[i].Type == 5 ) {
+                BSD->NodeData.Node[i].IsVisited = 1;
+                return BSD->NodeData.Node[i].DynamicBlockIndex;
+            }
+        }
+    }
+    return -1;
+}
 //TODO:Spawn the RenderObject when loading node data!
 //     Some nodes don't have a corresponding RenderObject like the PlayerSpawn.
 //     BSDSpawnEntity(int UBlockId,Vec3_t NodePos) => Store into a list and transform to vao.
@@ -1606,7 +1660,7 @@ void BSDDraw(LevelManager_t *LevelManager)
     
     Level = LevelManager->CurrentLevel;
     
-    if( 1 ) {
+    if( 0 ) {
         for( int i = 0; i < Level->BSD->NodeData.Header.NumNodes; i++ ) {
             if( Level->BSD->NodeData.Node[i].MessageData == -1 ) {
                 continue;

@@ -25,8 +25,8 @@
 typedef struct GUI_s GUI_t;
 typedef struct GUIFileDialog_s GUIFileDialog_t;
 
-typedef void (*DirSelectedCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Directory,char *File,void *UserData);
-typedef void (*DirSelectionCancelledCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI);
+typedef void (*FileDialogSelectCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Directory,char *File,void *UserData);
+typedef void (*FileDialogCancelCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI);
 
 typedef struct GUIProgressBar_s {
     ImGuiContext *Context;
@@ -40,8 +40,8 @@ typedef struct GUIFileDialog_s {
     char *Key;
     char *Filters;
     ImGuiFileDialog *Window;
-    DirSelectedCallback_t OnDirSelected;
-    DirSelectionCancelledCallback_t OnDirSelectionCancelled;    
+    FileDialogSelectCallback_t OnElementSelected;
+    FileDialogCancelCallback_t OnDialogCancelled;    
     struct GUIFileDialog_s *Next;
 } GUIFileDialog_t;
 typedef struct GUI_s {
@@ -70,13 +70,15 @@ void GUIToggleDebugWindow(GUI_t *GUI);
 void GUIToggleSettingsWindow(GUI_t *GUI);
 void GUIToggleLevelSelectWindow(GUI_t *GUI);
 void GUISetErrorMessage(GUI_t *GUI,char *Message);
-GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filters,DirSelectedCallback_t OnDirSelected,
-                                       DirSelectionCancelledCallback_t OnDirSelectionCancelled);
+GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filters,FileDialogSelectCallback_t OnElementSelected,
+                                       FileDialogCancelCallback_t OnDialogCancelled);
 void GUIFileDialogSetTitle(GUIFileDialog_t *FileDialog,char *Title);
-void GUIFileDialogSetCallbacks(GUIFileDialog_t *FileDialog,DirSelectedCallback_t OnDirSelected,DirSelectionCancelledCallback_t OnDirSelectionCancelled);
+void GUIFileDialogSetOnElementSelectedCallback(GUIFileDialog_t *FileDialog,FileDialogSelectCallback_t OnElementSelected);
+void GUIFileDialogSetOnDialogCancelledCallback(GUIFileDialog_t *FileDialog,FileDialogCancelCallback_t OnDialogCancelled);
 int GUIFileDialogIsOpen(GUIFileDialog_t *FileDialog);
 void GUIFileDialogOpen(GUI_t *GUI,GUIFileDialog_t *FileDialog);
 void GUIFileDialogOpenWithUserData(GUI_t *GUI,GUIFileDialog_t *FileDialog,void *UserData);
+void *GUIFileDialogGetUserData(GUIFileDialog_t *FileDialog);
 void GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *FileDialog);
 int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
 void GUIProgressBarBegin(GUI_t *GUI,char *Title);
