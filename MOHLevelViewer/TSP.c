@@ -59,7 +59,12 @@ void TSPFree(TSP_t *TSP)
     if( TSP->Header.NumDynamicDataBlock != 0 ) {
         for( i = 0; i < TSP->Header.NumDynamicDataBlock; i++ ) {
             free(TSP->DynamicData[i].FaceIndexList);
-            free(TSP->DynamicData[i].FaceDataList);
+            if( TSP->DynamicData[i].FaceDataList ) {
+                free(TSP->DynamicData[i].FaceDataList);
+            }
+            if( TSP->DynamicData[i].FaceDataListV3 ) {
+                free(TSP->DynamicData[i].FaceDataListV3);
+            }
         }
         free(TSP->DynamicData);
     }
@@ -871,6 +876,7 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
 //         }
         if( TSPIsFaceDynamic(TSP,Node->FaceList[i].FileOffset) ) {
             RenderingFace->Flags |= TSP_FX_DYNAMIC;
+            RenderingFace->SwapV1V2 = Node->FaceList[i].SwapV1V2;
             RenderingFace->DynamicDataIndex = Node->FaceList[i].FileOffset;
         }
         if( TSPGetColorIndex(TSP->Color[Vert0].c) < 40 || TSPGetColorIndex(TSP->Color[Vert1].c) < 40 || TSPGetColorIndex(TSP->Color[Vert2].c) < 40 ) {
@@ -1471,22 +1477,49 @@ void TSPUpdateDynamicFaces(TSP_t *TSPList,int DynamicDataIndex)
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         for( i = 0; i < Iterator->Header.NumDynamicDataBlock; i++ ) {
             if( Iterator->DynamicData[i].Header.DynamicDataIndex == DynamicDataIndex ) {
-                if( Iterator->DynamicData[i].CurrentStride >= Iterator->DynamicData[i].Header.FaceDataSizeMultiplier ) {
-                    Iterator->DynamicData[i].CurrentStride = 0;
-                }
-                
                 Now = SysMilliseconds();
                 if( (Now - Iterator->DynamicData[i].LastUpdateTime) < 120 ) {
                     continue;
                 }
                 Iterator->DynamicData[i].LastUpdateTime = Now;
+                switch( Iterator->DynamicData[i].Header.EffectType ) {
+                    case TSP_DYNAMIC_FACE_EFFECT_PLAY_AND_STOP_TO_LAST:
+                        Iterator->DynamicData[i].CurrentStride += Iterator->DynamicData[i].IncrementOffset;
+                        if( Iterator->DynamicData[i].CurrentStride >= Iterator->DynamicData[i].Header.FaceDataSizeMultiplier ) {
+                            Iterator->DynamicData[i].CurrentStride = Iterator->DynamicData[i].Header.FaceDataSizeMultiplier - 1;
+                            Iterator->DynamicData[i].IncrementOffset = 0;
+                        }
+                        break;
+                    case TSP_DYNAMIC_FACE_EFFECT_JUMP_TO_LAST:
+                        Iterator->DynamicData[i].CurrentStride += 23;
+                        Iterator->DynamicData[i].CurrentStride %= Iterator->DynamicData[i].Header.FaceDataSizeMultiplier;
+                        break;
+                    case TSP_DYNAMIC_FACE_EFFECT_CYCLE:
+                        Iterator->DynamicData[i].CurrentStride++;
+                        if( Iterator->DynamicData[i].CurrentStride >= Iterator->DynamicData[i].Header.FaceDataSizeMultiplier ) {
+                            Iterator->DynamicData[i].CurrentStride = 0;
+                        }
+                        break;
+                    case TSP_DYNAMIC_FACE_EFFECT_PULSE:
+                        Iterator->DynamicData[i].CurrentStride += Iterator->DynamicData[i].IncrementOffset;
+                        if( Iterator->DynamicData[i].CurrentStride < 0 ) {
+                            Iterator->DynamicData[i].CurrentStride = 1;
+                            Iterator->DynamicData[i].IncrementOffset = 1;
+                        } else {
+                            if( Iterator->DynamicData[i].CurrentStride >= Iterator->DynamicData[i].Header.FaceDataSizeMultiplier ) {
+                                Iterator->DynamicData[i].CurrentStride = Iterator->DynamicData[i].Header.FaceDataSizeMultiplier - 2;
+                                Iterator->DynamicData[i].IncrementOffset = -1;
+                            }
+                        }
+                        break;
+                }
+
 //                 TSPUpdateFaces(Iterator,&Iterator->DynamicData[i]);
                 DPrintf("TSP File %s:Update Dynamic Data with index %i Unk0:%i Unk1:%i MaxStride:%i\n",
                         Iterator->FName,DynamicDataIndex,Iterator->DynamicData[i].Header.Unk0,
-                    Iterator->DynamicData[i].Header.Unk1,Iterator->DynamicData[i].Header.FaceDataSizeMultiplier
+                    Iterator->DynamicData[i].Header.EffectType,Iterator->DynamicData[i].Header.FaceDataSizeMultiplier
                 );
                 TSPUpdateDynamicFaceNodes(Iterator,&Iterator->Node[0],&Iterator->DynamicData[i],Iterator->DynamicData[i].CurrentStride);
-                Iterator->DynamicData[i].CurrentStride++;
             }
         }
     }
@@ -1983,16 +2016,17 @@ void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
         DynamicBlockStart = ftell(InFile);
         fread(&TSP->DynamicData[i].Header.Size,sizeof(TSP->DynamicData[i].Header.Size),1,InFile);
         fread(&TSP->DynamicData[i].Header.Unk0,sizeof(TSP->DynamicData[i].Header.Unk0),1,InFile);
-        fread(&TSP->DynamicData[i].Header.Unk1,sizeof(TSP->DynamicData[i].Header.Unk1),1,InFile);
+        fread(&TSP->DynamicData[i].Header.EffectType,sizeof(TSP->DynamicData[i].Header.EffectType),1,InFile);
         fread(&TSP->DynamicData[i].Header.DynamicDataIndex,sizeof(TSP->DynamicData[i].Header.DynamicDataIndex),1,InFile);
         fread(&TSP->DynamicData[i].Header.FaceDataSizeMultiplier,sizeof(TSP->DynamicData[i].Header.FaceDataSizeMultiplier),1,InFile);
         fread(&TSP->DynamicData[i].Header.NumFacesIndex,sizeof(TSP->DynamicData[i].Header.NumFacesIndex),1,InFile);
         fread(&TSP->DynamicData[i].Header.FaceIndexOffset,sizeof(TSP->DynamicData[i].Header.FaceIndexOffset),1,InFile);
         fread(&TSP->DynamicData[i].Header.FaceDataOffset,sizeof(TSP->DynamicData[i].Header.FaceDataOffset),1,InFile);
         TSP->DynamicData[i].CurrentStride = 0;
+        TSP->DynamicData[i].IncrementOffset = 1;
         TSP->DynamicData[i].LastUpdateTime = 0;
         DPrintf("Size:%i\n",TSP->DynamicData[i].Header.Size);
-        DPrintf("Unk0:%i || Unk1:%i\n",TSP->DynamicData[i].Header.Unk0,TSP->DynamicData[i].Header.Unk1);
+        DPrintf("Unk0:%i || EffectType:%i\n",TSP->DynamicData[i].Header.Unk0,TSP->DynamicData[i].Header.EffectType);
         DPrintf("Dynamic Data Index:%i\n",TSP->DynamicData[i].Header.DynamicDataIndex);
         DPrintf("FaceDataSizeMultiplier:%i\n",TSP->DynamicData[i].Header.FaceDataSizeMultiplier);
         DPrintf("NumFacesIndex:%i\n",TSP->DynamicData[i].Header.NumFacesIndex);

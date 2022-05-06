@@ -270,7 +270,7 @@ The new face is made from the main face struct that we read at the beginning whe
 If the integer has the left-most bit set then we need to swap Vertex0 and Vertex2, otherwise we need to set V0 equals to V1 and  
 V1 equals to V2.  
 Finally we update Vertex2 with the new value taken from the int.  
-Note that the Value read is an int that contains two informations: Vertex Number  (Value & 0x1FFF) and Texture Index (Value >> 16 ).  
+Note that the Value read is an int that contains two values: Vertex Number  (Value & 0x1FFF) and Texture Index (Value >> 16 ).  
 At the end of all the iterations we should find that the number of loaded faces is equals to the one declared in the node.  
 
 
@@ -286,7 +286,7 @@ Every block starts with an header that contains the following fields:
 | ---- | ---- | ----------- |
 | int | 4 bytes  | Dynamic Block Size |
 | int | 4 bytes  | Unknown |
-| int | 4 bytes  | Unknown |
+| int | 4 bytes  | Effect Type |
 | int | 4 bytes  | Dynamic Data Index  |
 | short | 2 bytes  | Face Data Multiplier  |
 | short | 2 bytes  | Number of Faces Index  |
@@ -295,7 +295,19 @@ Every block starts with an header that contains the following fields:
 | short | n bytes  | Array of Faces Index |
 
 **Note that Face Index is an index to the TSP face index only on Medal Of Honor, Medal Of Honor:Underground uses this as the Face offset.**  
-Face data multiplier is used to indicate that we need to load at FaceDataOffset n faces where n=NumberofFacesIndex * FaceDataMultiplier.
+Face data multiplier is used to indicate that we need to load at FaceDataOffset n faces where n=NumberofFacesIndex *
+FaceDataMultiplier.    
+
+There are four types of effects that can be played when using Dynamic data:    
+
+| Effect | Enum | Description |
+| ---- | --------| ----------- |
+| 0 | TSP_DYNAMIC_FACE_EFFECT_PLAY_AND_STOP_TO_LAST | Change the texture data until the last effect is reached then stops. |
+| 1 | TSP_DYNAMIC_FACE_EFFECT_JUMP_TO_LAST | Change the texture data to the last available in the array. |
+| 2 |  TSP_DYNAMIC_FACE_EFFECT_CYCLE | Change the texture data continuously that restarts when it reaches the last effect |
+| 3 |  TSP_DYNAMIC_FACE_EFFECT_PULSE | Change the texture data by increasing and decreasing the index.|
+
+
 
 #### Dynamic Face Data
 After the index list we have the actual face data that can be used to swap the original texture from the TSP face.  
@@ -426,7 +438,7 @@ one is contained in a structure of 20 bytes:
 
 Every animated light has a number of colors that are loaded at the
 specified StartingColorOffset (to which you would add 4-bytes until all colors are read)
-where each color is just a 4-byte integer that represents the 3 components (RGB) plus a 
+where each color is just a 4-byte integer that represents the 3 components (RGB) plus a
 constant value that it is used to restart the animation ( by setting the Delay value to this constant ).  
 Every frame the animated light structure is updated only if the Delay reaches
 zero, after which the ColorIndex is incremented wrapping around only when

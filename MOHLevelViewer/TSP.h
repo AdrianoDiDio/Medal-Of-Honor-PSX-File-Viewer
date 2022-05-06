@@ -31,6 +31,14 @@ typedef enum {
     TSP_FX_DYNAMIC = 8
 } TSPRenderingFaceFlags_t;
 
+typedef enum {
+    TSP_DYNAMIC_FACE_EFFECT_PLAY_AND_STOP_TO_LAST = 0
+    TSP_DYNAMIC_FACE_EFFECT_JUMP_TO_LAST = 1,
+    TSP_DYNAMIC_FACE_EFFECT_CYCLE = 2,
+    TSP_DYNAMIC_FACE_EFFECT_PULSE = 3
+    
+} TSPDynamicFaceEffectType_t;
+
 typedef struct TSPVec3_s {
     short x;
     short y;
@@ -140,7 +148,7 @@ typedef struct TSPDynamicDataHeader_s
 {
     int Size;
     int Unk0;
-    int Unk1;
+    int EffectType;
     int DynamicDataIndex;
     short FaceDataSizeMultiplier; //Maybe it tells how many face data we have (2*NumFaces)?
     short NumFacesIndex;
@@ -154,6 +162,7 @@ typedef struct TSPDynamicData_s {
     TSPDynamicFaceData_t *FaceDataList;
     short *FaceDataListV3;
     int CurrentStride;
+    int IncrementOffset;
     int LastUpdateTime;
 } TSPDynamicData_t;
 
