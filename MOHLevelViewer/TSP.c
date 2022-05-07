@@ -462,41 +462,14 @@ int TSPIsFaceDynamic(TSP_t *TSP,int Face)
     }
     for( i = 0; i < TSP->Header.NumDynamicDataBlock; i++ ) {
         for( j = 0; j < TSP->DynamicData[i].Header.NumFacesIndex; j++ ) {
-            if( TSPIsVersion3(TSP) ) {
-                if( (TSP->DynamicData[i].FaceIndexList[j] ) == Face ) {
-                    return true;
-                }
-            } else {
-                if( TSP->DynamicData[i].FaceIndexList[j] == Face ) {
-                    return true;
-                }
+            if( TSP->DynamicData[i].FaceIndexList[j] == Face ) {
+                return true;
             }
         }
     }
     return false;
 }
-TSPDynamicFaceData_t *GetDynamicDataByFaceIndex(TSP_t *TSP,int FaceIndex,int Stride)
-{
-    int i;
-    int j;
-    int FaceDataStride;
-    if( TSP->Header.NumDynamicDataBlock == 0 ) {
-        return NULL;
-    }
-    for( i = 0; i < TSP->Header.NumDynamicDataBlock; i++ ) {
-        for( j = 0; j < TSP->DynamicData[i].Header.NumFacesIndex; j++ ) {
-            if( TSP->DynamicData[i].FaceIndexList[j] == FaceIndex ) {
-//                 if( Stride < TSP->DynamicData[i].Header.FaceDataSizeMultiplier ) {
-//                     FaceDataStride = Stride;
-//                 } else {
-                    FaceDataStride = Stride - 1;
-//                 }
-                return &TSP->DynamicData[i].FaceDataList[j + (TSP->DynamicData[i].Header.NumFacesIndex * FaceDataStride)];
-            }
-        }
-    }
-    return NULL;
-}
+
 int TSPGetNodeTransparentFaceCount(TSP_t *TSP,TSPNode_t *Node)
 {
     TSPTextureInfo_t TextureInfo;
@@ -625,24 +598,14 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             RenderingFace->Flags |= TSP_FX_DYNAMIC;
             RenderingFace->DynamicDataIndex = i;
         }
-//         DynamicData = GetDynamicDataByFaceIndex(TSP,j,2);
-//         if( DynamicData != NULL ) {
-//             U0 = (((float)DynamicData->UV0.u)/Width);
-//             V0 = /*255 -*/(((float)DynamicData->UV0.v) / Height);
-//             U1 = (((float)DynamicData->UV1.u) / Width);
-//             V1 = /*255 -*/(((float)DynamicData->UV1.v) /Height);
-//             U2 = (((float)DynamicData->UV2.u) /Width);
-//             V2 = /*255 -*/(((float)DynamicData->UV2.v) / Height);
-//             TSB = DynamicData->TSB;
-//             CBA = DynamicData->CBA;
-//         } else {
-            U0 = TSP->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage);
-            V0 = TSP->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-            U1 = TSP->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage);
-            V1 = TSP->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-            U2 = TSP->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage);
-            V2 = TSP->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-//         }
+
+        U0 = TSP->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage);
+        V0 = TSP->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+        U1 = TSP->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage);
+        V1 = TSP->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+        U2 = TSP->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage);
+        V2 = TSP->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+     
         
         if( TSPGetColorIndex(TSP->Color[Vert0].c) < 40 || TSPGetColorIndex(TSP->Color[Vert1].c) < 40 || TSPGetColorIndex(TSP->Color[Vert2].c) < 40 ) {
             RenderingFace->Flags |= TSP_FX_ANIMATED;
@@ -848,32 +811,21 @@ void TSPCreateFaceV3VAO(TSP_t *TSP,TSPNode_t *Node)
             Vert1 = Node->FaceList[i].Vert1;
             Vert2 = Node->FaceList[i].Vert2;
         }
-        
-//         DynamicData = GetDynamicDataByFaceIndex(TSP,j,2);
-//         if( DynamicData != NULL ) {
-//             U0 = (((float)DynamicData->UV0.u)/Width);
-//             V0 = /*255 -*/(((float)DynamicData->UV0.v) / Height);
-//             U1 = (((float)DynamicData->UV1.u) / Width);
-//             V1 = /*255 -*/(((float)DynamicData->UV1.v) /Height);
-//             U2 = (((float)DynamicData->UV2.u) /Width);
-//             V2 = /*255 -*/(((float)DynamicData->UV2.v) / Height);
-//             TSB = DynamicData->TSB;
-//             CBA = DynamicData->CBA;
-//         } else {
-            U0 = (TextureInfo.UV0.u + VRAMGetTexturePageX(VRAMPage));
-            V0 = TextureInfo.UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-            if( Node->FaceList[i].SwapV1V2 ) {
-                U2 = (TextureInfo.UV1.u + VRAMGetTexturePageX(VRAMPage));
-                V2 = (TextureInfo.UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
-                U1 = (TextureInfo.UV2.u + VRAMGetTexturePageX(VRAMPage));
-                V1 = (TextureInfo.UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
-            } else {
-                U1 = (TextureInfo.UV1.u + VRAMGetTexturePageX(VRAMPage));
-                V1 = (TextureInfo.UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
-                U2 = (TextureInfo.UV2.u + VRAMGetTexturePageX(VRAMPage));
-                V2 = (TextureInfo.UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
-            }
-//         }
+
+        U0 = (TextureInfo.UV0.u + VRAMGetTexturePageX(VRAMPage));
+        V0 = TextureInfo.UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+        if( Node->FaceList[i].SwapV1V2 ) {
+            U2 = (TextureInfo.UV1.u + VRAMGetTexturePageX(VRAMPage));
+            V2 = (TextureInfo.UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
+            U1 = (TextureInfo.UV2.u + VRAMGetTexturePageX(VRAMPage));
+            V1 = (TextureInfo.UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
+        } else {
+            U1 = (TextureInfo.UV1.u + VRAMGetTexturePageX(VRAMPage));
+            V1 = (TextureInfo.UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
+            U2 = (TextureInfo.UV2.u + VRAMGetTexturePageX(VRAMPage));
+            V2 = (TextureInfo.UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode));
+        }
+
         if( TSPIsFaceDynamic(TSP,Node->FaceList[i].FileOffset) ) {
             RenderingFace->Flags |= TSP_FX_DYNAMIC;
             RenderingFace->SwapV1V2 = Node->FaceList[i].SwapV1V2;
@@ -1304,12 +1256,20 @@ void DrawNode(TSPNode_t *Node,LevelSettings_t LevelSettings)
     }
 }
 
-void TSPUpdateDynamicRenderingFaces(TSP_t *TSP,TSPRenderingFace_t *Face,VAO_t *VAO,TSPDynamicData_t *DynamicData,int Reset)
+void TSPUpdateDynamicRenderingFaces(TSP_t *TSP,TSPRenderingFace_t *Face,VAO_t *VAO,TSPDynamicData_t *DynamicData)
 {
+    short FaceDataIndex;
+    int ColorMode;
+    int VRAMPage;
+    int CLUTPosX;
+    int CLUTPosY;
+    int CLUTPage;
+    int CLUTDestX;
+    int CLUTDestY;
     int FaceStride;
     int DynamicDataIndex;
     int Stride;
-    int ColorData[2];
+    int UVData[2];
     int CLUTData[3];
     int BaseOffset;
     int i;
@@ -1322,129 +1282,102 @@ void TSPUpdateDynamicRenderingFaces(TSP_t *TSP,TSPRenderingFace_t *Face,VAO_t *V
     if( !(Face->Flags & TSP_FX_DYNAMIC) ) {
         return;
     }
-    FaceStride = Reset * DynamicData->Header.NumFacesIndex;
+    FaceStride =  DynamicData->CurrentStride * DynamicData->Header.NumFacesIndex;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, VAO->VBOId[0]);
     for( i = 0; i < DynamicData->Header.NumFacesIndex; i++ ) {
         DynamicDataIndex = DynamicData->FaceIndexList[i];
         if( Face->DynamicDataIndex  != DynamicDataIndex ) {
             continue;
         }
         if( TSPIsVersion3(TSP) ) {
-            short FaceDataIndex = DynamicData->FaceDataListV3[FaceStride];
+            FaceDataIndex = DynamicData->FaceDataListV3[FaceStride];
             DPrintf("Grabbing tex info %i\n",FaceDataIndex);
             TSPTextureInfo_t *FaceData = &TSP->TextureData[FaceDataIndex];
             Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
-            glBindBuffer(GL_ARRAY_BUFFER, VAO->VBOId[0]);
             BaseOffset = (Face->VAOBufferOffset * Stride );
-            int ColorMode = (FaceData->TSB >> 7) & 0x3;
-            int VRAMPage = FaceData->TSB & 0x1F;
+            ColorMode = (FaceData->TSB >> 7) & 0x3;
+            VRAMPage = FaceData->TSB & 0x1F;
         
             
-            int CLUTPosX = (FaceData->CBA << 4) & 0x3F0;
-            int CLUTPosY = (FaceData->CBA >> 6) & 0x1ff;
-            int CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
-            int CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
-            int CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
+            CLUTPosX = (FaceData->CBA << 4) & 0x3F0;
+            CLUTPosY = (FaceData->CBA >> 6) & 0x1ff;
+            CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
+            CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
+            CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
             CLUTDestX += VRAMGetTexturePageX(CLUTPage);
+            
+            UVData[0] = FaceData->UV0.u + VRAMGetTexturePageX(VRAMPage);
+            UVData[1] = FaceData->UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+            glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 0) + (3*sizeof(int)), 2 * sizeof(int), &UVData);
+            if( Face->SwapV1V2 ) {
+                UVData[0] = FaceData->UV2.u + VRAMGetTexturePageX(VRAMPage);
+                UVData[1] = FaceData->UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1) + (3*sizeof(int)), 2 * sizeof(int), &UVData);    
+                UVData[0] = FaceData->UV1.u + VRAMGetTexturePageX(VRAMPage);
+                UVData[1] = FaceData->UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2) + (3*sizeof(int)), 2 * sizeof(int), &UVData);
+            } else {
+                UVData[0] = FaceData->UV1.u + VRAMGetTexturePageX(VRAMPage);
+                UVData[1] = FaceData->UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1) + (3*sizeof(int)), 2 * sizeof(int), &UVData);    
+                UVData[0] = FaceData->UV2.u + VRAMGetTexturePageX(VRAMPage);
+                UVData[1] = FaceData->UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2) + (3*sizeof(int)), 2 * sizeof(int), &UVData);
 
-    //         DynamicData = GetDynamicDataByFaceIndex(TSP,j,2);
-    //         if( DynamicData != NULL ) {
-    //             U0 = (((float)DynamicData->UV0.u)/Width);
-    //             V0 = /*255 -*/(((float)DynamicData->UV0.v) / Height);
-    //             U1 = (((float)DynamicData->UV1.u) / Width);
-    //             V1 = /*255 -*/(((float)DynamicData->UV1.v) /Height);
-    //             U2 = (((float)DynamicData->UV2.u) /Width);
-    //             V2 = /*255 -*/(((float)DynamicData->UV2.v) / Height);
-    //             TSB = DynamicData->TSB;
-    //             CBA = DynamicData->CBA;
-    //         } else {
-                ColorData[0] = FaceData->UV0.u + VRAMGetTexturePageX(VRAMPage);
-                ColorData[1] = FaceData->UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 0) + (3*sizeof(int)), 2 * sizeof(int), &ColorData);
-                if( Face->SwapV1V2 ) {
-                    ColorData[0] = FaceData->UV2.u + VRAMGetTexturePageX(VRAMPage);
-                    ColorData[1] = FaceData->UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-                    glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1) + (3*sizeof(int)), 2 * sizeof(int), &ColorData);    
-                    ColorData[0] = FaceData->UV1.u + VRAMGetTexturePageX(VRAMPage);
-                    ColorData[1] = FaceData->UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-                    glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2) + (3*sizeof(int)), 2 * sizeof(int), &ColorData);
-                } else {
-                                ColorData[0] = FaceData->UV1.u + VRAMGetTexturePageX(VRAMPage);
-                ColorData[1] = FaceData->UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1) + (3*sizeof(int)), 2 * sizeof(int), &ColorData);    
-                ColorData[0] = FaceData->UV2.u + VRAMGetTexturePageX(VRAMPage);
-                ColorData[1] = FaceData->UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2) + (3*sizeof(int)), 2 * sizeof(int), &ColorData);
-
-                }
-                CLUTData[0] = CLUTDestX;
-                CLUTData[1] = CLUTDestY;
-                CLUTData[2] = ColorMode;
-                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 0) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
-                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
-                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
-                FaceStride++;
-
+            }
+            CLUTData[0] = CLUTDestX;
+            CLUTData[1] = CLUTDestY;
+            CLUTData[2] = ColorMode;
+            glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 0) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
+            glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
+            glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
+            FaceStride++;
         } else {
             TSPDynamicFaceData_t *FaceData = &DynamicData->FaceDataList[FaceStride];
-    //         assert(1!=1);
-    //         assert(1!=1);
             //Update it!
             Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
-            glBindBuffer(GL_ARRAY_BUFFER, VAO->VBOId[0]);
             BaseOffset = (Face->VAOBufferOffset * Stride );
-            int ColorMode = (FaceData->TSB >> 7) & 0x3;
-            int VRAMPage = FaceData->TSB & 0x1F;
+            ColorMode = (FaceData->TSB >> 7) & 0x3;
+            VRAMPage = FaceData->TSB & 0x1F;
         
             
-            int CLUTPosX = (FaceData->CBA << 4) & 0x3F0;
-            int CLUTPosY = (FaceData->CBA >> 6) & 0x1ff;
-            int CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
-            int CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
-            int CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
+            CLUTPosX = (FaceData->CBA << 4) & 0x3F0;
+            CLUTPosY = (FaceData->CBA >> 6) & 0x1ff;
+            CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
+            CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
+            CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
             CLUTDestX += VRAMGetTexturePageX(CLUTPage);
 
-    //         DynamicData = GetDynamicDataByFaceIndex(TSP,j,2);
-    //         if( DynamicData != NULL ) {
-    //             U0 = (((float)DynamicData->UV0.u)/Width);
-    //             V0 = /*255 -*/(((float)DynamicData->UV0.v) / Height);
-    //             U1 = (((float)DynamicData->UV1.u) / Width);
-    //             V1 = /*255 -*/(((float)DynamicData->UV1.v) /Height);
-    //             U2 = (((float)DynamicData->UV2.u) /Width);
-    //             V2 = /*255 -*/(((float)DynamicData->UV2.v) / Height);
-    //             TSB = DynamicData->TSB;
-    //             CBA = DynamicData->CBA;
-    //         } else {
-                ColorData[0] = FaceData->UV0.u + VRAMGetTexturePageX(VRAMPage);
-                ColorData[1] = FaceData->UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 0) + (3*sizeof(int)), 2 * sizeof(int), &ColorData);
+            UVData[0] = FaceData->UV0.u + VRAMGetTexturePageX(VRAMPage);
+            UVData[1] = FaceData->UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+            glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 0) + (3*sizeof(int)), 2 * sizeof(int), &UVData);
 
-                ColorData[0] = FaceData->UV1.u + VRAMGetTexturePageX(VRAMPage);
-                ColorData[1] = FaceData->UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1) + (3*sizeof(int)), 2 * sizeof(int), &ColorData);    
-                ColorData[0] = FaceData->UV2.u + VRAMGetTexturePageX(VRAMPage);
-                ColorData[1] = FaceData->UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2) + (3*sizeof(int)), 2 * sizeof(int), &ColorData);
+            UVData[0] = FaceData->UV1.u + VRAMGetTexturePageX(VRAMPage);
+            UVData[1] = FaceData->UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+            glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1) + (3*sizeof(int)), 2 * sizeof(int), &UVData);    
+            UVData[0] = FaceData->UV2.u + VRAMGetTexturePageX(VRAMPage);
+            UVData[1] = FaceData->UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+            glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2) + (3*sizeof(int)), 2 * sizeof(int), &UVData);
 
                 
-                CLUTData[0] = CLUTDestX;
-                CLUTData[1] = CLUTDestY;
-                CLUTData[2] = ColorMode;
-                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 0) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
-                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
-                glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
-                FaceStride++;
-
+            CLUTData[0] = CLUTDestX;
+            CLUTData[1] = CLUTDestY;
+            CLUTData[2] = ColorMode;
+            glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 0) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
+            glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
+            glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
+//             CLUTData[0] = 255;
+//             CLUTData[1] = 0;
+//             CLUTData[2] = 0;
+//             glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * i) + (5*sizeof(int)), 3 * sizeof(int), &CLUTData);
+            FaceStride++;
         }
-//         }
-
-        //The offset in which we write the color is based on the current VAO Offset to which
-        //we add the stride times i which moves the pointer to one of the three vertices (each vertex takes Stride amount of bytes)
-        //and finally we add 5 times sizeof(int) in order to grab the starting definition of the color data inside the vertex array.
     }
-
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void TSPUpdateDynamicFaceNodes(TSP_t *TSP,TSPNode_t *Node,TSPDynamicData_t *DynamicData,int Reset)
+void TSPUpdateDynamicFaceNodes(TSP_t *TSP,TSPNode_t *Node,TSPDynamicData_t *DynamicData)
 {
     TSPRenderingFace_t *Iterator;
 
@@ -1453,20 +1386,29 @@ void TSPUpdateDynamicFaceNodes(TSP_t *TSP,TSPNode_t *Node,TSPDynamicData_t *Dyna
     }
     
     if( !TSPBoxInFrustum(Camera,Node->BBox) ) {
-        return;
+//         return;
     }
     
     if( Node->NumFaces != 0 ) {
         for( Iterator = Node->OpaqueFaceList; Iterator; Iterator = Iterator->Next ) {
-           TSPUpdateDynamicRenderingFaces(TSP,Iterator,Node->OpaqueFacesVAO,DynamicData,Reset);
+           TSPUpdateDynamicRenderingFaces(TSP,Iterator,Node->OpaqueFacesVAO,DynamicData);
         }
 
     } else {
-        TSPUpdateDynamicFaceNodes(TSP,Node->Child[1],DynamicData,Reset);
-        TSPUpdateDynamicFaceNodes(TSP,Node->Next,DynamicData,Reset);
-        TSPUpdateDynamicFaceNodes(TSP,Node->Child[0],DynamicData,Reset);
+        TSPUpdateDynamicFaceNodes(TSP,Node->Child[1],DynamicData);
+        TSPUpdateDynamicFaceNodes(TSP,Node->Next,DynamicData);
+        TSPUpdateDynamicFaceNodes(TSP,Node->Child[0],DynamicData);
     }
 }
+void TSPUpdateDynamicTransparentFaces(TSP_t *TSP,TSPDynamicData_t *DynamicData)
+{
+    TSPRenderingFace_t *Iterator;
+    
+    for( Iterator = TSP->TransparentFaceList; Iterator; Iterator = Iterator->Next ) {
+        TSPUpdateDynamicRenderingFaces(TSP,Iterator,TSP->TransparentVAO,DynamicData);
+    }
+}
+
 void TSPUpdateDynamicFaces(TSP_t *TSPList,int DynamicDataIndex)
 {
     TSP_t *Iterator;
@@ -1515,11 +1457,13 @@ void TSPUpdateDynamicFaces(TSP_t *TSPList,int DynamicDataIndex)
                 }
 
 //                 TSPUpdateFaces(Iterator,&Iterator->DynamicData[i]);
-                DPrintf("TSP File %s:Update Dynamic Data with index %i Unk0:%i Unk1:%i MaxStride:%i\n",
+                DPrintf("TSP File %s:Update Dynamic Data with index %i Unk0:%i Unk1:%i CurrentStride:%i MaxStride:%i\n",
                         Iterator->FName,DynamicDataIndex,Iterator->DynamicData[i].Header.Unk0,
-                    Iterator->DynamicData[i].Header.EffectType,Iterator->DynamicData[i].Header.FaceDataSizeMultiplier
+                        Iterator->DynamicData[i].Header.EffectType,Iterator->DynamicData[i].CurrentStride,
+                        Iterator->DynamicData[i].Header.FaceDataSizeMultiplier
                 );
-                TSPUpdateDynamicFaceNodes(Iterator,&Iterator->Node[0],&Iterator->DynamicData[i],Iterator->DynamicData[i].CurrentStride);
+                TSPUpdateDynamicFaceNodes(Iterator,&Iterator->Node[0],&Iterator->DynamicData[i]);
+                TSPUpdateDynamicTransparentFaces(Iterator,&Iterator->DynamicData[i]);
             }
         }
     }

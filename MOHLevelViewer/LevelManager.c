@@ -635,19 +635,20 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
     
     Level = LevelManager->CurrentLevel;
     
-    BSDClearNodesFlag(Level->BSD);
+    if( LevelManager->Settings.EnableAnimatedSurfaces ) {
+
+        BSDClearNodesFlag(Level->BSD);
     
-    while( (DynamicData = BSDGetCurrentCameraNodeDynamicData(Level->BSD) ) != -1 ) {
-        DPrintf("Updating ddata %i\n",DynamicData);
-        TSPUpdateDynamicFaces(Level->TSPList,DynamicData);
+        while( (DynamicData = BSDGetCurrentCameraNodeDynamicData(Level->BSD) ) != -1 ) {
+            TSPUpdateDynamicFaces(Level->TSPList,DynamicData);
+        }
     }
-    
     if( LevelManager->Settings.EnableAnimatedLights ) {
         BSDUpdateAnimatedLights(Level->BSD);
         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,0);
     }
     
-    glm_perspective(glm_rad(110.f),(float) VidConf.Width/ (float) VidConf.Height,1.f, 4096.f,VidConf.PMatrixM4);
+    glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue/ (float) VidConfigHeight->IValue,1.f, 4096.f,VidConf.PMatrixM4);
 
          
     temp[0] = 1;

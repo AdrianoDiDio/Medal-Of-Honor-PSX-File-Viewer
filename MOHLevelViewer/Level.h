@@ -42,6 +42,7 @@ typedef struct LevelSettings_s {
     bool EnableLighting;
     bool EnableSemiTransparency;
     bool EnableAnimatedLights;
+    bool EnableAnimatedSurfaces;
 } LevelSettings_t;
 
 typedef struct Level_s {

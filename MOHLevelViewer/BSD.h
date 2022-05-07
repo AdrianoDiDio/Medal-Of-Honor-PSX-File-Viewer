@@ -132,7 +132,7 @@ typedef struct BSDNode_s {
     int MessageData; //Offset to a list of Message Ids
     Byte DynamicBlockIndex;
     //TODO:At 0x5c in every pickup object is stored the amount of ammo...
-    int IsVisited;
+    int Visited;
 } BSDNode_t;
 
 typedef struct BSDTSPStreamNode_s {

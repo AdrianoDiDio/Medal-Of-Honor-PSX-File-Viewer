@@ -153,6 +153,9 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
             igText(LevelManager->BasePath);
             igSeparator();
             igText("Debug Settings");
+            if(igCheckbox("Show FPS",(bool *) &GUIShowFPS->IValue) ) {
+                ConfigSetNumber("GUIShowFPS",GUIShowFPS->IValue);
+            }
             igCheckbox("WireFrame Mode",&LevelManager->Settings.WireFrame);
             igCheckbox("Show Level",&LevelManager->Settings.ShowMap);
             igCheckbox("Show Collision Data",&LevelManager->Settings.ShowCollisionData);
@@ -169,6 +172,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
                     TSPUpdateAnimatedFaces(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->BSD,1);
                 }
             }
+            igCheckbox("Animated Surfaces",&LevelManager->Settings.EnableAnimatedSurfaces);
         }
         igSeparator();
         igText("Export the current level and objects");
@@ -408,6 +412,9 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,Mission_t *Mission
                 if( igTreeNodeEx_Str(Missions[i].Levels[j].LevelName,TreeNodeFlags) ) {
                     if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
                         LevelManagerLoadLevel(LevelManager,GUI,Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber);
+                        //Close it if we selected a level.
+                        GUI->LevelSelectWindowHandle = 0;
+                        break;
                     }
                 }
                 if( DisableNode ) {
@@ -694,6 +701,7 @@ void GUIContextInit(ImGuiContext *Context,SDL_Window *Window,SDL_GLContext *GLCo
     ImGuiIO *IO;
     ImGuiStyle *Style;
     ImFont *Font;
+    ImFontConfig *FontConfig;
     
     IO = igGetIO();
     igSetCurrentContext(Context);
@@ -706,6 +714,14 @@ void GUIContextInit(ImGuiContext *Context,SDL_Window *Window,SDL_GLContext *GLCo
             DPrintf("GUIContextInit:Invalid font file...using default\n");
             ConfigSet("GUIFont","");
         }
+    } else {
+        FontConfig = ImFontConfig_ImFontConfig();
+        FontConfig->OversampleH = 1;
+        FontConfig->OversampleV = 1;
+        FontConfig->PixelSnapH = true;
+        FontConfig->SizePixels = floor(GUIFontSize->FValue * VidConf.DPIScale);
+        ImFontAtlas_AddFontDefault(IO->Fonts,FontConfig);
+        ImFontConfig_destroy(FontConfig);
     }
     Style = igGetStyle();
     Style->WindowTitleAlign.x = 0.5f;

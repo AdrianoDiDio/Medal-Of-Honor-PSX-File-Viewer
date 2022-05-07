@@ -75,6 +75,7 @@ void LevelSetDefaultSettings(LevelSettings_t *LevelSettings)
     LevelSettings->EnableLighting = true;
     LevelSettings->EnableSemiTransparency = true;
     LevelSettings->EnableAnimatedLights = true;
+    LevelSettings->EnableAnimatedSurfaces = true;
     LevelSettings->WireFrame = false;
     LevelSettings->ShowAABBTree = false;
     LevelSettings->ShowCollisionData = false;

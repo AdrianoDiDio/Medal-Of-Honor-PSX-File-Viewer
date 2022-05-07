@@ -304,8 +304,8 @@ There are four types of effects that can be played when using Dynamic data:
 | ---- | --------| ----------- |
 | 0 | TSP_DYNAMIC_FACE_EFFECT_PLAY_AND_STOP_TO_LAST | Change the texture data until the last effect is reached then stops. |
 | 1 | TSP_DYNAMIC_FACE_EFFECT_JUMP_TO_LAST | Change the texture data to the last available in the array. |
-| 2 |  TSP_DYNAMIC_FACE_EFFECT_CYCLE | Change the texture data continuously that restarts when it reaches the last effect |
-| 3 |  TSP_DYNAMIC_FACE_EFFECT_PULSE | Change the texture data by increasing and decreasing the index.|
+| 2 |  TSP_DYNAMIC_FACE_EFFECT_CYCLE | Change the texture data continuously by resetting to zero when it reaches the last effect |
+| 3 |  TSP_DYNAMIC_FACE_EFFECT_PULSE | Change the texture data by increasing and decreasing the index causing a pulse effect to show.|
 
 
 

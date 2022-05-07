@@ -358,8 +358,8 @@ void CamInit(ViewParm_t *Camera,BSD_t *BSD)
 
 void CamMouseEvent(ViewParm_t *Camera,int Dx,int Dy)
 {
-    Camera->Angle.x += ( Dy - (VidConf.Height/2) ) / 10.0f; // 0.001f;
-    Camera->Angle.y += ( Dx - (VidConf.Width/2)) / 10.0f; // 0.001f;
+    Camera->Angle.x += ( Dy - (VidConfigHeight->IValue/2) ) / 10.0f; // 0.001f;
+    Camera->Angle.y += ( Dx - (VidConfigWidth->IValue/2)) / 10.0f; // 0.001f;
     CamFixAngles(Camera);
 }
 
@@ -956,7 +956,7 @@ void InitGLView()
 
 void GLFrame()
 {
-    glViewport(0,0,VidConf.Width,VidConf.Height);
+    glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     LevelManagerDraw(LevelManager);
     glDisable (GL_DEPTH_TEST);

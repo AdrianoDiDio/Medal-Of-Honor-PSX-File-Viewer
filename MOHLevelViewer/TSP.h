@@ -32,11 +32,10 @@ typedef enum {
 } TSPRenderingFaceFlags_t;
 
 typedef enum {
-    TSP_DYNAMIC_FACE_EFFECT_PLAY_AND_STOP_TO_LAST = 0
+    TSP_DYNAMIC_FACE_EFFECT_PLAY_AND_STOP_TO_LAST = 0,
     TSP_DYNAMIC_FACE_EFFECT_JUMP_TO_LAST = 1,
     TSP_DYNAMIC_FACE_EFFECT_CYCLE = 2,
     TSP_DYNAMIC_FACE_EFFECT_PULSE = 3
-    
 } TSPDynamicFaceEffectType_t;
 
 typedef struct TSPVec3_s {
@@ -138,9 +137,9 @@ typedef struct TSPNode_s {
 typedef struct TSPDynamicFaceData_s
 {
     TSPUv_t UV0;
-    short   CBA;
+    unsigned short   CBA;
     TSPUv_t UV1;
-    short   TSB;
+    unsigned short   TSB;
     TSPUv_t UV2;
 } TSPDynamicFaceData_t;
 
