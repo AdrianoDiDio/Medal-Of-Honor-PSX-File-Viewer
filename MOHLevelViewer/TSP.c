@@ -1285,7 +1285,7 @@ void TSPUpdateDynamicRenderingFaces(TSP_t *TSP,TSPRenderingFace_t *Face,VAO_t *V
     FaceStride =  DynamicData->CurrentStride * DynamicData->Header.NumFacesIndex;
     
     glBindBuffer(GL_ARRAY_BUFFER, VAO->VBOId[0]);
-    for( i = 0; i < DynamicData->Header.NumFacesIndex; i++ ) {
+    for( i = 0; i < DynamicData->Header.NumFacesIndex; FaceStride++,i++ ) {
         DynamicDataIndex = DynamicData->FaceIndexList[i];
         if( Face->DynamicDataIndex  != DynamicDataIndex ) {
             continue;
@@ -1332,7 +1332,6 @@ void TSPUpdateDynamicRenderingFaces(TSP_t *TSP,TSPRenderingFace_t *Face,VAO_t *V
             glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 0) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
             glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
             glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2) + (8*sizeof(int)), 3 * sizeof(int), &CLUTData);
-            FaceStride++;
         } else {
             TSPDynamicFaceData_t *FaceData = &DynamicData->FaceDataList[FaceStride];
             //Update it!
@@ -1371,7 +1370,6 @@ void TSPUpdateDynamicRenderingFaces(TSP_t *TSP,TSPRenderingFace_t *Face,VAO_t *V
 //             CLUTData[1] = 0;
 //             CLUTData[2] = 0;
 //             glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * i) + (5*sizeof(int)), 3 * sizeof(int), &CLUTData);
-            FaceStride++;
         }
     }
     glBindBuffer(GL_ARRAY_BUFFER, 0);

@@ -1611,7 +1611,7 @@ int BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD)
         }
         
         if( BSDPointInNode(Camera.Position,&BSD->NodeData.Node[i]) ) {
-            if( BSD->NodeData.Node[i].Type == 5 ) {
+            if( BSD->NodeData.Node[i].Type == 5 /*BSD->NodeData.Node[i].Type == 3 || BSD->NodeData.Node[i].Type == 5 || BSD->NodeData.Node[i].Type == 6 */) {
                 BSD->NodeData.Node[i].Visited = 1;
                 return BSD->NodeData.Node[i].DynamicBlockIndex;
             }
