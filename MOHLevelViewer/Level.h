@@ -29,22 +29,6 @@
 #include "TIM.h"
 #include "Font.h"
 
-typedef struct LevelSettings_s {
-    bool WireFrame;
-    bool ShowCollisionData;
-    bool ShowAABBTree;
-    bool ShowMap;
-    bool ShowBSDNodes;
-    bool ShowBSDRenderObject;
-    bool DrawBSDRenderObjects;
-    bool DrawBSDShowCaseRenderObject;
-    bool EnableFrustumCulling;
-    bool EnableLighting;
-    bool EnableSemiTransparency;
-    bool EnableAnimatedLights;
-    bool EnableAnimatedSurfaces;
-} LevelSettings_t;
-
 typedef struct Level_s {
     char    BasePath[256];
     char    MissionPath[256];
@@ -62,10 +46,22 @@ typedef struct Level_s {
 } Level_t;
 
 bool    LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine);
-void    LevelSetDefaultSettings(LevelSettings_t *LevelSettings);
 int     LevelIsLoaded(Level_t *Level);
 void    LevelUnload(Level_t *Level);
 void    LevelCleanUp(Level_t *Level);
 
+extern Config_t *LevelEnableWireFrameMode;
+extern Config_t *LevelDrawCollisionData;
+extern Config_t *LevelDrawBSPTree;
+extern Config_t *LevelDrawSurfaces;
+extern Config_t *LevelDrawBSDNodesAsPoints;
+extern Config_t *LevelDrawBSDRenderObjectsAsPoints;
+extern Config_t *LevelDrawBSDRenderObjects;
+extern Config_t *LevelDrawBSDShowCase;
+extern Config_t *LevelEnableFrustumCulling;
+extern Config_t *LevelEnableAmbientLight;
+extern Config_t *LevelEnableSemiTransparency;
+extern Config_t *LevelEnableAnimatedLights;
+extern Config_t *LevelEnableAnimatedSurfaces;
 
 #endif//__LEVEL_H_

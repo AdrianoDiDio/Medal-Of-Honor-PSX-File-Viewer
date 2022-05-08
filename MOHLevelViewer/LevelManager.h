@@ -48,7 +48,6 @@ typedef struct LevelManager_s {
     GUIFileDialog_t *FileDialog;
     GUIFileDialog_t *ExportFileDialog;
     Level_t *CurrentLevel;
-    LevelSettings_t Settings;
     int     IsPathSet;
     int     GameEngine;
 } LevelManager_t;

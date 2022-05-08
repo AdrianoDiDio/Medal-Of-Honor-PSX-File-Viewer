@@ -23,22 +23,39 @@
 #include "MOHLevelViewer.h"
 #include "ShaderManager.h"
 
-Color1i_t StarsColors[7] = {
+Color3b_t StarsColors[8] = {
     //R   G   B
     //128;128;128
-    {4034953344},
+    {128,128,128},
     //96;64;128
-    {2155888736},
+    {240,96,64},
     //32;240;64
-    {1077997600},
+    {128,128,32},
     //96;96;240
-    {4293943392},
+    {240,64,69},
     //255;255;255
-    {2164260863},
+    {96,96,240},
     //64;128;64
-    {4282417216},
-    {0}
+    {255,255,255},
+    {255,128,64},
+    {128,64,255}
 };
+// Color1i_t StarsColors[7] = {
+//     //R   G   B
+//     //128;128;128
+//     {4034953344},
+//     //96;64;128
+//     {2155888736},
+//     //32;240;64
+//     {1077997600},
+//     //96;96;240
+//     {4293943392},
+//     //255;255;255
+//     {2164260863},
+//     //64;128;64
+//     {4282417216},
+//     {0}
+// };
 /*
     1_1.BSD Compartment Trigger => 3246.604492;9.330523;-8456.515625
     673.832092;22.795897;-3504.162842
@@ -1045,7 +1062,7 @@ void BSDCreateStarsVAO(BSD_t *BSD)
     int Stride;
     int VertexSize;
     int i;
-    Color1i_t RandColor;
+    Color3b_t RandColor;
 
     if( !BSDAreStarsEnabled(BSD) ) {
         DPrintf("Stars are not enabled...\n");
@@ -1061,14 +1078,17 @@ void BSDCreateStarsVAO(BSD_t *BSD)
         R = (BSD->SkyData.StarRadius*256) * sqrt(Rand01());
         Theta = Rand01() * 2 * M_PI;
         Phi = acos(2.0 * Rand01() - 1.0);/*BSDRand01() * M_PI;*/
-        RandColor = StarsColors[RandRangeI(0,6)];
-        BSD->SkyData.StarsColors[i] = RandColor;
+        RandColor = StarsColors[RandRangeI(0,7)];
+        BSD->SkyData.StarsColors[i].rgba[0] = RandColor.r;
+        BSD->SkyData.StarsColors[i].rgba[1] = RandColor.g;
+        BSD->SkyData.StarsColors[i].rgba[2] = RandColor.b;
+
         VertexData[VertexPointer] =  (R * sin(Phi) * cos(Theta) );
         VertexData[VertexPointer+1] = (R * sin(Theta) * sin(Phi) ) - (BSD->SkyData.StarRadius*264);
         VertexData[VertexPointer+2] = R * cos(Phi);
-        VertexData[VertexPointer+3] = RandColor.rgba[0] / 255.f;
-        VertexData[VertexPointer+4] = RandColor.rgba[1] / 255.f;
-        VertexData[VertexPointer+5] = RandColor.rgba[2] / 255.f;
+        VertexData[VertexPointer+3] = RandColor.r / 255.f;
+        VertexData[VertexPointer+4] = RandColor.g / 255.f;
+        VertexData[VertexPointer+5] = RandColor.b / 255.f;
         VertexPointer += 6;
     }
     BSD->SkyData.StarsVAO = VAOInitXYZRGB(VertexData,VertexSize,Stride,0,3,1);
@@ -1653,7 +1673,7 @@ void BSDDraw(LevelManager_t *LevelManager)
             }
         }
     }
-    if( LevelManager->Settings.ShowBSDNodes ) {    
+    if( LevelDrawBSDNodesAsPoints->IValue ) {    
         Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
         glUseProgram(Shader->ProgramId);
 
@@ -1666,7 +1686,7 @@ void BSDDraw(LevelManager_t *LevelManager)
         glUseProgram(0);
     }
     
-    if( LevelManager->Settings.ShowBSDRenderObject ) {    
+    if( LevelDrawBSDRenderObjectsAsPoints->IValue ) {    
         Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
         glUseProgram(Shader->ProgramId);
 
@@ -1680,12 +1700,12 @@ void BSDDraw(LevelManager_t *LevelManager)
     }
     
     
-    if( LevelManager->Settings.DrawBSDRenderObjects ) {
+    if( LevelDrawBSDRenderObjects->IValue ) {
         Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
         glUseProgram(Shader->ProgramId);
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
         EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
-        glUniform1i(EnableLightingId, LevelManager->Settings.EnableLighting);
+        glUniform1i(EnableLightingId, LevelEnableAmbientLight->IValue);
         glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page.TextureId);
 
         for( RenderObjectIterator = Level->BSD->RenderObjectDrawableList; RenderObjectIterator; 
@@ -1745,7 +1765,7 @@ void BSDDraw(LevelManager_t *LevelManager)
         glUseProgram(0);
     }
     
-    if( LevelManager->Settings.DrawBSDShowCaseRenderObject ) {
+    if( LevelDrawBSDShowCase->IValue ) {
         Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
         glUseProgram(Shader->ProgramId);
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");

@@ -635,7 +635,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
     
     Level = LevelManager->CurrentLevel;
     
-    if( LevelManager->Settings.EnableAnimatedSurfaces ) {
+    if( LevelEnableAnimatedSurfaces->IValue ) {
 
         BSDClearNodesFlag(Level->BSD);
     
@@ -643,7 +643,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
             TSPUpdateDynamicFaces(Level->TSPList,DynamicData);
         }
     }
-    if( LevelManager->Settings.EnableAnimatedLights ) {
+    if( LevelEnableAnimatedLights->IValue ) {
         BSDUpdateAnimatedLights(Level->BSD);
         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,0);
     }
@@ -821,7 +821,6 @@ void LevelManagerInit(GUI_t *GUI)
     LevelManager->BasePath = NULL;
     //No path has been provided to it yet.
     LevelManager->IsPathSet = 0;
-    LevelSetDefaultSettings(&LevelManager->Settings);
     memset(LevelManager->CurrentLevel,0,sizeof(Level_t));
     
     LevelManagerBasePath = ConfigGet("GameBasePath");

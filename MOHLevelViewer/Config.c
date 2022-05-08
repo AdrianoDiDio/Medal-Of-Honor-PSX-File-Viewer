@@ -287,11 +287,30 @@ void ConfigRegisterDefaultSettings()
     ConfigRegister("VideoRefreshRate","60",NULL);
     ConfigRegister("VideoFullScreen","0",NULL);
 
-    ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to being set to empty.");
-    
+    ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to "
+                                    "being set to empty.");
     ConfigRegister("GUIFont","Fonts/DroidSans.ttf","Sets the file to be used as the GUI font,if not valid application will use the default one");
-    ConfigRegister("GUIFontSize","14.f","");
-    ConfigRegister("GUIShowFPS","1","");
+    ConfigRegister("GUIFontSize","14.f",NULL);
+    ConfigRegister("GUIShowFPS","1",NULL);
+
+    ConfigRegister("LevelEnableWireFrameMode","0","Draw the level surfaces as lines");
+    ConfigRegister("LevelDrawCollisionData","0","Draw the level collision data");
+    ConfigRegister("LevelDrawBSPTree","0","When enabled draws the BSP tree for the current level where a red box represents a splitter while "
+                                        "a yellow one a leaf (containing actual level data).");
+    ConfigRegister("LevelDrawSurfaces","1","Draw the level surfaces");
+    ConfigRegister("LevelDrawBSDNodesAsPoints","1","When enabled draws all the BSD nodes as points.");
+    ConfigRegister("LevelDrawBSDRenderObjectsAsPoints","1","When enabled draws all the BSD RenderObjects as Points");
+    ConfigRegister("LevelDrawBSDRenderObjects","1","When enabled draws all the supported render objects");
+    ConfigRegister("LevelDrawBSDShowCase","0","When enabled draws all the loaded RenderObjects near the player spawn.");
+    ConfigRegister("LevelEnableFrustumCulling","1","When enabled helps to skip non visibile nodes from the BSP tree improving the rendering speed");
+    ConfigRegister("LevelEnableAmbientLight","1","When enabled the texture color is interpolated with the surface color to simulate lights on "
+                                                    "surfaces");
+    ConfigRegister("LevelEnableSemiTransparency","1","When enabled draw transparent surfaces as non-opaque");
+    ConfigRegister("LevelEnableAnimatedLights","1","When enabled some surfaces will interpolate their color to simulate an animated surface."
+                                       "NOTE that this will only work if \"LevelEnableLights\" is enabled");
+    ConfigRegister("LevelEnableAnimatedSurfaces","1","When enabled this will make some surfaces change their texture when the camera gets near."
+                                       "For example when hovering the camera near an explosive charge an overlay will pulse near the charge.");
+
 }
 void ConfigDumpSettings()
 {

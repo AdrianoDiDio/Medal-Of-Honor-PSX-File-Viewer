@@ -40,6 +40,13 @@ typedef union {
     Byte rgba[4];
 } Color1i_t;
 
+typedef struct Color3_s {
+    Byte r;
+    Byte g;
+    Byte b;
+} Color3b_t;
+
+
 typedef struct Vec3_s
 {
     float x;

@@ -22,6 +22,21 @@
 #include "Level.h"
 #include "MOHLevelViewer.h"
 
+Config_t *LevelEnableWireFrameMode;
+Config_t *LevelDrawCollisionData;
+Config_t *LevelDrawBSPTree;
+Config_t *LevelDrawSurfaces;
+Config_t *LevelDrawBSDNodesAsPoints;
+Config_t *LevelDrawBSDRenderObjectsAsPoints;
+Config_t *LevelDrawBSDRenderObjects;
+Config_t *LevelDrawBSDShowCase;
+Config_t *LevelEnableFrustumCulling;
+Config_t *LevelEnableAmbientLight;
+Config_t *LevelEnableSemiTransparency;
+Config_t *LevelEnableAnimatedLights;
+Config_t *LevelEnableAnimatedSurfaces;
+
+
 int LevelIsLoaded(Level_t *Level)
 {
     if( !Level ) {
@@ -64,23 +79,23 @@ void LevelCleanUp(Level_t *Level)
     LevelUnload(Level);
     free(Level);
 }
-void LevelSetDefaultSettings(LevelSettings_t *LevelSettings)
-{
-    LevelSettings->ShowMap = true;
-    LevelSettings->ShowBSDNodes = true;
-    LevelSettings->ShowBSDRenderObject = true;
-    LevelSettings->DrawBSDRenderObjects = true;
-    LevelSettings->DrawBSDShowCaseRenderObject = false;
-    LevelSettings->EnableFrustumCulling = true;
-    LevelSettings->EnableLighting = true;
-    LevelSettings->EnableSemiTransparency = true;
-    LevelSettings->EnableAnimatedLights = true;
-    LevelSettings->EnableAnimatedSurfaces = true;
-    LevelSettings->WireFrame = false;
-    LevelSettings->ShowAABBTree = false;
-    LevelSettings->ShowCollisionData = false;
-}
 
+void LevelLoadSettings()
+{
+    LevelEnableWireFrameMode = ConfigGet("LevelEnableWireFrameMode");
+    LevelDrawCollisionData = ConfigGet("LevelDrawCollisionData");
+    LevelDrawBSPTree = ConfigGet("LevelDrawBSPTree");
+    LevelDrawSurfaces = ConfigGet("LevelDrawSurfaces");
+    LevelDrawBSDNodesAsPoints = ConfigGet("LevelDrawBSDNodesAsPoints");
+    LevelDrawBSDRenderObjectsAsPoints = ConfigGet("LevelDrawBSDRenderObjectsAsPoints");
+    LevelDrawBSDRenderObjects = ConfigGet("LevelDrawBSDRenderObjects");
+    LevelDrawBSDShowCase = ConfigGet("LevelDrawBSDShowCase");
+    LevelEnableFrustumCulling = ConfigGet("LevelEnableFrustumCulling");
+    LevelEnableAmbientLight = ConfigGet("LevelEnableAmbientLight");
+    LevelEnableSemiTransparency = ConfigGet("LevelEnableSemiTransparency");
+    LevelEnableAnimatedLights = ConfigGet("LevelEnableAnimatedLights");
+    LevelEnableAnimatedSurfaces = ConfigGet("LevelEnableAnimatedSurfaces");
+}
 bool LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine)
 {
     FILE *BSDFile;
@@ -108,6 +123,8 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int Le
     Level->ImageList = NULL;
     Level->MissionNumber = MissionNumber;
     Level->LevelNumber = LevelNumber;
+    
+    LevelLoadSettings();
 
     snprintf(Level->MissionPath,sizeof(Level->MissionPath),"%s/DATA/MSN%i/LVL%i",BasePath,Level->MissionNumber,Level->LevelNumber);
     DPrintf("LevelInit:Working directory:%s\n",BasePath);

@@ -26,9 +26,9 @@ typedef struct LevelManager_s LevelManager_t;
 typedef struct BSD_s BSD_t;
 typedef enum {
     TSP_FX_NONE = 1,
-    TSP_FX_TRANSPARENCY = 2,
-    TSP_FX_ANIMATED = 4,
-    TSP_FX_DYNAMIC = 8
+    TSP_FX_TRANSPARENT_FACE = 2,
+    TSP_FX_ANIMATED_LIGHT_FACE = 4,
+    TSP_FX_DYNAMIC_FACE = 8
 } TSPRenderingFaceFlags_t;
 
 typedef enum {
@@ -76,7 +76,10 @@ typedef struct TSPTextureInfo_s {
 typedef struct TSPRenderingFace_s {
     int VAOBufferOffset;
     int BlendingMode;
-    unsigned int OriginalColor[3];
+    TSPVert_t Vert0;
+    TSPVert_t Vert1;
+    TSPVert_t Vert2;
+    Color1i_t Colors[3];
     int ColorIndex[3];
     int DynamicDataIndex;
     int Flags;

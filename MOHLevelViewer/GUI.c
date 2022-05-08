@@ -138,7 +138,22 @@ void GUIEndFrame()
     igRender();
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 }
-
+bool GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...)
+{
+    va_list Arguments;
+    int IsChecked;
+    IsChecked = igCheckbox(Label,Value);
+    if( DescriptionFormat != NULL && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+        igBeginTooltip();
+        igPushTextWrapPos(igGetFontSize() * 35.0f);
+        va_start(Arguments, DescriptionFormat);
+        igTextV(DescriptionFormat,Arguments);
+        va_end(Arguments);
+        igPopTextWrapPos();
+        igEndTooltip();
+    }
+    return IsChecked;
+}
 void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
 {
     ImVec2 ButtonSize;
@@ -153,26 +168,57 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
             igText(LevelManager->BasePath);
             igSeparator();
             igText("Debug Settings");
-            if(igCheckbox("Show FPS",(bool *) &GUIShowFPS->IValue) ) {
+            if( GUICheckBoxWithTooltip("Show FPS",(bool *) &GUIShowFPS->IValue,GUIShowFPS->Description) ) {
                 ConfigSetNumber("GUIShowFPS",GUIShowFPS->IValue);
             }
-            igCheckbox("WireFrame Mode",&LevelManager->Settings.WireFrame);
-            igCheckbox("Show Level",&LevelManager->Settings.ShowMap);
-            igCheckbox("Show Collision Data",&LevelManager->Settings.ShowCollisionData);
-            igCheckbox("Show BSP Tree",&LevelManager->Settings.ShowAABBTree);
-            igCheckbox("Show BSD nodes as Points",&LevelManager->Settings.ShowBSDNodes);
-            igCheckbox("Show BSD RenderObjects as Points",&LevelManager->Settings.ShowBSDRenderObject);
-            igCheckbox("Draw BSD RenderObjects",&LevelManager->Settings.DrawBSDRenderObjects);
-            igCheckbox("Enable BSD RenderObjects ShowCase Rendering",&LevelManager->Settings.DrawBSDShowCaseRenderObject);
-            igCheckbox("Frustum Culling",&LevelManager->Settings.EnableFrustumCulling);
-            igCheckbox("Lighting",&LevelManager->Settings.EnableLighting);
-            igCheckbox("Semi-Transparency",&LevelManager->Settings.EnableSemiTransparency);
-            if( igCheckbox("Animated Lights",&LevelManager->Settings.EnableAnimatedLights) ) {
-                if( !LevelManager->Settings.EnableAnimatedLights ) {
+            if( GUICheckBoxWithTooltip("WireFrame Mode",(bool *) &LevelEnableWireFrameMode->IValue,LevelEnableWireFrameMode->Description) ) {
+                ConfigSetNumber("LevelEnableWireFrameMode",LevelEnableWireFrameMode->IValue);
+            }
+            if( GUICheckBoxWithTooltip("Draw Level",(bool *) &LevelDrawSurfaces->IValue,LevelDrawSurfaces->Description) ) {
+                ConfigSetNumber("LevelDrawSurfaces",LevelDrawSurfaces->IValue);
+            }
+            if( GUICheckBoxWithTooltip("Draw Collision Data",(bool *) &LevelDrawCollisionData->IValue,LevelDrawCollisionData->Description) ) {
+                ConfigSetNumber("LevelDrawCollisionData",LevelDrawCollisionData->IValue);
+            }
+            if( GUICheckBoxWithTooltip("Draw BSP Tree",(bool *) &LevelDrawBSPTree->IValue,LevelDrawBSPTree->Description) ) {
+                ConfigSetNumber("LevelDrawBSPTree",LevelDrawBSPTree->IValue);
+            }
+            if( GUICheckBoxWithTooltip("Draw BSD nodes as Points",(bool *) &LevelDrawBSDNodesAsPoints->IValue,
+                LevelDrawBSDNodesAsPoints->Description) ) {
+                ConfigSetNumber("LevelDrawBSDNodesAsPoints",LevelDrawBSDNodesAsPoints->IValue);
+            }
+            if( GUICheckBoxWithTooltip("Draw BSD RenderObjects as Points",(bool *) &LevelDrawBSDRenderObjectsAsPoints->IValue,
+                                       LevelDrawBSDRenderObjectsAsPoints->Description) ) {
+                ConfigSetNumber("LevelDrawBSDRenderObjectsAsPoints",LevelDrawBSDRenderObjectsAsPoints->IValue);
+            }
+            if( GUICheckBoxWithTooltip("Draw BSD RenderObjects",(bool *) &LevelDrawBSDRenderObjects->IValue,
+                LevelDrawBSDRenderObjects->Description) ) {
+                ConfigSetNumber("LevelDrawBSDRenderObjects",LevelDrawBSDRenderObjects->IValue);
+            }
+            if( GUICheckBoxWithTooltip("Enable BSD RenderObjects ShowCase Rendering",(bool *) &LevelDrawBSDShowCase->IValue,
+                                       LevelDrawBSDShowCase->Description) ) {
+                ConfigSetNumber("LevelDrawBSDShowCase",LevelDrawBSDShowCase->IValue);
+            }
+            if( GUICheckBoxWithTooltip("Frustum Culling",(bool *) &LevelEnableFrustumCulling->IValue,
+                LevelEnableFrustumCulling->Description ) ) {
+                ConfigSetNumber("LevelEnableFrustumCulling",LevelEnableFrustumCulling->IValue);
+            }
+            if( GUICheckBoxWithTooltip("Ambient Light",(bool *) &LevelEnableAmbientLight->IValue,LevelEnableAmbientLight->Description) ) {
+                ConfigSetNumber("LevelEnableAmbientLight",LevelEnableAmbientLight->IValue);
+            }
+            if( GUICheckBoxWithTooltip("Semi-Transparency",(bool *) &LevelEnableSemiTransparency->IValue,
+                LevelEnableSemiTransparency->Description) ) {
+                ConfigSetNumber("LevelEnableSemiTransparency",LevelEnableSemiTransparency->IValue);
+            }
+            if ( GUICheckBoxWithTooltip("Animated Lights",(bool *) &LevelEnableAnimatedLights->IValue,LevelEnableAnimatedLights->Description) ) {
+                if( !LevelEnableAnimatedLights->IValue ) {
                     TSPUpdateAnimatedFaces(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->BSD,1);
                 }
+                ConfigSetNumber("LevelEnableAnimatedLights",LevelEnableAnimatedLights->IValue);
             }
-            igCheckbox("Animated Surfaces",&LevelManager->Settings.EnableAnimatedSurfaces);
+            if ( GUICheckBoxWithTooltip("Animated Surfaces",(bool *) &LevelEnableAnimatedSurfaces->IValue,LevelEnableAnimatedSurfaces->Description) ) {
+                ConfigSetNumber("LevelEnableAnimatedSurfaces",LevelEnableAnimatedSurfaces->IValue);
+            }
         }
         igSeparator();
         igText("Export the current level and objects");
