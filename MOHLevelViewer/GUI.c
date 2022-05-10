@@ -145,7 +145,7 @@ bool GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...)
     IsChecked = igCheckbox(Label,Value);
     if( DescriptionFormat != NULL && igIsItemHovered(ImGuiHoveredFlags_None) ) {
         igBeginTooltip();
-        igPushTextWrapPos(igGetFontSize() * 35.0f);
+        igPushTextWrapPos(igGetFontSize() * 40.0f);
         va_start(Arguments, DescriptionFormat);
         igTextV(DescriptionFormat,Arguments);
         va_end(Arguments);
@@ -165,6 +165,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
     if( igBegin("Debug Settings",&GUI->DebugWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
         if( LevelManagerIsLevelLoaded(LevelManager) ) {
             igText(LevelManager->EngineName);
+            igText("Current Path:");
             igText(LevelManager->BasePath);
             igSeparator();
             igText("Debug Settings");
@@ -235,7 +236,6 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
         igText("Debug Statistics");
         igText("NumActiveWindows:%i",GUI->NumActiveWindows);
         igSeparator();
-        igText(ComTime->FPSString);
         igText("OpenGL Version: %s",glGetString(GL_VERSION));
         SDL_GetVersion(&Version);
         igText("SDL Version: %u.%u.%u",Version.major,Version.minor,Version.patch);
