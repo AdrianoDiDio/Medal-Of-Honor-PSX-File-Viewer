@@ -21,6 +21,7 @@
 #define __LEVELMANAGER_H_
 
 #include "GUI.h"
+#include "Sound.h"
 #include "Level.h"
 #include "Config.h"
 
@@ -48,6 +49,7 @@ typedef struct LevelManager_s {
     GUIFileDialog_t *FileDialog;
     GUIFileDialog_t *ExportFileDialog;
     Level_t *CurrentLevel;
+    SoundSystem_t *SoundSystem;
     int     IsPathSet;
     int     GameEngine;
 } LevelManager_t;
@@ -57,7 +59,7 @@ typedef struct LevelManagerExporter_s {
     int  OutputFormat;
 } LevelManagerExporter_t;
 
-void    LevelManagerInit();
+void    LevelManagerInit(GUI_t *GUI);
 void    LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNumber,int LevelNumber);
 int     LevelManagerIsLevelLoaded(LevelManager_t *LevelManager);
 int     LevelManagerGetGameEngine(LevelManager_t *LevelManager);

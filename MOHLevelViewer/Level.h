@@ -21,6 +21,7 @@
 #define __LEVEL_H_
 
 #include "Common.h"
+#include "Sound.h"
 #include "GUI.h"
 #include "TSP.h"
 #include "BSD.h"
@@ -45,7 +46,7 @@ typedef struct Level_s {
     int     TSPNumberRenderList[4];
 } Level_t;
 
-bool    LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine);
+bool    LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine);
 int     LevelIsLoaded(Level_t *Level);
 void    LevelUnload(Level_t *Level);
 void    LevelCleanUp(Level_t *Level);

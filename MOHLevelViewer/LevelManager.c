@@ -430,6 +430,7 @@ void LevelManagerFreeExporterData(GUIFileDialog_t *FileDialog)
 }
 void LevelManagerCleanUp()
 {
+    SoundSystemCleanUp(LevelManager->SoundSystem);
     if( LevelManager->CurrentLevel != NULL ) {
         LevelCleanUp(LevelManager->CurrentLevel);
     }
@@ -750,11 +751,11 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path)
     }
     LevelManager->BasePath = StringCopy(Path);
     LevelManager->IsPathSet = 0;
-    if( !LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->BasePath,1,1,&GameEngine) ) {
+    if( !LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->SoundSystem,LevelManager->BasePath,1,1,&GameEngine) ) {
         if( GUI != NULL ) {
             GUISetProgressBarDialogTitle(GUI,"Mission 2 Level 1");
         }
-        if( !LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->BasePath,2,1,&GameEngine) ) {
+        if( !LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->SoundSystem,LevelManager->BasePath,2,1,&GameEngine) ) {
             DPrintf("LevelManagerInitWithPath:Invalid path...\n");
         } else {
             LevelManager->IsPathSet = 1;
@@ -784,7 +785,7 @@ void LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNu
     }
     asprintf(&Buffer,"Loading Mission %i Level %i...",MissionNumber,LevelNumber);
     GUIProgressBarBegin(GUI,Buffer);
-    LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
+    LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->SoundSystem,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
     GUIProgressBarEnd(GUI);
     free(Buffer);
 }
@@ -809,6 +810,7 @@ void LevelManagerInit(GUI_t *GUI)
         DPrintf("LevelManagerInit:Failed to allocate memory for struct\n");
         return;
     }
+    LevelManager->SoundSystem = SoundSystemInit();
     LevelManager->CurrentLevel = malloc(sizeof(Level_t));
     if( !LevelManager->CurrentLevel ) {
         DPrintf("LevelManagerInit:Failed to allocate memory for level struct\n");

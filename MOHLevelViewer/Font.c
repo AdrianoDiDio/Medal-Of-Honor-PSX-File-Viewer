@@ -220,6 +220,10 @@ Font_t *FontInit(VRAM_t *VRAM)
 {
     Font_t *Font;
     Font = malloc(sizeof(Font_t));
+    if( !Font ) {
+        DPrintf("FontInit:Failed to allocate memory for Font data\n");
+        return NULL;
+    }
     FontLoad(Font,VRAM);
     return Font;
 }

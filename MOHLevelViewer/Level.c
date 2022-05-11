@@ -96,7 +96,7 @@ void LevelLoadSettings()
     LevelEnableAnimatedLights = ConfigGet("LevelEnableAnimatedLights");
     LevelEnableAnimatedSurfaces = ConfigGet("LevelEnableAnimatedSurfaces");
 }
-bool LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine)
+bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine)
 {
     FILE *BSDFile;
     char Buffer[512];
@@ -150,7 +150,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int Le
         DPrintf("LevelInit:Failed to load BSD file\n");
         return false;
     }
-    float NumStepsLeft = (Level->BSD->TSPInfo.NumTSP) + 5;
+    float NumStepsLeft = (Level->BSD->TSPInfo.NumTSP) + 6;
     float Increment = (100.f - BasePercentage) / NumStepsLeft;
     //Read the TSP FILES
     //Step.3 Load all the TSP file based on the data read from the BSD file.
@@ -189,6 +189,8 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,char *BasePath,int MissionNumber,int Le
     BSDCreateVAOs(Level->BSD,Level->VRAM);
     GUIProgressBarIncrement(GUI,Increment,"Fixing Objects Position");
     BSDFixRenderObjectPosition(Level);
+    GUIProgressBarIncrement(GUI,Increment,"Loading Music");
+    SoundSystemLoadLevelMusic(SoundSystem,Level->MissionPath,MissionNumber,LevelNumber,LocalGameEngine,0);
     CamInit(&Camera,Level->BSD);
     DPrintf("LevelInit:Allocated level struct\n");
 //     GUIProgressBarIncrement(GUI,99,"Done");

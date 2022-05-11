@@ -457,7 +457,7 @@ void DPrintf(char *Fmt, ...)
 
 bool VidInitSDL()
 {
-    if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
+    if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0 ) {
         return false;
     } else {
         DPrintf("SDL Subsystem initialized.\n");
@@ -629,7 +629,7 @@ void SysVidShutdown()
     free(VidConf.VideoModeList);
     SDL_GL_DeleteContext(Context);
     SDL_DestroyWindow(VideoSurface);
-    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     SDL_Quit();
 }
 void SysHideCursor()

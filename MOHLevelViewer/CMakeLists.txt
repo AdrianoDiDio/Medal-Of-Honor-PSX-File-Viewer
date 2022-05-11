@@ -3,7 +3,7 @@ include(FetchContent)
 
 project(MOHLevelViewer)
 
-set(SOURCE_FILES Config.c ShaderManager.c VAO.c GUI.c TSP.c 
+set(SOURCE_FILES Config.c ShaderManager.c VAO.c Sound.c GUI.c TSP.c 
                  TIM.c Font.c BSD.c BSDTwoPlayers.c 
                  VRAM.c Level.c LevelManager.c MOHLevelViewer.c
 )
