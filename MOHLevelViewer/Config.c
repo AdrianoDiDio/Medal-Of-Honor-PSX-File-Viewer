@@ -314,7 +314,10 @@ void ConfigRegisterDefaultSettings()
                                        "NOTE that this will only work if \"LevelEnableAmbientLight\" is enabled");
     ConfigRegister("LevelEnableAnimatedSurfaces","1","When enabled this will make some surfaces change their texture when the camera gets near.\n"
                                        "For example when hovering the camera near an explosive charge an overlay will pulse near the charge.");
-
+    
+    ConfigRegister("LevelEnableMusicTrack","1","When enabled sound will be loaded along with the current level and played.\n"
+                                       "There are 3 possible values:0 Disabled,1 Enable Music And Ambient sounds,2 Enable ambient sounds only.");
+    ConfigRegister("SoundVolume","128","Sets the sound volume, the value must be in range 0-128, values outside that range will be ignored.");
 }
 void ConfigDumpSettings()
 {

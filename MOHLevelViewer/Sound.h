@@ -20,6 +20,7 @@
 #define __SOUND_H_
 
 #include "Common.h"
+#include "Config.h"
 
 #define SOUND_SYSTEM_FREQUENCY 44100
 #define SOUND_SYSTEM_BUFFER_FORMAT AUDIO_S16
@@ -28,8 +29,9 @@
 
 //VAB Body Music files.
 typedef struct VBMusic_s {
-    short *Data;
+    Byte *Data;
     int    Size;
+    int    DataLeft;
     int    NumFrames;
     int    Duration;
     int    DataPointer;
@@ -46,5 +48,9 @@ typedef struct SoundSystem_s {
 // typedef struct LevelManager_s LevelManager_t;
 SoundSystem_t *SoundSystemInit();
 void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,char *MissionPath,int MissionNumber,int LevelNumber,int GameEngine,int AmbientOnly);
+int SoundSystemGetSoundDuration(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds);
+int SoundSystemGetCurrentSoundTime(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds);
 void SoundSystemCleanUp(SoundSystem_t *SoundSystem);
+
+extern Config_t *SoundVolume;
 #endif//__SOUND_H_

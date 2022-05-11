@@ -20,6 +20,7 @@
 */
 #include "Sound.h"
 #include "MOHLevelViewer.h"
+
 const double ADPCMFilterGainPositive[5] = {
     0.0, 
     0.9375, 
@@ -34,6 +35,8 @@ const double ADPCMFilterGainNegative[5] = {
     -0.859375, 
     -0.9375
 };
+
+Config_t *SoundVolume;
 void SoundSystemClearMusicList(SoundSystem_t *SoundSystem)
 {
     VBMusic_t *Temp;
@@ -55,18 +58,24 @@ void SoundSystemOnAudioUpdate(void *UserData,Byte *Stream,int Length)
     SoundSystem_t *SoundSystem;
     SoundSystem = (SoundSystem_t *) UserData;
     VBMusic_t *CurrentMusic;
+    int RealLength;
     
     CurrentMusic = SoundSystem->CurrentMusic;
-    
-    if( CurrentMusic->DataPointer > CurrentMusic->Size ) {
+    //TODO(Adriano):Switch to the next track if present otherwise restart it.
+    if( CurrentMusic->DataPointer >= CurrentMusic->Size ) {
         DPrintf("AudioCallback:Restarting it\n");
         CurrentMusic->DataPointer = 0;
     }
     for (int i = 0; i < Length; i++) {
         Stream[i] = 0;
     }
-    SDL_MixAudioFormat(Stream, (Byte *) (CurrentMusic->Data + CurrentMusic->DataPointer), AUDIO_S16, Length, 128);
-    CurrentMusic->DataPointer += (Length/2);
+
+    RealLength = (CurrentMusic->Size - CurrentMusic->DataPointer);
+    if( RealLength > Length ) {
+        RealLength = Length;
+    }
+    SDL_MixAudioFormat(Stream, &CurrentMusic->Data[CurrentMusic->DataPointer], AUDIO_S16, RealLength, SoundVolume->IValue);
+    CurrentMusic->DataPointer += (RealLength);
 }
 
 void SoundSystemPause(SoundSystem_t *SoundSystem)
@@ -108,7 +117,30 @@ short Quantize(double Sample)
     
     return (short) a;
 }
-
+int SoundSystemCalculateSoundDuration(int Size,int Frequency,int NumChannels,int BitsPerSample)
+{
+    return Size / (Frequency * NumChannels * (BitsPerSample / 8));
+}
+int SoundSystemGetSoundDuration(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds)
+{
+    if( !SoundSystem->CurrentMusic ) {
+        return 0;
+    }
+    *Minutes = SoundSystem->CurrentMusic->Duration / 60;
+    *Seconds = SoundSystem->CurrentMusic->Duration % 60;
+    return SoundSystem->CurrentMusic->Duration;
+}
+int SoundSystemGetCurrentSoundTime(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds)
+{
+    int CurrentLength;
+    if( !SoundSystem->CurrentMusic ) {
+        return 0;
+    }
+    CurrentLength = SoundSystemCalculateSoundDuration(SoundSystem->CurrentMusic->DataPointer,44100,2,16);
+    *Minutes = CurrentLength / 60;
+    *Seconds = CurrentLength % 60;
+    return CurrentLength;
+}
 short *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
 {
 //     VBMusic_t *VBMusic;
@@ -207,7 +239,7 @@ VBMusic_t *SoundSystemLoadVBFile(FILE *VBFile)
     SDL_AudioStreamPut(AudioStream, PCMData, NumFrames * sizeof (Sint16));
     SDL_AudioStreamFlush(AudioStream);
     Music->Size = SDL_AudioStreamAvailable(AudioStream);
-    Music->Duration = Music->Size / (44100 * 2 * 2);
+    Music->Duration = SoundSystemCalculateSoundDuration(Music->Size,44100,2,16);
     Music->DataPointer = 0;
     Music->Data = malloc(Music->Size);
     SDL_AudioStreamGet(AudioStream,Music->Data,Music->Size);
@@ -278,6 +310,8 @@ SoundSystem_t *SoundSystemInit()
     SoundSystem = malloc(sizeof(SoundSystem_t));
     SoundSystem->MusicList = NULL;
     SoundSystem->CurrentMusic = NULL;
+    
+    SoundVolume = ConfigGet("SoundVolume");
     
     if( !SoundSystem ) {
         DPrintf("SoundSystemInit:Failed to initialize sound system.\n");

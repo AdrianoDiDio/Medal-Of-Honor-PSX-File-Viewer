@@ -35,7 +35,7 @@ Config_t *LevelEnableAmbientLight;
 Config_t *LevelEnableSemiTransparency;
 Config_t *LevelEnableAnimatedLights;
 Config_t *LevelEnableAnimatedSurfaces;
-
+Config_t *LevelEnableMusicTrack;
 
 int LevelIsLoaded(Level_t *Level)
 {
@@ -95,6 +95,7 @@ void LevelLoadSettings()
     LevelEnableSemiTransparency = ConfigGet("LevelEnableSemiTransparency");
     LevelEnableAnimatedLights = ConfigGet("LevelEnableAnimatedLights");
     LevelEnableAnimatedSurfaces = ConfigGet("LevelEnableAnimatedSurfaces");
+    LevelEnableMusicTrack = ConfigGet("LevelEnableMusicTrack");
 }
 bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine)
 {
@@ -104,6 +105,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     TSP_t *TSP;
     int LocalGameEngine;
     float BasePercentage;
+    int LoadAmbientMusic;
     
     //Attempt to load the level...
     if( !Level ){
@@ -150,7 +152,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
         DPrintf("LevelInit:Failed to load BSD file\n");
         return false;
     }
-    float NumStepsLeft = (Level->BSD->TSPInfo.NumTSP) + 6;
+    float NumStepsLeft = (Level->BSD->TSPInfo.NumTSP) + 5 + (LevelEnableMusicTrack->IValue ? 1 : 0);
     float Increment = (100.f - BasePercentage) / NumStepsLeft;
     //Read the TSP FILES
     //Step.3 Load all the TSP file based on the data read from the BSD file.
@@ -189,8 +191,11 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     BSDCreateVAOs(Level->BSD,Level->VRAM);
     GUIProgressBarIncrement(GUI,Increment,"Fixing Objects Position");
     BSDFixRenderObjectPosition(Level);
-    GUIProgressBarIncrement(GUI,Increment,"Loading Music");
-    SoundSystemLoadLevelMusic(SoundSystem,Level->MissionPath,MissionNumber,LevelNumber,LocalGameEngine,0);
+    if( LevelEnableMusicTrack->IValue ) {
+        GUIProgressBarIncrement(GUI,Increment,"Loading Music");
+        LoadAmbientMusic = (LevelEnableMusicTrack->IValue == 2) ? 1 : 0;
+        SoundSystemLoadLevelMusic(SoundSystem,Level->MissionPath,MissionNumber,LevelNumber,LocalGameEngine,LoadAmbientMusic);
+    }
     CamInit(&Camera,Level->BSD);
     DPrintf("LevelInit:Allocated level struct\n");
 //     GUIProgressBarIncrement(GUI,99,"Done");

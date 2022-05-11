@@ -64,5 +64,5 @@ extern Config_t *LevelEnableAmbientLight;
 extern Config_t *LevelEnableSemiTransparency;
 extern Config_t *LevelEnableAnimatedLights;
 extern Config_t *LevelEnableAnimatedSurfaces;
-
+extern Config_t *LevelEnableMusicTrack;
 #endif//__LEVEL_H_

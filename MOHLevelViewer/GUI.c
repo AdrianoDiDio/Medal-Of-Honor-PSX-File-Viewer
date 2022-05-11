@@ -158,7 +158,10 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
 {
     ImVec2 ButtonSize;
     SDL_version Version;
-    
+    int MaxLengthMinutes;
+    int MaxLengthSeconds;
+    int CurrentLengthMinutes;
+    int CurrentLengthSeconds;
     if( !GUI->DebugWindowHandle ) {
         return;
     }
@@ -167,6 +170,10 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
             igText(LevelManager->EngineName);
             igText("Current Path:");
             igText(LevelManager->BasePath);
+            SoundSystemGetSoundDuration(LevelManager->SoundSystem,&MaxLengthMinutes,&MaxLengthSeconds);
+            SoundSystemGetCurrentSoundTime(LevelManager->SoundSystem,&CurrentLengthMinutes,&CurrentLengthSeconds);
+            igText("Music Track Info:");
+            igText("%02i:%02i/%02i:%02i",CurrentLengthMinutes,CurrentLengthSeconds,MaxLengthMinutes,MaxLengthSeconds);
             igSeparator();
             igText("Debug Settings");
             if( GUICheckBoxWithTooltip("Show FPS",(bool *) &GUIShowFPS->IValue,GUIShowFPS->Description) ) {
