@@ -59,11 +59,11 @@ void SoundSystemCleanUp(SoundSystem_t *SoundSystem)
 void SoundSystemOnAudioUpdate(void *UserData,Byte *Stream,int Length)
 {
     SoundSystem_t *SoundSystem;
-    SoundSystem = (SoundSystem_t *) UserData;
     VBMusic_t *CurrentMusic;
     VBMusic_t **CurrentMusicAddress;
     int ChunkLength;
     
+    SoundSystem = (SoundSystem_t *) UserData;
     CurrentMusic = SoundSystem->CurrentMusic;
     CurrentMusicAddress = &SoundSystem->CurrentMusic;
 
@@ -162,7 +162,8 @@ short *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
     int NumTotalSample;
     int Size;
     int  i;
-    int j;
+    int  j;
+    int  n;
     
     if( !VBFile ) {
         DPrintf("SoundSystemLoadVBFile:Invalid file\n");
@@ -180,8 +181,6 @@ short *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
     *NumFrames = NumTotalSample * NumFramePerBlock;
     //Size depends from the number of channels (in this case is 1).
     Size = *NumFrames * 1 * sizeof(short);
-//     VBMusic->Duration = VBMusic->Size / (22050 * 1 * 2);
-//     Duration = *NumFrames / (float) SampleRate;
     Result = malloc(Size);
     NumWrittenBytes = 0;
     for( i = 0; i < NumTotalSample; i++ ) {
@@ -193,22 +192,24 @@ short *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
 
         //Decompress the sample contained in the next 14-bytes.
         //Each sample contains two value stored as two's complement.
-        for( j = 0; j < 14; j++ ) {
-            BaseIndex = j * 2;
-            Temp = LowNibble(Data[j]) << 12;
-            Temp = SignExtend(Temp);    
-            Sample[BaseIndex] = (double) ( Temp >> Shift  );
-            Temp = HighNibble(Data[j]) << 12;
-            Temp = SignExtend(Temp);
-            Sample[BaseIndex+1] = (double) ( Temp >> Shift  );
-        }
-        //we have decompressed our samples now try to decode it.
-        for( j = 0; j < 28; j++ ) {
-            Sample[j] += (State[0] * ADPCMFilterGainPositive[Predictor] + State[1] * ADPCMFilterGainNegative[Predictor] );
-            State[1] = State[0];
-            State[0] = Sample[j];
-            Result[NumWrittenBytes++] = SoundSystemQuantize(Sample[j]);
-
+        for( j = 0; j < 14; j++) {
+            for( n = 0; n < 2; n++ ) {
+                BaseIndex = (j * 2) + n;
+                //Sample is contained inside 8-bit...
+                //In the first iteration we grab it from the first 4-bit
+                //while on the second one we grab the other half.
+                if( n & 1 ) {
+                    Temp = HighNibble(Data[j]) << 12;
+                } else {
+                    Temp = LowNibble(Data[j]) << 12;
+                }
+                Temp = SignExtend(Temp);    
+                Sample[BaseIndex] = (double) ( Temp >> Shift  );
+                Sample[BaseIndex] += (State[0] * ADPCMFilterGainPositive[Predictor] + State[1] * ADPCMFilterGainNegative[Predictor] );
+                State[1] = State[0];
+                State[0] = Sample[BaseIndex];
+                Result[NumWrittenBytes++] = SoundSystemQuantize(Sample[BaseIndex]);
+            }
         }
     }
     return Result;

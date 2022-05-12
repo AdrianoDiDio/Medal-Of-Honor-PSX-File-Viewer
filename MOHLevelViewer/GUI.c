@@ -184,6 +184,8 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
             igText(LevelManager->EngineName);
             igText("Current Path:");
             igText(LevelManager->BasePath);
+            igSeparator();
+            igText("Music Settings");
             if( igBeginCombo("Music Options",LevelMusicOptions[LevelEnableMusicTrack->IValue],0) ) {
                 for (i = 0; i < NumLevelMusicOptions; i++) {
                     IsSelected = (LevelEnableMusicTrack->IValue == i);
@@ -197,16 +199,20 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
                     }
                 }
                 igEndCombo();
-            }            
-            if( LevelEnableMusicTrack->IValue ) {
-                SoundSystemGetSoundDuration(LevelManager->SoundSystem,&MaxLengthMinutes,&MaxLengthSeconds);
-                SoundSystemGetCurrentSoundTime(LevelManager->SoundSystem,&CurrentLengthMinutes,&CurrentLengthSeconds);
-                igText("Music Track Info:");
-                igText("Name:%s",LevelManager->SoundSystem->CurrentMusic->Name);
-                igText("%02i:%02i/%02i:%02i",CurrentLengthMinutes,CurrentLengthSeconds,MaxLengthMinutes,MaxLengthSeconds);
-                
-                if( igSliderInt("Sound Volume",&SoundVolume->IValue,0,128,"%i",0) ) {
-                    ConfigSetNumber("SoundVolume",SoundVolume->IValue);
+            }
+            if( !LevelManager->SoundSystem->CurrentMusic ) {
+                igText("This Level Doesn't contain any music files.");
+            } else {
+                if( LevelEnableMusicTrack->IValue ) {
+                    SoundSystemGetSoundDuration(LevelManager->SoundSystem,&MaxLengthMinutes,&MaxLengthSeconds);
+                    SoundSystemGetCurrentSoundTime(LevelManager->SoundSystem,&CurrentLengthMinutes,&CurrentLengthSeconds);
+                    igText("Music Track Info:");
+                    igText("Name:%s",LevelManager->SoundSystem->CurrentMusic->Name);
+                    igText("%02i:%02i/%02i:%02i",CurrentLengthMinutes,CurrentLengthSeconds,MaxLengthMinutes,MaxLengthSeconds);
+                    
+                    if( igSliderInt("Sound Volume",&SoundVolume->IValue,0,128,"%i",0) ) {
+                        ConfigSetNumber("SoundVolume",SoundVolume->IValue);
+                    }
                 }
             }
             igSeparator();
