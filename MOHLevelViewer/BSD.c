@@ -213,7 +213,7 @@ void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
     
     if( !BSD || !OutFile ) {
         bool InvalidFile = (OutFile == NULL ? true : false);
-        printf("BSDDumpDataToFile: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
+        DPrintf("BSDDumpDataToFile: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
         return;
     }
 
@@ -386,7 +386,7 @@ void BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile)
     int i;
     if( !BSD || !OutFile ) {
         bool InvalidFile = (OutFile == NULL ? true : false);
-        printf("BSDDumpDataToPlyFile: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
+        DPrintf("BSDDumpDataToPlyFile: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
         return;
     }
     sprintf(Buffer,"ply\nformat ascii 1.0\n");

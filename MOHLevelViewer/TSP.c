@@ -260,7 +260,7 @@ int TSPDumpFaceV3DataToPlyFile(TSP_t *TSP,int VertexOffset,FILE *OutFile)
     int FaceOffset;
     if( !TSP || !OutFile ) {
         bool InvalidFile = (OutFile == NULL ? true : false);
-        printf("TSPDumpFaceDataToFile: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        DPrintf("TSPDumpFaceDataToFile: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
         return -1;
     }
     
@@ -908,12 +908,12 @@ Vec3_t Vec3_FromTSPVec3(TSPVec3_t In)
 
 void TSPPrintVec3(TSPVec3_t Vector)
 {
-    printf("(%i;%i;%i)\n",Vector.x,Vector.y,Vector.z);
+    DPrintf("(%i;%i;%i)\n",Vector.x,Vector.y,Vector.z);
 }
 
 void TSPPrintColor(Color1i_t Color)
 {
-    printf("RGBA:(%i;%i;%i;%i)\n",Color.rgba[0],Color.rgba[1],Color.rgba[2],Color.rgba[3]);
+    DPrintf("RGBA:(%i;%i;%i;%i)\n",Color.rgba[0],Color.rgba[1],Color.rgba[2],Color.rgba[3]);
 }
 
 void DrawTSPBox(TSPNode_t Node)
@@ -1380,7 +1380,7 @@ void TSPDrawList(LevelManager_t *LevelManager)
     TSPData = LevelManager->CurrentLevel->TSPList;
     
     if( !TSPData ) {
-        printf("DrawTSP:Invalid TSP data\n");
+        DPrintf("DrawTSP:Invalid TSP data\n");
         return;
     }
 
@@ -1411,7 +1411,7 @@ int TSPGetNodeByChildOffset(TSP_t *TSP,int Offset)
             return i;
         }
     }
-    printf("Offset %i doesn't match any node!\n",Offset);
+    DPrintf("Offset %i doesn't match any node!\n",Offset);
     return -1;
 }
 
@@ -1459,7 +1459,7 @@ void TSPLookUpChildNode(TSP_t *TSP,FILE *InFile)
             NextU4 = TSP->Node[i].BaseData + sizeof(TSPNode_t) - sizeof(int) - sizeof(Child);
         } else {
             NextU4 = TSP->Node[i].BaseData + (TSP->Node[i].NumFaces * sizeof(TSPFace_t));
-            printf("Drawing face from %i to %i\n",Base,Target);
+            DPrintf("Drawing face from %i to %i\n",Base,Target);
         }
 
 */
@@ -1479,7 +1479,7 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
         return;
     }
     if( TSP->Header.NumNodes == 0 ) {
-        printf("TSPReadNodeChunk:0 nodes found in file %s.\n",TSP->FName);
+        DPrintf("TSPReadNodeChunk:0 nodes found in file %s.\n",TSP->FName);
         return;
     }
     TSP->Node = malloc(TSP->Header.NumNodes * sizeof(TSPNode_t));
@@ -1599,7 +1599,7 @@ void TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
         return;
     }
     if( TSP->Header.NumFaces == 0 ) {
-        printf("TSPReadFaceChunk:0 faces found in file %s.\n",TSP->FName);
+        DPrintf("TSPReadFaceChunk:0 faces found in file %s.\n",TSP->FName);
         return;
     }
     //HACK:For the moment we calculate the number of faces by using the vertex offset
@@ -1607,7 +1607,7 @@ void TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
     //     Since it doesn't cause any weird issue with the 3D rendering.
     NumFaces = (TSP->Header.VertexOffset - TSP->Header.FaceOffset) / sizeof(TSPFace_t);
     if( NumFaces != TSP->Header.NumFaces ) {
-        printf("Fixed face count from %i to %i\n",TSP->Header.NumFaces,NumFaces);
+        DPrintf("Fixed face count from %i to %i\n",TSP->Header.NumFaces,NumFaces);
         TSP->Header.NumFaces = NumFaces;
     }
     TSP->Face = malloc(TSP->Header.NumFaces * sizeof(TSPFace_t));
@@ -1615,17 +1615,17 @@ void TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
         DPrintf("Reading Face %i at %li\n",i,ftell(InFile));
         Ret = fread(&TSP->Face[i],sizeof(TSPFace_t),1,InFile);
         if( Ret != 1 ) {
-            printf("TSPReadFaceChunk:Early failure when reading face %i\n",i);
+            DPrintf("TSPReadFaceChunk:Early failure when reading face %i\n",i);
             return;
         }
 #if 1
 //     if( i <= 4 ) {
-        printf(" -- Face %i --\n",i);
-        printf("V0:%u\n",TSP->Face[i].V0);
-        printf("V1:%u\n",TSP->Face[i].V1);
-        printf("V2:%u\n",TSP->Face[i].V2);
-        printf("CBA:%u\n",TSP->Face[i].CBA);
-        printf("TSB:%u\n",TSP->Face[i].TSB);
+        DPrintf(" -- Face %i --\n",i);
+        DPrintf("V0:%u\n",TSP->Face[i].V0);
+        DPrintf("V1:%u\n",TSP->Face[i].V1);
+        DPrintf("V2:%u\n",TSP->Face[i].V2);
+        DPrintf("CBA:%u\n",TSP->Face[i].CBA);
+        DPrintf("TSB:%u\n",TSP->Face[i].TSB);
 //     }
 #endif
     }
@@ -1642,7 +1642,7 @@ void TSPReadVertexChunk(TSP_t *TSP,FILE *InFile)
         return;
     }
     if( TSP->Header.NumVertices == 0 ) {
-        printf("TSPReadVertexChunk:No vertices found in file %s.\n",TSP->FName);
+        DPrintf("TSPReadVertexChunk:No vertices found in file %s.\n",TSP->FName);
         return;
     }
     
@@ -1651,10 +1651,10 @@ void TSPReadVertexChunk(TSP_t *TSP,FILE *InFile)
     for( i = 0; i < TSP->Header.NumVertices; i++ ) {
         Ret = fread(&TSP->Vertex[i],sizeof(TSPVert_t),1,InFile);
         if( Ret != 1 ) {
-            printf("TSPReadVertexChunk:Early failure when reading vertex %i\n",i);
+            DPrintf("TSPReadVertexChunk:Early failure when reading vertex %i\n",i);
             return;
         }
-//         printf(" -- Vertex %i --\n",i);
+//         DPrintf(" -- Vertex %i --\n",i);
 //         PrintTSPVec3(TSP->Vertex[i].Position);
         assert(TSP->Vertex[i].Pad == 104 || TSP->Vertex[i].Pad == 105);
     }
@@ -1671,7 +1671,7 @@ void TSPReadColorChunk(TSP_t *TSP,FILE *InFile)
         return;
     }
     if( TSP->Header.NumVertices == 0 ) {
-        printf("TSPReadColorChunk:0 colors found in file %s.\n",TSP->FName);
+        DPrintf("TSPReadColorChunk:0 colors found in file %s.\n",TSP->FName);
         return;
     }
     
@@ -1680,7 +1680,7 @@ void TSPReadColorChunk(TSP_t *TSP,FILE *InFile)
     for( i = 0; i < TSP->Header.NumColors; i++ ) {
         Ret = fread(&TSP->Color[i],sizeof(Color1i_t),1,InFile);
         if( Ret != 1 ) {
-            printf("TSPReadColorChunk:Early failure when reading normal %i\n",i);
+            DPrintf("TSPReadColorChunk:Early failure when reading normal %i\n",i);
             return;
         }
     }
@@ -1770,7 +1770,7 @@ void TSPReadTextureInfoChunk(TSP_t *TSP,FILE *InFile)
     
     if( !TSP || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
-        DPrintf("TSPReadTextureInfoChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        printf("TSPReadTextureInfoChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
         return;
     }
     if( TSP->Header.NumTextureInfo == 0 || TSP->Header.NumTextureInfo == -1 ) {
@@ -1812,27 +1812,27 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     TSP->CollisionData = malloc(sizeof(TSPCollision_t));
     Ret = fread(&TSP->CollisionData->Header,sizeof(TSPCollisionHeader_t),1,InFile);
     if( Ret != 1 ) {
-        printf("TSPReadCollisionChunk:Early failure when reading collision header.\n");
+        DPrintf("TSPReadCollisionChunk:Early failure when reading collision header.\n");
     }
-    printf("TSPReadCollisionChunk:Header\n");
-//     printf("U0|U1|U2|U3:%u %u %u %u\n",TSP->CollisionData->Header.U0,TSP->CollisionData->Header.U1,TSP->CollisionData->Header.U2,
+    DPrintf("TSPReadCollisionChunk:Header\n");
+//     DPrintf("U0|U1|U2|U3:%u %u %u %u\n",TSP->CollisionData->Header.U0,TSP->CollisionData->Header.U1,TSP->CollisionData->Header.U2,
 //         TSP->CollisionData->Header.U3
 //     );
-    printf("CollisionBoundMinX:%i\n",TSP->CollisionData->Header.CollisionBoundMinX);
-    printf("CollisionBoundMinZ:%i\n",TSP->CollisionData->Header.CollisionBoundMinZ);
-    printf("CollisionBoundMaxX:%i\n",TSP->CollisionData->Header.CollisionBoundMaxX);
-    printf("CollisionBoundMaxZ:%i\n",TSP->CollisionData->Header.CollisionBoundMaxZ);
-    printf("Num Collision KDTree Nodes:%u\n",TSP->CollisionData->Header.NumCollisionKDTreeNodes);
-    printf("Num Collision Face Index:%u\n",TSP->CollisionData->Header.NumCollisionFaceIndex);
-    printf("NumVertices:%u\n",TSP->CollisionData->Header.NumVertices);
-    printf("NumNormals:%u\n",TSP->CollisionData->Header.NumNormals);
-    printf("NumFaces:%u\n",TSP->CollisionData->Header.NumFaces);
+    DPrintf("CollisionBoundMinX:%i\n",TSP->CollisionData->Header.CollisionBoundMinX);
+    DPrintf("CollisionBoundMinZ:%i\n",TSP->CollisionData->Header.CollisionBoundMinZ);
+    DPrintf("CollisionBoundMaxX:%i\n",TSP->CollisionData->Header.CollisionBoundMaxX);
+    DPrintf("CollisionBoundMaxZ:%i\n",TSP->CollisionData->Header.CollisionBoundMaxZ);
+    DPrintf("Num Collision KDTree Nodes:%u\n",TSP->CollisionData->Header.NumCollisionKDTreeNodes);
+    DPrintf("Num Collision Face Index:%u\n",TSP->CollisionData->Header.NumCollisionFaceIndex);
+    DPrintf("NumVertices:%u\n",TSP->CollisionData->Header.NumVertices);
+    DPrintf("NumNormals:%u\n",TSP->CollisionData->Header.NumNormals);
+    DPrintf("NumFaces:%u\n",TSP->CollisionData->Header.NumFaces);
 
     TSP->CollisionData->KDTree = malloc(TSP->CollisionData->Header.NumCollisionKDTreeNodes * sizeof(TSPCollisionKDTreeNode_t));
     for( i = 0; i < TSP->CollisionData->Header.NumCollisionKDTreeNodes; i++ ) {
         Ret = fread(&TSP->CollisionData->KDTree[i],sizeof(TSP->CollisionData->KDTree[i]),1,InFile);
         if( Ret != 1 ) {
-            printf("TSPReadCollisionChunk:Early failure when reading KDTree nodes.\n");
+            DPrintf("TSPReadCollisionChunk:Early failure when reading KDTree nodes.\n");
             return;
         }
     }
@@ -1844,7 +1844,7 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
             return;
         }
 //         DPrintf("-- H %i at %i --\n",i,GetCurrentFilePosition(InFile));
-//         printf("%i\n",TSP->CollisionData->H[i]);
+//         DPrintf("%i\n",TSP->CollisionData->H[i]);
     }
     fread(&Pad,sizeof(Pad),1,InFile);
     if( Pad != 0 ) {
@@ -1857,12 +1857,12 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     for( i = 0; i < TSP->CollisionData->Header.NumVertices; i++ ) {
         Ret = fread(&TSP->CollisionData->Vertex[i],sizeof(TSP->CollisionData->Vertex[i]),1,InFile);
         if( Ret != 1 ) {
-            printf("TSPReadCollisionChunk:Early failure when reading vertex data.\n");
+            DPrintf("TSPReadCollisionChunk:Early failure when reading vertex data.\n");
             return;
         }
-//         printf("-- Vertex %i --\n",i);
+//         DPrintf("-- Vertex %i --\n",i);
 //         PrintTSPVec3(TSP->CollisionData->Vertex[i].Position);
-//         printf("Pad is %i\n",TSP->CollisionData->Vertex[i].Pad);
+//         DPrintf("Pad is %i\n",TSP->CollisionData->Vertex[i].Pad);
         assert(TSP->CollisionData->Vertex[i].Pad == 104 || TSP->CollisionData->Vertex[i].Pad == 105);
     }
     DPrintf("TSPReadCollisionChunk:Normals at %li\n",ftell(InFile));
@@ -1870,12 +1870,12 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     for( i = 0; i < TSP->CollisionData->Header.NumNormals; i++ ) {
         Ret = fread(&TSP->CollisionData->Normal[i],sizeof(TSP->CollisionData->Normal[i]),1,InFile);
         if( Ret != 1 ) {
-            printf("TSPReadCollisionChunk:Early failure when reading normal data.\n");
+            DPrintf("TSPReadCollisionChunk:Early failure when reading normal data.\n");
             return;
         }
-        printf("-- Normal %i --\n",i);
-        printf("%i;%i;%i\n",TSP->CollisionData->Normal[i].Position.x,TSP->CollisionData->Normal[i].Position.y,TSP->CollisionData->Normal[i].Position.z);
-//         printf("Pad is %i\n",TSP->CollisionData->Normal[i].Pad);
+        DPrintf("-- Normal %i --\n",i);
+        DPrintf("%i;%i;%i\n",TSP->CollisionData->Normal[i].Position.x,TSP->CollisionData->Normal[i].Position.y,TSP->CollisionData->Normal[i].Position.z);
+//         DPrintf("Pad is %i\n",TSP->CollisionData->Normal[i].Pad);
         assert(TSP->CollisionData->Normal[i].Pad == 0);
     }
     DPrintf("TSPReadCollisionChunk:Faces at %li\n",ftell(InFile));
@@ -1883,16 +1883,16 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     for( i = 0; i < TSP->CollisionData->Header.NumFaces; i++ ) {
         Ret = fread(&TSP->CollisionData->Face[i],sizeof(TSP->CollisionData->Face[i]),1,InFile);
         if( Ret != 1 ) {
-            printf("TSPReadCollisionChunk:Early failure when reading face data.\n");
+            DPrintf("TSPReadCollisionChunk:Early failure when reading face data.\n");
             return;
         }
-        printf("-- Face %i --\n",i);
-//         printf("V0|V1|V2:%u %u %u\n",TSP->CollisionData->Face[i].V0,TSP->CollisionData->Face[i].V1,TSP->CollisionData->Face[i].V2);
+        DPrintf("-- Face %i --\n",i);
+//         DPrintf("V0|V1|V2:%u %u %u\n",TSP->CollisionData->Face[i].V0,TSP->CollisionData->Face[i].V1,TSP->CollisionData->Face[i].V2);
         if( TSPIsVersion3(TSP) ) {
             TSP->CollisionData->Face[i].NormalIndex = TSP->CollisionData->Face[i].NormalIndex & 0xFFF;
         }
         assert(TSP->CollisionData->Face[i].NormalIndex < TSP->CollisionData->Header.NumNormals);
-        printf("Normal Index:%u\n",TSP->CollisionData->Face[i].NormalIndex);
+        DPrintf("Normal Index:%u\n",TSP->CollisionData->Face[i].NormalIndex);
 
     }
 //     assert(ftell(InFile) == GetFileLength(InFile));
@@ -1934,24 +1934,24 @@ int TSPGetYFromCollisionFace(TSPCollision_t *CollisionData,TSPVec3_t Point,TSPCo
     
     Normal = CollisionData->Normal[Face->NormalIndex].Position;
     if( abs(Normal.y) < 257 ) {
-        printf("TSPGetYFromCollisionFace:Returning it normal...\n");
+        DPrintf("TSPGetYFromCollisionFace:Returning it normal...\n");
         OutY = TSPFixedToFloat(Normal.y,15);
     } else {
-        printf("Normal fixed is:%i;%i;%i\n",Normal.x,Normal.y,Normal.z);
+        DPrintf("Normal fixed is:%i;%i;%i\n",Normal.x,Normal.y,Normal.z);
         float NormalX;
         float NormalY;
         float NormalZ;
         float PointX;
         float PointZ;
-        printf("Normal as int is:%i;%i;%i\n",Normal.x,Normal.y,Normal.z);
+        DPrintf("Normal as int is:%i;%i;%i\n",Normal.x,Normal.y,Normal.z);
         NormalX = /*FixedToInt*/TSPFixedToFloat(Normal.x,15);
         NormalY = /*FixedToInt*/TSPFixedToFloat(Normal.y,15);
         NormalZ = /*FixedToInt*/TSPFixedToFloat(Normal.z,15);
         PointX = /*fixed_to_float*/(Point2D[0]);
         PointZ = /*fixed_to_float*/(Point2D[1]);
-        printf("Normal as float is:%f;%f;%f\n",NormalX,NormalY,NormalZ);
+        DPrintf("Normal as float is:%f;%f;%f\n",NormalX,NormalY,NormalZ);
 //         DistanceOffset = ;
-        printf("TSPGetYFromCollisionFace:DistanceOffset Fixed:%i Real:%i\n",Face->PlaneDistance << 0xf,Face->PlaneDistance );
+        DPrintf("TSPGetYFromCollisionFace:DistanceOffset Fixed:%i Real:%i\n",Face->PlaneDistance << 0xf,Face->PlaneDistance );
         SolveFaceY = -(NormalX * PointX + NormalZ * PointZ + (Face->PlaneDistance /*<< 0xf*/));
         OutY = SolveFaceY / NormalY;
     }
@@ -2002,7 +2002,7 @@ int TSPCheckCollisionFaceIntersection(TSPCollision_t *CollisionData,TSPVec3_t Po
     int MinY;
     
     MinY = 99999;
-    printf("TSPCheckCollisionFaceIntersection:Checking %i faces\n",NumFaces);
+    DPrintf("TSPCheckCollisionFaceIntersection:Checking %i faces\n",NumFaces);
     FaceListIndex = StartingFaceListIndex;
     i = 0;
 
@@ -2011,16 +2011,16 @@ int TSPCheckCollisionFaceIntersection(TSPCollision_t *CollisionData,TSPVec3_t Po
         FaceIndex = CollisionData->FaceIndexList[FaceListIndex];
         //Then grab the corresponding face from the face array...
         CurrentFace = &CollisionData->Face[FaceIndex];
-        printf("Iteration %i\n",i);
+        DPrintf("Iteration %i\n",i);
         if( TSPPointInTriangle(CollisionData,Point,CurrentFace) == 1) {
-            printf("Point is in face %i...grabbing Y value\n",FaceIndex);
+            DPrintf("Point is in face %i...grabbing Y value\n",FaceIndex);
             Y = TSPGetYFromCollisionFace(CollisionData,Point,CurrentFace);
-            printf("Got %i as Y PointY was:%i\n",Y,Point.y);
+            DPrintf("Got %i as Y PointY was:%i\n",Y,Point.y);
             if( Y < MinY ) {
                 MinY = Y;
             }
         } else {
-            printf("Missed face %i...\n",FaceIndex);
+            DPrintf("Missed face %i...\n",FaceIndex);
         }
         //Make sure to increment it in order to fetch the next face.
         FaceListIndex++;
@@ -2056,12 +2056,12 @@ int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *Property
     
     while( 1 ) {
 //         CurrentPlaneIndex = (CurrentPlane - GOffset) / sizeof(TSPCollisionG_t);
-        printf("Node Index %i\n",CurrentNode);
+        DPrintf("Node Index %i\n",CurrentNode);
         Node = &CollisionData->KDTree[CurrentNode];
         if( Node->Child0 < 0 ) {
             DPrintf("Node Child1:%i\n",Node->Child1);
             assert(Node->Child1 >= 0);
-            printf("Done...found a leaf...node %i FaceIndex:%i Child0:%i NumFaces:%i Child1:%i PropertySetFileIndex:%i\n",CurrentNode,
+            DPrintf("Done...found a leaf...node %i FaceIndex:%i Child0:%i NumFaces:%i Child1:%i PropertySetFileIndex:%i\n",CurrentNode,
                    CollisionData->FaceIndexList[Node->Child1],
                    Node->Child0,~Node->Child0,Node->Child1,Node->PropertySetFileIndex);
             if( PropertySetFileIndex != NULL ) {

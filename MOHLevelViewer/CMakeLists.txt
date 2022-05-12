@@ -56,6 +56,7 @@ target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${CMAKE_SOURCE_DI
 target_link_libraries(cimgui ${FREETYPE_LIBRARIES} ${SDL2_LIBRARIES})
 
 if(WIN32)
+  add_compile_definitions(GLEW_STATIC)
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wl,-subsystem,windows)
   add_definitions("-DIMGUI_IMPL_API=extern \"C\" __declspec\(dllexport\)")
   target_link_libraries(${PROJECT_NAME} -static-libgcc mingw32 glew32)
@@ -68,7 +69,11 @@ endif()
 
 add_compile_definitions("IMGUI_IMPL_OPENGL_LOADER_GLEW")
 
-target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:-D_DEBUG -g>")
+target_compile_definitions(${PROJECT_NAME}
+    PRIVATE
+    $<$<CONFIG:Debug>:_DEBUG>
+)
+target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:-g>")
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:-O3>")
 
 

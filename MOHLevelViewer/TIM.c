@@ -20,6 +20,7 @@
 */ 
 
 #include "TIM.h"
+#include "MOHLevelViewer.h"
 
 void TIMImageListFree(TIMImage_t *ImageList)
 {
@@ -87,12 +88,12 @@ TIMImage_t *GetTIMByClutPage(TIMImage_t *List,int clutx,int cluty,int texpage)
 {
     for( TIMImage_t *Iterator = List; Iterator; Iterator = Iterator->Next ) {
         if( Iterator->TexturePage == texpage ) {
-            printf("Image has %ix%i %i bpp (looking for %ix%i)\n",Iterator->Header.CLUTOrgX,Iterator->Header.CLUTOrgY,
+            DPrintf("Image has %ix%i %i bpp (looking for %ix%i)\n",Iterator->Header.CLUTOrgX,Iterator->Header.CLUTOrgY,
                 Iterator->Header.BPP,clutx,cluty
             );
             if( Iterator->Header.CLUTOrgX == clutx &&
                 Iterator->Header.CLUTOrgY == cluty ) {
-                printf("Found %s in list\n",Iterator->Name);
+                DPrintf("Found %s in list\n",Iterator->Name);
                 return Iterator;
             }
         }
@@ -110,7 +111,7 @@ Byte *TIMExpandCLUTImageData(TIMImage_t *Image)
     int y;
     int WritePointer;
     if( Image->Header.BPP != BPP_4 && Image->Header.BPP != BPP_8 ) {
-        printf("TIMExpandCLUTImageData:Cannot expand CLUT data on a non-paletted image.\n");
+        DPrintf("TIMExpandCLUTImageData:Cannot expand CLUT data on a non-paletted image.\n");
         return NULL;
     }
     Data = malloc(Image->Width * Image->Height );
@@ -303,7 +304,7 @@ Byte **SetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
             Byte *Row = png_malloc (PNGPtr, sizeof (Byte) * Image->Width * 3);
             RowPointer[y] = Row;
             for (x = 0; x < Image->RowCount; x++) {
-//                 printf("Pixel is %u 0x%08x\n",Image->Data[x+Image->RowCount*y],Image->Data[x+Image->RowCount*y]);
+//                 DPrintf("Pixel is %u 0x%08x\n",Image->Data[x+Image->RowCount*y],Image->Data[x+Image->RowCount*y]);
                 Byte ClutIndex0 = Image->Data[x+Image->RowCount*y] & 0xF;
                 Byte ClutIndex1 = (Image->Data[x+Image->RowCount*y] >> 4) & 0xF;
                 Byte ClutIndex2 = (Image->Data[x+Image->RowCount*y] >> 8) & 0xF;
@@ -328,7 +329,7 @@ Byte **SetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
             Byte *Row = png_malloc (PNGPtr, sizeof (Byte) * Image->Width * 3);
             RowPointer[y] = Row;
             for (x = 0; x < Image->RowCount; x++) {
-//             printf("Pixel is %u 0x%08x\n",Image->Data[x+Image->RowCount*y],Image->Data[x+Image->RowCount*y]);
+//             DPrintf("Pixel is %u 0x%08x\n",Image->Data[x+Image->RowCount*y],Image->Data[x+Image->RowCount*y]);
                 Byte ClutIndex0 = Image->Data[x+Image->RowCount*y] & 0xFF;
                 Byte ClutIndex1 = (Image->Data[x+Image->RowCount*y] & 0xFF00) >> 8;
                 *Row++ = GetR(Image->CLUT[ClutIndex0]);
@@ -346,7 +347,7 @@ Byte **SetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
             Byte *Row = png_malloc (PNGPtr, sizeof (Byte) * Image->Width * 3);
             RowPointer[y] = Row;
             for (x = 0; x < Image->RowCount; x++) {
-//             printf("Pixel is %u 0x%08x\n",Image->Data[x+Image->RowCount*y],Image->Data[x+Image->RowCount*y]);
+//             DPrintf("Pixel is %u 0x%08x\n",Image->Data[x+Image->RowCount*y],Image->Data[x+Image->RowCount*y]);
                 Byte R = GetR(Image->Data[x+Image->RowCount*y]);
                 Byte G = GetG(Image->Data[x+Image->RowCount*y]);
                 Byte B = GetB(Image->Data[x+Image->RowCount*y]);
@@ -461,10 +462,10 @@ void GetPalette(FILE *TIMIMage,TIMImage_t *Image)
     fread(&Image->Header.NumCluts,sizeof(Image->Header.NumCluts),1,TIMIMage);
 
     
-    printf("ClutSize is %i\n",Image->Header.CLUTSize);
-    printf("ClutLocation is %ux%u\n",Image->Header.CLUTOrgX,Image->Header.CLUTOrgY);
-    printf("NumClutColors is %u\n",Image->Header.NumClutColors);
-    printf("NumCluts is %u\n",Image->Header.NumCluts);
+    DPrintf("ClutSize is %i\n",Image->Header.CLUTSize);
+    DPrintf("ClutLocation is %ux%u\n",Image->Header.CLUTOrgX,Image->Header.CLUTOrgY);
+    DPrintf("NumClutColors is %u\n",Image->Header.NumClutColors);
+    DPrintf("NumCluts is %u\n",Image->Header.NumCluts);
     Image->CLUT = malloc(Image->Header.NumClutColors * sizeof(unsigned short));
     for( i = 0; i < Image->Header.NumClutColors; i++ ) {
         fread(&Image->CLUT[i],sizeof(Image->CLUT[i]),1,TIMIMage);
@@ -483,60 +484,60 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     
     Ret = fread(&ResultImage->Header.Magic,sizeof(ResultImage->Header.Magic),1,TIMImage);
     if( Ret != 1 ) {
-        printf("EOF reached.\n");
+        DPrintf("EOF reached.\n");
         free(ResultImage);
         return NULL;
     }
     if( ResultImage->Header.Magic != 0x10 ) {
         printf("Wrong signature detected (%i (%#08x)).\n",ResultImage->Header.Magic,ResultImage->Header.Magic);
-        printf("Current offset in file is %li\n",ftell(TIMImage));
+        DPrintf("Current offset in file is %li\n",ftell(TIMImage));
         free(ResultImage);
         return NULL;
     }
-    printf("Found image at offset %li\n",ftell(TIMImage) - sizeof(ResultImage->Header.Magic));
+    DPrintf("Found image at offset %li\n",ftell(TIMImage) - sizeof(ResultImage->Header.Magic));
     fread(&ResultImage->Header.BPP,sizeof(ResultImage->Header.BPP),1,TIMImage);
     sprintf(ResultImage->Name,"IMAGE %i",NumImages);
-    printf("-- %s --\n",ResultImage->Name);
-    printf("Magic is %i\n",ResultImage->Header.Magic);
-    printf("Flags are %i\n",ResultImage->Header.BPP);
+    DPrintf("-- %s --\n",ResultImage->Name);
+    DPrintf("Magic is %i\n",ResultImage->Header.Magic);
+    DPrintf("Flags are %i\n",ResultImage->Header.BPP);
     ImageSizeOffset = 1;
     switch(ResultImage->Header.BPP) {
         case BPP_4:
-            printf("Found image with 4 BPP and CLUT!\n");
+            DPrintf("Found image with 4 BPP and CLUT!\n");
             ImageSizeOffset = 4;
             break;
         case BPP_4_NO_CLUT:
-            printf("Found image with 4 BPP without CLUT!\n");
+            DPrintf("Found image with 4 BPP without CLUT!\n");
             break;
         case BPP_8:
-            printf("Found image with 8 BPP and CLUT!\n");
+            DPrintf("Found image with 8 BPP and CLUT!\n");
             ImageSizeOffset = 2;
             break;
         case BPP_8_NO_CLUT:
-            printf("Found image with 8 BPP without CLUT!\n");
+            DPrintf("Found image with 8 BPP without CLUT!\n");
             break;
         case BPP_16:
-            printf("Found image with 16 BPP and CLUT!\n");
+            DPrintf("Found image with 16 BPP and CLUT!\n");
             ImageSizeOffset = 1;
             break;
         case BPP_24:
-            printf("Found image with 24 BPP and CLUT!\n");
+            DPrintf("Found image with 24 BPP and CLUT!\n");
             ImageSizeOffset = 0.5f; //Or 2/3?
             break;
         default:
-            printf("Unknown BPP %i found in tim file.\n",ResultImage->Header.BPP);
+            DPrintf("Unknown BPP %i found in tim file.\n",ResultImage->Header.BPP);
             free(ResultImage);
             return NULL;
     }
     
     if( ResultImage->Header.BPP == BPP_4_NO_CLUT || ResultImage->Header.BPP == BPP_8_NO_CLUT ) {
-        printf("Unsupported BPP %i\n",ResultImage->Header.BPP);
+        DPrintf("Unsupported BPP %i\n",ResultImage->Header.BPP);
         free(ResultImage);
         return NULL;
     }
     
     if( ResultImage->Header.BPP == BPP_24 ) {
-        printf("Warning: BPP 24 was not tested.\n");
+        DPrintf("Warning: BPP 24 was not tested.\n");
     }
     
     if( ResultImage->Header.BPP == BPP_4 || ResultImage->Header.BPP == BPP_8 ) {
@@ -563,8 +564,8 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
             ResultImage->CLUTTexturePage = (ResultImage->Header.CLUTOrgX / 64) /*+ 1*/;
             break;
     }
-    printf("FrameBuffer Coordinates %ux%u page %i\n",ResultImage->FrameBufferX,ResultImage->FrameBufferY,ResultImage->TexturePage);
-    printf("Image has calculated texture page as %i\n",ResultImage->TexturePage);
+    DPrintf("FrameBuffer Coordinates %ux%u page %i\n",ResultImage->FrameBufferX,ResultImage->FrameBufferY,ResultImage->TexturePage);
+    DPrintf("Image has calculated texture page as %i\n",ResultImage->TexturePage);
     //Texture Page is Zero based.
     //Next row.
     if( ResultImage->FrameBufferY >= 256 ) {
@@ -575,9 +576,9 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     }
     //Width is stored in 16-pixels unit so we need to offset it based on the current BPP.
     ResultImage->Width *= ImageSizeOffset;
-    printf("NumPixels is %i\n",ResultImage->NumPixels);
-    printf("FrameBuffer Coordinates %ux%u page %i\n",ResultImage->FrameBufferX,ResultImage->FrameBufferY,ResultImage->TexturePage);
-    printf("Image is %ux%u RowCount is %u\n",ResultImage->Width,ResultImage->Height,ResultImage->RowCount);
+    DPrintf("NumPixels is %i\n",ResultImage->NumPixels);
+    DPrintf("FrameBuffer Coordinates %ux%u page %i\n",ResultImage->FrameBufferX,ResultImage->FrameBufferY,ResultImage->TexturePage);
+    DPrintf("Image is %ux%u RowCount is %u\n",ResultImage->Width,ResultImage->Height,ResultImage->RowCount);
 //     if( ResultImage->FrameBufferX == 512 && ResultImage->FrameBufferY == 0 ) {
 //         exit(0);
 //     }

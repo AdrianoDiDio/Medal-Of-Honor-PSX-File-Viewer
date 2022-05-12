@@ -232,7 +232,7 @@ char *ReadTextFile(char *File,int Length)
     char *Result;
     int Ret;
     
-    Fp = fopen(File,"r");
+    Fp = fopen(File,"rb");
     
     if( !Fp ) {
         DPrintf("ReadTextFile:File %s was not found.\n",File);
