@@ -45,6 +45,24 @@ SDL_GLContext Context;
 
 int StartSeconds = 0;
 
+Byte HighNibble(Byte In)
+{
+    return (In >> 0x4) & 0xF;
+}
+
+Byte LowNibble(Byte In)
+{
+    return In & 0xF;
+}
+
+int SignExtend(int Temp)
+{
+    if ( Temp & 0x8000 ) {
+        Temp |= 0xffff0000;
+    }
+    return Temp;
+}
+
 float Rand01()
 {
     return (rand() / (float)(RAND_MAX));
@@ -147,7 +165,7 @@ int StringToInt(char *String)
 char *GetBaseName(char *Path)
 {
     char *Out;
-    Out = strrchr(Path, PATHSEPARATOR);
+    Out = strrchr(Path, PATH_SEPARATOR);
     if (Out == NULL) {
         Out = Path;
     } else {

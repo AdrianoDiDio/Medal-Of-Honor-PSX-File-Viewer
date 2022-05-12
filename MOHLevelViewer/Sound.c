@@ -42,10 +42,13 @@ void SoundSystemClearMusicList(SoundSystem_t *SoundSystem)
     VBMusic_t *Temp;
     while( SoundSystem->MusicList ) {
         free(SoundSystem->MusicList->Data);
+        free(SoundSystem->MusicList->Name);
         Temp = SoundSystem->MusicList;
         SoundSystem->MusicList = SoundSystem->MusicList->Next;
         free(Temp);
     }
+    SoundSystem->MusicList = NULL;
+    SoundSystem->CurrentMusic = NULL;
 }
 void SoundSystemCleanUp(SoundSystem_t *SoundSystem)
 {
@@ -58,24 +61,33 @@ void SoundSystemOnAudioUpdate(void *UserData,Byte *Stream,int Length)
     SoundSystem_t *SoundSystem;
     SoundSystem = (SoundSystem_t *) UserData;
     VBMusic_t *CurrentMusic;
-    int RealLength;
+    VBMusic_t **CurrentMusicAddress;
+    int ChunkLength;
     
     CurrentMusic = SoundSystem->CurrentMusic;
-    //TODO(Adriano):Switch to the next track if present otherwise restart it.
+    CurrentMusicAddress = &SoundSystem->CurrentMusic;
+
     if( CurrentMusic->DataPointer >= CurrentMusic->Size ) {
-        DPrintf("AudioCallback:Restarting it\n");
         CurrentMusic->DataPointer = 0;
+        if( CurrentMusic->Next ) {
+            *CurrentMusicAddress = (*CurrentMusicAddress)->Next;
+        } else {
+            *CurrentMusicAddress = SoundSystem->MusicList;
+        }
     }
     for (int i = 0; i < Length; i++) {
         Stream[i] = 0;
     }
 
-    RealLength = (CurrentMusic->Size - CurrentMusic->DataPointer);
-    if( RealLength > Length ) {
-        RealLength = Length;
+    ChunkLength = (CurrentMusic->Size - CurrentMusic->DataPointer);
+    if( ChunkLength > Length ) {
+        ChunkLength = Length;
     }
-    SDL_MixAudioFormat(Stream, &CurrentMusic->Data[CurrentMusic->DataPointer], AUDIO_S16, RealLength, SoundVolume->IValue);
-    CurrentMusic->DataPointer += (RealLength);
+    if( SoundVolume->IValue > 128 || SoundVolume->IValue < 0 ) {
+        ConfigSetNumber("SoundVolume",128);
+    }
+    SDL_MixAudioFormat(Stream, &CurrentMusic->Data[CurrentMusic->DataPointer], AUDIO_S16, ChunkLength, SoundVolume->IValue);
+    CurrentMusic->DataPointer += ChunkLength;
 }
 
 void SoundSystemPause(SoundSystem_t *SoundSystem)
@@ -86,40 +98,30 @@ void SoundSystemPlay(SoundSystem_t *SoundSystem)
 {
     SDL_PauseAudioDevice(SoundSystem->Device, 0);
 }
-
-Byte HighNibble(Byte In)
+void SoundSystemLockDevice(SoundSystem_t *SoundSystem)
 {
-    return (In >> 0x4) & 0xF;
+    SDL_LockAudioDevice(SoundSystem->Device);
 }
-
-Byte LowNibble(Byte In)
+void SoundSystemUnlockDevice(SoundSystem_t *SoundSystem)
 {
-    return In & 0xF;
+    SDL_UnlockAudioDevice(SoundSystem->Device);
 }
-
-int SignExtend(int Temp)
+short SoundSystemQuantize(double Sample)
 {
-    if ( Temp & 0x8000 ) {
-        Temp |= 0xffff0000;
-    }
-    return Temp;
-}
-short Quantize(double Sample)
-{
-    int a;
-    a = (int ) (Sample + 0.5);
-    if ( a < -32768 ) {
+    int OutSample;
+    OutSample = (int ) (Sample + 0.5);
+    if ( OutSample < -32768 ) {
         return -32768;
     }
-    if ( a > 32767 ) {
+    if ( OutSample > 32767 ) {
         return 32767;
     }
     
-    return (short) a;
+    return (short) OutSample;
 }
-int SoundSystemCalculateSoundDuration(int Size,int Frequency,int NumChannels,int BitsPerSample)
+int SoundSystemCalculateSoundDuration(int Size,int Frequency,int NumChannels,int BitDepth)
 {
-    return Size / (Frequency * NumChannels * (BitsPerSample / 8));
+    return Size / (Frequency * NumChannels * (BitDepth / 8));
 }
 int SoundSystemGetSoundDuration(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds)
 {
@@ -205,35 +207,42 @@ short *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
             Sample[j] += (State[0] * ADPCMFilterGainPositive[Predictor] + State[1] * ADPCMFilterGainNegative[Predictor] );
             State[1] = State[0];
             State[0] = Sample[j];
-            Result[NumWrittenBytes++] = Quantize(Sample[j]);
+            Result[NumWrittenBytes++] = SoundSystemQuantize(Sample[j]);
 
         }
     }
     return Result;
-//     SoundSystemConvertADPCMToPCM(
 }
 
-VBMusic_t *SoundSystemLoadVBFile(FILE *VBFile)
+VBMusic_t *SoundSystemLoadVBFile(char *VBFileName)
 {
     VBMusic_t *Music;
+    FILE *VBFile;
     SDL_AudioStream *AudioStream;
     short *PCMData;
     int    NumFrames;
-    if( !VBFile ) {
+    if( !VBFileName ) {
         DPrintf("SoundSystemLoadVBFile:Invalid file\n");
+        return NULL;
+    }
+    VBFile = fopen(VBFileName,"rb");
+    if( !VBFile ) {
         return NULL;
     }
     PCMData = SoundSystemConvertADPCMToPCM(VBFile,&NumFrames);
     if( !PCMData ) {
         DPrintf("SoundSystemLoadVBFile:Failed to convert ADPCM to PCM\n");
+        fclose(VBFile);
         return NULL;
     }
     Music = malloc(sizeof(VBMusic_t));
     if( !Music ) {
         DPrintf("SoundSystemLoadVBFile:Failed to allocate memory for music data\n");
         free(PCMData);
+        fclose(VBFile);
         return NULL;
     }
+    Music->Name = StringCopy(GetBaseName(VBFileName));
     //Perform a fast conversion to a more appropriate format...
     AudioStream = SDL_NewAudioStream(AUDIO_S16, 1, 22050, AUDIO_S16, 2, 44100);
     SDL_AudioStreamPut(AudioStream, PCMData, NumFrames * sizeof (Sint16));
@@ -242,20 +251,37 @@ VBMusic_t *SoundSystemLoadVBFile(FILE *VBFile)
     Music->Duration = SoundSystemCalculateSoundDuration(Music->Size,44100,2,16);
     Music->DataPointer = 0;
     Music->Data = malloc(Music->Size);
+    Music->Next = NULL;
     SDL_AudioStreamGet(AudioStream,Music->Data,Music->Size);
     SDL_FreeAudioStream(AudioStream);
     free(PCMData);
+    fclose(VBFile);
     return Music;
+}
+void SoundSystemAddMusicToList(VBMusic_t **MusicList,VBMusic_t *Music)
+{
+    VBMusic_t *LastNode;
+    if( !*MusicList ) {
+        *MusicList = Music;
+    } else {
+        LastNode = *MusicList;
+        while( LastNode->Next ) {
+            LastNode = LastNode->Next;
+        }
+        LastNode->Next = Music;
+    }
 }
 void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,char *MissionPath,int MissionNumber,int LevelNumber,int GameEngine,int AmbientOnly)
 {
     VBMusic_t *Music;
-    FILE *VBFile;
     char *Buffer;
     int NumLoadedVB;
     
+    DPrintf("Pausing it!\n");
     SoundSystemPause(SoundSystem);
+    DPrintf("Cleaning up some pointers\n");
     SoundSystemClearMusicList(SoundSystem);
+    DPrintf("Ready to init.\n");
     NumLoadedVB = 1;
     
     if( GameEngine == MOH_GAME_STANDARD ) {
@@ -264,42 +290,57 @@ void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,char *MissionPath,int 
         } else {
             asprintf(&Buffer,"%s/M%i_%i.VB",MissionPath,MissionNumber,LevelNumber);
         }
-        VBFile = fopen(Buffer,"rb");
-        if( !VBFile ) {
+        Music = SoundSystemLoadVBFile(Buffer);
+        if( !Music ) {
+            DPrintf("SoundSystemLoadLevelMusic:Failed to open %s\n",Buffer);
             free(Buffer);
             return;
         }
-        Music = SoundSystemLoadVBFile(VBFile);
-        DPrintf("Duration:%i:%i\n",Music->Duration/60,Music->Duration % 60);
         Music->Next = SoundSystem->MusicList;
         SoundSystem->MusicList = Music;
         SoundSystem->CurrentMusic = Music;
-        fclose(VBFile);
         NumLoadedVB++;
         free(Buffer);
     } else {
+        /*
+         * NOTE(Adriano):
+         * MOH:Underground uses multiple track files per level that are swapped dynamically based on the 
+         * collision between the camera and a specific node (like the TSP trigger).
+         * What we do here is just append all the available VB files into a circular list that gets played
+         * in a loop inside the audio callback.
+         * Since we don't know how many vb files are required per level, we just try to load them in a loop that
+         * stops only when the file cannot be opened (meaning that we have loaded all the available files).
+         */
         while( 1 ) {
             if( AmbientOnly ) {
                 asprintf(&Buffer,"%s/M%i_%i_%iA.VB",MissionPath,MissionNumber,LevelNumber,NumLoadedVB);
             } else {
                 asprintf(&Buffer,"%s/M%i_%i_%i.VB",MissionPath,MissionNumber,LevelNumber,NumLoadedVB);
             }
-         
-            VBFile = fopen(Buffer,"rb");
-            if( !VBFile ) {
+            Music = SoundSystemLoadVBFile(Buffer);
+            if( !Music ) {
                 free(Buffer);
                 break;
             }
-            Music = SoundSystemLoadVBFile(VBFile);
-    //         DPrintf("Duration:%i\n",Music->Duration);
-            Music->Next = SoundSystem->MusicList;
-            SoundSystem->MusicList = Music;
-            fclose(VBFile);
+            if( !SoundSystem->CurrentMusic ) {
+                SoundSystem->CurrentMusic = Music;
+            }
+            SoundSystemAddMusicToList(&SoundSystem->MusicList,Music);
+//             if( !SoundSystem->MusicList ) {
+//                 
+//             } else {
+//                 
+//             }
+//             Music->Next = SoundSystem->MusicList;
+//             SoundSystem->MusicList = Music;
             NumLoadedVB++;
             free(Buffer);
         }
+        DPrintf("Loaded %i files\n",NumLoadedVB);
     }
+    DPrintf("Unpausing now\n");
     SoundSystemPlay(SoundSystem);
+    DPrintf("Playing it\n");
 }
 SoundSystem_t *SoundSystemInit()
 {

@@ -103,10 +103,10 @@ void VRAMDumpDataToFile(VRAM_t *VRAM,char *OutBaseDir)
     char Buffer[256];
     FILE *MaterialFile;
     
-    sprintf(OutName,"%s%cvram.mtl",OutBaseDir,PATHSEPARATOR);
+    sprintf(OutName,"%s%cvram.mtl",OutBaseDir,PATH_SEPARATOR);
     MaterialFile = fopen(OutName,"w");
 
-    sprintf(OutName,"%s%cvram.png",OutBaseDir,PATHSEPARATOR);
+    sprintf(OutName,"%s%cvram.png",OutBaseDir,PATH_SEPARATOR);
     VRAMSave(VRAM,OutName);
     sprintf(Buffer,"newmtl vram\nKa 1.000 1.000 1.000\nKd 1.000 1.000 1.000\nKs 1.000 1.000 1.000\nmap_Kd vram.png\n");
     fwrite(Buffer,strlen(Buffer),1,MaterialFile);

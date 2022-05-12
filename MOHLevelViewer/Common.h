@@ -46,9 +46,9 @@
 #include "Types.h" 
 
 #ifdef __linux__
-#define PATHSEPARATOR '/'
+#define PATH_SEPARATOR '/'
 #else
-#define PATHSEPARATOR '\\'
+#define PATH_SEPARATOR '\\'
 #endif
 
 #ifdef __GNUC__

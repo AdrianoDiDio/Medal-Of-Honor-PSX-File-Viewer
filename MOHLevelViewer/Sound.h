@@ -29,6 +29,7 @@
 
 //VAB Body Music files.
 typedef struct VBMusic_s {
+    char *Name;
     Byte *Data;
     int    Size;
     int    DataLeft;
@@ -47,6 +48,9 @@ typedef struct SoundSystem_s {
 
 // typedef struct LevelManager_s LevelManager_t;
 SoundSystem_t *SoundSystemInit();
+void SoundSystemLockDevice(SoundSystem_t *SoundSystem);
+void SoundSystemUnlockDevice(SoundSystem_t *SoundSystem);
+void SoundSystemPause(SoundSystem_t *SoundSystem);
 void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,char *MissionPath,int MissionNumber,int LevelNumber,int GameEngine,int AmbientOnly);
 int SoundSystemGetSoundDuration(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds);
 int SoundSystemGetCurrentSoundTime(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds);

@@ -28,6 +28,15 @@ Config_t *GUIFont;
 Config_t *GUIFontSize;
 Config_t *GUIShowFPS;
 
+const char* LevelMusicOptions[] = { 
+    "Disable",
+    "Music and Ambient Sounds",
+    "Ambient Sounds Only" 
+};
+
+int NumLevelMusicOptions = sizeof(LevelMusicOptions) / sizeof(LevelMusicOptions[0]);
+
+
 void GUIReleaseContext(ImGuiContext *Context)
 {    
     igSetCurrentContext(Context);
@@ -156,24 +165,50 @@ bool GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...)
 }
 void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
 {
-    ImVec2 ButtonSize;
+    ImVec2 ZeroSize;
     SDL_version Version;
     int MaxLengthMinutes;
     int MaxLengthSeconds;
     int CurrentLengthMinutes;
     int CurrentLengthSeconds;
+    int i;
+    int IsSelected;
+    
     if( !GUI->DebugWindowHandle ) {
         return;
     }
+    ZeroSize.x = 0.f;
+    ZeroSize.y = 0.f;
     if( igBegin("Debug Settings",&GUI->DebugWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
         if( LevelManagerIsLevelLoaded(LevelManager) ) {
             igText(LevelManager->EngineName);
             igText("Current Path:");
             igText(LevelManager->BasePath);
-            SoundSystemGetSoundDuration(LevelManager->SoundSystem,&MaxLengthMinutes,&MaxLengthSeconds);
-            SoundSystemGetCurrentSoundTime(LevelManager->SoundSystem,&CurrentLengthMinutes,&CurrentLengthSeconds);
-            igText("Music Track Info:");
-            igText("%02i:%02i/%02i:%02i",CurrentLengthMinutes,CurrentLengthSeconds,MaxLengthMinutes,MaxLengthSeconds);
+            if( igBeginCombo("Music Options",LevelMusicOptions[LevelEnableMusicTrack->IValue],0) ) {
+                for (i = 0; i < NumLevelMusicOptions; i++) {
+                    IsSelected = (LevelEnableMusicTrack->IValue == i);
+                    if (igSelectable_Bool(LevelMusicOptions[i], IsSelected,0,ZeroSize)) {
+                        if( LevelEnableMusicTrack->IValue != i ) {
+                            LevelManagerUpdateSoundSettings(LevelManager,i);
+                        }
+                    }
+                    if (IsSelected) {
+                        igSetItemDefaultFocus();
+                    }
+                }
+                igEndCombo();
+            }            
+            if( LevelEnableMusicTrack->IValue ) {
+                SoundSystemGetSoundDuration(LevelManager->SoundSystem,&MaxLengthMinutes,&MaxLengthSeconds);
+                SoundSystemGetCurrentSoundTime(LevelManager->SoundSystem,&CurrentLengthMinutes,&CurrentLengthSeconds);
+                igText("Music Track Info:");
+                igText("Name:%s",LevelManager->SoundSystem->CurrentMusic->Name);
+                igText("%02i:%02i/%02i:%02i",CurrentLengthMinutes,CurrentLengthSeconds,MaxLengthMinutes,MaxLengthSeconds);
+                
+                if( igSliderInt("Sound Volume",&SoundVolume->IValue,0,128,"%i",0) ) {
+                    ConfigSetNumber("SoundVolume",SoundVolume->IValue);
+                }
+            }
             igSeparator();
             igText("Debug Settings");
             if( GUICheckBoxWithTooltip("Show FPS",(bool *) &GUIShowFPS->IValue,GUIShowFPS->Description) ) {
@@ -230,13 +265,13 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
         }
         igSeparator();
         igText("Export the current level and objects");
-        ButtonSize.x = 0.f;
-        ButtonSize.y = 0.f;
-        if( igButton("Export to OBJ",ButtonSize) ) {
+        ZeroSize.x = 0.f;
+        ZeroSize.y = 0.f;
+        if( igButton("Export to OBJ",ZeroSize) ) {
             LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_OBJ);
         }
         igSameLine(0.f,10.f);
-        if( igButton("Export to Ply",ButtonSize) ) {
+        if( igButton("Export to Ply",ZeroSize) ) {
             LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_PLY);
         }
         igSeparator();

@@ -48,6 +48,7 @@ typedef struct Level_s {
 
 bool    LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine);
 int     LevelIsLoaded(Level_t *Level);
+void    LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int GameEngine,int SoundValue);
 void    LevelUnload(Level_t *Level);
 void    LevelCleanUp(Level_t *Level);
 

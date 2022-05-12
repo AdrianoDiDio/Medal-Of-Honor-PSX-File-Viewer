@@ -80,6 +80,21 @@ void LevelCleanUp(Level_t *Level)
     free(Level);
 }
 
+void LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int GameEngine,int SoundValue)
+{
+    int IsAmbient;
+    if( SoundValue > 3 || SoundValue < 0 ) {
+        SoundValue = 1;
+    }
+    if( !SoundValue ) {
+        SoundSystemPause(SoundSystem);
+    } else {
+        IsAmbient = (SoundValue == 2) ? 1 : 0;
+        SoundSystemLoadLevelMusic(SoundSystem,Level->MissionPath,Level->MissionNumber,
+                              Level->LevelNumber,GameEngine,IsAmbient);
+    }
+    ConfigSetNumber("LevelEnableMusicTrack",SoundValue);
+}
 void LevelLoadSettings()
 {
     LevelEnableWireFrameMode = ConfigGet("LevelEnableWireFrameMode");

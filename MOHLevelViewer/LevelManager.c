@@ -443,6 +443,11 @@ void LevelManagerCleanUp()
     }
     free(LevelManager);
 }
+
+void LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,int SoundValue)
+{
+    LevelSetMusicTrackSettings(LevelManager->CurrentLevel,LevelManager->SoundSystem,LevelManager->GameEngine,SoundValue);
+}
 void LevelManagerExportToObj(LevelManager_t *LevelManager,GUI_t *GUI,char *Directory)
 {
     char *EngineName;
@@ -462,7 +467,7 @@ void LevelManagerExportToObj(LevelManager_t *LevelManager,GUI_t *GUI,char *Direc
     }
     asprintf(&EngineName,"%s",(LevelManager->GameEngine == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
     asprintf(&FileName,"%s-MSN%iLVL%i.obj",EngineName,LevelManager->CurrentLevel->MissionNumber,LevelManager->CurrentLevel->LevelNumber);
-    asprintf(&ObjectFile,"%s%c%s",Directory,PATHSEPARATOR,FileName);
+    asprintf(&ObjectFile,"%s%c%s",Directory,PATH_SEPARATOR,FileName);
     
     DPrintf("LevelManagerExportToObj:Dumping it...%s\n",ObjectFile);
     OutFile = fopen(ObjectFile,"w");
@@ -510,9 +515,9 @@ void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,char *Direc
     asprintf(&EngineName,"%s",(LevelManager->GameEngine == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
     asprintf(&LevelFileName,"%s-MSN%iLVL%i_Level.ply",EngineName,LevelManager->CurrentLevel->MissionNumber,LevelManager->CurrentLevel->LevelNumber);
     asprintf(&ObjectFileName,"%s-MSN%iLVL%i_Objects.ply",EngineName,LevelManager->CurrentLevel->MissionNumber,LevelManager->CurrentLevel->LevelNumber);
-    asprintf(&PlyLevelFile,"%s%c%s",Directory,PATHSEPARATOR,LevelFileName);
-    asprintf(&PlyObjectFile,"%s%c%s",Directory,PATHSEPARATOR,ObjectFileName);
-    asprintf(&TextureFile,"%s%cvram.png",Directory,PATHSEPARATOR);
+    asprintf(&PlyLevelFile,"%s%c%s",Directory,PATH_SEPARATOR,LevelFileName);
+    asprintf(&PlyObjectFile,"%s%c%s",Directory,PATH_SEPARATOR,ObjectFileName);
+    asprintf(&TextureFile,"%s%cvram.png",Directory,PATH_SEPARATOR);
     DPrintf("LevelManagerExportToPly:Dumping it...%s / %s\n",PlyLevelFile,PlyObjectFile);
     PlyLevelOutFile = fopen(PlyLevelFile,"w");
     if( !PlyLevelOutFile ) {
