@@ -92,7 +92,7 @@ void VRAMDump(VRAM_t *VRAM)
 {
     char OutName[256];
     CreateDirIfNotExists("VRAM");
-    sprintf(OutName,"VRAM/VRAM.png");
+    sprintf(OutName,"VRAM%cVRAM.png",PATH_SEPARATOR);
     VRAMSave(VRAM,OutName);
 }
 

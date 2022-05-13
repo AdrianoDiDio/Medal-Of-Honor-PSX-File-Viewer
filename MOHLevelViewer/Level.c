@@ -142,7 +142,8 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     
     LevelLoadSettings();
 
-    snprintf(Level->MissionPath,sizeof(Level->MissionPath),"%s/DATA/MSN%i/LVL%i",BasePath,Level->MissionNumber,Level->LevelNumber);
+    snprintf(Level->MissionPath,sizeof(Level->MissionPath),"%s%cDATA%cMSN%i%cLVL%i",BasePath,PATH_SEPARATOR,PATH_SEPARATOR,
+             Level->MissionNumber,PATH_SEPARATOR,Level->LevelNumber);
     DPrintf("LevelInit:Working directory:%s\n",BasePath);
     DPrintf("LevelInit:Loading level %s Mission %i Level %i\n",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 
@@ -151,7 +152,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     //Step.1 Load all the tims from taf.
     //0 is hardcoded...for the images it doesn't make any difference between 0 and 1
     //but if we need to load all the level sounds then 0 means Standard Mode while 1 American (All voices are translated to english!).
-    snprintf(Buffer,sizeof(Buffer),"%s/%i_%i0.TAF",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
+    snprintf(Buffer,sizeof(Buffer),"%s%c%i_%i0.TAF",Level->MissionPath,PATH_SEPARATOR,Level->MissionNumber,Level->LevelNumber);
     Level->ImageList = TIMGetAllImages(Buffer);
 
     if( !Level->ImageList ) {
@@ -177,7 +178,8 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     }
     
     for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.NumTSP; i++ ) {
-        snprintf(Buffer,sizeof(Buffer),"%s/TSP0/%i_%i_C%i.TSP",Level->MissionPath,Level->MissionNumber,Level->LevelNumber,i);
+        snprintf(Buffer,sizeof(Buffer),"%s%cTSP0%c%i_%i_C%i.TSP",Level->MissionPath,PATH_SEPARATOR,PATH_SEPARATOR,
+                 Level->MissionNumber,Level->LevelNumber,i);
         GUIProgressBarIncrement(GUI,Increment,Buffer);
         TSP = TSPLoad(Buffer,i);
         if( !TSP ) {

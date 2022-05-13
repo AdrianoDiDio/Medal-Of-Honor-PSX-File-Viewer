@@ -387,7 +387,7 @@ void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,char *MissionPath,int 
     NumLoadedVB = 1;
     
     if( GameEngine == MOH_GAME_STANDARD ) {
-        asprintf(&Buffer,"%s/M%i_%i.VB",MissionPath,MissionNumber,LevelNumber);
+        asprintf(&Buffer,"%s%cM%i_%i.VB",MissionPath,PATH_SEPARATOR,MissionNumber,LevelNumber);
         Music = SoundSystemLoadVBFile(Buffer);
         if( !Music ) {
             DPrintf("SoundSystemLoadLevelMusic:Failed to open %s\n",Buffer);
@@ -396,7 +396,7 @@ void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,char *MissionPath,int 
         }
         SoundSystemAddMusicToList(&SoundSystem->MusicList,Music);
         free(Buffer);
-        asprintf(&Buffer,"%s/M%i_%iA.VB",MissionPath,MissionNumber,LevelNumber);
+        asprintf(&Buffer,"%s%cM%i_%iA.VB",MissionPath,PATH_SEPARATOR,MissionNumber,LevelNumber);
         Music = SoundSystemLoadVBFile(Buffer);
         if( !Music ) {
             DPrintf("SoundSystemLoadLevelMusic:Failed to open %s\n",Buffer);
@@ -418,7 +418,7 @@ void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,char *MissionPath,int 
          */
         while( 1 ) {
 
-            asprintf(&Buffer,"%s/M%i_%i_%i.VB",MissionPath,MissionNumber,LevelNumber,NumLoadedVB);
+            asprintf(&Buffer,"%s%cM%i_%i_%i.VB",MissionPath,PATH_SEPARATOR,MissionNumber,LevelNumber,NumLoadedVB);
             Music = SoundSystemLoadVBFile(Buffer);
             if( !Music ) {
                 free(Buffer);
@@ -426,7 +426,7 @@ void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,char *MissionPath,int 
             }
             SoundSystemAddMusicToList(&SoundSystem->MusicList,Music);
             free(Buffer);
-            asprintf(&Buffer,"%s/M%i_%i_%iA.VB",MissionPath,MissionNumber,LevelNumber,NumLoadedVB);
+            asprintf(&Buffer,"%s%cM%i_%i_%iA.VB",MissionPath,PATH_SEPARATOR,MissionNumber,LevelNumber,NumLoadedVB);
             Music = SoundSystemLoadVBFile(Buffer);
             if( !Music ) {
                 free(Buffer);
