@@ -491,7 +491,26 @@ void LevelManagerExportToObj(LevelManager_t *LevelManager,GUI_t *GUI,char *Direc
     free(ObjectFile);
     fclose(OutFile);
 }
-
+void LevelManagerExportMusicToWav(LevelManager_t *LevelManager,GUI_t *GUI,char *Directory)
+{
+    char *EngineName;
+    
+    if( !LevelManager ) {
+        DPrintf("LevelManagerExportMusicToWav:Invalid user data\n");
+        return;
+    }
+    
+    if( !LevelManager->IsPathSet ) {
+        DPrintf("LevelManagerExportMusicToWav:Game path is not set!\n");
+        return;
+    }
+    asprintf(&EngineName,"%s",(LevelManager->GameEngine == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
+    
+    GUISetProgressBarDialogTitle(GUI,"Exporting to Wav...");
+    SoundSystemDumpMusicToWav(LevelManager->SoundSystem,EngineName,Directory);
+    GUIProgressBarIncrement(GUI,100,"Done.");
+    free(EngineName);
+}
 void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,char *Directory)
 {
     char *EngineName;
@@ -564,6 +583,9 @@ void LevelManagerOnExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char
             break;
         case LEVEL_MANAGER_EXPORT_FORMAT_PLY:
             LevelManagerExportToPly(LevelManager,GUI,Directory);
+            break;
+        case LEVEL_MANAGER_EXPORT_FORMAT_WAV:
+            LevelManagerExportMusicToWav(LevelManager,GUI,Directory);
             break;
         default:
             DPrintf("LevelManagerOnExportDirSelected:Invalid output format\n");

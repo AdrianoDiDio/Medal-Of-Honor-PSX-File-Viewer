@@ -27,6 +27,22 @@
 #define SOUND_SYSTEM_NUM_SAMPLES 512
 #define SOUND_SYSTEM_NUM_CHANNELS 2
 
+typedef struct WAVHeader_s {
+    char    ChunkID[4];
+    int     ChunkSize;
+    char    Format[4];
+    char    Subchunk1ID[4];
+    int     Subchunk1Size;
+    short   AudioFormat;
+    short   NumChannels;
+    int     SampleRate;
+    int     ByteRate;
+    short   BlockAlign;
+    short   BitsPerSample;
+    
+    char    Subchunk2ID[4];
+    int     Subchunk2Size;
+} WAVHeader_t;
 //VAB Body Music files.
 typedef struct VBMusic_s {
     char *Name;
@@ -39,21 +55,26 @@ typedef struct VBMusic_s {
     
     struct VBMusic_s *Next;
 } VBMusic_t;
+
 typedef struct SoundSystem_s {
     SDL_AudioDeviceID Device;
     VBMusic_t *MusicList;
+    VBMusic_t *AmbientMusicList;
     VBMusic_t *CurrentMusic;
-
+    int        IsAmbient;
 } SoundSystem_t;
 
 // typedef struct LevelManager_s LevelManager_t;
 SoundSystem_t *SoundSystemInit();
 void SoundSystemLockDevice(SoundSystem_t *SoundSystem);
 void SoundSystemUnlockDevice(SoundSystem_t *SoundSystem);
+void SoundSystemPlayMusic(SoundSystem_t *SoundSystem,int IsAmbient);
+void SoundSystemStopMusic(SoundSystem_t *SoundSystem);
 void SoundSystemPause(SoundSystem_t *SoundSystem);
-void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,char *MissionPath,int MissionNumber,int LevelNumber,int GameEngine,int AmbientOnly);
+void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,char *MissionPath,int MissionNumber,int LevelNumber,int GameEngine);
 int SoundSystemGetSoundDuration(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds);
 int SoundSystemGetCurrentSoundTime(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds);
+int SoundSystemDumpMusicToWav(SoundSystem_t *SoundSystem,char *EngineName,char *OutDirectory);
 void SoundSystemCleanUp(SoundSystem_t *SoundSystem);
 
 extern Config_t *SoundVolume;

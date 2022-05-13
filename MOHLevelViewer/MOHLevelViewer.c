@@ -190,19 +190,22 @@ void CreateDirIfNotExists(char *DirName) {
 char *SwitchExt(const char *In, const char *Ext)
 {
     char *NewExt;
-    int i;
+    int StrippedFileNameLength;
+    char *Temp;
     
     if ( !In || !Ext ) {
         return NULL;
     }
 
-    NewExt = malloc(strlen(In) + 1);
-
-    for ( i = 0; In[i] != '.'; i++ ) {
-        NewExt[i] = In[i];
+    Temp = strrchr(In,'.');
+    if( Temp ) {
+        StrippedFileNameLength = Temp - In;
+    } else {
+        StrippedFileNameLength = strlen(In);
     }
-    NewExt[i] = '\0';
-
+    NewExt = malloc(StrippedFileNameLength + strlen(Ext) + 1);
+    strncpy(NewExt,In,StrippedFileNameLength);
+    NewExt[StrippedFileNameLength] = '\0';
     //Now append the extension to the string.
     strncat(NewExt, Ext, strlen(NewExt));
     return NewExt;
@@ -383,20 +386,24 @@ void CamMouseEvent(ViewParm_t *Camera,int Dx,int Dy)
 
 void CamUpdate(ViewParm_t *Camera,int Orientation, float Sensitivity)
 {
+    Camera->Forward.x = sin(DEGTORAD(Camera->Angle.y));
+    Camera->Forward.z = -cos(DEGTORAD(Camera->Angle.y));
+    Camera->Forward.y = -sin(DEGTORAD(Camera->Angle.x));
+    
+    Camera->Right.x = -(float)(cos(DEGTORAD(Camera->Angle.y)));
+    Camera->Right.z = -(float)(sin(DEGTORAD(Camera->Angle.y)));
+    
     switch ( Orientation ) {
         case DIR_FORWARD:
-            Camera->Forward.x = sin(DEGTORAD(Camera->Angle.y));
-            Camera->Forward.z = -cos(DEGTORAD(Camera->Angle.y));
-            Camera->Forward.y = -sin(DEGTORAD(Camera->Angle.x));
             Vec3Scale(Camera->Forward,Sensitivity,&Camera->Forward);
             Vec3Add(Camera->Position,Camera->Forward,&Camera->Position);
             break;
         case DIR_BACKWARD:
-            Camera->Forward.x = -sin(DEGTORAD(Camera->Angle.y));
-            Camera->Forward.z = cos(DEGTORAD(Camera->Angle.y));
-            Camera->Forward.y = sin(DEGTORAD(Camera->Angle.x));
+//             Camera->Forward.x = -sin(DEGTORAD(Camera->Angle.y));
+//             Camera->Forward.z = cos(DEGTORAD(Camera->Angle.y));
+//             Camera->Forward.y = sin(DEGTORAD(Camera->Angle.x));
             Vec3Scale(Camera->Forward,Sensitivity,&Camera->Forward);
-            Vec3Add(Camera->Position,Camera->Forward,&Camera->Position);
+            Vec3Subtract(Camera->Position,Camera->Forward,&Camera->Position);
             break;
         case DIR_UPWARD:
             Camera->Position.y += Sensitivity;
@@ -405,16 +412,12 @@ void CamUpdate(ViewParm_t *Camera,int Orientation, float Sensitivity)
             Camera->Position.y -= Sensitivity;
             break;
         case DIR_LEFTWARD:
-            Camera->Right.x = -(float)(cos(DEGTORAD(Camera->Angle.y)));
-            Camera->Right.z = -(float)(sin(DEGTORAD(Camera->Angle.y)));
             Vec3Scale(Camera->Right,Sensitivity,&Camera->Right);
             Vec3Add(Camera->Position,Camera->Right,&Camera->Position);
             break;
         case DIR_RIGHTWARD:
-            Camera->Right.x = (float)(cos(DEGTORAD(Camera->Angle.y)));
-            Camera->Right.z = (float)(sin(DEGTORAD(Camera->Angle.y)));
             Vec3Scale(Camera->Right,Sensitivity,&Camera->Right);
-            Vec3Add(Camera->Position,Camera->Right,&Camera->Position);
+            Vec3Subtract(Camera->Position,Camera->Right,&Camera->Position);
             break;
          case LOOK_LEFT:
              Camera->Angle.y -= Sensitivity;
@@ -1018,7 +1021,6 @@ int main(int argc,char **argv)
 //         printf("%s <MOH Directory> <Mission Number> <Level Number> will load level files from that mission.\n",argv[0]);
 //         return -1;
 //     }
-    
     ConfigInit();
     
     VidConfigWidth = ConfigGet("VideoWidth");

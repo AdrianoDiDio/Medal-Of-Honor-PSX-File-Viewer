@@ -87,11 +87,10 @@ void LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int Ga
         SoundValue = 1;
     }
     if( !SoundValue ) {
-        SoundSystemPause(SoundSystem);
+        SoundSystemStopMusic(SoundSystem);
     } else {
         IsAmbient = (SoundValue == 2) ? 1 : 0;
-        SoundSystemLoadLevelMusic(SoundSystem,Level->MissionPath,Level->MissionNumber,
-                              Level->LevelNumber,GameEngine,IsAmbient);
+        SoundSystemPlayMusic(SoundSystem,IsAmbient);
     }
     ConfigSetNumber("LevelEnableMusicTrack",SoundValue);
 }
@@ -120,7 +119,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     TSP_t *TSP;
     int LocalGameEngine;
     float BasePercentage;
-    int LoadAmbientMusic;
+    int PlayAmbientMusic;
     
     //Attempt to load the level...
     if( !Level ){
@@ -206,10 +205,11 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     BSDCreateVAOs(Level->BSD,Level->VRAM);
     GUIProgressBarIncrement(GUI,Increment,"Fixing Objects Position");
     BSDFixRenderObjectPosition(Level);
+    GUIProgressBarIncrement(GUI,Increment,"Loading Music");
+    SoundSystemLoadLevelMusic(SoundSystem,Level->MissionPath,MissionNumber,LevelNumber,LocalGameEngine);
     if( LevelEnableMusicTrack->IValue ) {
-        GUIProgressBarIncrement(GUI,Increment,"Loading Music");
-        LoadAmbientMusic = (LevelEnableMusicTrack->IValue == 2) ? 1 : 0;
-        SoundSystemLoadLevelMusic(SoundSystem,Level->MissionPath,MissionNumber,LevelNumber,LocalGameEngine,LoadAmbientMusic);
+        PlayAmbientMusic = (LevelEnableMusicTrack->IValue == 2) ? 1 : 0;
+        SoundSystemPlayMusic(SoundSystem,PlayAmbientMusic);
     }
     CamInit(&Camera,Level->BSD);
     DPrintf("LevelInit:Allocated level struct\n");

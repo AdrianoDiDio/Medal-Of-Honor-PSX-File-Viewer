@@ -280,6 +280,13 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
         if( igButton("Export to Ply",ZeroSize) ) {
             LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_PLY);
         }
+        if( LevelManager->SoundSystem->CurrentMusic ) {
+            igSeparator();
+            igText("Export current music and ambient sounds");
+            if( igButton("Export to WAV",ZeroSize) ) {
+                LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_WAV);
+            }
+        }
         igSeparator();
         igText("Debug Statistics");
         igText("NumActiveWindows:%i",GUI->NumActiveWindows);
