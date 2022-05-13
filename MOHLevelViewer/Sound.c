@@ -253,24 +253,24 @@ void SoundSystemDumpMusic(VBMusic_t *Music,char *EngineName,char *OutDirectory)
         return;
     }
     
-    WAVHeader.ChunkID[0] = 'R';
-    WAVHeader.ChunkID[1] = 'I';
-    WAVHeader.ChunkID[2] = 'F';
-    WAVHeader.ChunkID[3] = 'F';
+    WAVHeader.RIFFHeader[0] = 'R';
+    WAVHeader.RIFFHeader[1] = 'I';
+    WAVHeader.RIFFHeader[2] = 'F';
+    WAVHeader.RIFFHeader[3] = 'F';
     
-    WAVHeader.ChunkSize = 4 + (8 + 16) + (8 + Music->Size);
+    WAVHeader.WAVSize = 4 + (8 + 16) + (8 + Music->Size);
     
-    WAVHeader.Format[0] = 'W';
-    WAVHeader.Format[1] = 'A';
-    WAVHeader.Format[2] = 'V';
-    WAVHeader.Format[3] = 'E';
+    WAVHeader.WAVEHeader[0] = 'W';
+    WAVHeader.WAVEHeader[1] = 'A';
+    WAVHeader.WAVEHeader[2] = 'V';
+    WAVHeader.WAVEHeader[3] = 'E';
     
-    WAVHeader.Subchunk1ID[0] = 'f';
-    WAVHeader.Subchunk1ID[1] = 'm';
-    WAVHeader.Subchunk1ID[2] = 't';
-    WAVHeader.Subchunk1ID[3] = ' ';
+    WAVHeader.FormatHeader[0] = 'f';
+    WAVHeader.FormatHeader[1] = 'm';
+    WAVHeader.FormatHeader[2] = 't';
+    WAVHeader.FormatHeader[3] = ' ';
     
-    WAVHeader.Subchunk1Size = 16;
+    WAVHeader.FormatSize = 16;
     WAVHeader.AudioFormat = 1;
     WAVHeader.NumChannels = 2;
     WAVHeader.SampleRate = 44100;
@@ -278,11 +278,11 @@ void SoundSystemDumpMusic(VBMusic_t *Music,char *EngineName,char *OutDirectory)
     WAVHeader.BlockAlign = (2 * (16/8));
     WAVHeader.BitsPerSample = 16;
     
-    WAVHeader.Subchunk2ID[0] = 'd';
-    WAVHeader.Subchunk2ID[1] = 'a';
-    WAVHeader.Subchunk2ID[2] = 't';
-    WAVHeader.Subchunk2ID[3] = 'a';
-    WAVHeader.Subchunk2Size = Music->Size;
+    WAVHeader.DataHeader[0] = 'd';
+    WAVHeader.DataHeader[1] = 'a';
+    WAVHeader.DataHeader[2] = 't';
+    WAVHeader.DataHeader[3] = 'a';
+    WAVHeader.DataSize = Music->Size;
     fwrite(&WAVHeader,sizeof(WAVHeader_t), 1,  WAVFile);
     fwrite(Music->Data,Music->Size,1,WAVFile);
     free(VBFileName);

@@ -28,11 +28,11 @@
 #define SOUND_SYSTEM_NUM_CHANNELS 2
 
 typedef struct WAVHeader_s {
-    char    ChunkID[4];
-    int     ChunkSize;
-    char    Format[4];
-    char    Subchunk1ID[4];
-    int     Subchunk1Size;
+    char    RIFFHeader[4];
+    int     WAVSize;
+    char    WAVEHeader[4];
+    char    FormatHeader[4];
+    int     FormatSize;
     short   AudioFormat;
     short   NumChannels;
     int     SampleRate;
@@ -40,8 +40,8 @@ typedef struct WAVHeader_s {
     short   BlockAlign;
     short   BitsPerSample;
     
-    char    Subchunk2ID[4];
-    int     Subchunk2Size;
+    char    DataHeader[4];
+    int     DataSize;
 } WAVHeader_t;
 //VAB Body Music files.
 typedef struct VBMusic_s {
