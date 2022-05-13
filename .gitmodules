@@ -7,3 +7,6 @@
 	path = MOHLevelViewer/Libs/cimgui
 	url = https://github.com/cimgui/cimgui
     update = merge
+[submodule "MOHLevelViewer/Libs/glew-cmake"]
+	path = MOHLevelViewer/Libs/glew-cmake
+	url = https://github.com/Perlmint/glew-cmake.git
