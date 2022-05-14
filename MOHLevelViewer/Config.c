@@ -93,7 +93,7 @@ void ConfigTokenizeSettings(char *String)
     }
 }
 
-void ConfigReadSettings()
+void ConfigLoadSettings()
 {
     char *PrefPath;
     char *PrefFile;
@@ -116,7 +116,7 @@ void ConfigReadSettings()
     ConfigLineIndex = 0;
     Temp = ConfigBuffer;
     
-    DPrintf("ConfigReadSettings:Loading %s\n",PrefFile);
+    DPrintf("ConfigLoadSettings:Loading %s\n",PrefFile);
 
     while( 1 ) {
         if( !*Temp ) {
@@ -315,9 +315,9 @@ void ConfigRegisterDefaultSettings()
     ConfigRegister("LevelEnableAnimatedSurfaces","1","When enabled this will make some surfaces change their texture when the camera gets near.\n"
                                        "For example when hovering the camera near an explosive charge an overlay will pulse near the charge.");
     
-    ConfigRegister("LevelEnableMusicTrack","1","When enabled sound will be loaded along with the current level and played.\n"
+    ConfigRegister("LevelEnableMusicTrack","1","When enabled sound will be played in background.\n"
                                        "There are 3 possible values:0 Disabled,1 Enable Music And Ambient sounds,2 Enable ambient sounds only.");
-    ConfigRegister("SoundVolume","128","Sets the sound volume, the value must be in range 0-128, values outside that range will be ignored.");
+    ConfigRegister("SoundVolume","128","Sets the sound volume, the value must be in range 0-128, values outside that range will be clamped.");
 }
 void ConfigDumpSettings()
 {
@@ -331,5 +331,5 @@ void ConfigDumpSettings()
 void ConfigInit()
 {
     ConfigRegisterDefaultSettings();
-    ConfigReadSettings();
+    ConfigLoadSettings();
 }

@@ -273,7 +273,7 @@ Mission_t MOHUMissionsList[] = {
     },
     {
         "Wewelsburg: Dark Camelot",
-        4,
+        6,
         3,
         (MissionLevel_t[]) {
             {
@@ -292,7 +292,7 @@ Mission_t MOHUMissionsList[] = {
     },
     {
         "Last Rites At Monte Cassino",
-        6,
+        4,
         3,
         (MissionLevel_t[]) {
             {

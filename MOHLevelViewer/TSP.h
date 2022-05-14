@@ -83,7 +83,6 @@ typedef struct TSPRenderingFace_s {
     int ColorIndex[3];
     int DynamicDataIndex;
     int Flags;
-    int SwapV1V2;
     struct TSPRenderingFace_s *Next;
 } TSPRenderingFace_t;
 

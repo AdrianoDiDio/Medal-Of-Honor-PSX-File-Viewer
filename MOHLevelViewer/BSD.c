@@ -1487,11 +1487,11 @@ char *BSDRenderObjectGetEnumStringFromType(int RenderObjectType)
 char *BSDGetCollisionVolumeStringFromType(int CollisionVolumeType)
 {
     switch( CollisionVolumeType ) {
-        case 0:
+        case BSD_COLLISION_VOLUME_TYPE_SPHERE:
             return "Sphere";
-        case 1:
+        case BSD_COLLISION_VOLUME_TYPE_CYLINDER:
             return "Cylinder";
-        case 2:
+        case BSD_COLLISION_VOLUME_TYPE_BOX:
         default:
             return "Box";
     }
@@ -1599,11 +1599,11 @@ bool BSDPointInBox(Vec3_t Point,BSDPosition_t Center,BSDPosition_t NodeRotation,
 bool BSDPointInNode(Vec3_t Position,BSDNode_t *Node)
 {
     switch( Node->CollisionVolumeType ) {
-        case 0:
+        case BSD_COLLISION_VOLUME_TYPE_SPHERE:
             return BSDPointInSphere(Position,Node->Position,Node->CollisionInfo0);
-        case 1:
+        case BSD_COLLISION_VOLUME_TYPE_CYLINDER:
             return BSDPointInCylinder(Position,Node->Position,Node->CollisionInfo0,Node->CollisionInfo1,Node->CollisionInfo2);
-        case 2:
+        case BSD_COLLISION_VOLUME_TYPE_BOX:
             return BSDPointInBox(Position,Node->Position,Node->Rotation,Node->CollisionInfo0,Node->CollisionInfo1,Node->CollisionInfo2);
         default:
             DPrintf("Unknown CollisionVolumeType %i for node %i\n",Node->CollisionVolumeType,Node->Id);
@@ -1631,7 +1631,8 @@ int BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD)
         }
         
         if( BSDPointInNode(Camera.Position,&BSD->NodeData.Node[i]) ) {
-            if( BSD->NodeData.Node[i].Type == 5 /*BSD->NodeData.Node[i].Type == 3 || BSD->NodeData.Node[i].Type == 5 || BSD->NodeData.Node[i].Type == 6 */) {
+            if( BSD->NodeData.Node[i].Type == 5 /*BSD->NodeData.Node[i].Type == 3 || BSD->NodeData.Node[i].Type == 5 ||
+                BSD->NodeData.Node[i].Type == 6*/ ) {
                 BSD->NodeData.Node[i].Visited = 1;
                 return BSD->NodeData.Node[i].DynamicBlockIndex;
             }

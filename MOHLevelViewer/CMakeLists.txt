@@ -55,10 +55,11 @@ target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${CMAKE_SOURCE_DI
 target_link_libraries(cimgui ${FREETYPE_LIBRARIES} ${SDL2_LIBRARIES})
 
 if(WIN32)
-  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wl,-subsystem,windows)
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
   add_definitions("-DIMGUI_IMPL_API=extern \"C\" __declspec\(dllexport\)")
   target_link_libraries(${PROJECT_NAME} -static-libgcc mingw32)
   target_link_libraries(cimgui -static-libstdc++ -static-libgcc -static)
+  target_link_options(${PROJECT_NAME} PRIVATE -mwindows)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:-Wall;-fsanitize=address>")
   target_link_options(${PROJECT_NAME} PRIVATE  "$<$<CONFIG:DEBUG>:-fsanitize=address>")

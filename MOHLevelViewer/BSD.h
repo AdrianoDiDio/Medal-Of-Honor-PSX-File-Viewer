@@ -97,6 +97,11 @@ typedef enum {
     BSD_UNKNOWN
 } BSDEntryType_t;
 
+typedef enum {
+    BSD_COLLISION_VOLUME_TYPE_SPHERE = 0,
+    BSD_COLLISION_VOLUME_TYPE_CYLINDER,
+    BSD_COLLISION_VOLUME_TYPE_BOX
+} BSDCollisionVolumeType_t;
 
 typedef struct BSDPosition_s {
     short x;

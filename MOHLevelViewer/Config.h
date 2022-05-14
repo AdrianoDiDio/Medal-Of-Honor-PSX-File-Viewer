@@ -32,11 +32,11 @@ typedef struct Config_s {
 
 extern Config_t *ConfigList;
 
-void ConfigInit();
-int ConfigSet(char *Name,char *Value);
-int ConfigSetNumber(char *Name,float Value);
-Config_t *ConfigGet(char *Name);
-int ConfigRegister(char *Name,char *Value,char *Description);
-void ConfigSaveSettings();
-void ConfigFree();
+void        ConfigInit();
+int         ConfigSet(char *Name,char *Value);
+int         ConfigSetNumber(char *Name,float Value);
+Config_t    *ConfigGet(char *Name);
+int         ConfigRegister(char *Name,char *Value,char *Description);
+void        ConfigSaveSettings();
+void        ConfigFree();
 #endif//__CONFIG_H_

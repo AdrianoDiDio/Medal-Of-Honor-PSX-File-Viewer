@@ -167,7 +167,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
         DPrintf("LevelInit:Failed to load BSD file\n");
         return false;
     }
-    float NumStepsLeft = (Level->BSD->TSPInfo.NumTSP) + 5 + (LevelEnableMusicTrack->IValue ? 1 : 0);
+    float NumStepsLeft = (Level->BSD->TSPInfo.NumTSP) + 6;
     float Increment = (100.f - BasePercentage) / NumStepsLeft;
     //Read the TSP FILES
     //Step.3 Load all the TSP file based on the data read from the BSD file.
