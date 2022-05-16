@@ -42,7 +42,7 @@ typedef struct LevelManager_s LevelManager_t;
 #define BSD_SKY_DATA_FILE_POSITION 0x58C
 #define BSD_SKY_MAX_STARS_NUMBER 255
 #define BSD_MOON_VRAM_PAGE 15
-#define BSD_MOON_WIdTH 32
+#define BSD_MOON_WIDTH 32
 #define BSD_MOON_HEIGHT 32
 #define BSD_MOON_TEXTURE_X 192
 #define BSD_MOON_TEXTURE_Y 96

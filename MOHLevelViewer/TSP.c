@@ -692,9 +692,12 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
                     U1,V1,
                     U2,V2);
         if( (TSB & 0x4000) != 0) {
-            TSPFillFaceVertexBuffer(TransparentVertexData,&TransparentVertexPointer,TSP->Vertex[Vert0],TSP->Color[Vert0],U0,V0,CLUTDestX,CLUTDestY,ColorMode);
-            TSPFillFaceVertexBuffer(TransparentVertexData,&TransparentVertexPointer,TSP->Vertex[Vert1],TSP->Color[Vert1],U1,V1,CLUTDestX,CLUTDestY,ColorMode);
-            TSPFillFaceVertexBuffer(TransparentVertexData,&TransparentVertexPointer,TSP->Vertex[Vert2],TSP->Color[Vert2],U2,V2,CLUTDestX,CLUTDestY,ColorMode);
+            TSPFillFaceVertexBuffer(TransparentVertexData,&TransparentVertexPointer,TSP->Vertex[Vert0],
+                                    TSP->Color[Vert0],U0,V0,CLUTDestX,CLUTDestY,ColorMode);
+            TSPFillFaceVertexBuffer(TransparentVertexData,&TransparentVertexPointer,TSP->Vertex[Vert1],
+                                    TSP->Color[Vert1],U1,V1,CLUTDestX,CLUTDestY,ColorMode);
+            TSPFillFaceVertexBuffer(TransparentVertexData,&TransparentVertexPointer,TSP->Vertex[Vert2],
+                                    TSP->Color[Vert2],U2,V2,CLUTDestX,CLUTDestY,ColorMode);
             RenderingFace->VAOBufferOffset = TSP->TransparentVAO->CurrentSize;
             RenderingFace->BlendingMode = (TSB >> 5 ) & 3;
             RenderingFace->Flags |= TSP_FX_TRANSPARENT_FACE;
@@ -1317,6 +1320,9 @@ void TSPDrawTransparentFaces(TSP_t *TSP)
     int TextureIndexId;
     TSPRenderingFace_t *TransparentFaceIterator;
 
+    if( !LevelDrawSurfaces->IValue ) {
+        return;
+    }
     
     Shader = ShaderCache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
     glUseProgram(Shader->ProgramId);

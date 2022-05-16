@@ -992,7 +992,7 @@ void BSDCreateMoonVAO(BSD_t *BSD,VRAM_t *VRAM)
     u0 = ((float)BSD_MOON_TEXTURE_X + VRAMGetTexturePageX(BSD_MOON_VRAM_PAGE)) / ImageWidth;
     //Color Mode 0 => 4 BPP texture
     v0 = ((float)BSD_MOON_TEXTURE_Y + VRAMGetTexturePageY(BSD_MOON_VRAM_PAGE,0)) / ImageHeight;
-    TexWidth = ((float)BSD_MOON_WIdTH) / ImageWidth;
+    TexWidth = ((float)BSD_MOON_WIDTH) / ImageWidth;
     TexHeight = ((float)BSD_MOON_HEIGHT) / ImageHeight;
     
     VertexData = malloc(DataSize);
@@ -1003,7 +1003,7 @@ void BSDCreateMoonVAO(BSD_t *BSD,VRAM_t *VRAM)
     y = MoonPosition.y;
     z = MoonPosition.z;
     
-    w = BSD_MOON_WIdTH * (BSD->SkyData.StarRadius * 4);
+    w = BSD_MOON_WIDTH * (BSD->SkyData.StarRadius * 4);
     h = BSD_MOON_HEIGHT * (BSD->SkyData.StarRadius * 4);
 
     VertexData[VertexPointer] =  x;
@@ -1766,7 +1766,7 @@ void BSDDraw(LevelManager_t *LevelManager)
         glUseProgram(0);
     }
     
-    if( LevelDrawBSDShowCase->IValue ) {
+    if( LevelDrawBSDShowcase->IValue ) {
         Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
         glUseProgram(Shader->ProgramId);
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");

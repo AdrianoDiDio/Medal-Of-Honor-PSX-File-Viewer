@@ -66,6 +66,7 @@ void    LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,int SoundVa
 int     LevelManagerIsLevelLoaded(LevelManager_t *LevelManager);
 int     LevelManagerGetGameEngine(LevelManager_t *LevelManager);
 int     LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path);
+void    LevelManagerUpdate(LevelManager_t *LevelManager);
 void    LevelManagerDraw(LevelManager_t *LevelManager);
 void    LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI);
 void    LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,int OutputFormat);

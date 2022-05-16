@@ -59,7 +59,7 @@ extern Config_t *LevelDrawSurfaces;
 extern Config_t *LevelDrawBSDNodesAsPoints;
 extern Config_t *LevelDrawBSDRenderObjectsAsPoints;
 extern Config_t *LevelDrawBSDRenderObjects;
-extern Config_t *LevelDrawBSDShowCase;
+extern Config_t *LevelDrawBSDShowcase;
 extern Config_t *LevelEnableFrustumCulling;
 extern Config_t *LevelEnableAmbientLight;
 extern Config_t *LevelEnableSemiTransparency;

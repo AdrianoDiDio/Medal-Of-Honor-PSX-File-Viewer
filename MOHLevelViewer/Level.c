@@ -29,7 +29,7 @@ Config_t *LevelDrawSurfaces;
 Config_t *LevelDrawBSDNodesAsPoints;
 Config_t *LevelDrawBSDRenderObjectsAsPoints;
 Config_t *LevelDrawBSDRenderObjects;
-Config_t *LevelDrawBSDShowCase;
+Config_t *LevelDrawBSDShowcase;
 Config_t *LevelEnableFrustumCulling;
 Config_t *LevelEnableAmbientLight;
 Config_t *LevelEnableSemiTransparency;
@@ -103,7 +103,7 @@ void LevelLoadSettings()
     LevelDrawBSDNodesAsPoints = ConfigGet("LevelDrawBSDNodesAsPoints");
     LevelDrawBSDRenderObjectsAsPoints = ConfigGet("LevelDrawBSDRenderObjectsAsPoints");
     LevelDrawBSDRenderObjects = ConfigGet("LevelDrawBSDRenderObjects");
-    LevelDrawBSDShowCase = ConfigGet("LevelDrawBSDShowCase");
+    LevelDrawBSDShowcase = ConfigGet("LevelDrawBSDShowcase");
     LevelEnableFrustumCulling = ConfigGet("LevelEnableFrustumCulling");
     LevelEnableAmbientLight = ConfigGet("LevelEnableAmbientLight");
     LevelEnableSemiTransparency = ConfigGet("LevelEnableSemiTransparency");

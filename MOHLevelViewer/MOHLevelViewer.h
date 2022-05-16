@@ -120,6 +120,8 @@ extern Config_t *VidConfigWidth;
 extern Config_t *VidConfigHeight;
 extern Config_t *VidConfigRefreshRate;
 extern Config_t *VidConfigFullScreen;
+extern Config_t *CameraSpeed;
+extern Config_t *CameraMouseSensitivity;
 
 void    DumpLevel(Level_t* Level);
 void    DPrintf(char *Fmt, ...) Attribute((format(printf,1,2)));
@@ -136,6 +138,7 @@ char   *GetBaseName(char *Path);
 bool    GLInitCompatibilityProfile(const char *Driver);
 Vec3_t  Vec3Build(float x,float y,float z);
 void    Vec3RotateXAxis(float Theta,Vec3_t *Vector);
+void    Vec3Scale(Vec3_t InVec,float Amount,Vec3_t *OutVec);
 void    GLSet3D();
 void    CamInit(ViewParm_t *Camera,BSD_t *BSD);
 void    CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility);

@@ -34,6 +34,8 @@ Config_t *VidConfigWidth;
 Config_t *VidConfigHeight;
 Config_t *VidConfigRefreshRate;
 Config_t *VidConfigFullScreen;
+Config_t *CameraSpeed;
+Config_t *CameraMouseSensitivity;
 
 VidDriver_t VidConf;
 ViewParm_t Camera;
@@ -379,8 +381,8 @@ void CamInit(ViewParm_t *Camera,BSD_t *BSD)
 
 void CamMouseEvent(ViewParm_t *Camera,int Dx,int Dy)
 {
-    Camera->Angle.x += ( Dy - (VidConfigHeight->IValue/2) ) / 10.0f; // 0.001f;
-    Camera->Angle.y += ( Dx - (VidConfigWidth->IValue/2)) / 10.0f; // 0.001f;
+    Camera->Angle.x += ( ( Dy - (VidConfigHeight->IValue/2) ) / 10.f ) * CameraMouseSensitivity->FValue; // 0.001f;
+    Camera->Angle.y += ( ( Dx - (VidConfigWidth->IValue/2)) / 10.f ) * CameraMouseSensitivity->FValue; // 0.001f;
     CamFixAngles(Camera);
 }
 
@@ -399,9 +401,6 @@ void CamUpdate(ViewParm_t *Camera,int Orientation, float Sensitivity)
             Vec3Add(Camera->Position,Camera->Forward,&Camera->Position);
             break;
         case DIR_BACKWARD:
-//             Camera->Forward.x = -sin(DEGTORAD(Camera->Angle.y));
-//             Camera->Forward.z = cos(DEGTORAD(Camera->Angle.y));
-//             Camera->Forward.y = sin(DEGTORAD(Camera->Angle.x));
             Vec3Scale(Camera->Forward,Sensitivity,&Camera->Forward);
             Vec3Subtract(Camera->Position,Camera->Forward,&Camera->Position);
             break;
@@ -737,7 +736,9 @@ void SysVidInit()
 void SysCheckKeyEvents()
 {
     SDL_Event Event;
-    float CamSpeed = 80.f;
+    float CamSpeed;
+    
+    CamSpeed = CameraSpeed->FValue * ComTime->Delta * 64.f;
     while( SDL_PollEvent(&Event) ) {
         
         if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
@@ -757,11 +758,6 @@ void SysCheckKeyEvents()
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
             LevelManagerToggleFileDialog(LevelManager,GUI);
-//             if( GUIDirSelectDialogIsOpened(GUI) ) {
-//                 GUIDirSelectDialogClose(GUI);
-//             } else {
-//                 GUIDirSelectDialogOpen(GUI,LevelManagerOnDirSelected,LevelManagerOnDirSelectionCancelled);
-//             }
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit();
@@ -778,39 +774,23 @@ void SysCheckKeyEvents()
                         Quit();
                     }
                     if( Event.key.keysym.sym == SDLK_w ) {
-                        CamUpdate(&Camera, DIR_FORWARD, CamSpeed * ComTime->Delta);
+                        CamUpdate(&Camera, DIR_FORWARD, CamSpeed);
                     }
                     if( Event.key.keysym.sym == SDLK_s ) {
-                        CamUpdate(&Camera, DIR_BACKWARD, CamSpeed * ComTime->Delta);
+                        CamUpdate(&Camera, DIR_BACKWARD, CamSpeed);
                     }
                     if( Event.key.keysym.sym == SDLK_a ) {
-                        CamUpdate(&Camera, DIR_LEFTWARD, CamSpeed * ComTime->Delta);
+                        CamUpdate(&Camera, DIR_LEFTWARD, CamSpeed);
                     }
                     if( Event.key.keysym.sym == SDLK_d ) {
-                        CamUpdate(&Camera, DIR_RIGHTWARD, CamSpeed * ComTime->Delta);
+                        CamUpdate(&Camera, DIR_RIGHTWARD, CamSpeed);
                     }
                     if( Event.key.keysym.sym == SDLK_SPACE ) {
-                        CamUpdate(&Camera, DIR_UPWARD, CamSpeed * ComTime->Delta);
+                        CamUpdate(&Camera, DIR_UPWARD, CamSpeed);
                     }
                     if( Event.key.keysym.sym == SDLK_z ) {
-                        CamUpdate(&Camera, DIR_DOWNWARD, CamSpeed * ComTime->Delta);
+                        CamUpdate(&Camera, DIR_DOWNWARD, CamSpeed);
                     }
-    //                 if( Event.key.keysym.sym == SDLK_LEFT ) {
-    //                     CamUpdate(&Camera, LOOK_LEFT, CamSpeed * ComTime->Delta);
-    //                 }
-    //                 if( Event.key.keysym.sym == SDLK_RIGHT ) {
-    //                     CamUpdate(&Camera, LOOK_RIGHT, CamSpeed * ComTime->Delta);
-    //                 }
-    //                 if( Event.key.keysym.sym == SDLK_UP ) {
-    //                     CamUpdate(&Camera, LOOK_UP, CamSpeed * ComTime->Delta);
-    //                 }
-    //                 if( Event.key.keysym.sym == SDLK_DOWN ) {
-    //                     CamUpdate(&Camera, LOOK_DOWN, CamSpeed * ComTime->Delta);
-    //                 }
-                    CamFixAngles(&Camera);
-                    break;
-                case SDL_QUIT:
-                    Quit();
                     break;
                 default:
                     break;
@@ -857,6 +837,39 @@ bool ComUpdateDelta()
         ComTime->FPS = 0;
     }
     return true;
+}
+
+void ComUpdateDeltaV2()
+{
+    long Now;
+    
+    Now = SysMilliseconds();
+
+    ComTime->UpdateLength = Now - ComTime->LastLoopTime;
+//     ComTime->UpdateLength = Now - ComTime->LastLoopTime;
+    ComTime->Delta = ComTime->UpdateLength * 0.001f;
+
+
+    // update the frame counter
+    ComTime->LastFPSTime += ComTime->UpdateLength;
+    ComTime->FPS++;
+    ComTime->LastLoopTime = Now;
+    // update our FPS counter if a second has passed since
+    // we last recorded
+    if (ComTime->LastFPSTime >= 1000 ) {
+        sprintf(ComTime->FPSString,"FPS:%i\nMs: %.2f ms\nLast FPS Time:%f\nDelta:%f",
+                ComTime->FPS,
+                1000.f/(float)ComTime->FPS,
+                ComTime->LastFPSTime,ComTime->Delta);
+        sprintf(ComTime->FPSSimpleString,"FPS %i Ms %.2f ms",
+                ComTime->FPS,
+                1000.f/(float)ComTime->FPS);
+        DPrintf("%s\n",ComTime->FPSString);
+        DPrintf("Current Camera Position:%f;%f;%f\n",Camera.Position.x,Camera.Position.y,Camera.Position.z);
+        ComTime->LastFPSTime = 0;
+        ComTime->FPS = 0;
+    }
+    return;
 }
 
 /*
@@ -985,15 +998,6 @@ void GLFrame()
     glEnable(GL_DEPTH_TEST);
 }
 
-/*
-    Late level initialization for all the subsystems that
-    requires a valid OpenGL context.
-*/
-void LevelLateInit()
-{
-    ShaderManagerInit();
-}
-
 void Quit()
 {
     LevelManagerCleanUp();
@@ -1027,7 +1031,8 @@ int main(int argc,char **argv)
     VidConfigHeight = ConfigGet("VideoHeight");
     VidConfigRefreshRate = ConfigGet("VideoRefreshRate");
     VidConfigFullScreen = ConfigGet("VideoFullScreen");
-
+    CameraSpeed = ConfigGet("CameraSpeed");
+    CameraMouseSensitivity = ConfigGet("CameraMouseSensitivity");
 #if _ENABLEVIDEOOUT
     SysVidInit();
     ComTime = malloc(sizeof(ComTimeInfo_t));
@@ -1039,15 +1044,16 @@ int main(int argc,char **argv)
     if( argc > 1 ) {
         ConfigSet("GameBasePath",argv[1]);
     }
+
     LevelManagerInit(GUI);
 
-//     CamInit(&Camera);
-//     LevelLateInit();
-    /* TEMP! */
     while( 1 ) {
+        ComUpdateDeltaV2();
+//         DPrintf("Delta TIme:%f\n",ComTime->Delta);
         SysCheckKeyEvents();
-        do {
-        } while( !ComUpdateDelta() );
+//         do {
+//         } while( !ComUpdateDelta() );
+        LevelManagerUpdate(LevelManager);
         GLFrame();
 //         glFlush();
         SysSwapBuffers();

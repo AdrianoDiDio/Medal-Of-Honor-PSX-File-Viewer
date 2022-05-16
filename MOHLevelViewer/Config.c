@@ -290,10 +290,13 @@ void ConfigRegisterDefaultSettings()
     ConfigRegister("VideoHeight","600",NULL);
     ConfigRegister("VideoRefreshRate","60",NULL);
     ConfigRegister("VideoFullScreen","0",NULL);
+    
+    ConfigRegister("CameraSpeed","80.f",NULL);
+    ConfigRegister("CameraMouseSensitivity","1.f",NULL);
 
     ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to "
                                     "being set to empty.");
-    ConfigRegister("GUIFont","Fonts/DroidSans.ttf","Sets the file to be used as the GUI font,if not valid application will use the default one");
+    ConfigRegister("GUIFont","Fonts/DroidSans.ttf","Sets the file to be used as the GUI font,if not valid the application will use the default one");
     ConfigRegister("GUIFontSize","14.f",NULL);
     ConfigRegister("GUIShowFPS","1",NULL);
 
@@ -305,7 +308,7 @@ void ConfigRegisterDefaultSettings()
     ConfigRegister("LevelDrawBSDNodesAsPoints","1","When enabled draws all the BSD nodes as points.");
     ConfigRegister("LevelDrawBSDRenderObjectsAsPoints","1","When enabled draws all the BSD RenderObjects as Points");
     ConfigRegister("LevelDrawBSDRenderObjects","1","When enabled draws all the supported render objects");
-    ConfigRegister("LevelDrawBSDShowCase","0","When enabled draws all the loaded RenderObjects near the player spawn.");
+    ConfigRegister("LevelDrawBSDShowcase","0","When enabled draws all the loaded RenderObjects near the player spawn.");
     ConfigRegister("LevelEnableFrustumCulling","1","When enabled helps to skip non visibile nodes from the BSP tree improving the rendering speed");
     ConfigRegister("LevelEnableAmbientLight","1","When enabled the texture color is interpolated with the surface color to simulate lights on \n"
                                                     "surfaces");

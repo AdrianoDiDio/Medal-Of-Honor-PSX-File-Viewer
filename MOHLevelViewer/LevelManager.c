@@ -645,11 +645,9 @@ void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,int OutputFormat
     GUIFileDialogSetTitle(LevelManager->ExportFileDialog,"Export");
     GUIFileDialogOpenWithUserData(GUI,LevelManager->ExportFileDialog,Exporter);
 }
-
-void LevelManagerDraw(LevelManager_t *LevelManager)
+void LevelManagerUpdate(LevelManager_t *LevelManager)
 {
     Level_t *Level;
-    vec3 temp;
     int DynamicData;
     
     //LevelManager has not received a valid path yet.
@@ -675,7 +673,37 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
         BSDUpdateAnimatedLights(Level->BSD);
         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,0);
     }
+}
+void LevelManagerDraw(LevelManager_t *LevelManager)
+{
+    Level_t *Level;
+    vec3 temp;
+    int DynamicData;
     
+    //LevelManager has not received a valid path yet.
+    if( !LevelManager->IsPathSet ) {
+        return;
+    }
+    //Level has not been loaded in yet.
+    if( !LevelManagerIsLevelLoaded(LevelManager) ) {
+        return;
+    }
+    
+    Level = LevelManager->CurrentLevel;
+    
+//     if( LevelEnableAnimatedSurfaces->IValue ) {
+// 
+//         BSDClearNodesFlag(Level->BSD);
+//     
+//         while( (DynamicData = BSDGetCurrentCameraNodeDynamicData(Level->BSD) ) != -1 ) {
+//             TSPUpdateDynamicFaces(Level->TSPList,DynamicData);
+//         }
+//     }
+//     if( LevelEnableAnimatedLights->IValue ) {
+//         BSDUpdateAnimatedLights(Level->BSD);
+//         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,0);
+//     }
+//     
     glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue/ (float) VidConfigHeight->IValue,1.f, 4096.f,VidConf.PMatrixM4);
 
          
@@ -784,6 +812,8 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path)
         }
         if( !LevelInit(LevelManager->CurrentLevel,GUI,LevelManager->SoundSystem,LevelManager->BasePath,2,1,&GameEngine) ) {
             DPrintf("LevelManagerInitWithPath:Invalid path...\n");
+            //NOTE(Adriano):Make sure to reset everything back to default before leaving this function...
+            LevelUnload(LevelManager->CurrentLevel);
         } else {
             LevelManager->IsPathSet = 1;
         }
