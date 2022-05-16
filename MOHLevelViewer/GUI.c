@@ -181,123 +181,132 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
     ZeroSize.y = 0.f;
     if( igBegin("Debug Settings",&GUI->DebugWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
         if( LevelManagerIsLevelLoaded(LevelManager) ) {
-            igText(LevelManager->EngineName);
-            igText("Current Path:");
-            igText(LevelManager->BasePath);
+            igText("Game:%s",LevelManager->EngineName);
+            igText("Current Path:%s",LevelManager->BasePath);
             igSeparator();
-            igText("Music Settings");
-            if( igBeginCombo("Music Options",LevelMusicOptions[LevelEnableMusicTrack->IValue],0) ) {
-                for (i = 0; i < NumLevelMusicOptions; i++) {
-                    IsSelected = (LevelEnableMusicTrack->IValue == i);
-                    if (igSelectable_Bool(LevelMusicOptions[i], IsSelected,0,ZeroSize)) {
-                        if( LevelEnableMusicTrack->IValue != i ) {
-                            LevelManagerUpdateSoundSettings(LevelManager,i);
+            if( igCollapsingHeader_TreeNodeFlags("Settings",0) ) {
+                if( GUICheckBoxWithTooltip("Show FPS",(bool *) &GUIShowFPS->IValue,GUIShowFPS->Description) ) {
+                    ConfigSetNumber("GUIShowFPS",GUIShowFPS->IValue);
+                }
+                if( igSliderFloat("Camera Speed",&CameraSpeed->FValue,10.f,256.f,"%.2f",0) ) {
+                        ConfigSetNumber("CameraSpeed",CameraSpeed->FValue);
+                }
+                if( igSliderFloat("Camera Mouse Sensitivity",&CameraMouseSensitivity->FValue,1.f,20.f,"%.2f",0) ) {
+                        ConfigSetNumber("CameraMouseSensitivity",CameraMouseSensitivity->FValue);
+                }
+            }
+            if( igCollapsingHeader_TreeNodeFlags("Music Info",0) ) {
+                if( igBeginCombo("Music Options",LevelMusicOptions[LevelEnableMusicTrack->IValue],0) ) {
+                    for (i = 0; i < NumLevelMusicOptions; i++) {
+                        IsSelected = (LevelEnableMusicTrack->IValue == i);
+                        if (igSelectable_Bool(LevelMusicOptions[i], IsSelected,0,ZeroSize)) {
+                            if( LevelEnableMusicTrack->IValue != i ) {
+                                LevelManagerUpdateSoundSettings(LevelManager,i);
+                            }
+                        }
+                        if (IsSelected) {
+                            igSetItemDefaultFocus();
                         }
                     }
-                    if (IsSelected) {
-                        igSetItemDefaultFocus();
+                    igEndCombo();
+                }
+                if( !LevelManager->SoundSystem->MusicList ) {
+                    igText("This Level Doesn't contain any music files.");
+                } else {
+                    if( LevelEnableMusicTrack->IValue ) {
+                        SoundSystemGetSoundDuration(LevelManager->SoundSystem,&MaxLengthMinutes,&MaxLengthSeconds);
+                        SoundSystemGetCurrentSoundTime(LevelManager->SoundSystem,&CurrentLengthMinutes,&CurrentLengthSeconds);
+                        igText("Music Track Info:");
+                        igText("Name:%s",LevelManager->SoundSystem->CurrentMusic->Name);
+                        igText("%02i:%02i/%02i:%02i",CurrentLengthMinutes,CurrentLengthSeconds,MaxLengthMinutes,MaxLengthSeconds);
+                        
+                        if( igSliderInt("Sound Volume",&SoundVolume->IValue,0,128,"%i",0) ) {
+                            ConfigSetNumber("SoundVolume",SoundVolume->IValue);
+                        }
+                    } else {
+                        igText("Music is not enabled..enable it first in order to show the statistics.");
                     }
                 }
-                igEndCombo();
             }
-            if( !LevelManager->SoundSystem->CurrentMusic ) {
-                igText("This Level Doesn't contain any music files.");
-            } else {
-                if( LevelEnableMusicTrack->IValue ) {
-                    SoundSystemGetSoundDuration(LevelManager->SoundSystem,&MaxLengthMinutes,&MaxLengthSeconds);
-                    SoundSystemGetCurrentSoundTime(LevelManager->SoundSystem,&CurrentLengthMinutes,&CurrentLengthSeconds);
-                    igText("Music Track Info:");
-                    igText("Name:%s",LevelManager->SoundSystem->CurrentMusic->Name);
-                    igText("%02i:%02i/%02i:%02i",CurrentLengthMinutes,CurrentLengthSeconds,MaxLengthMinutes,MaxLengthSeconds);
-                    
-                    if( igSliderInt("Sound Volume",&SoundVolume->IValue,0,128,"%i",0) ) {
-                        ConfigSetNumber("SoundVolume",SoundVolume->IValue);
+            if( igCollapsingHeader_TreeNodeFlags("Level Settings",0) ) {
+                if( GUICheckBoxWithTooltip("WireFrame Mode",(bool *) &LevelEnableWireFrameMode->IValue,LevelEnableWireFrameMode->Description) ) {
+                    ConfigSetNumber("LevelEnableWireFrameMode",LevelEnableWireFrameMode->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Draw Level",(bool *) &LevelDrawSurfaces->IValue,LevelDrawSurfaces->Description) ) {
+                    ConfigSetNumber("LevelDrawSurfaces",LevelDrawSurfaces->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Draw Collision Data",(bool *) &LevelDrawCollisionData->IValue,LevelDrawCollisionData->Description) ) {
+                    ConfigSetNumber("LevelDrawCollisionData",LevelDrawCollisionData->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Draw BSP Tree",(bool *) &LevelDrawBSPTree->IValue,LevelDrawBSPTree->Description) ) {
+                    ConfigSetNumber("LevelDrawBSPTree",LevelDrawBSPTree->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Draw BSD nodes as Points",(bool *) &LevelDrawBSDNodesAsPoints->IValue,
+                    LevelDrawBSDNodesAsPoints->Description) ) {
+                    ConfigSetNumber("LevelDrawBSDNodesAsPoints",LevelDrawBSDNodesAsPoints->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Draw BSD RenderObjects as Points",(bool *) &LevelDrawBSDRenderObjectsAsPoints->IValue,
+                                        LevelDrawBSDRenderObjectsAsPoints->Description) ) {
+                    ConfigSetNumber("LevelDrawBSDRenderObjectsAsPoints",LevelDrawBSDRenderObjectsAsPoints->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Draw BSD RenderObjects",(bool *) &LevelDrawBSDRenderObjects->IValue,
+                    LevelDrawBSDRenderObjects->Description) ) {
+                    ConfigSetNumber("LevelDrawBSDRenderObjects",LevelDrawBSDRenderObjects->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Enable BSD RenderObjects Shwocase Rendering",(bool *) &LevelDrawBSDShowcase->IValue,
+                                        LevelDrawBSDShowcase->Description) ) {
+                    ConfigSetNumber("LevelDrawBSDShowcase",LevelDrawBSDShowcase->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Frustum Culling",(bool *) &LevelEnableFrustumCulling->IValue,
+                    LevelEnableFrustumCulling->Description ) ) {
+                    ConfigSetNumber("LevelEnableFrustumCulling",LevelEnableFrustumCulling->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Ambient Light",(bool *) &LevelEnableAmbientLight->IValue,LevelEnableAmbientLight->Description) ) {
+                    ConfigSetNumber("LevelEnableAmbientLight",LevelEnableAmbientLight->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Semi-Transparency",(bool *) &LevelEnableSemiTransparency->IValue,
+                    LevelEnableSemiTransparency->Description) ) {
+                    ConfigSetNumber("LevelEnableSemiTransparency",LevelEnableSemiTransparency->IValue);
+                }
+                if ( GUICheckBoxWithTooltip("Animated Lights",(bool *) &LevelEnableAnimatedLights->IValue,LevelEnableAnimatedLights->Description) ) {
+                    if( !LevelEnableAnimatedLights->IValue ) {
+                        TSPUpdateAnimatedFaces(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->BSD,1);
                     }
+                    ConfigSetNumber("LevelEnableAnimatedLights",LevelEnableAnimatedLights->IValue);
+                }
+                if ( GUICheckBoxWithTooltip("Animated Surfaces",(bool *) &LevelEnableAnimatedSurfaces->IValue,LevelEnableAnimatedSurfaces->Description) ) {
+                    ConfigSetNumber("LevelEnableAnimatedSurfaces",LevelEnableAnimatedSurfaces->IValue);
                 }
             }
-            igSeparator();
-            igText("Debug Settings");
-            if( GUICheckBoxWithTooltip("Show FPS",(bool *) &GUIShowFPS->IValue,GUIShowFPS->Description) ) {
-                ConfigSetNumber("GUIShowFPS",GUIShowFPS->IValue);
-            }
-            if( GUICheckBoxWithTooltip("WireFrame Mode",(bool *) &LevelEnableWireFrameMode->IValue,LevelEnableWireFrameMode->Description) ) {
-                ConfigSetNumber("LevelEnableWireFrameMode",LevelEnableWireFrameMode->IValue);
-            }
-            if( GUICheckBoxWithTooltip("Draw Level",(bool *) &LevelDrawSurfaces->IValue,LevelDrawSurfaces->Description) ) {
-                ConfigSetNumber("LevelDrawSurfaces",LevelDrawSurfaces->IValue);
-            }
-            if( GUICheckBoxWithTooltip("Draw Collision Data",(bool *) &LevelDrawCollisionData->IValue,LevelDrawCollisionData->Description) ) {
-                ConfigSetNumber("LevelDrawCollisionData",LevelDrawCollisionData->IValue);
-            }
-            if( GUICheckBoxWithTooltip("Draw BSP Tree",(bool *) &LevelDrawBSPTree->IValue,LevelDrawBSPTree->Description) ) {
-                ConfigSetNumber("LevelDrawBSPTree",LevelDrawBSPTree->IValue);
-            }
-            if( GUICheckBoxWithTooltip("Draw BSD nodes as Points",(bool *) &LevelDrawBSDNodesAsPoints->IValue,
-                LevelDrawBSDNodesAsPoints->Description) ) {
-                ConfigSetNumber("LevelDrawBSDNodesAsPoints",LevelDrawBSDNodesAsPoints->IValue);
-            }
-            if( GUICheckBoxWithTooltip("Draw BSD RenderObjects as Points",(bool *) &LevelDrawBSDRenderObjectsAsPoints->IValue,
-                                       LevelDrawBSDRenderObjectsAsPoints->Description) ) {
-                ConfigSetNumber("LevelDrawBSDRenderObjectsAsPoints",LevelDrawBSDRenderObjectsAsPoints->IValue);
-            }
-            if( GUICheckBoxWithTooltip("Draw BSD RenderObjects",(bool *) &LevelDrawBSDRenderObjects->IValue,
-                LevelDrawBSDRenderObjects->Description) ) {
-                ConfigSetNumber("LevelDrawBSDRenderObjects",LevelDrawBSDRenderObjects->IValue);
-            }
-            if( GUICheckBoxWithTooltip("Enable BSD RenderObjects ShowCase Rendering",(bool *) &LevelDrawBSDShowCase->IValue,
-                                       LevelDrawBSDShowCase->Description) ) {
-                ConfigSetNumber("LevelDrawBSDShowCase",LevelDrawBSDShowCase->IValue);
-            }
-            if( GUICheckBoxWithTooltip("Frustum Culling",(bool *) &LevelEnableFrustumCulling->IValue,
-                LevelEnableFrustumCulling->Description ) ) {
-                ConfigSetNumber("LevelEnableFrustumCulling",LevelEnableFrustumCulling->IValue);
-            }
-            if( GUICheckBoxWithTooltip("Ambient Light",(bool *) &LevelEnableAmbientLight->IValue,LevelEnableAmbientLight->Description) ) {
-                ConfigSetNumber("LevelEnableAmbientLight",LevelEnableAmbientLight->IValue);
-            }
-            if( GUICheckBoxWithTooltip("Semi-Transparency",(bool *) &LevelEnableSemiTransparency->IValue,
-                LevelEnableSemiTransparency->Description) ) {
-                ConfigSetNumber("LevelEnableSemiTransparency",LevelEnableSemiTransparency->IValue);
-            }
-            if ( GUICheckBoxWithTooltip("Animated Lights",(bool *) &LevelEnableAnimatedLights->IValue,LevelEnableAnimatedLights->Description) ) {
-                if( !LevelEnableAnimatedLights->IValue ) {
-                    TSPUpdateAnimatedFaces(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->BSD,1);
+            if( igCollapsingHeader_TreeNodeFlags("Exporter",0) ) {
+                igText("Export the current level and objects");
+                ZeroSize.x = 0.f;
+                ZeroSize.y = 0.f;
+                if( igButton("Export to OBJ",ZeroSize) ) {
+                    LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_OBJ);
                 }
-                ConfigSetNumber("LevelEnableAnimatedLights",LevelEnableAnimatedLights->IValue);
+                igSameLine(0.f,10.f);
+                if( igButton("Export to Ply",ZeroSize) ) {
+                    LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_PLY);
+                }
+                igSeparator();
+                igText("Export current music and ambient sounds");
+                if( igButton("Export to WAV",ZeroSize) ) {
+                    LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_WAV);
+                }
             }
-            if ( GUICheckBoxWithTooltip("Animated Surfaces",(bool *) &LevelEnableAnimatedSurfaces->IValue,LevelEnableAnimatedSurfaces->Description) ) {
-                ConfigSetNumber("LevelEnableAnimatedSurfaces",LevelEnableAnimatedSurfaces->IValue);
-            }
         }
-        igSeparator();
-        igText("Export the current level and objects");
-        ZeroSize.x = 0.f;
-        ZeroSize.y = 0.f;
-        if( igButton("Export to OBJ",ZeroSize) ) {
-            LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_OBJ);
-        }
-        igSameLine(0.f,10.f);
-        if( igButton("Export to Ply",ZeroSize) ) {
-            LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_PLY);
-        }
-        if( LevelManager->SoundSystem->CurrentMusic ) {
+        if( igCollapsingHeader_TreeNodeFlags("Debug Statistics",0) ) {
+            igText("NumActiveWindows:%i",GUI->NumActiveWindows);
             igSeparator();
-            igText("Export current music and ambient sounds");
-            if( igButton("Export to WAV",ZeroSize) ) {
-                LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_WAV);
-            }
+            igText("OpenGL Version: %s",glGetString(GL_VERSION));
+            SDL_GetVersion(&Version);
+            igText("SDL Version: %u.%u.%u",Version.major,Version.minor,Version.patch);
+            igSeparator();
+            igText("Display Informations");
+            igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);
+            igText("Refresh Rate:%i",VidConfigRefreshRate->IValue);
         }
-        igSeparator();
-        igText("Debug Statistics");
-        igText("NumActiveWindows:%i",GUI->NumActiveWindows);
-        igSeparator();
-        igText("OpenGL Version: %s",glGetString(GL_VERSION));
-        SDL_GetVersion(&Version);
-        igText("SDL Version: %u.%u.%u",Version.major,Version.minor,Version.patch);
-        igSeparator();
-        igText("Display Informations");
-        igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);
-        igText("Refresh Rate:%i",VidConfigRefreshRate->IValue);
     }
     
     if( !GUI->DebugWindowHandle ) {
