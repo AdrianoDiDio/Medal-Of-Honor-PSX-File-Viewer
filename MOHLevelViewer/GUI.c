@@ -431,7 +431,7 @@ void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
         igEnd();
     }
     GUIEndFrame();
-    SysSwapBuffers();
+    VideoSystemSwapBuffers(&VidConf);
 }
 
 void GUIProgressBarEnd(GUI_t *GUI)
@@ -441,7 +441,7 @@ void GUIProgressBarEnd(GUI_t *GUI)
     GUI->ProgressBar->CurrentPercentage = 0.f;
 }
 
-void GUIDrawSettingsWindow(GUI_t *GUI)
+void GUIDrawSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
 #if 1
     int i;
@@ -453,19 +453,19 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
     }
     ImVec2 Size;
     Size.x = Size.y = 0.f;
-    int PreviewIndex = VidConf.CurrentVideoMode != -1 ? VidConf.CurrentVideoMode : 0;
-    if( igBegin("Settings",&GUI->SettingsWindowHandle,0) ) {
+    int PreviewIndex = VideoSystem->CurrentVideoMode != -1 ? VideoSystem->CurrentVideoMode : 0;
+    if( igBegin("Settings",&GUI->SettingsWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
         igText("Video Settings");
         igSeparator();
         //NOTE(Adriano):Only in Fullscreen mode we can select the video mode we want.
         if( VidConfigFullScreen->IValue ) {
             igText("Video Mode");
-            if( igBeginCombo("##Resolution", VidConf.VideoModeList[PreviewIndex].Description, 0) ) {
-                for( i = 0; i < VidConf.NumVideoModes; i++ ) {
-                    int IsSelected = ((VidConf.VideoModeList[i].Width == VidConf.Width) && 
-                        (VidConf.VideoModeList[i].Height == VidConf.Height)) ? 1 : 0;
-                    if( igSelectable_Bool(VidConf.VideoModeList[i].Description,IsSelected,0,Size ) ) {
-                        SysSetCurrentVideoSettings(i);
+            if( igBeginCombo("##Resolution", VideoSystem->VideoModeList[PreviewIndex].Description, 0) ) {
+                for( i = 0; i < VideoSystem->NumVideoModes; i++ ) {
+                    int IsSelected = ((VideoSystem->VideoModeList[i].Width == VidConfigWidth->IValue) && 
+                        (VideoSystem->VideoModeList[i].Height == VidConfigHeight->IValue)) ? 1 : 0;
+                    if( igSelectable_Bool(VideoSystem->VideoModeList[i].Description,IsSelected,0,Size ) ) {
+                        VideoSystemSetVideoSettings(VideoSystem,i);
                     }
                     if( IsSelected ) {
                         igSetItemDefaultFocus();
@@ -477,7 +477,7 @@ void GUIDrawSettingsWindow(GUI_t *GUI)
         }
         if( igCheckbox("Fullscreen Mode",(bool *) &VidConfigFullScreen->IValue) ) {
             DPrintf("VidConfigFullScreen:%i\n",VidConfigFullScreen->IValue);
-            SysSetCurrentVideoSettings(-1);
+            VideoSystemSetVideoSettings(VideoSystem,-1);
         }
     }
     igEnd();
@@ -638,7 +638,7 @@ void GUIRenderFileDialogs(GUI_t *GUI)
         GUIFileDialogRender(GUI,Iterator);
     }
 }
-void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
+void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem)
 {
     ImVec2 ButtonSize;
     ImVec2 ModalPosition;
@@ -677,7 +677,7 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager)
         }
     }
     GUIDrawDebugWindow(GUI,LevelManager);
-    GUIDrawSettingsWindow(GUI);
+    GUIDrawSettingsWindow(GUI,VideoSystem);
     GUIDrawLevelSelectWindow(GUI,LevelManager);
 //     igShowDemoWindow(NULL);
     GUIEndFrame();
@@ -805,7 +805,7 @@ void GUIFileDialogSetOnDialogCancelledCallback(GUIFileDialog_t *FileDialog,FileD
     FileDialog->OnDialogCancelled = OnDialogCancelled;
 }
 
-void GUIContextInit(ImGuiContext *Context,SDL_Window *Window,SDL_GLContext *GLContext,char *ConfigFilePath)
+void GUIContextInit(ImGuiContext *Context,VideoSystem_t *VideoSystem,char *ConfigFilePath)
 {
     ImGuiIO *IO;
     ImGuiStyle *Style;
@@ -814,11 +814,11 @@ void GUIContextInit(ImGuiContext *Context,SDL_Window *Window,SDL_GLContext *GLCo
     
     IO = igGetIO();
     igSetCurrentContext(Context);
-    ImGui_ImplSDL2_InitForOpenGL(VideoSurface, &GLContext);
+    ImGui_ImplSDL2_InitForOpenGL(VideoSystem->Window, &VideoSystem->GLContext);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     igStyleColorsDark(NULL);
     if( GUIFont->Value[0] ) {
-        Font = ImFontAtlas_AddFontFromFileTTF(IO->Fonts,GUIFont->Value,floor(GUIFontSize->FValue * VidConf.DPIScale),NULL,NULL);
+        Font = ImFontAtlas_AddFontFromFileTTF(IO->Fonts,GUIFont->Value,floor(GUIFontSize->FValue * VideoSystem->DPIScale),NULL,NULL);
         if( !Font ) {
             DPrintf("GUIContextInit:Invalid font file...using default\n");
             ConfigSet("GUIFont","");
@@ -828,17 +828,17 @@ void GUIContextInit(ImGuiContext *Context,SDL_Window *Window,SDL_GLContext *GLCo
         FontConfig->OversampleH = 1;
         FontConfig->OversampleV = 1;
         FontConfig->PixelSnapH = true;
-        FontConfig->SizePixels = floor(GUIFontSize->FValue * VidConf.DPIScale);
+        FontConfig->SizePixels = floor(GUIFontSize->FValue * VideoSystem->DPIScale);
         ImFontAtlas_AddFontDefault(IO->Fonts,FontConfig);
         ImFontConfig_destroy(FontConfig);
     }
     Style = igGetStyle();
     Style->WindowTitleAlign.x = 0.5f;
-    ImGuiStyle_ScaleAllSizes(Style,VidConf.DPIScale);
+    ImGuiStyle_ScaleAllSizes(Style,VideoSystem->DPIScale);
     IO->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     IO->IniFilename = ConfigFilePath;
 }
-GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
+GUI_t *GUIInit(VideoSystem_t *VideoSystem)
 {
     GUI_t *GUI;
 
@@ -869,8 +869,8 @@ GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext)
     GUI->DefaultContext = igCreateContext(NULL);
     GUI->ProgressBar->Context = igCreateContext(NULL);
     GUI->ProgressBar->DialogTitle = NULL;
-    GUIContextInit(GUI->ProgressBar->Context,Window,GLContext,GUI->ConfigFilePath);
-    GUIContextInit(GUI->DefaultContext,Window,GLContext,GUI->ConfigFilePath);
+    GUIContextInit(GUI->ProgressBar->Context,VideoSystem,GUI->ConfigFilePath);
+    GUIContextInit(GUI->DefaultContext,VideoSystem,GUI->ConfigFilePath);
     
     GUI->NumActiveWindows = 0;
 

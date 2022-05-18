@@ -646,10 +646,7 @@ void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,int OutputFormat
     GUIFileDialogOpenWithUserData(GUI,LevelManager->ExportFileDialog,Exporter);
 }
 void LevelManagerUpdate(LevelManager_t *LevelManager)
-{
-    Level_t *Level;
-    int DynamicData;
-    
+{    
     //LevelManager has not received a valid path yet.
     if( !LevelManager->IsPathSet ) {
         return;
@@ -658,26 +655,13 @@ void LevelManagerUpdate(LevelManager_t *LevelManager)
     if( !LevelManagerIsLevelLoaded(LevelManager) ) {
         return;
     }
-    
-    Level = LevelManager->CurrentLevel;
-    
-    if( LevelEnableAnimatedSurfaces->IValue ) {
-
-        BSDClearNodesFlag(Level->BSD);
-    
-        while( (DynamicData = BSDGetCurrentCameraNodeDynamicData(Level->BSD) ) != -1 ) {
-            TSPUpdateDynamicFaces(Level->TSPList,DynamicData);
-        }
-    }
-    if( LevelEnableAnimatedLights->IValue ) {
-        BSDUpdateAnimatedLights(Level->BSD);
-        TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,0);
-    }
+        
+    LevelUpdate(LevelManager->CurrentLevel);
 }
 void LevelManagerDraw(LevelManager_t *LevelManager)
 {
-    Level_t *Level;
     vec3 temp;
+    mat4 ProjectionMatrix;
     
     //LevelManager has not received a valid path yet.
     if( !LevelManager->IsPathSet ) {
@@ -688,89 +672,9 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
         return;
     }
     
-    Level = LevelManager->CurrentLevel;
-
-    glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue/ (float) VidConfigHeight->IValue,1.f, 4096.f,VidConf.PMatrixM4);
-
-         
-    temp[0] = 1;
-     temp[1] = 0;
-     temp[2] = 0;
-     glm_mat4_identity(VidConf.ModelViewMatrix);
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
-     temp[0] = 0;
-     temp[1] = 1;
-     temp[2] = 0;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
-     temp[0] = 0;
-     temp[1] = 0;
-     temp[2] = 1;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
-     
-     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-     
-     //Emulate PSX Coordinate system...
-     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-     BSDDrawSky(LevelManager->CurrentLevel->BSD,LevelManager->CurrentLevel->VRAM);
-     
-     temp[0] = 1;
-     temp[1] = 0;
-     temp[2] = 0;
-     glm_mat4_identity(VidConf.ModelViewMatrix);
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
-     temp[0] = 0;
-     temp[1] = 1;
-     temp[2] = 0;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
-     temp[0] = 0;
-     temp[1] = 0;
-     temp[2] = 1;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
-     temp[0] = -Camera.Position.x;
-     temp[1] = -Camera.Position.y;
-     temp[2] = -Camera.Position.z;
-     glm_translate(VidConf.ModelViewMatrix,temp);
-     
-     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-     
-     //Emulate PSX Coordinate system...
-     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-     
-     glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
-     glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
-     
-//      BSD2PDraw(Level);
-     BSDDraw(LevelManager->CurrentLevel->BSD,LevelManager->CurrentLevel->VRAM);
-
-     
-     temp[0] = 1;
-     temp[1] = 0;
-     temp[2] = 0;
-     glm_mat4_identity(VidConf.ModelViewMatrix);
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
-     temp[0] = 0;
-     temp[1] = 1;
-     temp[2] = 0;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
-     temp[0] = 0;
-     temp[1] = 0;
-     temp[2] = 1;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
-     temp[0] = -Camera.Position.x;
-     temp[1] = -Camera.Position.y;
-     temp[2] = -Camera.Position.z;
-     glm_translate(VidConf.ModelViewMatrix,temp);
-     
-     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-     
-     //Emulate PSX Coordinate system...
-     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-     
-     glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
-     glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
-     TSPDrawList(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->VRAM);
-     
-
+    glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,VidConf.PMatrixM4);     
+    
+    LevelDraw(LevelManager->CurrentLevel,ProjectionMatrix);
 }
 
 int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path)

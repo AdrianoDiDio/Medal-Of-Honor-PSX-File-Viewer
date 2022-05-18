@@ -94,6 +94,115 @@ void LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int Ga
     }
     ConfigSetNumber("LevelEnableMusicTrack",SoundValue);
 }
+void LevelUpdate(Level_t *Level)
+{
+    int DynamicData;
+    
+    if( !Level ) {
+        return;
+    }
+    if( LevelEnableAnimatedSurfaces->IValue ) {
+
+        BSDClearNodesFlag(Level->BSD);
+    
+        while( (DynamicData = BSDGetCurrentCameraNodeDynamicData(Level->BSD) ) != -1 ) {
+            TSPUpdateDynamicFaces(Level->TSPList,DynamicData);
+        }
+    }
+    if( LevelEnableAnimatedLights->IValue ) {
+        BSDUpdateAnimatedLights(Level->BSD);
+        TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,0);
+    }
+}
+void LevelDraw(Level_t *Level,mat4 ProjectionMatrix)
+{
+    vec4 temp;
+    mat4 ModelViewMatrix;
+    
+    if( !Level ) {
+        DPrintf("LevelDraw:Invalid Level\n");
+    }
+    
+    glm_mat4_identity(VidConf.ModelViewMatrix);
+         
+    temp[0] = 1;
+    temp[1] = 0;
+    temp[2] = 0;
+    glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
+    temp[0] = 0;
+    temp[1] = 1;
+    temp[2] = 0;
+    glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
+    temp[0] = 0;
+    temp[1] = 0;
+    temp[2] = 1;
+    glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
+     
+    glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
+     
+     //Emulate PSX Coordinate system...
+     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
+     BSDDrawSky(LevelManager->CurrentLevel->BSD,LevelManager->CurrentLevel->VRAM);
+     
+     temp[0] = 1;
+     temp[1] = 0;
+     temp[2] = 0;
+     glm_mat4_identity(VidConf.ModelViewMatrix);
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
+     temp[0] = 0;
+     temp[1] = 1;
+     temp[2] = 0;
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
+     temp[0] = 0;
+     temp[1] = 0;
+     temp[2] = 1;
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
+     temp[0] = -Camera.Position.x;
+     temp[1] = -Camera.Position.y;
+     temp[2] = -Camera.Position.z;
+     glm_translate(VidConf.ModelViewMatrix,temp);
+     
+     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
+     
+     //Emulate PSX Coordinate system...
+     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
+     
+     glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
+     glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
+     
+//      BSD2PDraw(Level);
+     BSDDraw(LevelManager->CurrentLevel->BSD,LevelManager->CurrentLevel->VRAM);
+
+     
+     temp[0] = 1;
+     temp[1] = 0;
+     temp[2] = 0;
+     glm_mat4_identity(VidConf.ModelViewMatrix);
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
+     temp[0] = 0;
+     temp[1] = 1;
+     temp[2] = 0;
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
+     temp[0] = 0;
+     temp[1] = 0;
+     temp[2] = 1;
+     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
+     temp[0] = -Camera.Position.x;
+     temp[1] = -Camera.Position.y;
+     temp[2] = -Camera.Position.z;
+     glm_translate(VidConf.ModelViewMatrix,temp);
+     
+     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
+     
+     //Emulate PSX Coordinate system...
+     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
+     
+     glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
+     glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
+     TSPDrawList(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->VRAM);
+
+}
+
 void LevelLoadSettings()
 {
     LevelEnableWireFrameMode = ConfigGet("LevelEnableWireFrameMode");

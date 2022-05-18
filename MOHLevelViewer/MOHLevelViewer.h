@@ -21,6 +21,7 @@
 
 #include "Common.h"
 #include "Config.h"
+#include "Video.h"
 #include "BSD.h"
 #include "Level.h"
 #include "LevelManager.h"
@@ -35,37 +36,30 @@ typedef enum
     MOH_GAME_UNDERGROUND
 } MOHGame_t;
 
-typedef struct VideoMode_s {
-    int Width;
-    int Height;
-    int RefreshRate;
-    int BPP;
-    
-    char *Description;
-} VideoMode_t;
 
-typedef struct VidDriver_s {
-const char *Title;
-    int    Width;
-    int    Height;
-    bool   FullScreen;
-    void  *GLLibHandle;
-    //..Use this one.
-    char   *Driver;
-    bool   Initialized;
-    bool   Resizable;
-    bool	UseCompatibilityRenderer; //If true use OpenGL 3 compatibility profile for older systems.
-    float PMatrix[16]; //TODO:Remove this and put it into the right context...
-    mat4    PMatrixM4;
-    mat4    ModelMatrix;
-    mat4    ViewMatrix;
-    mat4    ModelViewMatrix;
-    mat4    MVPMatrix;
-    float   DPIScale;
-    VideoMode_t *VideoModeList;
-    int     NumVideoModes;
-    int     CurrentVideoMode;
-} VidDriver_t;
+
+// typedef struct VidDriver_s {
+// const char *Title;
+//     int    Width;
+//     int    Height;
+//     bool   FullScreen;
+//     void  *GLLibHandle;
+//     //..Use this one.
+//     char   *Driver;
+//     bool   Initialized;
+//     bool   Resizable;
+//     bool	UseCompatibilityRenderer; //If true use OpenGL 3 compatibility profile for older systems.
+//     float PMatrix[16]; //TODO:Remove this and put it into the right context...
+//     mat4    PMatrixM4;
+//     mat4    ModelMatrix;
+//     mat4    ViewMatrix;
+//     mat4    ModelViewMatrix;
+//     mat4    MVPMatrix;
+//     float   DPIScale;
+//     VideoMode_t *VideoModeList;
+//     int     NumVideoModes;
+//     int     CurrentVideoMode;
+// } VidDriver_t;
 
 typedef struct ComTimeInfo_s {
     int	  FPS;
@@ -107,19 +101,12 @@ typedef enum {
     DIR_RIGHTWARD
 } Direction_t;
 
-extern VidDriver_t VidConf;
+extern VideoSystem_t VidConf;
 extern ViewParm_t Camera;
 extern ComTimeInfo_t *ComTime;
 extern LevelManager_t *LevelManager;
 extern GUI_t *GUI;
-extern SDL_Window *VideoSurface;
-extern SDL_GLContext Context;
 
-
-extern Config_t *VidConfigWidth;
-extern Config_t *VidConfigHeight;
-extern Config_t *VidConfigRefreshRate;
-extern Config_t *VidConfigFullScreen;
 extern Config_t *CameraSpeed;
 extern Config_t *CameraMouseSensitivity;
 

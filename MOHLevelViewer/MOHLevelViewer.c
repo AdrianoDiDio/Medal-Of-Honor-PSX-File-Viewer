@@ -30,14 +30,11 @@ Color4f_t    c_Yellow = {  1.f,  1.f, 0,   1.f};
 Color4f_t    c_White    = {   1.f,  1.f, 1.f, 1.f};
 Color4f_t    c_Grey =  {   0.75, 0.75,0.75,1.f};
 
-Config_t *VidConfigWidth;
-Config_t *VidConfigHeight;
-Config_t *VidConfigRefreshRate;
-Config_t *VidConfigFullScreen;
+
 Config_t *CameraSpeed;
 Config_t *CameraMouseSensitivity;
 
-VidDriver_t VidConf;
+VideoSystem_t VidConf;
 ViewParm_t Camera;
 ComTimeInfo_t *ComTime;
 LevelManager_t *LevelManager;
@@ -586,72 +583,7 @@ SDL_DisplayMode *SDLGetCurrentDisplayMode()
     }
     return NULL;
 }
-void SysSetCurrentVideoSettings(int PreferredModeIndex)
-{
-    if( SDL_GetWindowFlags (VideoSurface) & SDL_WINDOW_FULLSCREEN ) {
-        //Was fullscreen reset it...
-        SDL_SetWindowFullscreen(VideoSurface,0);
-    }
-    SDL_SetWindowSize(VideoSurface,VidConfigWidth->IValue,VidConfigHeight->IValue);
-    DPrintf("Going fullscreen:%i\n",VidConfigFullScreen->IValue);
-    if( VidConfigFullScreen->IValue ) {
-        VidSetFullScreenVideoMode(PreferredModeIndex);
-        if( SDL_SetWindowDisplayMode(VideoSurface,SDLGetCurrentDisplayMode() ) < 0 ) {
-            ConfigSetNumber("VideoFullScreen",0);
-            SysSetCurrentVideoSettings(PreferredModeIndex);
-            return;
-        }
-        SDL_SetWindowFullscreen(VideoSurface,SDL_WINDOW_FULLSCREEN);
-    }
-    //Update the value and save changes on the file.
-    ConfigSetNumber("VideoFullScreen",VidConfigFullScreen->IValue);
-}
 
-bool VidOpenWindow()
-{
-    //Make sure we have an OpenGL context.
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-#ifdef _DEBUG
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-#endif
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    VideoSurface = SDL_CreateWindow(VidConf.Title,SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                     VidConfigWidth->IValue, VidConfigHeight->IValue, 
-                     SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    
-    SysSetCurrentVideoSettings(-1);
-    Context = SDL_GL_CreateContext(VideoSurface);
-    VidConf.DPIScale = 1.f;
-    if( !SDL_GetDisplayDPI(0, NULL, &VidConf.DPIScale, NULL) ) {
-        VidConf.DPIScale /= 96.f;
-    }
-        
-    GUI = GUIInit(VideoSurface,Context);
-    VidConf.Initialized = true;
-    SDL_GL_SetSwapInterval(1);
-    
-    return true;
-}
-void SysVidShutdown()
-{
-    int i;
-    for( i = 0; i < VidConf.NumVideoModes; i++ ) {
-        free(VidConf.VideoModeList[i].Description);
-    }
-    free(VidConf.VideoModeList);
-    SDL_GL_DeleteContext(Context);
-    SDL_DestroyWindow(VideoSurface);
-    SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-    SDL_Quit();
-}
 void SysHideCursor()
 {
     SDL_ShowCursor(false);
@@ -664,16 +596,16 @@ void SysShowCursor()
 
 void SysCenterCursor()
 {
-    SDL_WarpMouseInWindow(VideoSurface,VidConf.Width/2,VidConf.Height/2);
+    SDL_WarpMouseInWindow(VideoSurface,VidConfigWidth->IValue/2,VidConfigHeight->IValue/2);
 }
 
-void SysSwapBuffers()
-{
-    if( !VidConf.Initialized ){
-        return;
-    }
-    SDL_GL_SwapWindow(VideoSurface);
-}
+// void SysSwapBuffers()
+// {
+// //     if( !VidConf.Initialized ){
+// //         return;
+// //     }
+//     SDL_GL_SwapWindow(VideoSurface);
+// }
 
 int SysGetCurrentVideoWidth()
 {
@@ -686,51 +618,51 @@ int SysGetCurrentVideoHeight()
     return VidConf.VideoModeList[VidConf.CurrentVideoMode].Height;
 }
 
-void InitSDL(const char *Title)
-{
-    GLenum GlewError;
-    if ( !VidConf.Initialized ) {
-        DPrintf("Vidconf isn't initialized...\n");
-    }
-
-    VidConf.Title = Title == NULL ? "Unnamed" : Title;
-    DPrintf("Title:%s\n",Title);
-//     VidConf.Width = Width;
-//     VidConf.Height = Height;
-//     VidConf.FullScreen = 0;
-    VidConf.Resizable = false;
-
-    if ( !VidInitSDL() ) {
-        DPrintf("Failed on initializing SDL.\n");
-    }
-    
-    VidGetAvailableVideoModes();
-    
-    VidConf.Width = VidConfigWidth->IValue;
-    VidConf.Height = VidConfigHeight->IValue;
-
-    if ( !VidOpenWindow() ) {
-        DPrintf("Failed on opening a new window.\n");
-    }
-    //Needed in order to load the core 3.3 profile.
-    glewExperimental = GL_TRUE;
-    GlewError = glewInit();
-    if (GlewError != GLEW_OK) {
-        DPrintf( "Failed to init GLEW\n");
-        SDL_DestroyWindow(VideoSurface);
-        SDL_Quit();
-        return;
-    }
-
-    
-    VidConf.Driver = StringCopy("SDL");
-    SysHideCursor();
-    return;
-}
+// void InitSDL(const char *Title)
+// {
+//     GLenum GlewError;
+//     if ( !VidConf.Initialized ) {
+//         DPrintf("Vidconf isn't initialized...\n");
+//     }
+// 
+//     VidConf.Title = Title == NULL ? "Unnamed" : Title;
+//     DPrintf("Title:%s\n",Title);
+// //     VidConf.Width = Width;
+// //     VidConf.Height = Height;
+// //     VidConf.FullScreen = 0;
+//     VidConf.Resizable = false;
+// 
+//     if ( !VidInitSDL() ) {
+//         DPrintf("Failed on initializing SDL.\n");
+//     }
+//     
+//     VidGetAvailableVideoModes();
+//     
+//     VidConf.Width = VidConfigWidth->IValue;
+//     VidConf.Height = VidConfigHeight->IValue;
+// 
+//     if ( !VidOpenWindow() ) {
+//         DPrintf("Failed on opening a new window.\n");
+//     }
+//     //Needed in order to load the core 3.3 profile.
+//     glewExperimental = GL_TRUE;
+//     GlewError = glewInit();
+//     if (GlewError != GLEW_OK) {
+//         DPrintf( "Failed to init GLEW\n");
+//         SDL_DestroyWindow(VideoSurface);
+//         SDL_Quit();
+//         return;
+//     }
+// 
+//     
+//     VidConf.Driver = StringCopy("SDL");
+//     SysHideCursor();
+//     return;
+// }
 
 void SysVidInit()
 {
-    InitSDL("MOH Level Viewer");
+//     InitSDL("MOH Level Viewer");
 }
 
 void SysCheckKeyEvents()
@@ -742,10 +674,10 @@ void SysCheckKeyEvents()
     while( SDL_PollEvent(&Event) ) {
         
         if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-            VidConf.Width = Event.window.data1;
-            VidConf.Height = Event.window.data2;
-            ConfigSetNumber("VideoWidth",VidConf.Width);
-            ConfigSetNumber("VideoHeight",VidConf.Height);
+//             VidConf.Width = Event.window.data1;
+//             VidConf.Height = Event.window.data2;
+            ConfigSetNumber("VideoWidth",Event.window.data1);
+            ConfigSetNumber("VideoHeight",Event.window.data2);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F1 ) {
             GUIToggleDebugWindow(GUI);
@@ -988,13 +920,13 @@ void InitGLView()
     GLSetDefaultState();
 }
 
-void GLFrame()
+void GLFrame(VideoSystem_t *VideoSystem)
 {
     glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     LevelManagerDraw(LevelManager);
     glDisable (GL_DEPTH_TEST);
-    GUIDraw(GUI,LevelManager);
+    GUIDraw(GUI,LevelManager,VideoSystem);
     glEnable(GL_DEPTH_TEST);
 }
 
@@ -1004,9 +936,8 @@ void Quit()
     GUIFree(GUI);
 //     LevelCleanUp(Level);
     ShaderManagerFree();
-    free(VidConf.Driver);
     free(ComTime);
-    SysVidShutdown();
+    VideoSystemShutdown(&VidConf);
     SDL_Quit();
     exit(0);
 }
@@ -1020,6 +951,7 @@ void Quit()
 #define _ENABLEVIDEOOUT 1
 int main(int argc,char **argv)
 {
+    VideoSystem_t *VideoSystem;
     srand(time(NULL));
 //     if( argc != 4 ) {
 //         printf("%s <MOH Directory> <Mission Number> <Level Number> will load level files from that mission.\n",argv[0]);
@@ -1034,7 +966,12 @@ int main(int argc,char **argv)
     CameraSpeed = ConfigGet("CameraSpeed");
     CameraMouseSensitivity = ConfigGet("CameraMouseSensitivity");
 #if _ENABLEVIDEOOUT
-    SysVidInit();
+    VideoSystem = VideoSystemInit();
+    
+    //Temporarily route vidconf to the new system.
+    VidConf = *VideoSystem;
+    
+//     SysVidInit();
     ComTime = malloc(sizeof(ComTimeInfo_t));
     memset(ComTime,0,sizeof(ComTimeInfo_t));
     InitGLView();
@@ -1045,6 +982,7 @@ int main(int argc,char **argv)
         ConfigSet("GameBasePath",argv[1]);
     }
 
+    GUI = GUIInit(VideoSystem);
     LevelManagerInit(GUI);
 
     while( 1 ) {
@@ -1054,9 +992,10 @@ int main(int argc,char **argv)
 //         do {
 //         } while( !ComUpdateDelta() );
         LevelManagerUpdate(LevelManager);
-        GLFrame();
+        GLFrame(VideoSystem);
+        VideoSystemSwapBuffers(VideoSystem);
 //         glFlush();
-        SysSwapBuffers();
+//         SysSwapBuffers();
     }
 #else
     #ifdef _DEBUG

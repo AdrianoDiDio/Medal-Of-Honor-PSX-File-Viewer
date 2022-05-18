@@ -21,6 +21,7 @@
 
 #include "Common.h"
 #include "Config.h"
+#include "Video.h"
 
 typedef struct GUI_s GUI_t;
 typedef struct GUIFileDialog_s GUIFileDialog_t;
@@ -65,7 +66,7 @@ extern Config_t *GUIFont;
 extern Config_t *GUIFontSize;
 extern Config_t *GUIShowFPS;
 
-GUI_t *GUIInit(SDL_Window *Window,SDL_GLContext *GLContext);
+GUI_t *GUIInit(VideoSystem_t *VideoSystem);
 void GUIToggleDebugWindow(GUI_t *GUI);
 void GUIToggleSettingsWindow(GUI_t *GUI);
 void GUIToggleLevelSelectWindow(GUI_t *GUI);
@@ -86,6 +87,6 @@ void GUIProgressBarEnd(GUI_t *GUI);
 void GUIProgressBarReset(GUI_t *GUI);
 void GUISetProgressBarDialogTitle(GUI_t *GUI,char *Title);
 void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message);
-void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager);
+void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem);
 void GUIFree(GUI_t *GUI);
 #endif//__GUI_H_
