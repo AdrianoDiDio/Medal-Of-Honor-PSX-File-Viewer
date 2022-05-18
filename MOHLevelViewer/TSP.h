@@ -21,6 +21,7 @@
 
 #include "Common.h"
 #include "VAO.h"
+#include "VRAM.h"
 
 typedef struct LevelManager_s LevelManager_t;
 typedef struct BSD_s BSD_t;
@@ -257,11 +258,10 @@ typedef struct TSP_s {
     struct TSP_s *Next;
 } TSP_t;
 
-struct Level_s;
 typedef struct Level_s Level_t;
 
 TSP_t  *TSPLoad(char *FName,int TSPNumber);
-void    TSPDrawList(LevelManager_t *Level);
+void    TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM);
 void    TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,int Reset);
 void    TSPUpdateDynamicFaces(TSP_t *TSPList,int DynamicDataIndex);
 void    TSPCreateVAO(TSP_t *TSP);
@@ -269,8 +269,8 @@ void    TSPCreateNodeBBoxVAO(TSP_t *TSPList);
 void    TSPCreateCollisionVAO(TSP_t *TSPList);
 int     TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY);
 bool    TSPIsVersion3(TSP_t *TSP);
-void    TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile);
-void    TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile);
+void    TSPDumpDataToObjFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile);
+void    TSPDumpDataToPlyFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile);
 void    TSPFree(TSP_t *TSP);
 void    TSPFreeList(TSP_t *List);
 #endif //__TSPVIEWER_H_

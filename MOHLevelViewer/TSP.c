@@ -109,7 +109,7 @@ void Vec4FromXYZ(float x,float y,float z,vec4 Out)
     Out[2] = z;
     Out[3] = 1;
 }
-void TSPDumpFaceDataToFile(TSP_t *TSP,FILE *OutFile)
+void TSPDumpFaceDataToObjFile(TSP_t *TSP,VRAM_t *VRAM,FILE *OutFile)
 {
     char Buffer[256];
     float TextureWidth;
@@ -122,8 +122,13 @@ void TSPDumpFaceDataToFile(TSP_t *TSP,FILE *OutFile)
         return;
     }
     
-    TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
-    TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
+    if( !VRAM ) {
+        DPrintf("TSPDumpFaceDataToFile:Invalid VRAM\n");
+        return;
+    }
+    
+    TextureWidth = VRAM->Page.Width;
+    TextureHeight = VRAM->Page.Height;
 
     for( i = TSP->Header.NumFaces - 1; i >= 0 ; i-- ) {
         int ColorMode = (TSP->Face[i].TSB >> 7) & 0x3;
@@ -148,7 +153,7 @@ void TSPDumpFaceDataToFile(TSP_t *TSP,FILE *OutFile)
         fwrite(Buffer,strlen(Buffer),1,OutFile);
     }
 }
-void TSPDumpFaceV3DataToFile(TSP_t *TSP,FILE *OutFile)
+void TSPDumpFaceV3DataToObjFile(TSP_t *TSP,VRAM_t *VRAM,FILE *OutFile)
 {
     char Buffer[256];
     TSPTextureInfo_t TextureInfo;
@@ -159,12 +164,16 @@ void TSPDumpFaceV3DataToFile(TSP_t *TSP,FILE *OutFile)
     
     if( !TSP || !OutFile ) {
         bool InvalidFile = (OutFile == NULL ? true : false);
-        printf("TSPDumpFaceV3DataToFile: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        printf("TSPDumpFaceV3DataToObjFile: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
         return;
     }
     
-    TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
-    TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
+    if( !VRAM ) {
+        DPrintf("TSPDumpFaceV3DataToObjFile:Invalid VRAM\n");
+        return;
+    }
+    TextureWidth = VRAM->Page.Width;
+    TextureHeight = VRAM->Page.Height;
 
     
     for( i = 0; i < TSP->Header.NumNodes; i++ ) {
@@ -197,7 +206,7 @@ void TSPDumpFaceV3DataToFile(TSP_t *TSP,FILE *OutFile)
         }
     }
 }
-void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
+void TSPDumpDataToObjFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile)
 {
     TSP_t *Iterator;
     char Buffer[256];
@@ -208,6 +217,10 @@ void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
     if( !TSPList || !OutFile ) {
         bool InvalidFile = (OutFile == NULL ? true : false);
         printf("TSPDumpDataToFile: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        return;
+    }
+    if( !VRAM ) {
+        DPrintf("TSPDumpDataToFile:Invalid VRAM\n");
         return;
     }
     t = 1;
@@ -223,9 +236,9 @@ void TSPDumpDataToFile(TSP_t *TSPList,FILE* OutFile)
             fwrite(Buffer,strlen(Buffer),1,OutFile);            
         }
         if( TSPIsVersion3(Iterator) ) {
-            TSPDumpFaceV3DataToFile(Iterator,OutFile);
+            TSPDumpFaceV3DataToObjFile(Iterator,VRAM,OutFile);
         } else {
-            TSPDumpFaceDataToFile(Iterator,OutFile);
+            TSPDumpFaceDataToObjFile(Iterator,VRAM,OutFile);
         }
 //         fwrite(Buffer,strlen(Buffer),1,OutFile);
 //         break;
@@ -284,7 +297,7 @@ int TSPDumpFaceV3DataToPlyFile(TSP_t *TSP,int VertexOffset,FILE *OutFile)
     return FaceOffset;
 }
 
-void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile)
+void TSPDumpDataToPlyFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile)
 {
     TSP_t *Iterator;
     char Buffer[256];
@@ -298,6 +311,10 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile)
     if( !TSPList || !OutFile ) {
         bool InvalidFile = (OutFile == NULL ? true : false);
         printf("TSPDumpDataToPlyFile: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+        return;
+    }
+    if( !VRAM ) {
+        DPrintf("TSPDumpDataToPlyFile:Invalid VRAM\n");
         return;
     }
     sprintf(Buffer,"ply\nformat ascii 1.0\n");
@@ -323,8 +340,8 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,FILE* OutFile)
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         float TextureWidth;
         float TextureHeight;
-        TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
-        TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
+        TextureWidth = VRAM->Page.Width;
+        TextureHeight = VRAM->Page.Height;
         if( TSPIsVersion3(Iterator) ) {
             for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
                 if( Iterator->Node[i].NumFaces == 0 ) {
@@ -975,7 +992,7 @@ bool IsTSPInRenderArray(Level_t *Level,int TSPNumber)
     return false;
 }
 
-void DrawNode(TSPNode_t *Node)
+void TSPDrawNode(TSPNode_t *Node,VRAM_t *VRAM)
 {
     Shader_t *Shader;
     int MVPMatrixId;
@@ -1014,9 +1031,9 @@ void DrawNode(TSPNode_t *Node)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
             glActiveTexture(GL_TEXTURE0 + 0);
-            glBindTexture(GL_TEXTURE_2D, LevelManager->CurrentLevel->VRAM->TextureIndexPage.TextureId);
+            glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
             glActiveTexture(GL_TEXTURE0 + 1);
-            glBindTexture(GL_TEXTURE_2D, LevelManager->CurrentLevel->VRAM->PalettePage.TextureId);
+            glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
 
             glDisable(GL_BLEND);
             glBindVertexArray(Node->OpaqueFacesVAO->VAOId[0]);
@@ -1029,9 +1046,9 @@ void DrawNode(TSPNode_t *Node)
             glUseProgram(0);
         }
     } else {
-        DrawNode(Node->Child[1]);
-        DrawNode(Node->Next);
-        DrawNode(Node->Child[0]);
+        TSPDrawNode(Node->Child[1],VRAM);
+        TSPDrawNode(Node->Next,VRAM);
+        TSPDrawNode(Node->Child[0],VRAM);
 
     }
 }
@@ -1311,7 +1328,7 @@ void TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,int Reset)
         TSPUpdateTransparentAnimatedFaces(Iterator,BSD,Reset);
     }
 }
-void TSPDrawTransparentFaces(TSP_t *TSP)
+void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM)
 {
     Shader_t *Shader;
     int MVPMatrixId;
@@ -1341,9 +1358,9 @@ void TSPDrawTransparentFaces(TSP_t *TSP)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, LevelManager->CurrentLevel->VRAM->TextureIndexPage.TextureId);
+    glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
     glActiveTexture(GL_TEXTURE0 + 1);
-    glBindTexture(GL_TEXTURE_2D, LevelManager->CurrentLevel->VRAM->PalettePage.TextureId);
+    glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
     glBindVertexArray(TSP->TransparentVAO->VAOId[0]);
     if( !LevelEnableSemiTransparency->IValue ) {
         glDrawArrays(GL_TRIANGLES, 0, TSP->TransparentVAO->Count);
@@ -1378,31 +1395,28 @@ void TSPDrawTransparentFaces(TSP_t *TSP)
     glBlendColor(1.f, 1.f, 1.f, 1.f);
     glUseProgram(0);
 }
-void TSPDrawList(LevelManager_t *LevelManager)
+void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM)
 {
-    TSP_t *TSPData;
     TSP_t *Iterator;
-
-    TSPData = LevelManager->CurrentLevel->TSPList;
     
-    if( !TSPData ) {
+    if( !TSPList ) {
         DPrintf("DrawTSP:Invalid TSP data\n");
         return;
     }
 
-    for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
+    for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);  
-        DrawNode(&Iterator->Node[0]);
+        TSPDrawNode(&Iterator->Node[0],VRAM);
         glDisable(GL_CULL_FACE);
     }
 
     // Alpha pass.
-    for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
-        TSPDrawTransparentFaces(Iterator);
+    for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+        TSPDrawTransparentFaces(Iterator,VRAM);
     }
     if( LevelDrawCollisionData->IValue ) {
-        for( Iterator = TSPData; Iterator; Iterator = Iterator->Next ) {
+        for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
             DrawTSPCollisionData(Iterator);
         }
     }

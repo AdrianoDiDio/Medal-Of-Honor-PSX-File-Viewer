@@ -427,8 +427,7 @@ void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
     igSetNextWindowPos(ScreenCenter, ImGuiCond_Always, Pivot);
     GUI->ProgressBar->CurrentPercentage += Increment;
     if (igBeginPopupModal(GUI->ProgressBar->DialogTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        Delta = (ComTime->Delta != 0.f) ? ComTime->Delta : 1;
-        igProgressBar((GUI->ProgressBar->CurrentPercentage / 100.f) * Delta/* * IO->DeltaTime*/,Size,Message);
+        igProgressBar((GUI->ProgressBar->CurrentPercentage / 100.f),Size,Message);
         igEnd();
     }
     GUIEndFrame();

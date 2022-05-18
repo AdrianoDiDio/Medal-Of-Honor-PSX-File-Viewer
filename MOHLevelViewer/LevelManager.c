@@ -480,9 +480,9 @@ void LevelManagerExportToObj(LevelManager_t *LevelManager,GUI_t *GUI,char *Direc
     sprintf(MaterialNameTag,"mtllib vram.mtl\n");
     fwrite(MaterialNameTag,strlen(MaterialNameTag),1,OutFile);
     GUIProgressBarIncrement(GUI,35,"Writing TSP data.");
-    TSPDumpDataToFile(LevelManager->CurrentLevel->TSPList,OutFile);
+    TSPDumpDataToObjFile(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->VRAM,OutFile);
     GUIProgressBarIncrement(GUI,55,"Writing BSD data.");
-    BSDDumpDataToFile(LevelManager->CurrentLevel->BSD,OutFile);
+    BSDDumpDataToObjFile(LevelManager->CurrentLevel->BSD,LevelManager->CurrentLevel->VRAM,LevelManager->GameEngine,OutFile);
     GUIProgressBarIncrement(GUI,95,"Exporting VRAM.");
     VRAMDumpDataToFile(LevelManager->CurrentLevel->VRAM,Directory);
     GUIProgressBarIncrement(GUI,100,"Done.");
@@ -550,9 +550,9 @@ void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,char *Direc
     }
     GUISetProgressBarDialogTitle(GUI,"Exporting to Ply...");
     GUIProgressBarIncrement(GUI,5,"Writing TSP data.");
-    TSPDumpDataToPlyFile(LevelManager->CurrentLevel->TSPList,PlyLevelOutFile);
+    TSPDumpDataToPlyFile(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->VRAM,PlyLevelOutFile);
     GUIProgressBarIncrement(GUI,55,"Writing BSD data.");
-    BSDDumpDataToPlyFile(LevelManager->CurrentLevel->BSD,PlyObjectOutFile);
+    BSDDumpDataToPlyFile(LevelManager->CurrentLevel->BSD,LevelManager->CurrentLevel->VRAM,LevelManager->GameEngine,PlyObjectOutFile);
     GUIProgressBarIncrement(GUI,95,"Exporting VRAM.");
     VRAMSave(LevelManager->CurrentLevel->VRAM,TextureFile);
     GUIProgressBarIncrement(GUI,100,"Done.");
@@ -678,7 +678,6 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
 {
     Level_t *Level;
     vec3 temp;
-    int DynamicData;
     
     //LevelManager has not received a valid path yet.
     if( !LevelManager->IsPathSet ) {
@@ -690,20 +689,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
     }
     
     Level = LevelManager->CurrentLevel;
-    
-//     if( LevelEnableAnimatedSurfaces->IValue ) {
-// 
-//         BSDClearNodesFlag(Level->BSD);
-//     
-//         while( (DynamicData = BSDGetCurrentCameraNodeDynamicData(Level->BSD) ) != -1 ) {
-//             TSPUpdateDynamicFaces(Level->TSPList,DynamicData);
-//         }
-//     }
-//     if( LevelEnableAnimatedLights->IValue ) {
-//         BSDUpdateAnimatedLights(Level->BSD);
-//         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,0);
-//     }
-//     
+
     glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue/ (float) VidConfigHeight->IValue,1.f, 4096.f,VidConf.PMatrixM4);
 
          
@@ -725,7 +711,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
      
      //Emulate PSX Coordinate system...
      glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-     BSDDrawSky(LevelManager);
+     BSDDrawSky(LevelManager->CurrentLevel->BSD,LevelManager->CurrentLevel->VRAM);
      
      temp[0] = 1;
      temp[1] = 0;
@@ -753,10 +739,8 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
      glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
      glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
      
-     /* TEMP! */
-     BSDCheckCompartmentTrigger(Level,Camera.Position);
 //      BSD2PDraw(Level);
-     BSDDraw(LevelManager);
+     BSDDraw(LevelManager->CurrentLevel->BSD,LevelManager->CurrentLevel->VRAM);
 
      
      temp[0] = 1;
@@ -784,7 +768,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
      
      glm_frustum_planes(VidConf.MVPMatrix,Camera.FrustumPlaneList);
      glm_frustum_corners(VidConf.MVPMatrix,Camera.FrustumCornerList);
-     TSPDrawList(LevelManager);
+     TSPDrawList(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->VRAM);
      
 
 }

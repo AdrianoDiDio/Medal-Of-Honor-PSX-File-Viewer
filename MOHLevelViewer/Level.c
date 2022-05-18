@@ -120,6 +120,10 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     int LocalGameEngine;
     float BasePercentage;
     int PlayAmbientMusic;
+    int NumStepsLeft;
+    float Increment;
+    int IsMultiplayer;
+
     
     //Attempt to load the level...
     if( !Level ){
@@ -139,7 +143,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     Level->ImageList = NULL;
     Level->MissionNumber = MissionNumber;
     Level->LevelNumber = LevelNumber;
-    
+        
     LevelLoadSettings();
 
     snprintf(Level->MissionPath,sizeof(Level->MissionPath),"%s%cDATA%cMSN%i%cLVL%i",BasePath,PATH_SEPARATOR,PATH_SEPARATOR,
@@ -147,7 +151,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     DPrintf("LevelInit:Working directory:%s\n",BasePath);
     DPrintf("LevelInit:Loading level %s Mission %i Level %i\n",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 
-    BasePercentage = 10.f;
+    BasePercentage = 5.f;
     GUIProgressBarIncrement(GUI,BasePercentage,"Loading all images");
     //Step.1 Load all the tims from taf.
     //0 is hardcoded...for the images it doesn't make any difference between 0 and 1
@@ -159,16 +163,17 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
         DPrintf("LevelInit:Failed to load TAF file %s\n",Buffer);
         return false;
     }
-    BasePercentage += 10;
+    BasePercentage += 5;
     GUIProgressBarIncrement(GUI,BasePercentage,"Early Loading BSD File");
     //Step.2 Partially load the BSD file in order to get the TSP info.
-    BSDFile = BSDEarlyInit(Level);
+    BSDFile = BSDEarlyInit(&Level->BSD,Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
     if( !BSDFile ) {
         DPrintf("LevelInit:Failed to load BSD file\n");
         return false;
     }
-    float NumStepsLeft = (Level->BSD->TSPInfo.NumTSP) + 6;
-    float Increment = (100.f - BasePercentage) / NumStepsLeft;
+    NumStepsLeft = (Level->BSD->TSPInfo.NumTSP) + 7;
+    Increment = (100.f - BasePercentage)  / NumStepsLeft;
+//     assert(1!=1);
     //Read the TSP FILES
     //Step.3 Load all the TSP file based on the data read from the BSD file.
     //Note that we are going to load all the tsp file since we do not know 
@@ -193,10 +198,12 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     if( GameEngine ) {
         *GameEngine = LocalGameEngine;
     }
+    //NOTE(Adriano):This is required due to the different BSD RenderObject ID mapping that multiplayer levels use.
+    IsMultiplayer = MissionNumber == 12 ? 1 : 0;
     GUIProgressBarIncrement(GUI,Increment,"Loading BSD");
     //Step.4 Resume loading the BSD after we successfully loaded the TSP.
     DPrintf("LevelInit: Detected game %s\n",LocalGameEngine == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
-    BSDLoad(Level,LocalGameEngine,BSDFile);
+    BSDLoad(Level->BSD,LocalGameEngine,IsMultiplayer,BSDFile);
     GUIProgressBarIncrement(GUI,Increment,"Loading VRAM");
     Level->VRAM = VRAMInit(Level->ImageList);
     GUIProgressBarIncrement(GUI,Increment,"Loading Font");
@@ -204,7 +211,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     GUIProgressBarIncrement(GUI,Increment,"Generating VAOs");
     TSPCreateNodeBBoxVAO(Level->TSPList);
     TSPCreateCollisionVAO(Level->TSPList);
-    BSDCreateVAOs(Level->BSD,Level->VRAM);
+    BSDCreateVAOs(Level->BSD,LocalGameEngine,Level->VRAM);
     GUIProgressBarIncrement(GUI,Increment,"Fixing Objects Position");
     BSDFixRenderObjectPosition(Level);
     GUIProgressBarIncrement(GUI,Increment,"Loading Music");
@@ -215,7 +222,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     }
     CamInit(&Camera,Level->BSD);
     DPrintf("LevelInit:Allocated level struct\n");
-//     GUIProgressBarIncrement(GUI,99,"Done");
+    GUIProgressBarIncrement(GUI,100,"Ready");
     return true;
     
 }

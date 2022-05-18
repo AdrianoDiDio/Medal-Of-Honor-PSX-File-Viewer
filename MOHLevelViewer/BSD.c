@@ -76,7 +76,7 @@ void BSDDumpProperty(BSD_t *BSD,int PropertyIndex)
     }
 }
 
-void BSDDumpFaceDataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,FILE *OutFile)
+void BSDDumpFaceDataToObjFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,VRAM_t *VRAM,FILE *OutFile)
 {
     char Buffer[256];
     BSDRenderObjectElement_t *RenderObjectElement;
@@ -88,8 +88,8 @@ void BSDDumpFaceDataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDra
     int i;
     
     RenderObjectElement = &BSD->RenderObjectTable.RenderObject[RenderObjectDrawable->RenderObjectIndex];
-    TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
-    TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
+    TextureWidth = VRAM->Page.Width;
+    TextureHeight = VRAM->Page.Height;
     
     for( i = RenderObjectElement->NumVertex - 1; i >= 0; i-- ) {
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].x;
@@ -109,13 +109,16 @@ void BSDDumpFaceDataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDra
     for( i = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].NumFaces - 1; i >= 0 ; i-- ) {
         int VRAMPage = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].TexInfo & 0x1F;
         int ColorMode = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].TexInfo & 0xC0) >> 7;
-        float U0 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+        float U0 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV0.u + 
+            VRAMGetTexturePageX(VRAMPage))/TextureWidth);
         float V0 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV0.v +
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        float U1 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        float U1 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV1.u + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
         float V1 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV1.v + 
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
-        float U2 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
+        float U2 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV2.u + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
         float V2 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV2.v + 
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
         sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
@@ -138,9 +141,9 @@ void BSDDumpFaceDataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDra
     }
 }
 
-void BSDDumpFaceV2DataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,FILE *OutFile)
+void BSDDumpFaceV2DataToObjFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,VRAM_t *VRAM,FILE *OutFile)
 {
-        char Buffer[256];
+    char Buffer[256];
     BSDRenderObjectElement_t *RenderObjectElement;
     vec3 VertPos;
     vec3 OutVector;
@@ -150,8 +153,8 @@ void BSDDumpFaceV2DataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectD
     int i;
         
     RenderObjectElement = &BSD->RenderObjectTable.RenderObject[RenderObjectDrawable->RenderObjectIndex];
-    TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
-    TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
+    TextureWidth = VRAM->Page.Width;
+    TextureHeight = VRAM->Page.Height;
     
     for( i = RenderObjectElement->NumVertex - 1; i >= 0; i-- ) {
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].x;
@@ -170,13 +173,16 @@ void BSDDumpFaceV2DataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectD
     for( i = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].NumFaces - 1; i >= 0 ; i-- ) {
         int VRAMPage = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].TexInfo;
         int ColorMode = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].TexInfo & 0xC0) >> 7;
-        float U0 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+        float U0 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV0.u + 
+            VRAMGetTexturePageX(VRAMPage))/TextureWidth);
         float V0 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV0.v +
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        float U1 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        float U1 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV1.u + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
         float V1 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV1.v + 
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
-        float U2 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
+        float U2 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV2.u + 
+            VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
         float V2 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV2.v + 
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
         sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
@@ -199,7 +205,7 @@ void BSDDumpFaceV2DataToFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectD
     }
 }
 
-void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
+void BSDDumpDataToObjFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
 {
     char Buffer[256];
     BSDRenderObjectDrawable_t *RenderObjectIterator;
@@ -216,6 +222,11 @@ void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
         DPrintf("BSDDumpDataToFile: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
         return;
     }
+    
+    if( !VRAM ) {
+        DPrintf("BSDDumpDataToObjFile:Invalid VRAM data\n");
+        return;
+    }
 
     for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
         RenderObjectElement = &BSD->RenderObjectTable.RenderObject[RenderObjectIterator->RenderObjectIndex];
@@ -228,7 +239,7 @@ void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
         RotationAxis[2] = 0;
         glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);
         RotationAxis[0] = 0;
-        RotationAxis[1] = -1;
+        RotationAxis[1] = 1;
         RotationAxis[2] = 0;
         glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation.y), RotationAxis);
         RotationAxis[0] = 1;
@@ -247,16 +258,16 @@ void BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile)
 
         glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
         
-        if( LevelManagerGetGameEngine(LevelManager) == MOH_GAME_UNDERGROUND ) {
-            BSDDumpFaceV2DataToFile(BSD,RenderObjectIterator,ModelMatrix,OutFile);
+        if( GameEngine == MOH_GAME_UNDERGROUND ) {
+            BSDDumpFaceV2DataToObjFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
         } else {
-            BSDDumpFaceDataToFile(BSD,RenderObjectIterator,ModelMatrix,OutFile);
+            BSDDumpFaceDataToObjFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
         }
     }
 
 }
 
-void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,FILE *OutFile)
+void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,VRAM_t *VRAM,FILE *OutFile)
 {
     char Buffer[256];
     vec3 VertPos;
@@ -266,19 +277,22 @@ void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObject
     float TextureHeight;
     int i;
         
-    TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
-    TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
+    TextureWidth = VRAM->Page.Width;
+    TextureHeight = VRAM->Page.Height;
     
     for( i = 0 ; i < BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].NumFaces; i++ ) {
         int VRAMPage = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].TexInfo;
         int ColorMode = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].TexInfo & 0xC0) >> 7;
-        float U0 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+        float U0 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV0.u + 
+            VRAMGetTexturePageX(VRAMPage))/TextureWidth);
         float V0 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV0.v +
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        float U1 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        float U1 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV1.u + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
         float V1 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV1.v + 
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
-        float U2 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
+        float U2 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV2.u + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
         float V2 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV2.v + 
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
         int Vert0 = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].VData & 0xFF);
@@ -315,7 +329,7 @@ void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObject
     }
 }
 
-void BSDDumpFaceV2DataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,FILE *OutFile)
+void BSDDumpFaceV2DataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,VRAM_t *VRAM,FILE *OutFile)
 {
     char Buffer[256];
     vec3 VertPos;
@@ -325,19 +339,22 @@ void BSDDumpFaceV2DataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObje
     float TextureHeight;
     int i;
         
-    TextureWidth = LevelManager->CurrentLevel->VRAM->Page.Width;
-    TextureHeight = LevelManager->CurrentLevel->VRAM->Page.Height;
+    TextureWidth = VRAM->Page.Width;
+    TextureHeight = VRAM->Page.Height;
     
     for( i = 0 ; i < BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].NumFaces; i++ ) {
         int VRAMPage = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].TexInfo;
         int ColorMode = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].TexInfo & 0xC0) >> 7;
-        float U0 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+        float U0 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV0.u + 
+            VRAMGetTexturePageX(VRAMPage))/TextureWidth);
         float V0 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV0.v +
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        float U1 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        float U1 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV1.u + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
         float V1 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV1.v + 
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
-        float U2 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
+        float U2 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV2.u + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
         float V2 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV2.v + 
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
         int Vert0 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].Vert0;
@@ -372,7 +389,7 @@ void BSDDumpFaceV2DataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObje
         fwrite(Buffer,strlen(Buffer),1,OutFile);
     }
 }
-void BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile)
+void BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
 {
     char Buffer[256];
     BSDRenderObjectDrawable_t *RenderObjectIterator;
@@ -387,6 +404,10 @@ void BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile)
     if( !BSD || !OutFile ) {
         bool InvalidFile = (OutFile == NULL ? true : false);
         DPrintf("BSDDumpDataToPlyFile: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
+        return;
+    }
+    if( !VRAM ) {
+        DPrintf("BSDDumpDataToPlyFile:Invalid VRAM data\n");
         return;
     }
     sprintf(Buffer,"ply\nformat ascii 1.0\n");
@@ -428,10 +449,10 @@ void BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile)
 
         glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
         
-        if( LevelManagerGetGameEngine(LevelManager) == MOH_GAME_UNDERGROUND ) {
-            BSDDumpFaceV2DataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,OutFile);
+        if( GameEngine == MOH_GAME_UNDERGROUND ) {
+            BSDDumpFaceV2DataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
         } else {
-            BSDDumpFaceDataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,OutFile);
+            BSDDumpFaceDataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
         }
     }
     VertexOffset = 0;
@@ -759,13 +780,13 @@ void BSDCreateRenderObjectPointListVAO(BSD_t *BSD)
     free(RenderObjectData);
 }
 
-void BSDAddNodeToRenderObjecDrawabletList(BSD_t *BSD,int MissionNumber,unsigned int NodeId,Vec3_t Position,Vec3_t Rotation)
+void BSDAddNodeToRenderObjecDrawabletList(BSD_t *BSD,int IsMultiplayer,unsigned int NodeId,Vec3_t Position,Vec3_t Rotation)
 {
     BSDRenderObjectDrawable_t *Object;
     unsigned int RenderObjectId;
     int RenderObjectIndex;
 
-    if( MissionNumber == 12 ) {
+    if( IsMultiplayer ) {
         RenderObjectId = BSDMPNodeIdToRenderObjectId(NodeId);
     } else {
         RenderObjectId = BSDNodeIdToRenderObjectId(NodeId);
@@ -1101,7 +1122,7 @@ void BSDCreateSkyVAOs(BSD_t *BSD,VRAM_t *VRAM)
     BSDCreateStarsVAO(BSD);
 }
 
-void BSDCreateVAOs(BSD_t *BSD,VRAM_t *VRAM)
+void BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM)
 {
     BSDRenderObject_t *RenderObjectData;
     int i;
@@ -1115,7 +1136,7 @@ void BSDCreateVAOs(BSD_t *BSD,VRAM_t *VRAM)
             continue;
         }
 
-        if( BSD->GameEngine == MOH_GAME_UNDERGROUND ) {
+        if( GameEngine == MOH_GAME_UNDERGROUND ) {
             BSDCreateFaceV2VAO(RenderObjectData,VRAM);
         } else {
             BSDCreateFaceVAO(RenderObjectData,VRAM);
@@ -1179,26 +1200,6 @@ bool isPointInsideAABB(Vec3_t Position, Vec3_t BoxMin,Vec3_t BoxMax)
   return (Position.x >= BoxMin.x && Position.x <= BoxMax.x) &&
          (Position.y >= BoxMin.y && Position.y <= BoxMax.y) &&
          (Position.z >= BoxMin.z && Position.z <= BoxMax.z);
-}
-void BSDCheckCompartmentTrigger(Level_t *Level,Vec3_t CameraPosition)
-{
-//     int i;
-//     for( i = 0; i < Level->BSD->NodeData.Header.NumNodes; i++ ) {
-//         Vec3_t Min;
-//         Vec3_t Max;
-//         
-//         Min.x = Level->BSD->NodeData.Node[i].Position.x;
-//         Min.y = Level->BSD->NodeData.Node[i].Position.y;
-//         Min.z = Level->BSD->NodeData.Node[i].Position.z;
-//         
-//         Max.x = Min.x + -Level->BSD->NodeData.Node[i].PositionMax.x;
-//         Max.y = Min.y + -Level->BSD->NodeData.Node[i].PositionMax.y;
-//         Max.z = Min.z + Level->BSD->NodeData.Node[i].PositionMax.z;
-//         if( isPointInsideAABB(CameraPosition,Min,Max) ) {
-//             DPrintf("Camera touching node %s\n",BSDNodeGetEnumStringFromValue(Level->BSD->NodeData.Node[i].Id));
-//             return;
-//         }
-//     }
 }
 
 unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId)
@@ -1643,7 +1644,7 @@ int BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD)
 //TODO:Spawn the RenderObject when loading node data!
 //     Some nodes don't have a corresponding RenderObject like the PlayerSpawn.
 //     BSDSpawnEntity(int UBlockId,Vec3_t NodePos) => Store into a list and transform to vao.
-void BSDDraw(LevelManager_t *LevelManager)
+void BSDDraw(BSD_t *BSD,VRAM_t *VRAM)
 {
     Shader_t *Shader;
     BSDRenderObjectDrawable_t *RenderObjectIterator;
@@ -1651,24 +1652,21 @@ void BSDDraw(LevelManager_t *LevelManager)
     int MVPMatrixId;
     int EnableLightingId;
     int i;
-    Level_t *Level;
-    
-    Level = LevelManager->CurrentLevel;
     
     if( 1 ) {
-        for( int i = 0; i < Level->BSD->NodeData.Header.NumNodes; i++ ) {
-            if( Level->BSD->NodeData.Node[i].MessageData == -1 ) {
+        for( int i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
+            if( BSD->NodeData.Node[i].MessageData == -1 ) {
                 continue;
             }
 //             if( Level->BSD->NodeData.Node[i].CollisionVolumeType != 2 ) {
 //                 continue;
 //             }
-            if( BSDPointInNode(Camera.Position,&Level->BSD->NodeData.Node[i]) ) {
-                DPrintf("Camera is inside node %i => %s\n",i,BSDNodeGetEnumStringFromNodeId(Level->BSD->NodeData.Node[i].Id));
-                DPrintf("Node CollisionVolumeType:%s\n",BSDGetCollisionVolumeStringFromType(Level->BSD->NodeData.Node[i].CollisionVolumeType));
-                if( Level->BSD->NodeData.Node[i].Type == 5 ) {
+            if( BSDPointInNode(Camera.Position,&BSD->NodeData.Node[i]) ) {
+                DPrintf("Camera is inside node %i => %s\n",i,BSDNodeGetEnumStringFromNodeId(BSD->NodeData.Node[i].Id));
+                DPrintf("Node CollisionVolumeType:%s\n",BSDGetCollisionVolumeStringFromType(BSD->NodeData.Node[i].CollisionVolumeType));
+                if( BSD->NodeData.Node[i].Type == 5 ) {
                     //TODO:Update the TSP faces based on the node dynamic index that maps to the dynamic block inside TSP file.
-                    DPrintf("Node has dynamic face index set to %i\n",Level->BSD->NodeData.Node[i].DynamicBlockIndex);
+                    DPrintf("Node has dynamic face index set to %i\n",BSD->NodeData.Node[i].DynamicBlockIndex);
                 }
                 break;
             }
@@ -1680,9 +1678,9 @@ void BSDDraw(LevelManager_t *LevelManager)
 
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
         glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
-        glBindVertexArray(Level->BSD->NodeVAO->VAOId[0]);
+        glBindVertexArray(BSD->NodeVAO->VAOId[0]);
         glPointSize(10.f);
-        glDrawArrays(GL_POINTS, 0, Level->BSD->NodeData.Header.NumNodes);
+        glDrawArrays(GL_POINTS, 0, BSD->NodeData.Header.NumNodes);
         glBindVertexArray(0);
         glUseProgram(0);
     }
@@ -1693,9 +1691,9 @@ void BSDDraw(LevelManager_t *LevelManager)
 
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
         glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
-        glBindVertexArray(Level->BSD->RenderObjectPointVAO->VAOId[0]);
+        glBindVertexArray(BSD->RenderObjectPointVAO->VAOId[0]);
         glPointSize(10.f);
-        glDrawArrays(GL_POINTS, 0, Level->BSD->NumRenderObjectPoint);
+        glDrawArrays(GL_POINTS, 0, BSD->NumRenderObjectPoint);
         glBindVertexArray(0);
         glUseProgram(0);
     }
@@ -1707,9 +1705,9 @@ void BSDDraw(LevelManager_t *LevelManager)
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
         EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
         glUniform1i(EnableLightingId, LevelEnableAmbientLight->IValue);
-        glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page.TextureId);
+        glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
 
-        for( RenderObjectIterator = Level->BSD->RenderObjectDrawableList; RenderObjectIterator; 
+        for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; 
             RenderObjectIterator = RenderObjectIterator->Next ) {
             vec3 temp;
             glm_mat4_identity(VidConf.ModelViewMatrix);
@@ -1755,7 +1753,7 @@ void BSDDraw(LevelManager_t *LevelManager)
             glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
             glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
 
-            for( VAOIterator = Level->BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].VAO; VAOIterator; 
+            for( VAOIterator = BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].VAO; VAOIterator; 
                 VAOIterator = VAOIterator->Next ) {
                 glBindVertexArray(VAOIterator->VAOId[0]);
                 glDrawArrays(GL_TRIANGLES, 0, VAOIterator->Count);
@@ -1770,12 +1768,12 @@ void BSDDraw(LevelManager_t *LevelManager)
         Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
         glUseProgram(Shader->ProgramId);
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-        glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page.TextureId);
+        glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
         Vec3_t PSpawn;
     
-        PSpawn = BSDGetPlayerSpawn(Level->BSD,NULL);
+        PSpawn = BSDGetPlayerSpawn(BSD,NULL);
     
-        for( i = 0; i < Level->BSD->RenderObjectTable.NumRenderObject; i++ ) {
+        for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
             vec3 temp;
             glm_mat4_identity(VidConf.ModelViewMatrix);
             temp[0] = 1;
@@ -1814,7 +1812,7 @@ void BSDDraw(LevelManager_t *LevelManager)
             glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
             glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
 
-            for( VAOIterator = Level->BSD->RenderObjectList[i].VAO; VAOIterator; VAOIterator = VAOIterator->Next ) {
+            for( VAOIterator = BSD->RenderObjectList[i].VAO; VAOIterator; VAOIterator = VAOIterator->Next ) {
                 glBindVertexArray(VAOIterator->VAOId[0]);
                 glDrawArrays(GL_TRIANGLES, 0, VAOIterator->Count);
                 glBindVertexArray(0);
@@ -1825,31 +1823,29 @@ void BSDDraw(LevelManager_t *LevelManager)
     }
 }
 
-void BSDDrawSky(LevelManager_t *LevelManager)
+void BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM)
 {
     Shader_t *Shader;
     int MVPMatrixId;
-    Level_t *Level;
     
-    Level = LevelManager->CurrentLevel;
     glDepthMask(0);
-    if( BSDIsMoonEnabled(Level->BSD) ) {
+    if( BSDIsMoonEnabled(BSD) ) {
         Shader = ShaderCache("MoonShader","Shaders/MoonVertexShader.glsl","Shaders/MoonFragmentShader.glsl");
         glUseProgram(Shader->ProgramId);
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-        glBindTexture(GL_TEXTURE_2D,Level->VRAM->Page.TextureId);
+        glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
 
         glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
 
-        glBindVertexArray(Level->BSD->SkyData.MoonVAO->VAOId[0]);
-        glDrawArrays(GL_TRIANGLES, 0, Level->BSD->SkyData.MoonVAO->Count);
+        glBindVertexArray(BSD->SkyData.MoonVAO->VAOId[0]);
+        glDrawArrays(GL_TRIANGLES, 0, BSD->SkyData.MoonVAO->Count);
         glBindVertexArray(0);
                 
         glBindTexture(GL_TEXTURE_2D,0);
         glUseProgram(0);
     }
-    if( BSDAreStarsEnabled(Level->BSD) ) {
-        BSDUpdateStarsColors(Level->BSD);
+    if( BSDAreStarsEnabled(BSD) ) {
+        BSDUpdateStarsColors(BSD);
         
         Shader = ShaderCache("StarsShader","Shaders/StarsVertexShader.glsl","Shaders/StarsFragmentShader.glsl");
         glUseProgram(Shader->ProgramId);
@@ -1857,7 +1853,7 @@ void BSDDrawSky(LevelManager_t *LevelManager)
         
         glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
         glPointSize(2.f);
-        glBindVertexArray(Level->BSD->SkyData.StarsVAO->VAOId[0]);
+        glBindVertexArray(BSD->SkyData.StarsVAO->VAOId[0]);
         glDrawArrays(GL_POINTS, 0, 255);
         glBindVertexArray(0);
         glUseProgram(0);
@@ -2067,7 +2063,7 @@ void ParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffset,
         }
     }
 }
-void LoadRenderObjectsFaceData(BSD_t *BSD,int RenderObjectDataOffset,FILE *BSDFile)
+void LoadRenderObjectsFaceData(BSD_t *BSD,int RenderObjectDataOffset,int GameEngine,FILE *BSDFile)
 {
     int FaceOffset;
     int i;
@@ -2082,7 +2078,7 @@ void LoadRenderObjectsFaceData(BSD_t *BSD,int RenderObjectDataOffset,FILE *BSDFi
             continue;
         }
         DPrintf("LoadRenderObjectsFaceData:RenderObject Id %u\n",BSD->RenderObjectList[i].Data->Id);
-        if( BSD->GameEngine == MOH_GAME_UNDERGROUND ) {
+        if( GameEngine == MOH_GAME_UNDERGROUND ) {
             FaceOffset = ( RenderObjectDataOffset + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) ) + 260;
             ParseRenderObjectFaceDataV2(&BSD->RenderObjectList[i],FaceOffset,BSDFile);
         } else {
@@ -2262,7 +2258,7 @@ void BSDReadSkyChunk(BSD_t *BSD,FILE *BSDFile)
     DPrintf("Star Radius:%i\n",BSD->SkyData.StarRadius);
 }
 
-void BSDReadRenderObjectChunk(BSD_t *BSD,FILE *BSDFile)
+void BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
 {
     int FirstRenderObjectPosition;
     int PreviousFilePosition;
@@ -2283,7 +2279,7 @@ void BSDReadRenderObjectChunk(BSD_t *BSD,FILE *BSDFile)
     
     BSD->RenderObjectTable.RenderObject = malloc(BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObjectElement_t));
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        if( BSD->GameEngine == MOH_GAME_UNDERGROUND ) {
+        if( GameEngine == MOH_GAME_UNDERGROUND ) {
             assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectPosition + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE));
         } else {
             assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectPosition + (i * MOH_RENDER_OBJECT_SIZE));
@@ -2319,7 +2315,7 @@ void BSDReadRenderObjectChunk(BSD_t *BSD,FILE *BSDFile)
         } else {
             DPrintf("RenderObject No Reference set...\n");
         }
-        if( BSD->GameEngine == MOH_GAME_UNDERGROUND ) {
+        if( GameEngine == MOH_GAME_UNDERGROUND ) {
             if( BSD->RenderObjectTable.RenderObject[i].FaceOffset == 0 ) {
                 fread(&BSD->RenderObjectTable.RenderObject[i].FaceOffset,sizeof(int),1,BSDFile);
                 SkipFileSection(16,BSDFile);
@@ -2331,11 +2327,11 @@ void BSDReadRenderObjectChunk(BSD_t *BSD,FILE *BSDFile)
     // Prepare vertices to be rendered!
     PreviousFilePosition = ftell(BSDFile);
     ParseRenderObjectVertexData(BSD,BSDFile);
-    LoadRenderObjectsFaceData(BSD,FirstRenderObjectPosition,BSDFile);
+    LoadRenderObjectsFaceData(BSD,FirstRenderObjectPosition,GameEngine,BSDFile);
     fseek(BSDFile,PreviousFilePosition,SEEK_SET);
 }
 
-void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int MissionNumber,int NodeFilePosition,FILE *BSDFile)
+void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFilePosition,FILE *BSDFile)
 {
     BSDTSPStreamNode_t *StreamNode;
     int Offset;
@@ -2440,7 +2436,7 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int MissionNumber,int NodeFile
             if( NodeNumReferencedRenderObjectIdOffset != 0 ) {
                 if( Node->Type == 4 ) {
                     DPrintf("Node has Type 4 so the RenderObject Id is %u.\n",NodeNumReferencedRenderObjectIdOffset);
-                    BSDAddNodeToRenderObjecDrawabletList(BSD,MissionNumber,NodeNumReferencedRenderObjectIdOffset,NodePosition,NodeRotation);
+                    BSDAddNodeToRenderObjecDrawabletList(BSD,IsMultiplayer,NodeNumReferencedRenderObjectIdOffset,NodePosition,NodeRotation);
                 } else {
                     fseek(BSDFile,NodeFilePosition + NodeNumReferencedRenderObjectIdOffset,SEEK_SET);
                     fread(&NumReferencedRenderObjectId,sizeof(NumReferencedRenderObjectId),1,BSDFile);
@@ -2450,7 +2446,7 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int MissionNumber,int NodeFile
                         if( Node->Id == BSD_ENEMY_SPAWN && NodeRenderObjectId != 3817496448 && i == 0 ) {
                             DPrintf("We have a different RenderObject for this enemy spawn...\n");
                         }
-                        BSDAddNodeToRenderObjecDrawabletList(BSD,MissionNumber,NodeRenderObjectId,NodePosition,NodeRotation);
+                        BSDAddNodeToRenderObjecDrawabletList(BSD,IsMultiplayer,NodeRenderObjectId,NodePosition,NodeRotation);
                     }
                 }
             }
@@ -2460,7 +2456,7 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int MissionNumber,int NodeFile
         DPrintf("Zero Offset.\n");
     }
 }
-void BSDReadNodeChunk(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
+void BSDReadNodeChunk(BSD_t *BSD,int IsMultiplayer,FILE *BSDFile)
 {
     int NodeFilePosition;
     int NodeTableEnd;
@@ -2511,13 +2507,13 @@ void BSDReadNodeChunk(BSD_t *BSD,int MissionNumber,FILE *BSDFile)
         fread(&BSD->NodeData.Node[i].CollisionInfo0,sizeof(BSD->NodeData.Node[i].CollisionInfo0),1,BSDFile);
         fread(&BSD->NodeData.Node[i].CollisionInfo1,sizeof(BSD->NodeData.Node[i].CollisionInfo1),1,BSDFile);
         fread(&BSD->NodeData.Node[i].CollisionInfo2,sizeof(BSD->NodeData.Node[i].CollisionInfo2),1,BSDFile);
-        BSDParseNodeChunk(&BSD->NodeData.Node[i],BSD,MissionNumber,NodeFilePosition,BSDFile);
+        BSDParseNodeChunk(&BSD->NodeData.Node[i],BSD,IsMultiplayer,NodeFilePosition,BSDFile);
         NextNodeOffset = NodeFilePosition + BSD->NodeData.Node[i].Size;
         fseek(BSDFile,NextNodeOffset,SEEK_SET);
     }
 }
 
-int BSDLoad(Level_t *Level,int GameEngine,FILE *BSDFile)
+int BSDLoad(BSD_t *BSD,int GameEngine,int IsMultiplayer,FILE *BSDFile)
 {   
     int MemBegin;
     int MemEnd;
@@ -2525,9 +2521,8 @@ int BSDLoad(Level_t *Level,int GameEngine,FILE *BSDFile)
     int Jump;
     BSDAnimatedLight_t *AnimatedLight;
     
-    Level->BSD->GameEngine = GameEngine;
-    fread(&Level->BSD->Unknown,sizeof(Level->BSD->Unknown),1,BSDFile);
-    BSDReadAnimatedLightChunk(Level->BSD,BSDFile);
+    fread(&BSD->Unknown,sizeof(BSD->Unknown),1,BSDFile);
+    BSDReadAnimatedLightChunk(BSD,BSDFile);
     //This section seems unused and should be constant in size (320 bytes).
     //TODO:Remove this useless code and just jump 320 bytes...
     MemBegin = GetCurrentFilePosition(BSDFile);
@@ -2544,47 +2539,44 @@ int BSDLoad(Level_t *Level,int GameEngine,FILE *BSDFile)
     //This file section of 80 bytes contains the begin/end offset of some entries.
     //Like the NodeListTableStart/NodeListEnd after the header (+2048).
     //We can have a max of 20 offsets or 10 Begin/End Definitions.
-    BSDReadEntryTableChunk(Level->BSD,BSDFile);
+    BSDReadEntryTableChunk(BSD,BSDFile);
     
-    BSDReadSkyChunk(Level->BSD,BSDFile);
+    BSDReadSkyChunk(BSD,BSDFile);
     
-    if( Level->BSD->GameEngine == MOH_GAME_UNDERGROUND ) {
+    if( GameEngine == MOH_GAME_UNDERGROUND ) {
         SkipFileSection(16,BSDFile);
     }
     
     DPrintf("Current Position after entries is %i\n",GetCurrentFilePosition(BSDFile));
-    BSDReadRenderObjectChunk(Level->BSD,BSDFile);
+    BSDReadRenderObjectChunk(BSD,GameEngine,BSDFile);
     DPrintf("Current Position after RenderObject Table is: %i\n",GetCurrentFilePosition(BSDFile));
     //NOTE(Adriano):Altough we are able to load all the animated lights and grab the color data from there, BSD files are not meant to be read
-    //              sequentially, this means that we need to skip a certain amount of bytes which corresponds to the area pointed by each animated light,
-    //              that contains a list of color values,in order to guarantee that we are reading it correctly.
-    if( Level->BSD->AnimatedLightsTable.NumAnimatedLights != 0 ) {
+    //              sequentially, this means that we need to skip a certain amount of bytes which corresponds to the area pointed 
+    //              by each animated light,that contains a list of color values,in order to guarantee that we are reading it correctly.
+    if( BSD->AnimatedLightsTable.NumAnimatedLights != 0 ) {
         DPrintf("Skipping block referenced by Animated lights Table...\n");
-        AnimatedLight = &Level->BSD->AnimatedLightsTable.AnimatedLightsList[Level->BSD->AnimatedLightsTable.NumAnimatedLights - 1];
+        AnimatedLight = &BSD->AnimatedLightsTable.AnimatedLightsList[BSD->AnimatedLightsTable.NumAnimatedLights - 1];
         Jump = ((AnimatedLight->StartingColorOffset + 2048) + (AnimatedLight->NumColors * 4)) - GetCurrentFilePosition(BSDFile);
         DPrintf("Skipping %i Bytes...\n",Jump);
         assert(Jump > 0);
         SkipFileSection(Jump,BSDFile);
     }
     DPrintf("Current Position after Color List Block is: %i\n",GetCurrentFilePosition(BSDFile));
-    BSDReadNodeChunk(Level->BSD,Level->MissionNumber,BSDFile);
-    BSDReadPropertySetFile(Level->BSD,BSDFile);
+    BSDReadNodeChunk(BSD,IsMultiplayer,BSDFile);
+    BSDReadPropertySetFile(BSD,BSDFile);
     fclose(BSDFile);
     return 1;
 }
 
 
-FILE *BSDEarlyInit(Level_t *Level)
+FILE *BSDEarlyInit(BSD_t **BSD,char *MissionPath,int MissionNumber,int LevelNumber)
 {
+    BSD_t *LocalBSD;
     FILE *BSDFile;
     char Buffer[512];
     int i;
     
-    if( !Level ) {
-        DPrintf("BSDEarlyInit:Invalid Level data\n");
-        return NULL;
-    }
-    snprintf(Buffer,sizeof(Buffer),"%s/%i_%i.BSD",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
+    snprintf(Buffer,sizeof(Buffer),"%s/%i_%i.BSD",MissionPath,MissionNumber,LevelNumber);
 
     DPrintf("BSDEarlyInit:Loading BSD file %s...\n",Buffer);
     
@@ -2594,38 +2586,39 @@ FILE *BSDEarlyInit(Level_t *Level)
         DPrintf("BSDEarlyInit:Failed opening BSD File.\n");
         return NULL;
     }
-    Level->BSD = malloc(sizeof(BSD_t));
+    LocalBSD = malloc(sizeof(BSD_t));
     
-    Level->BSD->TSPStreamNodeList = NULL;
+    LocalBSD->TSPStreamNodeList = NULL;
 //     BSD->RenderObjectRealList = NULL;
-    Level->BSD->RenderObjectList = NULL;
-    Level->BSD->RenderObjectDrawableList = NULL;
+    LocalBSD->RenderObjectList = NULL;
+    LocalBSD->RenderObjectDrawableList = NULL;
 //     BSD->RenderObjectShowCaseList = NULL;
     
-    Level->BSD->NodeVAO = NULL;
-    Level->BSD->RenderObjectPointVAO = NULL;
-    Level->BSD->NumRenderObjectPoint = 0;
-    Level->BSD->SkyData.MoonVAO = NULL;
-    Level->BSD->SkyData.StarsVAO = NULL;
+    LocalBSD->NodeVAO = NULL;
+    LocalBSD->RenderObjectPointVAO = NULL;
+    LocalBSD->NumRenderObjectPoint = 0;
+    LocalBSD->SkyData.MoonVAO = NULL;
+    LocalBSD->SkyData.StarsVAO = NULL;
 
     
-    assert(sizeof(Level->BSD->Header) == 2048);
-    fread(&Level->BSD->Header,sizeof(Level->BSD->Header),1,BSDFile);
-    DPrintf("BSDEarlyInit: BSD Header contains %i(%#02x) element.\n",Level->BSD->Header.NumHeadElements,Level->BSD->Header.NumHeadElements);
-    for( i = 0; i < Level->BSD->Header.NumHeadElements; i++ ) {
-        DPrintf("BSDEarlyInit:Got %i(%#02x)(%i)\n",Level->BSD->Header.Sector[i],Level->BSD->Header.Sector[i],Level->BSD->Header.Sector[i] >> 0xb);
+    assert(sizeof(LocalBSD->Header) == 2048);
+    fread(&LocalBSD->Header,sizeof(LocalBSD->Header),1,BSDFile);
+    DPrintf("BSDEarlyInit: BSD Header contains %i(%#02x) element.\n",LocalBSD->Header.NumHeadElements,LocalBSD->Header.NumHeadElements);
+    for( i = 0; i < LocalBSD->Header.NumHeadElements; i++ ) {
+        DPrintf("BSDEarlyInit:Got %i(%#02x)(%i)\n",LocalBSD->Header.Sector[i],LocalBSD->Header.Sector[i],LocalBSD->Header.Sector[i] >> 0xb);
     }
     //At position 152 after the header we have the SPRITE definitions...
     //Maybe hud/ammo...
-    fread(&Level->BSD->TSPInfo,sizeof(Level->BSD->TSPInfo),1,BSDFile);
+    fread(&LocalBSD->TSPInfo,sizeof(LocalBSD->TSPInfo),1,BSDFile);
     DPrintf("BSDEarlyInit:Reading TSP info.\n");
-    DPrintf("Compartment pattern: %s\n",Level->BSD->TSPInfo.TSPPattern);
-    DPrintf("Number of compartments: %i\n",Level->BSD->TSPInfo.NumTSP);
-    DPrintf("TargetInitialCompartment: %i\n",Level->BSD->TSPInfo.TargetInitialCompartment);
-    DPrintf("Starting Compartment: %i\n",Level->BSD->TSPInfo.StartingComparment);
-    DPrintf("u3: %i\n",Level->BSD->TSPInfo.u3);
+    DPrintf("Compartment pattern: %s\n",LocalBSD->TSPInfo.TSPPattern);
+    DPrintf("Number of compartments: %i\n",LocalBSD->TSPInfo.NumTSP);
+    DPrintf("TargetInitialCompartment: %i\n",LocalBSD->TSPInfo.TargetInitialCompartment);
+    DPrintf("Starting Compartment: %i\n",LocalBSD->TSPInfo.StartingComparment);
+    DPrintf("u3: %i\n",LocalBSD->TSPInfo.u3);
     DPrintf("TSP Block ends at %i\n",GetCurrentFilePosition(BSDFile));
-    assert(Level->BSD->TSPInfo.u3 == 0);
+    assert(LocalBSD->TSPInfo.u3 == 0);
+    *BSD = LocalBSD;
     return BSDFile;
 }
 

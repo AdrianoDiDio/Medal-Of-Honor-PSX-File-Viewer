@@ -738,7 +738,7 @@ void SysCheckKeyEvents()
     SDL_Event Event;
     float CamSpeed;
     
-    CamSpeed = CameraSpeed->FValue * ComTime->Delta * 64.f;
+    CamSpeed = CameraSpeed->FValue * ComTime->Delta * 128.f;
     while( SDL_PollEvent(&Event) ) {
         
         if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {

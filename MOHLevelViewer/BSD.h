@@ -372,23 +372,20 @@ typedef struct BSD_s {
     int          NumRenderObjectPoint;
     //Easy lookup to see if the camera is in that node position so that
     //we can update the TSPNumberRenderList.
-    BSDTSPStreamNode_t *TSPStreamNodeList;
-    
-    int         GameEngine;
+    BSDTSPStreamNode_t *TSPStreamNodeList;    
 } BSD_t;
 
 struct Level_s;
 typedef struct Level_s Level_t;
 
-FILE   *BSDEarlyInit(Level_t *Level);
-int     BSDLoad(Level_t *Level,int GameEngine,FILE *BSDFile);
-void    BSDCheckCompartmentTrigger(Level_t *Level,Vec3_t CameraPosition);
+FILE    *BSDEarlyInit(BSD_t **BSD,char *MissionPath,int MissionNumber,int LevelNumber);
+int     BSDLoad(BSD_t *BSD,int GameEngine,int Multiplayer,FILE *BSDFile);
 char   *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId);
 char   *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
 Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD,Vec3_t *Rotation);
-void    BSDCreateVAOs(BSD_t *BSD,VRAM_t *VRAM);
-void    BSDDraw(LevelManager_t *LevelManager);
-void    BSDDrawSky(LevelManager_t *LevelManager);
+void    BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM);
+void    BSDDraw(BSD_t *BSD,VRAM_t *VRAM);
+void    BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM);
 void    BSDClearNodesFlag(BSD_t *BSD);
 int     BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD);
 unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId);
@@ -397,8 +394,8 @@ int     BSDGetRenderObjectIndexById(BSD_t *BSD,int Id);
 bool    BSDIsRenderObjectPresent(BSD_t *BSD,unsigned int RenderObjectId);
 void    BSDFixRenderObjectPosition(Level_t *Level);
 int     BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index);
-void    BSDDumpDataToFile(BSD_t *BSD, FILE *OutFile);
-void    BSDDumpDataToPlyFile(BSD_t *BSD, FILE *OutFile);
+void    BSDDumpDataToObjFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile);
+void    BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile);
 void    BSDUpdateAnimatedLights(BSD_t *BSD);
 void    BSDUpdateStarsColors(BSD_t *BSD);
 int     BSDIsMoonEnabled(BSD_t *BSD);
