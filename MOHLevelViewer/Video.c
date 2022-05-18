@@ -56,6 +56,13 @@ SDL_DisplayMode *SDLGetCurrentDisplayModeV2(VideoSystem_t *VideoSystem)
     }
     return NULL;
 }
+
+/*
+ Given a target resolution from the settings, if we are going to init the windows as fullscreen
+ we need to pick an exact match in the SDL video mode list.
+ If PreferredModeIndex is equals to -1 then it will use the config values otherwise the one
+ from the selected video mode in the mode array.
+ */
 void VideoSystemSetFullScreenVideoMode(VideoSystem_t *VideoSystem,int PreferredModeIndex)
 {
     int i;

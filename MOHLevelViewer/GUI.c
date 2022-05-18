@@ -163,7 +163,7 @@ bool GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...)
     }
     return IsChecked;
 }
-void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
+void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera)
 {
     ImVec2 ZeroSize;
     SDL_version Version;
@@ -270,7 +270,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
                 }
                 if ( GUICheckBoxWithTooltip("Animated Lights",(bool *) &LevelEnableAnimatedLights->IValue,LevelEnableAnimatedLights->Description) ) {
                     if( !LevelEnableAnimatedLights->IValue ) {
-                        TSPUpdateAnimatedFaces(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->BSD,1);
+                        TSPUpdateAnimatedFaces(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->BSD,Camera,1);
                     }
                     ConfigSetNumber("LevelEnableAnimatedLights",LevelEnableAnimatedLights->IValue);
                 }
@@ -306,6 +306,10 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager)
             igText("Display Informations");
             igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);
             igText("Refresh Rate:%i",VidConfigRefreshRate->IValue);
+            igSeparator();
+            igText("Camera Informations");
+            igText("Position:%f;%f;%f",Camera->Position.x,Camera->Position.y,Camera->Position.z);
+            igText("Rotation:%f;%f;%f",Camera->Rotation.x,Camera->Rotation.y,Camera->Rotation.z);
         }
     }
     
@@ -638,7 +642,7 @@ void GUIRenderFileDialogs(GUI_t *GUI)
         GUIFileDialogRender(GUI,Iterator);
     }
 }
-void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem)
+void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem)
 {
     ImVec2 ButtonSize;
     ImVec2 ModalPosition;
@@ -676,7 +680,7 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem)
             igEndPopup();
         }
     }
-    GUIDrawDebugWindow(GUI,LevelManager);
+    GUIDrawDebugWindow(GUI,LevelManager,Camera);
     GUIDrawSettingsWindow(GUI,VideoSystem);
     GUIDrawLevelSelectWindow(GUI,LevelManager);
 //     igShowDemoWindow(NULL);

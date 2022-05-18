@@ -30,12 +30,7 @@ Color4f_t    c_Yellow = {  1.f,  1.f, 0,   1.f};
 Color4f_t    c_White    = {   1.f,  1.f, 1.f, 1.f};
 Color4f_t    c_Grey =  {   0.75, 0.75,0.75,1.f};
 
-
-Config_t *CameraSpeed;
-Config_t *CameraMouseSensitivity;
-
 VideoSystem_t VidConf;
-ViewParm_t Camera;
 ComTimeInfo_t *ComTime;
 LevelManager_t *LevelManager;
 GUI_t *GUI;
@@ -333,111 +328,6 @@ void Vec3Scale(Vec3_t InVec,float Amount,Vec3_t *OutVec)
 }
 
 
-void CamFixAngles(ViewParm_t *Camera)
-{
-    //If needed fix it.
-    if ( Camera->Angle.x > 90.0f ) {
-        Camera->Angle.x = 90.0f;
-    }
-
-    if ( Camera->Angle.x < -90.0f ) {
-        Camera->Angle.x = -90.0f;
-    }
-
-    if ( Camera->Angle.y > 180.0f ) {
-        Camera->Angle.y -= 360.0f;
-    }
-
-    if ( Camera->Angle.y < -180.0f ) {
-        Camera->Angle.y += 360.0f;
-    }
-
-}
-
-void CamInit(ViewParm_t *Camera,BSD_t *BSD)
-{
-    Vec3_t PlayerRotation;
-
-
-    if( !BSD ) {
-        Camera->Position = Vec3Build(0.f,0.f,0.f);
-        Camera->Angle = Vec3Build(0.f,0.f,0.f);
-    } else {
-        Camera->Position = BSDGetPlayerSpawn(BSD,&PlayerRotation);
-        Camera->Angle.x = (PlayerRotation.x / 4096.f) *  360.f;
-        Camera->Angle.y = (PlayerRotation.y / 4096.f) *  360.f;
-        Camera->Angle.z = (PlayerRotation.z / 4096.f) *  360.f;
-    }
-    Camera->OldPosition = Camera->Position;
-    Camera->Up = Vec3Build(0.0f,1.0f,0.0f);
-    Camera->Right = Vec3Build(1.0f,0.0f,0.0f);
-    Camera->Forward = Vec3Build(0.0f,0.0f,1.0f);
-
-    CamFixAngles(Camera);
-}
-
-void CamMouseEvent(ViewParm_t *Camera,int Dx,int Dy)
-{
-    Camera->Angle.x += ( ( Dy - (VidConfigHeight->IValue/2) ) / 10.f ) * CameraMouseSensitivity->FValue; // 0.001f;
-    Camera->Angle.y += ( ( Dx - (VidConfigWidth->IValue/2)) / 10.f ) * CameraMouseSensitivity->FValue; // 0.001f;
-    CamFixAngles(Camera);
-}
-
-void CamUpdate(ViewParm_t *Camera,int Orientation, float Sensitivity)
-{
-    Camera->Forward.x = sin(DEGTORAD(Camera->Angle.y));
-    Camera->Forward.z = -cos(DEGTORAD(Camera->Angle.y));
-    Camera->Forward.y = -sin(DEGTORAD(Camera->Angle.x));
-    
-    Camera->Right.x = -(float)(cos(DEGTORAD(Camera->Angle.y)));
-    Camera->Right.z = -(float)(sin(DEGTORAD(Camera->Angle.y)));
-    
-    switch ( Orientation ) {
-        case DIR_FORWARD:
-            Vec3Scale(Camera->Forward,Sensitivity,&Camera->Forward);
-            Vec3Add(Camera->Position,Camera->Forward,&Camera->Position);
-            break;
-        case DIR_BACKWARD:
-            Vec3Scale(Camera->Forward,Sensitivity,&Camera->Forward);
-            Vec3Subtract(Camera->Position,Camera->Forward,&Camera->Position);
-            break;
-        case DIR_UPWARD:
-            Camera->Position.y += Sensitivity;
-            break;
-        case DIR_DOWNWARD:
-            Camera->Position.y -= Sensitivity;
-            break;
-        case DIR_LEFTWARD:
-            Vec3Scale(Camera->Right,Sensitivity,&Camera->Right);
-            Vec3Add(Camera->Position,Camera->Right,&Camera->Position);
-            break;
-        case DIR_RIGHTWARD:
-            Vec3Scale(Camera->Right,Sensitivity,&Camera->Right);
-            Vec3Subtract(Camera->Position,Camera->Right,&Camera->Position);
-            break;
-         case LOOK_LEFT:
-             Camera->Angle.y -= Sensitivity;
-             if ( Camera->Angle.y < -360.f ) {
-                 Camera->Angle.y += 360.f;
-             }
-             break;
-         case LOOK_RIGHT:
-             Camera->Angle.y += Sensitivity;
-             if ( Camera->Angle.y > 360.f ) {
-                 Camera->Angle.y -= 360.f;
-             }
-             break;
-         case LOOK_DOWN:
-             Camera->Angle.x += Sensitivity;
-             break;
-         case LOOK_UP:
-             Camera->Angle.x -= Sensitivity;
-             break;
-        default:
-            break;
-    }
-}
-
 char *SysGetConfigPath()
 {
     return SDL_GetPrefPath(NULL,"MOHLevelViewer");
@@ -472,118 +362,6 @@ void DPrintf(char *Fmt, ...)
     va_end(arglist);
 }
 
-bool VidInitSDL()
-{
-    if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0 ) {
-        return false;
-    } else {
-        DPrintf("SDL Subsystem initialized.\n");
-        return true;
-    }
-    return false;
-}
-
-void VidGetAvailableVideoModes()
-{
-    int NumAvailableVideoModes;
-    SDL_DisplayMode Mode;
-    int i;
-    
-    //NOTE(Adriano):We are forcing this to display 0.
-    NumAvailableVideoModes = SDL_GetNumDisplayModes(0);
-    VidConf.VideoModeList = malloc(NumAvailableVideoModes * sizeof(VideoMode_t));
-    //Pickup the maximum supported resolution as the default one.
-    VidConf.CurrentVideoMode = 0;
-    for( i = 0; i < NumAvailableVideoModes; i++ ) {
-        SDL_GetDisplayMode(0,i,&Mode);
-        VidConf.VideoModeList[i].Width = Mode.w;
-        VidConf.VideoModeList[i].Height = Mode.h;
-        VidConf.VideoModeList[i].RefreshRate = Mode.refresh_rate;
-        VidConf.VideoModeList[i].BPP = SDL_BITSPERPIXEL(Mode.format);
-        asprintf(&VidConf.VideoModeList[i].Description, "%ix%i@%iHz",VidConf.VideoModeList[i].Width,VidConf.VideoModeList[i].Height,
-                 VidConf.VideoModeList[i].RefreshRate);
-    }
-    VidConf.NumVideoModes = NumAvailableVideoModes;
-}
-
-/*
- Given a target resolution from the settings, if we are going to init the windows as fullscreen
- we need to pick an exact match in the SDL video mode list.
- If PreferredModeIndex is equals to -1 then it will use the config values otherwise the one
- from the selected video mode in the mode array.
- */
-void VidSetFullScreenVideoMode(int PreferredModeIndex)
-{
-    int i;
-    int ClosestDistance;
-    int Delta;
-    int DistanceX;
-    int DistanceY;
-    int TargetWidth;
-    int TargetHeight;
-    int TargetRefreshRate;
-    int BestMode;
-    
-    ClosestDistance = 9999;
-    BestMode = -1;
-    
-    if( PreferredModeIndex != -1 ) {
-        TargetWidth = VidConf.VideoModeList[PreferredModeIndex].Width;
-        TargetHeight = VidConf.VideoModeList[PreferredModeIndex].Height;
-        TargetRefreshRate = VidConf.VideoModeList[PreferredModeIndex].RefreshRate;
-    } else {
-        TargetWidth = VidConfigWidth->IValue;
-        TargetHeight = VidConfigHeight->IValue;
-        TargetRefreshRate = VidConfigRefreshRate->IValue;
-    }
-//     VidConf.CurrentVideoMode = -1;
-    DPrintf("VidSetCurrentFullScreenVideoMode:Users wants to go with %ix%i Fullscreen\n",VidConfigWidth->IValue,VidConfigHeight->IValue);
-    for( i = 0; i < VidConf.NumVideoModes; i++ ) {
-        //Ideally we want to match the one in the config!
-        if( VidConf.VideoModeList[i].RefreshRate != TargetRefreshRate ) {
-            continue;
-        }
-        DistanceX = TargetWidth - VidConf.VideoModeList[i].Width;
-        DistanceY = TargetHeight - VidConf.VideoModeList[i].Height;
-
-        Delta = Square(DistanceX) + Square(DistanceY);
-        
-        if( Delta < ClosestDistance ) {
-            ClosestDistance = Delta;
-            BestMode = i;
-        }
-    }
-    if( BestMode == -1 ) {
-        //User did not set any preference...pick the highest one from the list.
-        BestMode = 0;
-    }
-    DPrintf("VidSetCurrentFullScreenVideoMode:Users obtained %ix%i RefreshRate:%i\n",VidConf.VideoModeList[BestMode].Width,
-            VidConf.VideoModeList[BestMode].Height,VidConf.VideoModeList[BestMode].RefreshRate);
-    ConfigSetNumber("VideoWidth",VidConf.VideoModeList[BestMode].Width);
-    ConfigSetNumber("VideoHeight",VidConf.VideoModeList[BestMode].Height);
-    ConfigSetNumber("VideoRefreshRate",VidConf.VideoModeList[BestMode].RefreshRate);
-    VidConf.CurrentVideoMode = BestMode;
-
-}
-SDL_DisplayMode *SDLGetCurrentDisplayMode()
-{
-    static SDL_DisplayMode Result;
-    VideoMode_t *CurrentMode;
-    int NumModes;
-    int i;
-    
-    NumModes = SDL_GetNumDisplayModes(0);
-    CurrentMode = &VidConf.VideoModeList[VidConf.CurrentVideoMode];
-    for( i = 0; i < NumModes; i++ ) {
-        SDL_GetDisplayMode(0,i,&Result);
-        if( Result.w == CurrentMode->Width && Result.h == CurrentMode->Height &&
-            SDL_BITSPERPIXEL(Result.format) == CurrentMode->BPP && Result.refresh_rate == CurrentMode->RefreshRate ) {
-                return &Result;
-            }
-    }
-    return NULL;
-}
-
 void SysHideCursor()
 {
     SDL_ShowCursor(false);
@@ -599,14 +377,6 @@ void SysCenterCursor()
     SDL_WarpMouseInWindow(VideoSurface,VidConfigWidth->IValue/2,VidConfigHeight->IValue/2);
 }
 
-// void SysSwapBuffers()
-// {
-// //     if( !VidConf.Initialized ){
-// //         return;
-// //     }
-//     SDL_GL_SwapWindow(VideoSurface);
-// }
-
 int SysGetCurrentVideoWidth()
 {
     assert(VidConf.CurrentVideoMode != -1);
@@ -618,59 +388,11 @@ int SysGetCurrentVideoHeight()
     return VidConf.VideoModeList[VidConf.CurrentVideoMode].Height;
 }
 
-// void InitSDL(const char *Title)
-// {
-//     GLenum GlewError;
-//     if ( !VidConf.Initialized ) {
-//         DPrintf("Vidconf isn't initialized...\n");
-//     }
-// 
-//     VidConf.Title = Title == NULL ? "Unnamed" : Title;
-//     DPrintf("Title:%s\n",Title);
-// //     VidConf.Width = Width;
-// //     VidConf.Height = Height;
-// //     VidConf.FullScreen = 0;
-//     VidConf.Resizable = false;
-// 
-//     if ( !VidInitSDL() ) {
-//         DPrintf("Failed on initializing SDL.\n");
-//     }
-//     
-//     VidGetAvailableVideoModes();
-//     
-//     VidConf.Width = VidConfigWidth->IValue;
-//     VidConf.Height = VidConfigHeight->IValue;
-// 
-//     if ( !VidOpenWindow() ) {
-//         DPrintf("Failed on opening a new window.\n");
-//     }
-//     //Needed in order to load the core 3.3 profile.
-//     glewExperimental = GL_TRUE;
-//     GlewError = glewInit();
-//     if (GlewError != GLEW_OK) {
-//         DPrintf( "Failed to init GLEW\n");
-//         SDL_DestroyWindow(VideoSurface);
-//         SDL_Quit();
-//         return;
-//     }
-// 
-//     
-//     VidConf.Driver = StringCopy("SDL");
-//     SysHideCursor();
-//     return;
-// }
 
-void SysVidInit()
-{
-//     InitSDL("MOH Level Viewer");
-}
-
-void SysCheckKeyEvents()
+void SysCheckKeyEvents(Camera_t *Camera)
 {
     SDL_Event Event;
-    float CamSpeed;
-    
-    CamSpeed = CameraSpeed->FValue * ComTime->Delta * 128.f;
+
     while( SDL_PollEvent(&Event) ) {
         
         if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
@@ -689,7 +411,7 @@ void SysCheckKeyEvents()
             GUIToggleLevelSelectWindow(GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
-            LevelManagerToggleFileDialog(LevelManager,GUI);
+            LevelManagerToggleFileDialog(LevelManager,GUI,Camera);
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit();
@@ -698,7 +420,7 @@ void SysCheckKeyEvents()
         if( !GUIProcessEvent(GUI,&Event) ) {
             switch( Event.type ) {
                 case SDL_MOUSEMOTION:
-                    CamMouseEvent(&Camera,Event.motion.x,Event.motion.y);
+                    CameraOnMouseEvent(Camera,Event.motion.x,Event.motion.y);
                     SysCenterCursor();
                     break;
                 case SDL_KEYDOWN:
@@ -706,22 +428,22 @@ void SysCheckKeyEvents()
                         Quit();
                     }
                     if( Event.key.keysym.sym == SDLK_w ) {
-                        CamUpdate(&Camera, DIR_FORWARD, CamSpeed);
+                        CameraUpdate(Camera, DIR_FORWARD, ComTime->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_s ) {
-                        CamUpdate(&Camera, DIR_BACKWARD, CamSpeed);
+                        CameraUpdate(Camera, DIR_BACKWARD, ComTime->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_a ) {
-                        CamUpdate(&Camera, DIR_LEFTWARD, CamSpeed);
+                        CameraUpdate(Camera, DIR_LEFTWARD, ComTime->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_d ) {
-                        CamUpdate(&Camera, DIR_RIGHTWARD, CamSpeed);
+                        CameraUpdate(Camera, DIR_RIGHTWARD, ComTime->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_SPACE ) {
-                        CamUpdate(&Camera, DIR_UPWARD, CamSpeed);
+                        CameraUpdate(Camera, DIR_UPWARD, ComTime->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_z ) {
-                        CamUpdate(&Camera, DIR_DOWNWARD, CamSpeed);
+                        CameraUpdate(Camera, DIR_DOWNWARD, ComTime->Delta);
                     }
                     break;
                 default:
@@ -732,46 +454,7 @@ void SysCheckKeyEvents()
     
 }
 
-bool ComUpdateDelta()
-{
-    long Now;
-    int TimeSlice;
-    
-    Now = SysMilliseconds();
-    TimeSlice = /*floor*/((1/MAX_FPS) * 1000);
-
-    ComTime->UpdateLength = Now - ComTime->LastLoopTime;
-    ComTime->OptimalTime = (float) (1000 / MAX_FPS);
-    ComTime->UpdateLength = Now - ComTime->LastLoopTime;
-    ComTime->Delta = ComTime->UpdateLength / ( ComTime->OptimalTime);
-
-    if( ComTime->UpdateLength < TimeSlice ) {
-        return false;
-    }
-
-    // update the frame counter
-    ComTime->LastFPSTime += ComTime->UpdateLength;
-    ComTime->FPS++;
-    ComTime->LastLoopTime = Now;
-    // update our FPS counter if a second has passed since
-    // we last recorded
-    if (ComTime->LastFPSTime >= 1000 ) {
-        sprintf(ComTime->FPSString,"FPS:%i\nMs: %.2f ms\nLast FPS Time:%f\nDelta:%f",
-                ComTime->FPS,
-                1000.f/(float)ComTime->FPS,
-                ComTime->LastFPSTime,ComTime->Delta);
-        sprintf(ComTime->FPSSimpleString,"FPS %i Ms %.2f ms",
-                ComTime->FPS,
-                1000.f/(float)ComTime->FPS);
-        DPrintf("%s\n",ComTime->FPSString);
-        DPrintf("Current Camera Position:%f;%f;%f\n",Camera.Position.x,Camera.Position.y,Camera.Position.z);
-        ComTime->LastFPSTime = 0;
-        ComTime->FPS = 0;
-    }
-    return true;
-}
-
-void ComUpdateDeltaV2()
+void ComUpdateDelta(Camera_t *Camera)
 {
     long Now;
     
@@ -797,7 +480,7 @@ void ComUpdateDeltaV2()
                 ComTime->FPS,
                 1000.f/(float)ComTime->FPS);
         DPrintf("%s\n",ComTime->FPSString);
-        DPrintf("Current Camera Position:%f;%f;%f\n",Camera.Position.x,Camera.Position.y,Camera.Position.z);
+        DPrintf("Current Camera Position:%f;%f;%f\n",Camera->Position.x,Camera->Position.y,Camera->Position.z);
         ComTime->LastFPSTime = 0;
         ComTime->FPS = 0;
     }
@@ -920,13 +603,13 @@ void InitGLView()
     GLSetDefaultState();
 }
 
-void GLFrame(VideoSystem_t *VideoSystem)
+void GLFrame(Camera_t *Camera,VideoSystem_t *VideoSystem)
 {
     glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    LevelManagerDraw(LevelManager);
+    LevelManagerDraw(LevelManager,Camera);
     glDisable (GL_DEPTH_TEST);
-    GUIDraw(GUI,LevelManager,VideoSystem);
+    GUIDraw(GUI,LevelManager,Camera,VideoSystem);
     glEnable(GL_DEPTH_TEST);
 }
 
@@ -952,6 +635,7 @@ void Quit()
 int main(int argc,char **argv)
 {
     VideoSystem_t *VideoSystem;
+    Camera_t *Camera;
     srand(time(NULL));
 //     if( argc != 4 ) {
 //         printf("%s <MOH Directory> <Mission Number> <Level Number> will load level files from that mission.\n",argv[0]);
@@ -963,10 +647,10 @@ int main(int argc,char **argv)
     VidConfigHeight = ConfigGet("VideoHeight");
     VidConfigRefreshRate = ConfigGet("VideoRefreshRate");
     VidConfigFullScreen = ConfigGet("VideoFullScreen");
-    CameraSpeed = ConfigGet("CameraSpeed");
-    CameraMouseSensitivity = ConfigGet("CameraMouseSensitivity");
+
 #if _ENABLEVIDEOOUT
     VideoSystem = VideoSystemInit();
+    Camera = CameraInit();
     
     //Temporarily route vidconf to the new system.
     VidConf = *VideoSystem;
@@ -983,16 +667,16 @@ int main(int argc,char **argv)
     }
 
     GUI = GUIInit(VideoSystem);
-    LevelManagerInit(GUI);
+    LevelManagerInit(GUI,Camera);
 
     while( 1 ) {
-        ComUpdateDeltaV2();
+        ComUpdateDelta(Camera);
 //         DPrintf("Delta TIme:%f\n",ComTime->Delta);
-        SysCheckKeyEvents();
+        SysCheckKeyEvents(Camera);
 //         do {
 //         } while( !ComUpdateDelta() );
-        LevelManagerUpdate(LevelManager);
-        GLFrame(VideoSystem);
+        LevelManagerUpdate(LevelManager,Camera);
+        GLFrame(Camera,VideoSystem);
         VideoSystemSwapBuffers(VideoSystem);
 //         glFlush();
 //         SysSwapBuffers();

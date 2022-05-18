@@ -22,6 +22,7 @@
 #include "Common.h"
 #include "Config.h"
 #include "Video.h"
+#include "Camera.h"
 #include "BSD.h"
 #include "Level.h"
 #include "LevelManager.h"
@@ -36,31 +37,6 @@ typedef enum
     MOH_GAME_UNDERGROUND
 } MOHGame_t;
 
-
-
-// typedef struct VidDriver_s {
-// const char *Title;
-//     int    Width;
-//     int    Height;
-//     bool   FullScreen;
-//     void  *GLLibHandle;
-//     //..Use this one.
-//     char   *Driver;
-//     bool   Initialized;
-//     bool   Resizable;
-//     bool	UseCompatibilityRenderer; //If true use OpenGL 3 compatibility profile for older systems.
-//     float PMatrix[16]; //TODO:Remove this and put it into the right context...
-//     mat4    PMatrixM4;
-//     mat4    ModelMatrix;
-//     mat4    ViewMatrix;
-//     mat4    ModelViewMatrix;
-//     mat4    MVPMatrix;
-//     float   DPIScale;
-//     VideoMode_t *VideoModeList;
-//     int     NumVideoModes;
-//     int     CurrentVideoMode;
-// } VidDriver_t;
-
 typedef struct ComTimeInfo_s {
     int	  FPS;
     float Delta;
@@ -74,41 +50,10 @@ typedef struct ComTimeInfo_s {
     char  FPSSimpleString[256];
 } ComTimeInfo_t;
 
-
-
-typedef struct ViewParm_s {
-    Vec3_t Position;
-    Vec3_t Angle;
-    Vec3_t  OldPosition;
-    //Movements...
-    Vec3_t	Up;
-    Vec3_t	Right;
-    Vec3_t	Forward;
-    vec4    FrustumPlaneList[6];
-    vec4    FrustumCornerList[8];
-} ViewParm_t;
-
-typedef enum {
-    LOOK_LEFT,
-    LOOK_RIGHT,
-    LOOK_UP,
-    LOOK_DOWN,
-    DIR_FORWARD,
-    DIR_BACKWARD,
-    DIR_UPWARD,
-    DIR_DOWNWARD,
-    DIR_LEFTWARD,
-    DIR_RIGHTWARD
-} Direction_t;
-
 extern VideoSystem_t VidConf;
-extern ViewParm_t Camera;
 extern ComTimeInfo_t *ComTime;
 extern LevelManager_t *LevelManager;
 extern GUI_t *GUI;
-
-extern Config_t *CameraSpeed;
-extern Config_t *CameraMouseSensitivity;
 
 void    DumpLevel(Level_t* Level);
 void    DPrintf(char *Fmt, ...) Attribute((format(printf,1,2)));
@@ -124,12 +69,12 @@ char   *SwitchExt(const char *In, const char *Ext);
 char   *GetBaseName(char *Path);
 bool    GLInitCompatibilityProfile(const char *Driver);
 Vec3_t  Vec3Build(float x,float y,float z);
+void    Vec3Add(Vec3_t A,Vec3_t B,Vec3_t *VOut);
+void    Vec3Subtract(Vec3_t A,Vec3_t B,Vec3_t *VOut);
 void    Vec3RotateXAxis(float Theta,Vec3_t *Vector);
 void    Vec3Scale(Vec3_t InVec,float Amount,Vec3_t *OutVec);
 void    GLSet3D();
-void    CamInit(ViewParm_t *Camera,BSD_t *BSD);
-void    CamUpdate(ViewParm_t *Camera,int Orientation, float Sensibility);
-void    CamUpdateVectors(ViewParm_t *Camera);
+
 float   Rand01();
 int     RandRangeI(int Min,int Max);
 Byte    HighNibble(Byte In);
@@ -137,10 +82,8 @@ Byte    LowNibble(Byte In);
 int     SignExtend(int Temp);
 int     SysMilliseconds();
 char   *SysGetConfigPath();
-void    SysSwapBuffers();
 void    SysShowCursor();
 void    SysHideCursor();
-void    SysSetCurrentVideoSettings(int PreferredModeIndex);
 void    Quit();
 
 #endif //__MOHLEVELVIEWER_H_

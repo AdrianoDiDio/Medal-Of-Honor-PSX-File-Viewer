@@ -259,11 +259,12 @@ typedef struct TSP_s {
 } TSP_t;
 
 typedef struct Level_s Level_t;
+typedef struct Camera_s Camera_t;
 
 TSP_t  *TSPLoad(char *FName,int TSPNumber);
-void    TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM);
-void    TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,int Reset);
-void    TSPUpdateDynamicFaces(TSP_t *TSPList,int DynamicDataIndex);
+void    TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera);
+void    TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,Camera_t *Camera,int Reset);
+void    TSPUpdateDynamicFaces(TSP_t *TSPList,Camera_t *Camera,int DynamicDataIndex);
 void    TSPCreateVAO(TSP_t *TSP);
 void    TSPCreateNodeBBoxVAO(TSP_t *TSPList);
 void    TSPCreateCollisionVAO(TSP_t *TSPList);

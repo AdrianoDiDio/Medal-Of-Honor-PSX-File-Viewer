@@ -47,8 +47,9 @@ typedef struct Level_s {
 } Level_t;
 
 bool    LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine);
-void    LevelDraw(Level_t *Level,mat4 ProjectionMatrix);
-void    LevelUpdate(Level_t *Level);
+void    LevelDraw(Level_t *Level,Camera_t *Camera,mat4 ProjectionMatrix);
+Vec3_t  LevelGetPlayerSpawn(Level_t *Level,int SpawnIndex,Vec3_t *Rotation);
+void    LevelUpdate(Level_t *Level,Camera_t *Camera);
 int     LevelIsLoaded(Level_t *Level);
 void    LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int GameEngine,int SoundValue);
 void    LevelUnload(Level_t *Level);

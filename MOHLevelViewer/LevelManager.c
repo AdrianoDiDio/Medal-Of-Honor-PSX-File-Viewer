@@ -605,8 +605,11 @@ void LevelManagerOnExportDirCancelled(GUIFileDialog_t *FileDialog,GUI_t *GUI)
 
 void LevelManagerOnDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Path,char *File,void *UserData)
 {
+    Camera_t *Camera;
     int LoadStatus;
-    LoadStatus = LevelManagerInitWithPath(LevelManager,GUI,Path);
+    
+    Camera = (Camera_t *) UserData;
+    LoadStatus = LevelManagerInitWithPath(LevelManager,GUI,Camera,Path);
     if( !LoadStatus ) {
         GUISetErrorMessage(GUI,"Selected path doesn't seems to contain any game file...\nPlease select a folder containing MOH or MOH:Undergound.");
     } else {
@@ -645,7 +648,7 @@ void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,int OutputFormat
     GUIFileDialogSetTitle(LevelManager->ExportFileDialog,"Export");
     GUIFileDialogOpenWithUserData(GUI,LevelManager->ExportFileDialog,Exporter);
 }
-void LevelManagerUpdate(LevelManager_t *LevelManager)
+void LevelManagerUpdate(LevelManager_t *LevelManager,Camera_t *Camera)
 {    
     //LevelManager has not received a valid path yet.
     if( !LevelManager->IsPathSet ) {
@@ -656,9 +659,9 @@ void LevelManagerUpdate(LevelManager_t *LevelManager)
         return;
     }
         
-    LevelUpdate(LevelManager->CurrentLevel);
+    LevelUpdate(LevelManager->CurrentLevel,Camera);
 }
-void LevelManagerDraw(LevelManager_t *LevelManager)
+void LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera)
 {
     vec3 temp;
     mat4 ProjectionMatrix;
@@ -674,11 +677,13 @@ void LevelManagerDraw(LevelManager_t *LevelManager)
     
     glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,VidConf.PMatrixM4);     
     
-    LevelDraw(LevelManager->CurrentLevel,ProjectionMatrix);
+    LevelDraw(LevelManager->CurrentLevel,Camera,ProjectionMatrix);
 }
 
-int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path)
+int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,Camera_t *Camera,char *Path)
 {
+    Vec3_t Position;
+    Vec3_t Rotation;
     int GameEngine;
     if( !LevelManager ) {
         DPrintf("LevelManagerInitWithPath:Called without a valid struct\n");
@@ -711,6 +716,9 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path)
     if( LevelManager->IsPathSet != 0 ) {
         LevelManager->GameEngine = GameEngine;
         sprintf(LevelManager->EngineName,"%s",GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
+        Position = LevelGetPlayerSpawn(LevelManager->CurrentLevel,0,&Rotation);
+        CameraSetPosition(Camera,Position);
+        CameraSetRotation(Camera,Rotation);
     }
     GUIProgressBarEnd(GUI);
     return LevelManager->IsPathSet;
@@ -735,19 +743,18 @@ void LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNu
     free(Buffer);
 }
 
-void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI)
+void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,Camera_t *Camera)
 {
     if( GUIFileDialogIsOpen(LevelManager->FileDialog) ) {
         if( LevelManager->IsPathSet ) {
             GUIFileDialogClose(GUI,LevelManager->FileDialog);
         }
     } else {
-        DPrintf("Opening dialog!!!\n");
-        GUIFileDialogOpen(GUI,LevelManager->FileDialog);
+        GUIFileDialogOpenWithUserData(GUI,LevelManager->FileDialog,Camera);
     }
 
 }
-void LevelManagerInit(GUI_t *GUI)
+void LevelManagerInit(GUI_t *GUI,Camera_t *Camera)
 {
     int OpenDialog;
     LevelManager = malloc(sizeof(LevelManager_t));
@@ -773,7 +780,7 @@ void LevelManagerInit(GUI_t *GUI)
     LevelManagerBasePath = ConfigGet("GameBasePath");
     OpenDialog = 0;
     if( LevelManagerBasePath->Value[0] ) {
-        if( !LevelManagerInitWithPath(LevelManager,GUI,LevelManagerBasePath->Value) ) {
+        if( !LevelManagerInitWithPath(LevelManager,GUI,Camera,LevelManagerBasePath->Value) ) {
             ConfigSet("GameBasePath","");
             OpenDialog = 1;
         }
@@ -781,7 +788,7 @@ void LevelManagerInit(GUI_t *GUI)
         OpenDialog = 1;
     }
     if( OpenDialog ) {
-        LevelManagerToggleFileDialog(LevelManager,GUI);
+        LevelManagerToggleFileDialog(LevelManager,GUI,Camera);
 //         GUIDirSelectDialogOpen(GUI,LevelManagerOnDirSelected,NULL);
     }
 }

@@ -433,7 +433,7 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile)
 
 }
 
-bool TSPBoxInFrustum(ViewParm_t Camera,TSPBBox_t BBox)
+bool TSPBoxInFrustum(Camera_t *Camera,TSPBBox_t BBox)
 {
     vec4 BoxCornerList[8];
     int BoxOutsideCount;
@@ -452,7 +452,7 @@ bool TSPBoxInFrustum(ViewParm_t Camera,TSPBBox_t BBox)
     for( i = 0; i < 6; i++ ) {
         BoxOutsideCount = 0;
         for( j = 0; j < 8; j++ ) {
-            if( glm_vec4_dot(Camera.FrustumPlaneList[i],BoxCornerList[j]) < 0.f ) {
+            if( glm_vec4_dot(Camera->FrustumPlaneList[i],BoxCornerList[j]) < 0.f ) {
                 BoxOutsideCount++;
             }
         }
@@ -992,7 +992,7 @@ bool IsTSPInRenderArray(Level_t *Level,int TSPNumber)
     return false;
 }
 
-void TSPDrawNode(TSPNode_t *Node,VRAM_t *VRAM)
+void TSPDrawNode(TSPNode_t *Node,VRAM_t *VRAM,Camera_t *Camera)
 {
     Shader_t *Shader;
     int MVPMatrixId;
@@ -1046,9 +1046,9 @@ void TSPDrawNode(TSPNode_t *Node,VRAM_t *VRAM)
             glUseProgram(0);
         }
     } else {
-        TSPDrawNode(Node->Child[1],VRAM);
-        TSPDrawNode(Node->Next,VRAM);
-        TSPDrawNode(Node->Child[0],VRAM);
+        TSPDrawNode(Node->Child[1],VRAM,Camera);
+        TSPDrawNode(Node->Next,VRAM,Camera);
+        TSPDrawNode(Node->Child[0],VRAM,Camera);
 
     }
 }
@@ -1153,7 +1153,7 @@ void TSPUpdateDynamicRenderingFaces(TSP_t *TSP,TSPRenderingFace_t *Face,VAO_t *V
     free(VertexBuffer);
 }
 
-void TSPUpdateDynamicFaceNodes(TSP_t *TSP,TSPNode_t *Node,TSPDynamicData_t *DynamicData)
+void TSPUpdateDynamicFaceNodes(TSP_t *TSP,TSPNode_t *Node,TSPDynamicData_t *DynamicData,Camera_t *Camera)
 {
     TSPRenderingFace_t *Iterator;
 
@@ -1162,7 +1162,7 @@ void TSPUpdateDynamicFaceNodes(TSP_t *TSP,TSPNode_t *Node,TSPDynamicData_t *Dyna
     }
     
     if( !TSPBoxInFrustum(Camera,Node->BBox) ) {
-//         return;
+        return;
     }
     
     if( Node->NumFaces != 0 ) {
@@ -1171,9 +1171,9 @@ void TSPUpdateDynamicFaceNodes(TSP_t *TSP,TSPNode_t *Node,TSPDynamicData_t *Dyna
         }
 
     } else {
-        TSPUpdateDynamicFaceNodes(TSP,Node->Child[1],DynamicData);
-        TSPUpdateDynamicFaceNodes(TSP,Node->Next,DynamicData);
-        TSPUpdateDynamicFaceNodes(TSP,Node->Child[0],DynamicData);
+        TSPUpdateDynamicFaceNodes(TSP,Node->Child[1],DynamicData,Camera);
+        TSPUpdateDynamicFaceNodes(TSP,Node->Next,DynamicData,Camera);
+        TSPUpdateDynamicFaceNodes(TSP,Node->Child[0],DynamicData,Camera);
     }
 }
 void TSPUpdateDynamicTransparentFaces(TSP_t *TSP,TSPDynamicData_t *DynamicData)
@@ -1185,7 +1185,7 @@ void TSPUpdateDynamicTransparentFaces(TSP_t *TSP,TSPDynamicData_t *DynamicData)
     }
 }
 
-void TSPUpdateDynamicFaces(TSP_t *TSPList,int DynamicDataIndex)
+void TSPUpdateDynamicFaces(TSP_t *TSPList,Camera_t *Camera,int DynamicDataIndex)
 {
     TSP_t *Iterator;
     int i;
@@ -1238,7 +1238,7 @@ void TSPUpdateDynamicFaces(TSP_t *TSPList,int DynamicDataIndex)
                         Iterator->DynamicData[i].Header.EffectType,Iterator->DynamicData[i].CurrentStride,
                         Iterator->DynamicData[i].Header.FaceDataSizeMultiplier
                 );
-                TSPUpdateDynamicFaceNodes(Iterator,&Iterator->Node[0],&Iterator->DynamicData[i]);
+                TSPUpdateDynamicFaceNodes(Iterator,&Iterator->Node[0],&Iterator->DynamicData[i],Camera);
                 TSPUpdateDynamicTransparentFaces(Iterator,&Iterator->DynamicData[i]);
             }
         }
@@ -1289,7 +1289,7 @@ void TSPUpdateAnimatedRenderingFace(TSPRenderingFace_t *Face,VAO_t *VAO,BSD_t *B
     }
 }
 
-void TSPUpdateAnimatedFaceNodes(TSPNode_t *Node,BSD_t *BSD,int Reset)
+void TSPUpdateAnimatedFaceNodes(TSPNode_t *Node,BSD_t *BSD,Camera_t *Camera,int Reset)
 {
     TSPRenderingFace_t *Iterator;
 
@@ -1307,9 +1307,9 @@ void TSPUpdateAnimatedFaceNodes(TSPNode_t *Node,BSD_t *BSD,int Reset)
         }
 
     } else {
-        TSPUpdateAnimatedFaceNodes(Node->Child[1],BSD,Reset);
-        TSPUpdateAnimatedFaceNodes(Node->Next,BSD,Reset);
-        TSPUpdateAnimatedFaceNodes(Node->Child[0],BSD,Reset);
+        TSPUpdateAnimatedFaceNodes(Node->Child[1],BSD,Camera,Reset);
+        TSPUpdateAnimatedFaceNodes(Node->Next,BSD,Camera,Reset);
+        TSPUpdateAnimatedFaceNodes(Node->Child[0],BSD,Camera,Reset);
     }
 }
 void TSPUpdateTransparentAnimatedFaces(TSP_t *TSP,BSD_t *BSD,int Reset)
@@ -1320,11 +1320,11 @@ void TSPUpdateTransparentAnimatedFaces(TSP_t *TSP,BSD_t *BSD,int Reset)
         TSPUpdateAnimatedRenderingFace(Iterator,TSP->TransparentVAO,BSD,Reset);
     }
 }
-void TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,int Reset)
+void TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,Camera_t *Camera,int Reset)
 {
     TSP_t *Iterator;
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
-        TSPUpdateAnimatedFaceNodes(&Iterator->Node[0],BSD,Reset);
+        TSPUpdateAnimatedFaceNodes(&Iterator->Node[0],BSD,Camera,Reset);
         TSPUpdateTransparentAnimatedFaces(Iterator,BSD,Reset);
     }
 }
@@ -1395,7 +1395,7 @@ void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM)
     glBlendColor(1.f, 1.f, 1.f, 1.f);
     glUseProgram(0);
 }
-void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM)
+void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera)
 {
     TSP_t *Iterator;
     
@@ -1407,7 +1407,7 @@ void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM)
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);  
-        TSPDrawNode(&Iterator->Node[0],VRAM);
+        TSPDrawNode(&Iterator->Node[0],VRAM,Camera);
         glDisable(GL_CULL_FACE);
     }
 

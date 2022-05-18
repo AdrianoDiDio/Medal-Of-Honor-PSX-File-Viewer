@@ -689,6 +689,7 @@ Each node has the following structure:
 | [Vector3](#Vector3) | 6 bytes | Collision Volume Half Extent |
 | char | 8 bytes | Unknown |
 | int  | 4 bytes | Message Data ID List |
+| short  | 2 bytes | When ID is equal to 2289546822 (Player Spawn) then this value is the Spawn Index (Player 1/2) |
 
 
 **Note that Rotation is stored in fixed math format where 4096 is 360 degrees**

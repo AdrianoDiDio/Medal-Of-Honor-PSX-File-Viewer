@@ -135,6 +135,7 @@ typedef struct BSDNode_s {
     short CollisionInfo2; // CylinderTop or BoxDepth
 //     char Pad2[8];
     int MessageData; //Offset to a list of Message Ids
+    short SpawnIndex;
     Byte DynamicBlockIndex;
     //TODO:At 0x5c in every pickup object is stored the amount of ammo...
     int Visited;
@@ -375,19 +376,19 @@ typedef struct BSD_s {
     BSDTSPStreamNode_t *TSPStreamNodeList;    
 } BSD_t;
 
-struct Level_s;
 typedef struct Level_s Level_t;
+typedef struct Camera_s Camera_t;
 
 FILE    *BSDEarlyInit(BSD_t **BSD,char *MissionPath,int MissionNumber,int LevelNumber);
 int     BSDLoad(BSD_t *BSD,int GameEngine,int Multiplayer,FILE *BSDFile);
 char   *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId);
 char   *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
-Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD,Vec3_t *Rotation);
+Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,Vec3_t *Rotation);
 void    BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM);
-void    BSDDraw(BSD_t *BSD,VRAM_t *VRAM);
+void    BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera);
 void    BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM);
 void    BSDClearNodesFlag(BSD_t *BSD);
-int     BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD);
+int     BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD,Camera_t *Camera);
 unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId);
 unsigned int BSDMPNodeIdToRenderObjectId(unsigned int NodeId);
 int     BSDGetRenderObjectIndexById(BSD_t *BSD,int Id);

@@ -1149,9 +1149,11 @@ void BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM)
 
 
 
-Vec3_t BSDGetPlayerSpawn(BSD_t *BSD,Vec3_t *Rotation)
+Vec3_t BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,Vec3_t *Rotation)
 {
     Vec3_t PlayerSpawn;
+    Vec3_t LocalRotation;
+
     int i;
     
     PlayerSpawn = Vec3Build(0,0,0);
@@ -1165,13 +1167,19 @@ Vec3_t BSDGetPlayerSpawn(BSD_t *BSD,Vec3_t *Rotation)
         if( BSD->NodeData.Node[i].Id != BSD_PLAYER_SPAWN ) {
             continue;
         }
+        if( BSD->NodeData.Node[i].SpawnIndex != SpawnIndex ) {
+            continue;
+        }
         PlayerSpawn = Vec3Build(BSD->NodeData.Node[i].Position.x,BSD->NodeData.Node[i].Position.y,BSD->NodeData.Node[i].Position.z);
+        Vec3RotateXAxis(DEGTORAD(180.f),&PlayerSpawn);
         if( Rotation ) {
-            *Rotation = Vec3Build(BSD->NodeData.Node[i].Rotation.x,BSD->NodeData.Node[i].Rotation.y,BSD->NodeData.Node[i].Rotation.z);
+            LocalRotation = Vec3Build(BSD->NodeData.Node[i].Rotation.x,BSD->NodeData.Node[i].Rotation.y,BSD->NodeData.Node[i].Rotation.z);
+            Rotation->x = (LocalRotation.x / 4096.f) *  360.f;
+            Rotation->y = (LocalRotation.y / 4096.f) *  360.f;
+            Rotation->z = (LocalRotation.z / 4096.f) *  360.f;
         }
         break;
     }
-    Vec3RotateXAxis(DEGTORAD(180.f),&PlayerSpawn);
     return PlayerSpawn;
 }
 int BSDGetRenderObjectIndexById(BSD_t *BSD,int Id)
@@ -1620,7 +1628,7 @@ void BSDClearNodesFlag(BSD_t *BSD)
     }
 }
 
-int BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD)
+int BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD,Camera_t *Camera)
 {
     int i;
     for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
@@ -1631,7 +1639,7 @@ int BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD)
             continue;
         }
         
-        if( BSDPointInNode(Camera.Position,&BSD->NodeData.Node[i]) ) {
+        if( BSDPointInNode(Camera->Position,&BSD->NodeData.Node[i]) ) {
             if( BSD->NodeData.Node[i].Type == 5 /*BSD->NodeData.Node[i].Type == 3 || BSD->NodeData.Node[i].Type == 5 ||
                 BSD->NodeData.Node[i].Type == 6*/ ) {
                 BSD->NodeData.Node[i].Visited = 1;
@@ -1644,7 +1652,7 @@ int BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD)
 //TODO:Spawn the RenderObject when loading node data!
 //     Some nodes don't have a corresponding RenderObject like the PlayerSpawn.
 //     BSDSpawnEntity(int UBlockId,Vec3_t NodePos) => Store into a list and transform to vao.
-void BSDDraw(BSD_t *BSD,VRAM_t *VRAM)
+void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera)
 {
     Shader_t *Shader;
     BSDRenderObjectDrawable_t *RenderObjectIterator;
@@ -1661,7 +1669,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM)
 //             if( Level->BSD->NodeData.Node[i].CollisionVolumeType != 2 ) {
 //                 continue;
 //             }
-            if( BSDPointInNode(Camera.Position,&BSD->NodeData.Node[i]) ) {
+            if( BSDPointInNode(Camera->Position,&BSD->NodeData.Node[i]) ) {
                 DPrintf("Camera is inside node %i => %s\n",i,BSDNodeGetEnumStringFromNodeId(BSD->NodeData.Node[i].Id));
                 DPrintf("Node CollisionVolumeType:%s\n",BSDGetCollisionVolumeStringFromType(BSD->NodeData.Node[i].CollisionVolumeType));
                 if( BSD->NodeData.Node[i].Type == 5 ) {
@@ -1714,19 +1722,19 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM)
             temp[0] = 1;
             temp[1] = 0;
             temp[2] = 0;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
+            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.x), temp);
             temp[0] = 0;
             temp[1] = 1;
             temp[2] = 0;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
+            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.y), temp);
             temp[0] = 0;
             temp[1] = 0;
             temp[2] = 1;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
+            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.z), temp);
             
-            temp[0] = -(Camera.Position.x - RenderObjectIterator->Position.x);
-            temp[1] = -(Camera.Position.y + RenderObjectIterator->Position.y);
-            temp[2] = -(Camera.Position.z + RenderObjectIterator->Position.z);
+            temp[0] = -(Camera->Position.x - RenderObjectIterator->Position.x);
+            temp[1] = -(Camera->Position.y + RenderObjectIterator->Position.y);
+            temp[2] = -(Camera->Position.z + RenderObjectIterator->Position.z);
 
             glm_translate(VidConf.ModelViewMatrix,temp);
             temp[0] = 0;
@@ -1771,7 +1779,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM)
         glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
         Vec3_t PSpawn;
     
-        PSpawn = BSDGetPlayerSpawn(BSD,NULL);
+        PSpawn = BSDGetPlayerSpawn(BSD,0,NULL);
     
         for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
             vec3 temp;
@@ -1779,19 +1787,19 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM)
             temp[0] = 1;
             temp[1] = 0;
             temp[2] = 0;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.x), temp);
+            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.x), temp);
             temp[0] = 0;
             temp[1] = 1;
             temp[2] = 0;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.y), temp);
+            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.y), temp);
             temp[0] = 0;
             temp[1] = 0;
             temp[2] = 1;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera.Angle.z), temp);
+            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.z), temp);
             
-            temp[0] = -(Camera.Position.x - (PSpawn.x - (i * 200.f)));
-            temp[1] = -(Camera.Position.y + PSpawn.y);
-            temp[2] = -(Camera.Position.z - PSpawn.z);
+            temp[0] = -(Camera->Position.x - (PSpawn.x - (i * 200.f)));
+            temp[1] = -(Camera->Position.y + PSpawn.y);
+            temp[2] = -(Camera->Position.z - PSpawn.z);
 
             glm_translate(VidConf.ModelViewMatrix,temp);
                         temp[0] = 0;
@@ -2370,6 +2378,15 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFile
                 BSDGetCollisionVolumeStringFromType(Node->CollisionVolumeType),
                 Node->CollisionInfo0,Node->CollisionInfo1,
                 Node->CollisionInfo2);
+    }
+    
+    if( Node->Id == BSD_PLAYER_SPAWN ) {
+        PrevPos = GetCurrentFilePosition(BSDFile);
+        fseek(BSDFile,NodeFilePosition + 52,SEEK_SET);
+        fread(&Node->SpawnIndex,sizeof(Node->SpawnIndex),1,BSDFile);
+        fseek(BSDFile,PrevPos,SEEK_SET);
+    } else {
+        Node->SpawnIndex = 0;
     }
 
     assert(Node->Position.Pad == 0);

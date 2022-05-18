@@ -60,15 +60,15 @@ typedef struct LevelManagerExporter_s {
     int  OutputFormat;
 } LevelManagerExporter_t;
 
-void    LevelManagerInit(GUI_t *GUI);
+void    LevelManagerInit(GUI_t *GUI,Camera_t *Camera);
 void    LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNumber,int LevelNumber);
 void    LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,int SoundValue);
 int     LevelManagerIsLevelLoaded(LevelManager_t *LevelManager);
 int     LevelManagerGetGameEngine(LevelManager_t *LevelManager);
-int     LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path);
-void    LevelManagerUpdate(LevelManager_t *LevelManager);
-void    LevelManagerDraw(LevelManager_t *LevelManager);
-void    LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI);
+int     LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,Camera_t *Camera,char *Path);
+void    LevelManagerUpdate(LevelManager_t *LevelManager,Camera_t *Camera);
+void    LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera);
+void    LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,Camera_t *Camera);
 void    LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,int OutputFormat);
 void    LevelManagerCleanUp();
 
