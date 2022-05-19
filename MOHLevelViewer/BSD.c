@@ -1649,17 +1649,53 @@ int BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD,Camera_t *Camera)
     }
     return -1;
 }
+void BSDGetObjectMatrix(BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 Result)
+{
+    vec3 temp;
+    glm_mat4_identity(Result);
+//     glm_mat4_copy(Camera->ViewMatrix,ModelMatrix);
+    temp[0] = (RenderObjectDrawable->Position.x);
+    temp[1] = -(RenderObjectDrawable->Position.y);
+    temp[2] = -(RenderObjectDrawable->Position.z);
+
+    glm_translate(Result,temp);
+    temp[0] = 0;
+    temp[1] = -1;
+    temp[2] = 0;
+    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation.y), temp);
+    temp[0] = 1;
+    temp[1] = 0;
+    temp[2] = 0;
+    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation.x), temp);
+    temp[0] = 0;
+    temp[1] = 0;
+    temp[2] = 1;
+    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation.z), temp);
+        
+    temp[0] = RenderObjectDrawable->Scale.x;
+    temp[1] = RenderObjectDrawable->Scale.y;
+    temp[2] = RenderObjectDrawable->Scale.z;
+    glm_scale(Result,temp);
+}
 //TODO:Spawn the RenderObject when loading node data!
 //     Some nodes don't have a corresponding RenderObject like the PlayerSpawn.
 //     BSDSpawnEntity(int UBlockId,Vec3_t NodePos) => Store into a list and transform to vao.
-void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera)
+void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
 {
     Shader_t *Shader;
     BSDRenderObjectDrawable_t *RenderObjectIterator;
     VAO_t *VAOIterator;
+    mat4 MVPMatrix;
+    mat4 ModelViewMatrix;
+    mat4 ModelMatrix;
     int MVPMatrixId;
     int EnableLightingId;
     int i;
+    
+    glm_mat4_mul(ProjectionMatrix,Camera->ViewMatrix,MVPMatrix);
+     
+    //Emulate PSX Coordinate system...
+    glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
     
     if( 1 ) {
         for( int i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
@@ -1685,7 +1721,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera)
         glUseProgram(Shader->ProgramId);
 
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-        glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
+        glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
         glBindVertexArray(BSD->NodeVAO->VAOId[0]);
         glPointSize(10.f);
         glDrawArrays(GL_POINTS, 0, BSD->NodeData.Header.NumNodes);
@@ -1698,7 +1734,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera)
         glUseProgram(Shader->ProgramId);
 
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-        glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
+        glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
         glBindVertexArray(BSD->RenderObjectPointVAO->VAOId[0]);
         glPointSize(10.f);
         glDrawArrays(GL_POINTS, 0, BSD->NumRenderObjectPoint);
@@ -1717,49 +1753,12 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera)
 
         for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; 
             RenderObjectIterator = RenderObjectIterator->Next ) {
-            vec3 temp;
-            glm_mat4_identity(VidConf.ModelViewMatrix);
-            temp[0] = 1;
-            temp[1] = 0;
-            temp[2] = 0;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.x), temp);
-            temp[0] = 0;
-            temp[1] = 1;
-            temp[2] = 0;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.y), temp);
-            temp[0] = 0;
-            temp[1] = 0;
-            temp[2] = 1;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.z), temp);
-            
-            temp[0] = -(Camera->Position.x - RenderObjectIterator->Position.x);
-            temp[1] = -(Camera->Position.y + RenderObjectIterator->Position.y);
-            temp[2] = -(Camera->Position.z + RenderObjectIterator->Position.z);
-
-            glm_translate(VidConf.ModelViewMatrix,temp);
-            temp[0] = 0;
-            temp[1] = -1;
-            temp[2] = 0;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(RenderObjectIterator->Rotation.y), temp);
-            temp[0] = 1;
-            temp[1] = 0;
-            temp[2] = 0;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(RenderObjectIterator->Rotation.x), temp);
-            temp[0] = 0;
-            temp[1] = 0;
-            temp[2] = 1;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(RenderObjectIterator->Rotation.z), temp);
-            
-            temp[0] = RenderObjectIterator->Scale.x;
-            temp[1] = RenderObjectIterator->Scale.y;
-            temp[2] = RenderObjectIterator->Scale.z;
-            glm_scale(VidConf.ModelViewMatrix,temp);
-
-            glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-            
-//             Emulate PSX Coordinate system...
-            glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-            glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
+            glm_mat4_identity(ModelViewMatrix);
+            BSDGetObjectMatrix(RenderObjectIterator,ModelMatrix);
+            glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
+            glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);            
+            glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+            glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
 
             for( VAOIterator = BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].VAO; VAOIterator; 
                 VAOIterator = VAOIterator->Next ) {
@@ -1783,42 +1782,18 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera)
     
         for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
             vec3 temp;
-            glm_mat4_identity(VidConf.ModelViewMatrix);
-            temp[0] = 1;
-            temp[1] = 0;
-            temp[2] = 0;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.x), temp);
-            temp[0] = 0;
-            temp[1] = 1;
-            temp[2] = 0;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.y), temp);
-            temp[0] = 0;
-            temp[1] = 0;
-            temp[2] = 1;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.z), temp);
-            
-            temp[0] = -(Camera->Position.x - (PSpawn.x - (i * 200.f)));
-            temp[1] = -(Camera->Position.y + PSpawn.y);
-            temp[2] = -(Camera->Position.z - PSpawn.z);
-
-            glm_translate(VidConf.ModelViewMatrix,temp);
-                        temp[0] = 0;
-            temp[1] = -1;
-            temp[2] = 0;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(0), temp);
-            temp[0] = 1;
-            temp[1] = 0;
-            temp[2] = 0;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(0), temp);
-            temp[0] = 0;
-            temp[1] = 0;
-            temp[2] = 1;
-            glm_rotate(VidConf.ModelViewMatrix,glm_rad(0), temp);
-            glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
+            glm_mat4_identity(ModelViewMatrix);
+            glm_mat4_identity(ModelMatrix);
+            temp[0] = ((PSpawn.x - (i * 200.f)));
+            temp[1] = (-PSpawn.y);
+            temp[2] = (PSpawn.z);
+            glm_translate(ModelMatrix,temp);
+            glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
+            glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
             
             //Emulate PSX Coordinate system...
-            glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-            glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
+            glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+            glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
 
             for( VAOIterator = BSD->RenderObjectList[i].VAO; VAOIterator; VAOIterator = VAOIterator->Next ) {
                 glBindVertexArray(VAOIterator->VAOId[0]);
@@ -1831,10 +1806,23 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera)
     }
 }
 
-void BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM)
+void BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
 {
     Shader_t *Shader;
+    mat4 SkyMatrix;
+    mat4 MVPMatrix;
     int MVPMatrixId;
+    
+    glm_mat4_identity(SkyMatrix);
+    //NOTE(Adriano):Zero-Out the translation component from the Matrix.
+    SkyMatrix[3][0]=0;
+    SkyMatrix[3][1]=0;
+    SkyMatrix[3][2]=0;
+    SkyMatrix[3][3]=0;
+    glm_mat4_mul(Camera->ViewMatrix,SkyMatrix,SkyMatrix);
+    glm_mat4_mul(ProjectionMatrix,SkyMatrix,MVPMatrix);
+     //Emulate PSX Coordinate system...
+    glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
     
     glDepthMask(0);
     if( BSDIsMoonEnabled(BSD) ) {
@@ -1843,7 +1831,7 @@ void BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM)
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
         glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
 
-        glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
+        glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
 
         glBindVertexArray(BSD->SkyData.MoonVAO->VAOId[0]);
         glDrawArrays(GL_TRIANGLES, 0, BSD->SkyData.MoonVAO->Count);
@@ -1859,7 +1847,7 @@ void BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM)
         glUseProgram(Shader->ProgramId);
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
         
-        glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
+        glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
         glPointSize(2.f);
         glBindVertexArray(BSD->SkyData.StarsVAO->VAOId[0]);
         glDrawArrays(GL_POINTS, 0, 255);

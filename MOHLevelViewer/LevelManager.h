@@ -51,6 +51,7 @@ typedef struct LevelManager_s {
     GUIFileDialog_t *ExportFileDialog;
     Level_t *CurrentLevel;
     SoundSystem_t *SoundSystem;
+    int     HasToSpawnCamera;
     int     IsPathSet;
     int     GameEngine;
 } LevelManager_t;
@@ -60,17 +61,17 @@ typedef struct LevelManagerExporter_s {
     int  OutputFormat;
 } LevelManagerExporter_t;
 
-void    LevelManagerInit(GUI_t *GUI,Camera_t *Camera);
-void    LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNumber,int LevelNumber);
-void    LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,int SoundValue);
-int     LevelManagerIsLevelLoaded(LevelManager_t *LevelManager);
-int     LevelManagerGetGameEngine(LevelManager_t *LevelManager);
-int     LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,Camera_t *Camera,char *Path);
-void    LevelManagerUpdate(LevelManager_t *LevelManager,Camera_t *Camera);
-void    LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera);
-void    LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,Camera_t *Camera);
-void    LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,int OutputFormat);
-void    LevelManagerCleanUp();
+LevelManager_t *LevelManagerInit(GUI_t *GUI);
+void            LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,int MissionNumber,int LevelNumber);
+void            LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,int SoundValue);
+int             LevelManagerIsLevelLoaded(LevelManager_t *LevelManager);
+int             LevelManagerGetGameEngine(LevelManager_t *LevelManager);
+int             LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,char *Path);
+void            LevelManagerUpdate(LevelManager_t *LevelManager,Camera_t *Camera);
+void            LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera);
+void            LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI);
+void            LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,int OutputFormat);
+void            LevelManagerCleanUp(LevelManager_t *LevelManager);
 
 extern Mission_t MOHMissionsList[];
 extern int NumMOHMissions;

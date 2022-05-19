@@ -141,7 +141,7 @@ void FontLoadChar(Font_t *Font,VRAM_t *VRAM,int CharIndex,float RowX,float RowY)
     free(VertexData);
 }
 
-void FontDrawChar(char c,float x,float y,Color4f_t Color)
+void FontDrawChar(Font_t *Font,mat4 ProjectionMatrix,char c,float x,float y,Color4f_t Color)
 {
     Shader_t *Shader;
     int OrthoMatrixId;
@@ -149,6 +149,8 @@ void FontDrawChar(char c,float x,float y,Color4f_t Color)
     vec3 temp;
     vec4 color;
     int CharIndex;
+    mat4 ModelViewMatrix;
+    mat4 MVPMatrix;
     
     
     color[0] = Color.r;
@@ -161,20 +163,20 @@ void FontDrawChar(char c,float x,float y,Color4f_t Color)
     OrthoMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
     ColorId = glGetUniformLocation(Shader->ProgramId,"Color");
     glUniform4fv(ColorId,1,color);
-    glm_mat4_identity(VidConf.ModelViewMatrix);
+    glm_mat4_identity(ModelViewMatrix);
     temp[0] = x;
     temp[1] = y;
     temp[2] = 0;
-    glm_translate(VidConf.ModelViewMatrix,temp);
-    glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-    glUniformMatrix4fv(OrthoMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
+    glm_translate(ModelViewMatrix,temp);
+    glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
+    glUniformMatrix4fv(OrthoMatrixId,1,false,&MVPMatrix[0][0]);
     CharIndex = (int) c;
-    glBindVertexArray(LevelManager->CurrentLevel->Font->Characters[ASCII_To_MOH_Table[CharIndex]]->VAOId[0]);
+    glBindVertexArray(Font->Characters[ASCII_To_MOH_Table[CharIndex]]->VAOId[0]);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 }
 
-void FontDrawString(VRAM_t *VRAM,char *String,float x,float y,Color4f_t Color)
+void FontDrawString(Font_t *Font,VRAM_t *VRAM,mat4 ProjectionMatrix,char *String,float x,float y,Color4f_t Color)
 {
 
     float Spacing = 10.f;
@@ -190,7 +192,7 @@ void FontDrawString(VRAM_t *VRAM,char *String,float x,float y,Color4f_t Color)
             String++;
             continue;
         }
-        FontDrawChar(*String,currentX,y,Color);
+        FontDrawChar(Font,ProjectionMatrix,*String,currentX,y,Color);
         currentX += Spacing;
         String++;
     }

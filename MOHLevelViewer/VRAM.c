@@ -80,8 +80,8 @@ void VRAMWritePNG(SDL_Surface *ImageSurface,char *OutName)
     }
     png_set_rows (PNGPtr, PNGInfoPtr, RowPointer);
     png_write_png (PNGPtr, PNGInfoPtr, PNG_TRANSFORM_IDENTITY, NULL);
-    png_destroy_write_struct(&PNGPtr,&PNGInfoPtr);
     png_free (PNGPtr, RowPointer);
+    png_destroy_write_struct(&PNGPtr,&PNGInfoPtr);
     fclose(PNGImage);
 }
 void VRAMSave(VRAM_t *VRAM,char *File)

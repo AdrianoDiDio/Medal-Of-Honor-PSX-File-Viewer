@@ -35,11 +35,6 @@ typedef struct VideoSystem_s {
     float   DPIScale;
     int     NumVideoModes;
     int     CurrentVideoMode;
-    
-    mat4 ModelViewMatrix;
-    mat4 PMatrixM4;
-    mat4    MVPMatrix;
-    
     SDL_Window *Window;
     SDL_GLContext GLContext;
 } VideoSystem_t;
@@ -51,6 +46,7 @@ extern Config_t *VidConfigFullScreen;
 
 VideoSystem_t   *VideoSystemInit();
 void            VideoSystemSetVideoSettings(VideoSystem_t *VideoSystem,int PreferredModeIndex);
+void            VideoSystemCenterMouse(VideoSystem_t *VideoSystem);
 void            VideoSystemSwapBuffers(VideoSystem_t *VideoSystem);
 void            VideoSystemShutdown(VideoSystem_t *VideoSystem);
 #endif//__VIDEO_H_

@@ -37,6 +37,12 @@ void VideoSystemShutdown(VideoSystem_t *VideoSystem)
     SDL_DestroyWindow(VideoSystem->Window);
     SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     SDL_Quit();
+    free(VideoSystem);
+}
+
+void VideoSystemCenterMouse(VideoSystem_t *VideoSystem)
+{
+    SDL_WarpMouseInWindow(VideoSystem->Window,VidConfigWidth->IValue/2,VidConfigHeight->IValue/2);
 }
 SDL_DisplayMode *SDLGetCurrentDisplayModeV2(VideoSystem_t *VideoSystem)
 {

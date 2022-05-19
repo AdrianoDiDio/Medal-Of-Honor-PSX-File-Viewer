@@ -42,6 +42,8 @@ typedef struct Camera_s {
     Vec3_t	Up;
     Vec3_t	Right;
     Vec3_t	Forward;
+    
+    mat4    ViewMatrix;
     vec4    FrustumPlaneList[6];
     vec4    FrustumCornerList[8];
 } Camera_t;
@@ -50,8 +52,10 @@ extern Config_t *CameraSpeed;
 extern Config_t *CameraMouseSensitivity;
 
 Camera_t    *CameraInit();
+void        CameraBeginFrame(Camera_t *Camera);
 void        CameraSetPosition(Camera_t *Camera,Vec3_t Position);
 void        CameraSetRotation(Camera_t *Camera,Vec3_t Rotation);
 void        CameraOnMouseEvent(Camera_t *Camera,int Dx,int Dy);
 void        CameraUpdate(Camera_t *Camera,int Orientation, float Delta);
+void        CameraCleanUp(Camera_t *Camera);
 #endif//__CAMERA_H_

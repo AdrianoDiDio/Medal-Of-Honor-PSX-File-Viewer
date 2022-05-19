@@ -24,6 +24,21 @@
 
 Config_t *ConfigList;
 
+void ConfigFree()
+{
+    Config_t *Temp;
+    
+    while( ConfigList ) {
+        free(ConfigList->Name);
+        free(ConfigList->Value);
+        if( ConfigList->Description ) {
+            free(ConfigList->Description);
+        }
+        Temp = ConfigList;
+        ConfigList = ConfigList->Next;
+        free(Temp);
+    }
+}
 void ConfigTokenizeSettings(char *String)
 {
     char *Temp;
@@ -157,6 +172,7 @@ void ConfigLoadSettings()
     }
     free(ConfigBuffer);
     free(PrefFile);
+    free(PrefPath);
     return;
 }
 
@@ -181,6 +197,7 @@ void ConfigSaveSettings()
     
     free(PrefFile);
     fclose(ConfigFile);
+    free(PrefPath);
 }
 Config_t *ConfigGet(char *Name)
 {

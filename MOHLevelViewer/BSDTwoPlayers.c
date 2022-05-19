@@ -60,16 +60,21 @@ void BSD2PVAOPointList(BSD2P_t *BSD)
 }
 
 
-void BSD2PDraw(Level_t *Level)
+void BSD2PDraw(Level_t *Level,Camera_t *Camera,mat4 ProjectionMatrix)
 {
     Shader_t *Shader;
     int MVPMatrixId;
-    
+    mat4 MVPMatrix;
+         
+    glm_mat4_mul(ProjectionMatrix,Camera->ViewMatrix,MVPMatrix);
+     
+    //Emulate PSX Coordinate system...
+    glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
     Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
     glUseProgram(Shader->ProgramId);
 
     MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-    glUniformMatrix4fv(MVPMatrixId,1,false,&VidConf.MVPMatrix[0][0]);
+    glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
     glBindVertexArray(Level->BSDTwoP->NodeVAO->VAOId[0]);
     glPointSize(10.f);
     glDrawArrays(GL_POINTS, 0, Level->BSDTwoP->NodeData.Header.NumNodes);

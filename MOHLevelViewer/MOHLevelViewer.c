@@ -30,13 +30,6 @@ Color4f_t    c_Yellow = {  1.f,  1.f, 0,   1.f};
 Color4f_t    c_White    = {   1.f,  1.f, 1.f, 1.f};
 Color4f_t    c_Grey =  {   0.75, 0.75,0.75,1.f};
 
-VideoSystem_t VidConf;
-ComTimeInfo_t *ComTime;
-LevelManager_t *LevelManager;
-GUI_t *GUI;
-SDL_Window *VideoSurface;
-SDL_GLContext Context;
-
 int StartSeconds = 0;
 
 Byte HighNibble(Byte In)
@@ -372,24 +365,7 @@ void SysShowCursor()
     SDL_ShowCursor(true);
 }
 
-void SysCenterCursor()
-{
-    SDL_WarpMouseInWindow(VideoSurface,VidConfigWidth->IValue/2,VidConfigHeight->IValue/2);
-}
-
-int SysGetCurrentVideoWidth()
-{
-    assert(VidConf.CurrentVideoMode != -1);
-    return VidConf.VideoModeList[VidConf.CurrentVideoMode].Width;
-}
-int SysGetCurrentVideoHeight()
-{
-    assert(VidConf.CurrentVideoMode != -1);
-    return VidConf.VideoModeList[VidConf.CurrentVideoMode].Height;
-}
-
-
-void SysCheckKeyEvents(Camera_t *Camera)
+void EngineCheckEvents(Engine_t *Engine)
 {
     SDL_Event Event;
 
@@ -402,48 +378,48 @@ void SysCheckKeyEvents(Camera_t *Camera)
             ConfigSetNumber("VideoHeight",Event.window.data2);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F1 ) {
-            GUIToggleDebugWindow(GUI);
+            GUIToggleDebugWindow(Engine->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F2 ) {
-            GUIToggleSettingsWindow(GUI);
+            GUIToggleSettingsWindow(Engine->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F3 ) {
-            GUIToggleLevelSelectWindow(GUI);
+            GUIToggleLevelSelectWindow(Engine->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
-            LevelManagerToggleFileDialog(LevelManager,GUI,Camera);
+            LevelManagerToggleFileDialog(Engine->LevelManager,Engine->GUI);
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
-            Quit();
+            Quit(Engine);
         }
         
-        if( !GUIProcessEvent(GUI,&Event) ) {
+        if( !GUIProcessEvent(Engine->GUI,&Event) ) {
             switch( Event.type ) {
                 case SDL_MOUSEMOTION:
-                    CameraOnMouseEvent(Camera,Event.motion.x,Event.motion.y);
-                    SysCenterCursor();
+                    CameraOnMouseEvent(Engine->Camera,Event.motion.x,Event.motion.y);
+                    VideoSystemCenterMouse(Engine->VideoSystem);
                     break;
                 case SDL_KEYDOWN:
                     if( Event.key.keysym.sym == SDLK_ESCAPE ) {
-                        Quit();
+                        Quit(Engine);
                     }
                     if( Event.key.keysym.sym == SDLK_w ) {
-                        CameraUpdate(Camera, DIR_FORWARD, ComTime->Delta);
+                        CameraUpdate(Engine->Camera, DIR_FORWARD, Engine->TimeInfo->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_s ) {
-                        CameraUpdate(Camera, DIR_BACKWARD, ComTime->Delta);
+                        CameraUpdate(Engine->Camera, DIR_BACKWARD, Engine->TimeInfo->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_a ) {
-                        CameraUpdate(Camera, DIR_LEFTWARD, ComTime->Delta);
+                        CameraUpdate(Engine->Camera, DIR_LEFTWARD, Engine->TimeInfo->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_d ) {
-                        CameraUpdate(Camera, DIR_RIGHTWARD, ComTime->Delta);
+                        CameraUpdate(Engine->Camera, DIR_RIGHTWARD, Engine->TimeInfo->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_SPACE ) {
-                        CameraUpdate(Camera, DIR_UPWARD, ComTime->Delta);
+                        CameraUpdate(Engine->Camera, DIR_UPWARD, Engine->TimeInfo->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_z ) {
-                        CameraUpdate(Camera, DIR_DOWNWARD, ComTime->Delta);
+                        CameraUpdate(Engine->Camera, DIR_DOWNWARD, Engine->TimeInfo->Delta);
                     }
                     break;
                 default:
@@ -454,37 +430,35 @@ void SysCheckKeyEvents(Camera_t *Camera)
     
 }
 
-void ComUpdateDelta(Camera_t *Camera)
+void ComUpdateDelta(ComTimeInfo_t *TimeInfo,Camera_t *Camera)
 {
     long Now;
     
     Now = SysMilliseconds();
 
-    ComTime->UpdateLength = Now - ComTime->LastLoopTime;
-//     ComTime->UpdateLength = Now - ComTime->LastLoopTime;
-    ComTime->Delta = ComTime->UpdateLength * 0.001f;
+    TimeInfo->UpdateLength = Now - TimeInfo->LastLoopTime;
+    TimeInfo->Delta = TimeInfo->UpdateLength * 0.001f;
 
 
     // update the frame counter
-    ComTime->LastFPSTime += ComTime->UpdateLength;
-    ComTime->FPS++;
-    ComTime->LastLoopTime = Now;
+    TimeInfo->LastFPSTime += TimeInfo->UpdateLength;
+    TimeInfo->FPS++;
+    TimeInfo->LastLoopTime = Now;
     // update our FPS counter if a second has passed since
     // we last recorded
-    if (ComTime->LastFPSTime >= 1000 ) {
-        sprintf(ComTime->FPSString,"FPS:%i\nMs: %.2f ms\nLast FPS Time:%f\nDelta:%f",
-                ComTime->FPS,
-                1000.f/(float)ComTime->FPS,
-                ComTime->LastFPSTime,ComTime->Delta);
-        sprintf(ComTime->FPSSimpleString,"FPS %i Ms %.2f ms",
-                ComTime->FPS,
-                1000.f/(float)ComTime->FPS);
-        DPrintf("%s\n",ComTime->FPSString);
+    if (TimeInfo->LastFPSTime >= 1000 ) {
+        sprintf(TimeInfo->FPSString,"FPS:%i\nMs: %.2f ms\nLast FPS Time:%f\nDelta:%f",
+                TimeInfo->FPS,
+                1000.f/(float)TimeInfo->FPS,
+                TimeInfo->LastFPSTime,TimeInfo->Delta);
+        sprintf(TimeInfo->FPSSimpleString,"FPS %i Ms %.2f ms",
+                TimeInfo->FPS,
+                1000.f/(float)TimeInfo->FPS);
+        DPrintf("%s\n",TimeInfo->FPSString);
         DPrintf("Current Camera Position:%f;%f;%f\n",Camera->Position.x,Camera->Position.y,Camera->Position.z);
-        ComTime->LastFPSTime = 0;
-        ComTime->FPS = 0;
+        TimeInfo->LastFPSTime = 0;
+        TimeInfo->FPS = 0;
     }
-    return;
 }
 
 /*
@@ -598,49 +572,85 @@ void GLSetDefaultState()
 //     glEnableClientState( GL_VERTEX_ARRAY );
 }
 
-void InitGLView()
-{
-    GLSetDefaultState();
-}
 
 void GLFrame(Camera_t *Camera,VideoSystem_t *VideoSystem)
 {
-    glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    LevelManagerDraw(LevelManager,Camera);
-    glDisable (GL_DEPTH_TEST);
-    GUIDraw(GUI,LevelManager,Camera,VideoSystem);
-    glEnable(GL_DEPTH_TEST);
-}
 
-void Quit()
+}
+void Quit(Engine_t *Engine)
 {
-    LevelManagerCleanUp();
-    GUIFree(GUI);
-//     LevelCleanUp(Level);
+    EngineShutDown(Engine);
     ShaderManagerFree();
-    free(ComTime);
-    VideoSystemShutdown(&VidConf);
-    SDL_Quit();
+    ConfigFree();
     exit(0);
 }
-
-/*
- * Requires 3 things:
-    - MOH DATA Location
-    - MISSION NUMBER
-    - LEVEL NUMBER
-*/
-#define _ENABLEVIDEOOUT 1
-int main(int argc,char **argv)
+void EngineShutDown(Engine_t *Engine)
 {
-    VideoSystem_t *VideoSystem;
-    Camera_t *Camera;
-    srand(time(NULL));
-//     if( argc != 4 ) {
-//         printf("%s <MOH Directory> <Mission Number> <Level Number> will load level files from that mission.\n",argv[0]);
-//         return -1;
-//     }
+    if( !Engine ) {
+        return;
+    }
+    if( Engine->LevelManager ) {
+        LevelManagerCleanUp(Engine->LevelManager);
+    }
+    if( Engine->GUI ) {
+        GUIFree(Engine->GUI);
+    }
+    if( Engine->TimeInfo ) {
+        free(Engine->TimeInfo);
+    }
+    if( Engine->VideoSystem ) {
+        VideoSystemShutdown(Engine->VideoSystem);
+    }
+    if( Engine->Camera ) {
+        CameraCleanUp(Engine->Camera);
+    }
+    free(Engine);
+}
+
+void EngineDraw(Engine_t *Engine)
+{
+    if( !Engine ) {
+        DPrintf("EngineDraw:Called without a valid engine\n");
+        return;
+    }
+    glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    LevelManagerDraw(Engine->LevelManager,Engine->Camera);
+    glDisable (GL_DEPTH_TEST);
+    GUIDraw(Engine->GUI,Engine->LevelManager,Engine->Camera,Engine->VideoSystem,Engine->TimeInfo);
+    glEnable(GL_DEPTH_TEST);
+}
+void EngineFrame(Engine_t *Engine)
+{
+    if( !Engine ) {
+        DPrintf("EngineFrame:Called without a valid engine\n");
+        return;
+    }
+    ComUpdateDelta(Engine->TimeInfo,Engine->Camera);
+    EngineCheckEvents(Engine);
+    CameraBeginFrame(Engine->Camera);
+    LevelManagerUpdate(Engine->LevelManager,Engine->Camera);
+    EngineDraw(Engine);
+    
+    VideoSystemSwapBuffers(Engine->VideoSystem);
+}
+Engine_t *EngineInit(int argc,char **argv)
+{
+    Engine_t *Engine;
+    
+    Engine = malloc(sizeof(Engine_t));
+    
+    if( !Engine ) {
+        printf("EngineInit:Failed to allocate memory for engine\n");
+        return NULL;
+    }
+    
+    Engine->LevelManager = NULL;
+    Engine->GUI = NULL;
+    Engine->Camera = NULL;
+    Engine->TimeInfo = NULL;
+    Engine->VideoSystem = NULL;
+    
     ConfigInit();
     
     VidConfigWidth = ConfigGet("VideoWidth");
@@ -648,44 +658,66 @@ int main(int argc,char **argv)
     VidConfigRefreshRate = ConfigGet("VideoRefreshRate");
     VidConfigFullScreen = ConfigGet("VideoFullScreen");
 
-#if _ENABLEVIDEOOUT
-    VideoSystem = VideoSystemInit();
-    Camera = CameraInit();
+    Engine->VideoSystem = VideoSystemInit();
     
-    //Temporarily route vidconf to the new system.
-    VidConf = *VideoSystem;
+    if( !Engine->VideoSystem ) {
+        printf("EngineInit:Failed to Initialize Video system...\n");
+        return NULL;
+    }
+    Engine->Camera = CameraInit();
     
-//     SysVidInit();
-    ComTime = malloc(sizeof(ComTimeInfo_t));
-    memset(ComTime,0,sizeof(ComTimeInfo_t));
-    InitGLView();
+    if( !Engine->Camera ) {
+        printf("EngineInit:Failed to Initialize Camera System\n");
+        return NULL;
+    }
+    
+    Engine->TimeInfo = malloc(sizeof(ComTimeInfo_t));
+    if( !Engine->TimeInfo ) {
+        printf("EngineInit:Failed to allocate memory for time info\n");
+        return NULL;
+    }
+    memset(Engine->TimeInfo,0,sizeof(ComTimeInfo_t));
+    
+    GLSetDefaultState();
     ShaderManagerInit();
+    
     //NOTE(Adriano):Allow the game path to be set using command line argument.
     //              If the path is not valid the game will discard it.
     if( argc > 1 ) {
         ConfigSet("GameBasePath",argv[1]);
     }
 
-    GUI = GUIInit(VideoSystem);
-    LevelManagerInit(GUI,Camera);
-
-    while( 1 ) {
-        ComUpdateDelta(Camera);
-//         DPrintf("Delta TIme:%f\n",ComTime->Delta);
-        SysCheckKeyEvents(Camera);
-//         do {
-//         } while( !ComUpdateDelta() );
-        LevelManagerUpdate(LevelManager,Camera);
-        GLFrame(Camera,VideoSystem);
-        VideoSystemSwapBuffers(VideoSystem);
-//         glFlush();
-//         SysSwapBuffers();
+    Engine->GUI = GUIInit(Engine->VideoSystem);
+    if( !Engine->GUI ) {
+        printf("EngineInit:Failed to initialize GUI system\n");
+        return NULL;
     }
-#else
-    #ifdef _DEBUG
-    Quit();
-    #endif
-#endif
+    
+    Engine->LevelManager = LevelManagerInit(Engine->GUI);
+    
+    if( !Engine->LevelManager ) {
+        printf("EngineInit:Failed to initialize LevelManager\n");
+        return NULL;
+    }
+    return Engine;
+}
+
+int main(int argc,char **argv)
+{
+    Engine_t *Engine;
+    
+    srand(time(NULL));
+    
+    Engine = EngineInit(argc,argv);
+    
+    if( !Engine ) {
+        printf("Failed to initialize engine...\n");
+        EngineShutDown(Engine);
+        return -1;
+    }
+    while( 1 ) {
+        EngineFrame(Engine);
+    }
 // 
     return 0;
 }

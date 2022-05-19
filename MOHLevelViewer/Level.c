@@ -116,88 +116,13 @@ void LevelUpdate(Level_t *Level,Camera_t *Camera)
 }
 void LevelDraw(Level_t *Level,Camera_t *Camera,mat4 ProjectionMatrix)
 {
-    vec4 temp;
-    mat4 ModelViewMatrix;
-    
     if( !Level ) {
         DPrintf("LevelDraw:Invalid Level\n");
     }
-    
-    glm_mat4_identity(VidConf.ModelViewMatrix);
-         
-    temp[0] = 1;
-    temp[1] = 0;
-    temp[2] = 0;
-    glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.x), temp);
-    temp[0] = 0;
-    temp[1] = 1;
-    temp[2] = 0;
-    glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.y), temp);
-    temp[0] = 0;
-    temp[1] = 0;
-    temp[2] = 1;
-    glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.z), temp);
-     
-    glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-     
-     //Emulate PSX Coordinate system...
-     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-     BSDDrawSky(LevelManager->CurrentLevel->BSD,LevelManager->CurrentLevel->VRAM);
-     
-     temp[0] = 1;
-     temp[1] = 0;
-     temp[2] = 0;
-     glm_mat4_identity(VidConf.ModelViewMatrix);
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.x), temp);
-     temp[0] = 0;
-     temp[1] = 1;
-     temp[2] = 0;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.y), temp);
-     temp[0] = 0;
-     temp[1] = 0;
-     temp[2] = 1;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.z), temp);
-     temp[0] = -Camera->Position.x;
-     temp[1] = -Camera->Position.y;
-     temp[2] = -Camera->Position.z;
-     glm_translate(VidConf.ModelViewMatrix,temp);
-     
-     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-     
-     //Emulate PSX Coordinate system...
-     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-          
-//      BSD2PDraw(Level);
-     BSDDraw(LevelManager->CurrentLevel->BSD,LevelManager->CurrentLevel->VRAM,Camera);
-
-     
-     temp[0] = 1;
-     temp[1] = 0;
-     temp[2] = 0;
-     glm_mat4_identity(VidConf.ModelViewMatrix);
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.x), temp);
-     temp[0] = 0;
-     temp[1] = 1;
-     temp[2] = 0;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.y), temp);
-     temp[0] = 0;
-     temp[1] = 0;
-     temp[2] = 1;
-     glm_rotate(VidConf.ModelViewMatrix,glm_rad(Camera->Rotation.z), temp);
-     temp[0] = -Camera->Position.x;
-     temp[1] = -Camera->Position.y;
-     temp[2] = -Camera->Position.z;
-     glm_translate(VidConf.ModelViewMatrix,temp);
-     
-     glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-     
-     //Emulate PSX Coordinate system...
-     glm_rotate_x(VidConf.MVPMatrix,glm_rad(180.f), VidConf.MVPMatrix);
-     
-     glm_frustum_planes(VidConf.MVPMatrix,Camera->FrustumPlaneList);
-     glm_frustum_corners(VidConf.MVPMatrix,Camera->FrustumCornerList);
-     TSPDrawList(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->VRAM,Camera);
-
+             
+    BSDDrawSky(Level->BSD,Level->VRAM,Camera,ProjectionMatrix);
+    BSDDraw(Level->BSD,Level->VRAM,Camera,ProjectionMatrix);
+    TSPDrawList(Level->TSPList,Level->VRAM,Camera,ProjectionMatrix);
 }
 
 Vec3_t LevelGetPlayerSpawn(Level_t *Level,int SpawnIndex,Vec3_t *Rotation)

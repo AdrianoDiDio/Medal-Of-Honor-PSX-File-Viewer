@@ -23,6 +23,7 @@
 #include "Common.h"
 #include "VRAM.h"
 #include "VAO.h"
+#include "Camera.h"
 
 #define MOH_FONT_TEXTURE_VRAM_PAGE 15
 #define NUM_MOH_FONT_CHARS 50
@@ -37,6 +38,6 @@ typedef struct Font_s {
 } Font_t;
 
 Font_t *FontInit(VRAM_t *VRAM);
-void FontDrawString(VRAM_t *Font,char *String,float x,float y,Color4f_t Color);
+void FontDrawString(Font_t *Font,VRAM_t *VRAM,mat4 ProjectionMatrix,char *String,float x,float y,Color4f_t Color);
 void FontFree(Font_t *Font);
 #endif //__FONT_H_

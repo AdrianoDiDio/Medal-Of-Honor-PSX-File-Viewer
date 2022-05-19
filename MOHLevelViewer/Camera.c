@@ -25,6 +25,13 @@
 Config_t *CameraSpeed;
 Config_t *CameraMouseSensitivity;
 
+void CameraCleanUp(Camera_t *Camera)
+{
+    if( !Camera ) {
+        return;
+    }
+    free(Camera);
+}
 void CameraFixAngles(Camera_t *Camera)
 {
     //If needed fix it.
@@ -57,7 +64,7 @@ void CameraUpdate(Camera_t *Camera,int Orientation, float Delta)
 {
     float CamSpeed;
     
-    CamSpeed = CameraSpeed->FValue * ComTime->Delta * 128.f;
+    CamSpeed = CameraSpeed->FValue * Delta * 128.f;
 
     Camera->Forward.x = sin(DEGTORAD(Camera->Rotation.y));
     Camera->Forward.z = -cos(DEGTORAD(Camera->Rotation.y));
@@ -110,6 +117,28 @@ void CameraUpdate(Camera_t *Camera,int Orientation, float Delta)
         default:
             break;
     }
+}
+void CameraBeginFrame(Camera_t *Camera)
+{
+    vec3 Axis;
+    glm_mat4_identity(Camera->ViewMatrix);
+    Axis[0] = 1;
+    Axis[1] = 0;
+    Axis[2] = 0;
+    glm_mat4_identity(Camera->ViewMatrix);
+    glm_rotate(Camera->ViewMatrix,glm_rad(Camera->Rotation.x), Axis);
+    Axis[0] = 0;
+    Axis[1] = 1;
+    Axis[2] = 0;
+    glm_rotate(Camera->ViewMatrix,glm_rad(Camera->Rotation.y), Axis);
+    Axis[0] = 0;
+    Axis[1] = 0;
+    Axis[2] = 1;
+    glm_rotate(Camera->ViewMatrix,glm_rad(Camera->Rotation.z), Axis);
+    Axis[0] = -Camera->Position.x;
+    Axis[1] = -Camera->Position.y;
+    Axis[2] = -Camera->Position.z;
+    glm_translate(Camera->ViewMatrix,Axis);
 }
 void CameraSetRotation(Camera_t *Camera,Vec3_t Rotation)
 {

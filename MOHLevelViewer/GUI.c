@@ -347,7 +347,7 @@ void GUIDrawHelpOverlay()
     igEnd();
 }
 
-void GUIDrawFPSOverlay()
+void GUIDrawFPSOverlay(ComTimeInfo_t *TimeInfo)
 {
     ImGuiViewport *Viewport;
     ImVec2 WorkPosition;
@@ -356,8 +356,8 @@ void GUIDrawFPSOverlay()
     ImVec2 WindowPivot;
     int WindowFlags;
     
-    WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
-                    ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+    WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | 
+                    ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
     Viewport = igGetMainViewport();
     WorkPosition = Viewport->WorkPos;
     WorkSize = Viewport->WorkSize;
@@ -368,7 +368,7 @@ void GUIDrawFPSOverlay()
     igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
 
     if( igBegin("FPS", NULL, WindowFlags) ) {
-        igText(ComTime->FPSString);
+        igText(TimeInfo->FPSString);
     }
     igEnd(); 
 }
@@ -403,7 +403,6 @@ void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
     ImVec2 ScreenCenter;
     ImVec2 Pivot;
     ImVec2 Size;
-    float Delta;
     
     if( !GUI ) {
         return;
@@ -435,7 +434,7 @@ void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
         igEnd();
     }
     GUIEndFrame();
-    VideoSystemSwapBuffers(&VidConf);
+    SDL_GL_SwapWindow(GUI->Window);
 }
 
 void GUIProgressBarEnd(GUI_t *GUI)
@@ -642,7 +641,7 @@ void GUIRenderFileDialogs(GUI_t *GUI)
         GUIFileDialogRender(GUI,Iterator);
     }
 }
-void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem)
+void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo)
 {
     ImVec2 ButtonSize;
     ImVec2 ModalPosition;
@@ -652,7 +651,7 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSyste
     GUIBeginFrame();
     
     if( GUIShowFPS->IValue ) {
-        GUIDrawFPSOverlay();
+        GUIDrawFPSOverlay(TimeInfo);
     }
     
     if( !GUI->NumActiveWindows ) {
@@ -845,6 +844,7 @@ void GUIContextInit(ImGuiContext *Context,VideoSystem_t *VideoSystem,char *Confi
 GUI_t *GUIInit(VideoSystem_t *VideoSystem)
 {
     GUI_t *GUI;
+    char *ConfigPath;
 
     GUI = malloc(sizeof(GUI_t));
     
@@ -856,13 +856,18 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     memset(GUI,0,sizeof(GUI_t));
     GUI->ProgressBar = malloc(sizeof(GUIProgressBar_t));
     GUI->ErrorMessage = NULL;
-    asprintf(&GUI->ConfigFilePath,"%simgui.ini",SysGetConfigPath());
+    
+    ConfigPath = SysGetConfigPath();
+    asprintf(&GUI->ConfigFilePath,"%simgui.ini",ConfigPath);
+    free(ConfigPath);
+    
     if( !GUI->ProgressBar ) {
         DPrintf("GUIInit:Failed to allocate memory for ProgressBar struct\n");
         free(GUI);
         return NULL;
     }
     GUI->NumRegisteredFileDialog = 0;
+    GUI->Window = VideoSystem->Window;
     
     GUI->FileDialogList = NULL;
 
@@ -873,6 +878,7 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     GUI->DefaultContext = igCreateContext(NULL);
     GUI->ProgressBar->Context = igCreateContext(NULL);
     GUI->ProgressBar->DialogTitle = NULL;
+
     GUIContextInit(GUI->ProgressBar->Context,VideoSystem,GUI->ConfigFilePath);
     GUIContextInit(GUI->DefaultContext,VideoSystem,GUI->ConfigFilePath);
     

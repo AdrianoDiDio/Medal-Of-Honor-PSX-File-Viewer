@@ -58,10 +58,13 @@ typedef struct GUI_s {
     int NumActiveWindows;
     GUIProgressBar_t *ProgressBar;
     char *ErrorMessage;
+    
+    SDL_Window *Window;
 } GUI_t;
 
 typedef struct LevelManager_s LevelManager_t;
 typedef struct Camera_s Camera_t;
+typedef struct ComTimeInfo_s ComTimeInfo_t;
 
 extern Config_t *GUIFont;
 extern Config_t *GUIFontSize;
@@ -88,6 +91,6 @@ void GUIProgressBarEnd(GUI_t *GUI);
 void GUIProgressBarReset(GUI_t *GUI);
 void GUISetProgressBarDialogTitle(GUI_t *GUI,char *Title);
 void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message);
-void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem);
+void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo);
 void GUIFree(GUI_t *GUI);
 #endif//__GUI_H_
