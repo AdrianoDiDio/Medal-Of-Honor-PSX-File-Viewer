@@ -387,7 +387,7 @@ void EngineCheckEvents(Engine_t *Engine)
             GUIToggleLevelSelectWindow(Engine->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
-            LevelManagerToggleFileDialog(Engine->LevelManager,Engine->GUI);
+            LevelManagerToggleFileDialog(Engine->LevelManager,Engine->GUI,Engine->VideoSystem);
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit(Engine);
@@ -693,7 +693,7 @@ Engine_t *EngineInit(int argc,char **argv)
         return NULL;
     }
     
-    Engine->LevelManager = LevelManagerInit(Engine->GUI);
+    Engine->LevelManager = LevelManagerInit(Engine->GUI,Engine->VideoSystem);
     
     if( !Engine->LevelManager ) {
         printf("EngineInit:Failed to initialize LevelManager\n");

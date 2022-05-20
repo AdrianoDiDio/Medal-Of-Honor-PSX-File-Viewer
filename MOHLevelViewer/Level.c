@@ -148,7 +148,8 @@ void LevelLoadSettings()
     LevelEnableAnimatedSurfaces = ConfigGet("LevelEnableAnimatedSurfaces");
     LevelEnableMusicTrack = ConfigGet("LevelEnableMusicTrack");
 }
-bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine)
+bool LevelInit(Level_t *Level,GUI_t *GUI,VideoSystem_t *VideoSystem,
+               SoundSystem_t *SoundSystem,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine)
 {
     FILE *BSDFile;
     char Buffer[512];
@@ -168,7 +169,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
         return false;
     }
     GUIProgressBarReset(GUI);
-    GUIProgressBarIncrement(GUI,5,"Unloading Previous Level");
+    GUIProgressBarIncrement(GUI,VideoSystem,5,"Unloading Previous Level");
     if( LevelIsLoaded(Level) ) {
         LevelUnload(Level);
     }
@@ -189,7 +190,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     DPrintf("LevelInit:Loading level %s Mission %i Level %i\n",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 
     BasePercentage = 5.f;
-    GUIProgressBarIncrement(GUI,BasePercentage,"Loading all images");
+    GUIProgressBarIncrement(GUI,VideoSystem,BasePercentage,"Loading all images");
     //Step.1 Load all the tims from taf.
     //0 is hardcoded...for the images it doesn't make any difference between 0 and 1
     //but if we need to load all the level sounds then 0 means Standard Mode while 1 American (All voices are translated to english!).
@@ -201,7 +202,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
         return false;
     }
     BasePercentage += 5;
-    GUIProgressBarIncrement(GUI,BasePercentage,"Early Loading BSD File");
+    GUIProgressBarIncrement(GUI,VideoSystem,BasePercentage,"Early Loading BSD File");
     //Step.2 Partially load the BSD file in order to get the TSP info.
     BSDFile = BSDEarlyInit(&Level->BSD,Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
     if( !BSDFile ) {
@@ -222,7 +223,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.NumTSP; i++ ) {
         snprintf(Buffer,sizeof(Buffer),"%s%cTSP0%c%i_%i_C%i.TSP",Level->MissionPath,PATH_SEPARATOR,PATH_SEPARATOR,
                  Level->MissionNumber,Level->LevelNumber,i);
-        GUIProgressBarIncrement(GUI,Increment,Buffer);
+        GUIProgressBarIncrement(GUI,VideoSystem,Increment,Buffer);
         TSP = TSPLoad(Buffer,i);
         if( !TSP ) {
             DPrintf("LevelInit:Failed to load TSP File %s\n",Buffer);
@@ -237,28 +238,28 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,SoundSystem_t *SoundSystem,char *BasePa
     }
     //NOTE(Adriano):This is required due to the different BSD RenderObject ID mapping that multiplayer levels use.
     IsMultiplayer = MissionNumber == 12 ? 1 : 0;
-    GUIProgressBarIncrement(GUI,Increment,"Loading BSD");
+    GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Loading BSD");
     //Step.4 Resume loading the BSD after we successfully loaded the TSP.
     DPrintf("LevelInit: Detected game %s\n",LocalGameEngine == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
     BSDLoad(Level->BSD,LocalGameEngine,IsMultiplayer,BSDFile);
-    GUIProgressBarIncrement(GUI,Increment,"Loading VRAM");
+    GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Loading VRAM");
     Level->VRAM = VRAMInit(Level->ImageList);
-    GUIProgressBarIncrement(GUI,Increment,"Loading Font");
+    GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Loading Font");
     Level->Font = FontInit(Level->VRAM);
-    GUIProgressBarIncrement(GUI,Increment,"Generating VAOs");
+    GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Generating VAOs");
     TSPCreateNodeBBoxVAO(Level->TSPList);
     TSPCreateCollisionVAO(Level->TSPList);
     BSDCreateVAOs(Level->BSD,LocalGameEngine,Level->VRAM);
-    GUIProgressBarIncrement(GUI,Increment,"Fixing Objects Position");
+    GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Fixing Objects Position");
     BSDFixRenderObjectPosition(Level);
-    GUIProgressBarIncrement(GUI,Increment,"Loading Music");
+    GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Loading Music");
     SoundSystemLoadLevelMusic(SoundSystem,Level->MissionPath,MissionNumber,LevelNumber,LocalGameEngine);
     if( LevelEnableMusicTrack->IValue ) {
         PlayAmbientMusic = (LevelEnableMusicTrack->IValue == 2) ? 1 : 0;
         SoundSystemPlayMusic(SoundSystem,PlayAmbientMusic);
     }
     DPrintf("LevelInit:Allocated level struct\n");
-    GUIProgressBarIncrement(GUI,100,"Ready");
+    GUIProgressBarIncrement(GUI,VideoSystem,100,"Ready");
     return true;
     
 }

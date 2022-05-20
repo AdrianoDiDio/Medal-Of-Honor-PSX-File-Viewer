@@ -44,8 +44,6 @@ typedef struct Camera_s {
     Vec3_t	Forward;
     
     mat4    ViewMatrix;
-    vec4    FrustumPlaneList[6];
-    vec4    FrustumCornerList[8];
 } Camera_t;
 
 extern Config_t *CameraSpeed;

@@ -163,7 +163,7 @@ bool GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...)
     }
     return IsChecked;
 }
-void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera)
+void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem)
 {
     ImVec2 ZeroSize;
     SDL_version Version;
@@ -268,7 +268,8 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                     LevelEnableSemiTransparency->Description) ) {
                     ConfigSetNumber("LevelEnableSemiTransparency",LevelEnableSemiTransparency->IValue);
                 }
-                if ( GUICheckBoxWithTooltip("Animated Lights",(bool *) &LevelEnableAnimatedLights->IValue,LevelEnableAnimatedLights->Description) ) {
+                if ( GUICheckBoxWithTooltip("Animated Lights",(bool *) &LevelEnableAnimatedLights->IValue,
+                    LevelEnableAnimatedLights->Description) ) {
                     if( !LevelEnableAnimatedLights->IValue ) {
                         TSPUpdateAnimatedFaces(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->BSD,Camera,1);
                     }
@@ -283,16 +284,16 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                 ZeroSize.x = 0.f;
                 ZeroSize.y = 0.f;
                 if( igButton("Export to OBJ",ZeroSize) ) {
-                    LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_OBJ);
+                    LevelManagerExport(LevelManager,GUI,VideoSystem,LEVEL_MANAGER_EXPORT_FORMAT_OBJ);
                 }
                 igSameLine(0.f,10.f);
                 if( igButton("Export to Ply",ZeroSize) ) {
-                    LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_PLY);
+                    LevelManagerExport(LevelManager,GUI,VideoSystem,LEVEL_MANAGER_EXPORT_FORMAT_PLY);
                 }
                 igSeparator();
                 igText("Export current music and ambient sounds");
                 if( igButton("Export to WAV",ZeroSize) ) {
-                    LevelManagerExport(LevelManager,GUI,LEVEL_MANAGER_EXPORT_FORMAT_WAV);
+                    LevelManagerExport(LevelManager,GUI,VideoSystem,LEVEL_MANAGER_EXPORT_FORMAT_WAV);
                 }
             }
         }
@@ -327,8 +328,9 @@ void GUIDrawHelpOverlay()
     ImVec2 WindowPosition;
     ImVec2 WindowPivot;
     
-    WindowFlags = /*ImGuiWindowFlags_NoDecoration |*/ ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | 
-                    ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+    WindowFlags = /*ImGuiWindowFlags_NoDecoration |*/ ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | 
+                    ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | 
+                    ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
     Viewport = igGetMainViewport();
     WorkPosition = Viewport->WorkPos;
     WindowPosition.x = (WorkPosition.x + 10.f);
@@ -338,8 +340,8 @@ void GUIDrawHelpOverlay()
     igSetNextWindowPos(WindowPosition, ImGuiCond_Once, WindowPivot);
 
     if( igBegin("Help", NULL, WindowFlags) ) {
-        igText("Press F1 to enable/disable debug settings");
-        igText("Press F2 to open video settings");
+        igText("Press F1 to open the debug settings");
+        igText("Press F2 to open the video settings");
         igText("Press F3 to open the level selection window");
         igText("Press F4 to change the game path");
         igText("Press Escape to exit the program");
@@ -357,7 +359,8 @@ void GUIDrawFPSOverlay(ComTimeInfo_t *TimeInfo)
     int WindowFlags;
     
     WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | 
-                    ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+                    ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | 
+                    ImGuiWindowFlags_NoMove;
     Viewport = igGetMainViewport();
     WorkPosition = Viewport->WorkPos;
     WorkSize = Viewport->WorkSize;
@@ -397,7 +400,7 @@ void GUIProgressBarReset(GUI_t *GUI)
     }
     GUI->ProgressBar->CurrentPercentage = 0;
 }
-void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
+void GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increment,char *Message)
 {
     ImGuiViewport *Viewport;
     ImVec2 ScreenCenter;
@@ -410,7 +413,7 @@ void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
         
     Viewport = igGetMainViewport();
     ImGuiViewport_GetCenter(&ScreenCenter,Viewport);
-    DPrintf("Center:%f;%f\n",ScreenCenter.x,ScreenCenter.y);
+
     Pivot.x = 0.5f;
     Pivot.y = 0.5f;
     //Update it
@@ -434,7 +437,7 @@ void GUIProgressBarIncrement(GUI_t *GUI,float Increment,char *Message)
         igEnd();
     }
     GUIEndFrame();
-    SDL_GL_SwapWindow(GUI->Window);
+    VideoSystemSwapBuffers(VideoSystem);
 }
 
 void GUIProgressBarEnd(GUI_t *GUI)
@@ -490,7 +493,7 @@ void GUIDrawSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
 #endif
 }
 
-void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,Mission_t *Missions,int NumMissions)
+void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem,Mission_t *Missions,int NumMissions)
 {
     int TreeNodeFlags;
     int i;
@@ -523,7 +526,8 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,Mission_t *Mission
                 }
                 if( igTreeNodeEx_Str(Missions[i].Levels[j].LevelName,TreeNodeFlags) ) {
                     if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
-                        LevelManagerLoadLevel(LevelManager,GUI,Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber);
+                        LevelManagerLoadLevel(LevelManager,GUI,VideoSystem,
+                                              Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber);
                         //Close it if we selected a level.
                         GUI->LevelSelectWindowHandle = 0;
                         break;
@@ -537,7 +541,7 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,Mission_t *Mission
         }
     }
 }
-void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager)
+void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem)
 {
     if( !GUI->LevelSelectWindowHandle ) {
         return;
@@ -550,9 +554,9 @@ void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager)
             igText(LevelManager->EngineName);
             igSeparator();
             if( LevelManagerGetGameEngine(LevelManager) == MOH_GAME_STANDARD ) {
-                GUIDrawLevelTree(GUI,LevelManager,MOHMissionsList,NumMOHMissions);
+                GUIDrawLevelTree(GUI,LevelManager,VideoSystem,MOHMissionsList,NumMOHMissions);
             } else {
-                GUIDrawLevelTree(GUI,LevelManager,MOHUMissionsList,NumMOHUMissions);
+                GUIDrawLevelTree(GUI,LevelManager,VideoSystem,MOHUMissionsList,NumMOHUMissions);
             }
         }
     }
@@ -679,9 +683,9 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSyste
             igEndPopup();
         }
     }
-    GUIDrawDebugWindow(GUI,LevelManager,Camera);
+    GUIDrawDebugWindow(GUI,LevelManager,Camera,VideoSystem);
     GUIDrawSettingsWindow(GUI,VideoSystem);
-    GUIDrawLevelSelectWindow(GUI,LevelManager);
+    GUIDrawLevelSelectWindow(GUI,LevelManager,VideoSystem);
 //     igShowDemoWindow(NULL);
     GUIEndFrame();
 }
@@ -867,7 +871,6 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
         return NULL;
     }
     GUI->NumRegisteredFileDialog = 0;
-    GUI->Window = VideoSystem->Window;
     
     GUI->FileDialogList = NULL;
 
@@ -878,7 +881,6 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     GUI->DefaultContext = igCreateContext(NULL);
     GUI->ProgressBar->Context = igCreateContext(NULL);
     GUI->ProgressBar->DialogTitle = NULL;
-
     GUIContextInit(GUI->ProgressBar->Context,VideoSystem,GUI->ConfigFilePath);
     GUIContextInit(GUI->DefaultContext,VideoSystem,GUI->ConfigFilePath);
     

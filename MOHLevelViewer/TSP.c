@@ -703,7 +703,9 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
         V2 += VRAMGetTexturePageY(VRAMPage,ColorMode);
      
         
-        if( TSPGetColorIndex(TSP->Color[Vert0].c) < 40 || TSPGetColorIndex(TSP->Color[Vert1].c) < 40 || TSPGetColorIndex(TSP->Color[Vert2].c) < 40 ) {
+        if( TSPGetColorIndex(TSP->Color[Vert0].c) < BSD_ANIMATED_LIGHTS_TABLE_SIZE || 
+            TSPGetColorIndex(TSP->Color[Vert1].c) < BSD_ANIMATED_LIGHTS_TABLE_SIZE || 
+            TSPGetColorIndex(TSP->Color[Vert2].c) < BSD_ANIMATED_LIGHTS_TABLE_SIZE ) {
             RenderingFace->Flags |= TSP_FX_ANIMATED_LIGHT_FACE;
         }
                     
@@ -727,9 +729,12 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             TransparentVertexPointer = 0;
 
         } else {
-            TSPFillFaceVertexBuffer(VertexData,&VertexPointer,TSP->Vertex[Vert0],TSP->Color[Vert0],U0,V0,CLUTDestX,CLUTDestY,ColorMode);
-            TSPFillFaceVertexBuffer(VertexData,&VertexPointer,TSP->Vertex[Vert1],TSP->Color[Vert1],U1,V1,CLUTDestX,CLUTDestY,ColorMode);
-            TSPFillFaceVertexBuffer(VertexData,&VertexPointer,TSP->Vertex[Vert2],TSP->Color[Vert2],U2,V2,CLUTDestX,CLUTDestY,ColorMode);
+            TSPFillFaceVertexBuffer(VertexData,&VertexPointer,TSP->Vertex[Vert0],
+                                    TSP->Color[Vert0],U0,V0,CLUTDestX,CLUTDestY,ColorMode);
+            TSPFillFaceVertexBuffer(VertexData,&VertexPointer,TSP->Vertex[Vert1],
+                                    TSP->Color[Vert1],U1,V1,CLUTDestX,CLUTDestY,ColorMode);
+            TSPFillFaceVertexBuffer(VertexData,&VertexPointer,TSP->Vertex[Vert2],
+                                    TSP->Color[Vert2],U2,V2,CLUTDestX,CLUTDestY,ColorMode);
             
             RenderingFace->VAOBufferOffset = Node->OpaqueFacesVAO->CurrentSize;
             RenderingFace->Flags |= TSP_FX_NONE;
@@ -739,9 +744,12 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
             VertexPointer = 0;
         }
         if( RenderingFace->Flags & TSP_FX_ANIMATED_LIGHT_FACE ) {
-            RenderingFace->ColorIndex[0] = (TSPGetColorIndex(TSP->Color[Vert0].c) < 40) ? (TSP->Color[Vert0].c & 0xFF) : -1;
-            RenderingFace->ColorIndex[1] = (TSPGetColorIndex(TSP->Color[Vert1].c) < 40) ? (TSP->Color[Vert1].c & 0xFF) : -1; 
-            RenderingFace->ColorIndex[2] = (TSPGetColorIndex(TSP->Color[Vert2].c) < 40) ? (TSP->Color[Vert2].c & 0xFF) : -1;
+            RenderingFace->ColorIndex[0] = (TSPGetColorIndex(TSP->Color[Vert0].c) < BSD_ANIMATED_LIGHTS_TABLE_SIZE) 
+                ? (TSP->Color[Vert0].c & 0xFF) : -1;
+            RenderingFace->ColorIndex[1] = (TSPGetColorIndex(TSP->Color[Vert1].c) < BSD_ANIMATED_LIGHTS_TABLE_SIZE) 
+                ? (TSP->Color[Vert1].c & 0xFF) : -1; 
+            RenderingFace->ColorIndex[2] = (TSPGetColorIndex(TSP->Color[Vert2].c) < BSD_ANIMATED_LIGHTS_TABLE_SIZE) 
+                ? (TSP->Color[Vert2].c & 0xFF) : -1;
         }
     }
     free(VertexData);
