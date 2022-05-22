@@ -1506,7 +1506,7 @@ char *BSDGetCollisionVolumeStringFromType(int CollisionVolumeType)
     }
 }
 
-bool BSDPointInSphere(Vec3_t Point,BSDPosition_t Center,float Radius)
+bool BSDPointInSphere(vec3 Point,BSDPosition_t Center,float Radius)
 {
     Vec3_t Node;
     float DeltaX;
@@ -1518,9 +1518,9 @@ bool BSDPointInSphere(Vec3_t Point,BSDPosition_t Center,float Radius)
     Node.z = Center.z;
     Vec3RotateXAxis(DEGTORAD(180.f),&Node);
     
-    DeltaX = fabs(Point.x - Node.x);
-    DeltaY = fabs(Point.y - Node.y);
-    DeltaZ = fabs(Point.z - Node.z);
+    DeltaX = fabs(Point[0] - Node.x);
+    DeltaY = fabs(Point[1] - Node.y);
+    DeltaZ = fabs(Point[2] - Node.z);
     
     return ( DeltaX*DeltaX + DeltaY*DeltaY + DeltaZ*DeltaZ <= Radius*Radius );
 }
@@ -1531,7 +1531,7 @@ bool BSDPointInSphere(Vec3_t Point,BSDPosition_t Center,float Radius)
     Radius
     MinY/MaxY: Bottom and Top Y coordinate of the cylinder from the center position.
 */
-bool BSDPointInCylinder(Vec3_t Point,BSDPosition_t Center,float Radius,float MinY,float MaxY)
+bool BSDPointInCylinder(vec3 Point,BSDPosition_t Center,float Radius,float MinY,float MaxY)
 {
 //   int DeltaY;
 //   int DeltaX;
@@ -1553,9 +1553,9 @@ bool BSDPointInCylinder(Vec3_t Point,BSDPosition_t Center,float Radius,float Min
         MinY = Temp;
     }
     
-    DeltaX = Point.x - Node.x;
-    DeltaY = Point.y - Node.y;
-    DeltaZ = Point.z - Node.z;
+    DeltaX = Point[0] - Node.x;
+    DeltaY = Point[1] - Node.y;
+    DeltaZ = Point[2] - Node.z;
     
     if( DeltaX * DeltaX + DeltaZ * DeltaZ <= Radius * Radius ) {
         if( DeltaY >= MinY && DeltaY <= MaxY ) {
@@ -1565,7 +1565,7 @@ bool BSDPointInCylinder(Vec3_t Point,BSDPosition_t Center,float Radius,float Min
     return false;
 }
 
-bool BSDPointInBox(Vec3_t Point,BSDPosition_t Center,BSDPosition_t NodeRotation,float Width,float Height,float Depth)
+bool BSDPointInBox(vec3 Point,BSDPosition_t Center,BSDPosition_t NodeRotation,float Width,float Height,float Depth)
 {
     Vec3_t Node;
     vec3 Delta;
@@ -1584,9 +1584,9 @@ bool BSDPointInBox(Vec3_t Point,BSDPosition_t Center,BSDPosition_t NodeRotation,
     HalfSizeY = fabs(Height)/ 2.f;
     HalfSizeZ = fabs(Depth) / 2.f;
 
-    Delta[0] = Point.x - Node.x;
-    Delta[1] = Point.y - Node.y;
-    Delta[2] = Point.z - Node.z;
+    Delta[0] = Point[0] - Node.x;
+    Delta[1] = Point[1] - Node.y;
+    Delta[2] = Point[2] - Node.z;
 
     if( NodeRotation.x != 0 || NodeRotation.y != 0 || NodeRotation.z != 0 ) {
 //         OOB Test...
@@ -1605,7 +1605,7 @@ bool BSDPointInBox(Vec3_t Point,BSDPosition_t Center,BSDPosition_t NodeRotation,
     return false;
 }
 
-bool BSDPointInNode(Vec3_t Position,BSDNode_t *Node)
+bool BSDPointInNode(vec3 Position,BSDNode_t *Node)
 {
     switch( Node->CollisionVolumeType ) {
         case BSD_COLLISION_VOLUME_TYPE_SPHERE:

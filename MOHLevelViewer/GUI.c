@@ -309,8 +309,8 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
             igText("Refresh Rate:%i",VidConfigRefreshRate->IValue);
             igSeparator();
             igText("Camera Informations");
-            igText("Position:%f;%f;%f",Camera->Position.x,Camera->Position.y,Camera->Position.z);
-            igText("Rotation:%f;%f;%f",Camera->Rotation.x,Camera->Rotation.y,Camera->Rotation.z);
+            igText("Position:%f;%f;%f",Camera->Position[0],Camera->Position[1],Camera->Position[2]);
+            igText("Rotation:%f;%f;%f",Camera->Rotation[PITCH],Camera->Rotation[YAW],Camera->Rotation[ROLL]);
         }
     }
     
@@ -340,6 +340,7 @@ void GUIDrawHelpOverlay()
     igSetNextWindowPos(WindowPosition, ImGuiCond_Once, WindowPivot);
 
     if( igBegin("Help", NULL, WindowFlags) ) {
+        igText("Press WASD to move the camera around");
         igText("Press F1 to open the debug settings");
         igText("Press F2 to open the video settings");
         igText("Press F3 to open the level selection window");

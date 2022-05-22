@@ -33,11 +33,9 @@ pvs_studio_add_target(TARGET MOHLevelViewer.Analyze ALL
                       ANALYZE ${PROJECT_NAME}
                       MODE GA:1,2)
                     
-#set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX foo)
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 
 include_directories(Libs/cimgui/imgui)
-# include_directories(${CMAKE_SOURCE_DIR})
 
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
@@ -75,11 +73,6 @@ target_compile_definitions(${PROJECT_NAME}
 )
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:-g>")
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:-O3>")
-
-
-
-
-
 
 include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(Libs/cimgui/generator/output/)

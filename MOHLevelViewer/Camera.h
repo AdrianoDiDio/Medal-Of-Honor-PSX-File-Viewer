@@ -22,28 +22,33 @@
 #include "Common.h"
 #include "Config.h"
 
+#define PITCH 0
+#define YAW 1
+#define ROLL 2
+
 typedef enum {
-    LOOK_LEFT,
-    LOOK_RIGHT,
-    LOOK_UP,
-    LOOK_DOWN,
-    DIR_FORWARD,
-    DIR_BACKWARD,
-    DIR_UPWARD,
-    DIR_DOWNWARD,
-    DIR_LEFTWARD,
-    DIR_RIGHTWARD
+    CAMERA_LOOK_LEFT,
+    CAMERA_LOOK_RIGHT,
+    CAMERA_LOOK_UP,
+    CAMERA_LOOK_DOWN,
+    CAMERA_DIRECTION_FORWARD,
+    CAMERA_DIRECTION_BACKWARD,
+    CAMERA_DIRECTION_UPWARD,
+    CAMERA_DIRECTION_DOWNWARD,
+    CAMERA_DIRECTION_LEFTWARD,
+    CAMERA_DIRECTION_RIGHTWARD
 } CameraDirection_t;
 
 typedef struct Camera_s {
-    Vec3_t Position;
-    Vec3_t Rotation;
+    vec3    Position;
+    vec3    Rotation;
     //Movements...
-    Vec3_t	Up;
-    Vec3_t	Right;
-    Vec3_t	Forward;
+    vec3	Right;
+    vec3	Forward;
     
     mat4    ViewMatrix;
+    
+    int     HasFocus;
 } Camera_t;
 
 extern Config_t *CameraSpeed;
@@ -51,6 +56,7 @@ extern Config_t *CameraMouseSensitivity;
 
 Camera_t    *CameraInit();
 void        CameraBeginFrame(Camera_t *Camera);
+void        CameraLostFocus(Camera_t *Camera);
 void        CameraSetPosition(Camera_t *Camera,Vec3_t Position);
 void        CameraSetRotation(Camera_t *Camera,Vec3_t Rotation);
 void        CameraOnMouseEvent(Camera_t *Camera,int Dx,int Dy);

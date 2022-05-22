@@ -393,7 +393,10 @@ void EngineCheckEvents(Engine_t *Engine)
             Quit(Engine);
         }
         
-        if( !GUIProcessEvent(Engine->GUI,&Event) ) {
+        if( GUIProcessEvent(Engine->GUI,&Event) ) {
+            //NOTE(Adriano):GUI is now open...tell the camera to zero-out the mouse delta immediately after we close the GUI.
+            CameraLostFocus(Engine->Camera);
+        } else {
             switch( Event.type ) {
                 case SDL_MOUSEMOTION:
                     CameraOnMouseEvent(Engine->Camera,Event.motion.x,Event.motion.y);
@@ -404,22 +407,22 @@ void EngineCheckEvents(Engine_t *Engine)
                         Quit(Engine);
                     }
                     if( Event.key.keysym.sym == SDLK_w ) {
-                        CameraUpdate(Engine->Camera, DIR_FORWARD, Engine->TimeInfo->Delta);
+                        CameraUpdate(Engine->Camera, CAMERA_DIRECTION_FORWARD, Engine->TimeInfo->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_s ) {
-                        CameraUpdate(Engine->Camera, DIR_BACKWARD, Engine->TimeInfo->Delta);
+                        CameraUpdate(Engine->Camera, CAMERA_DIRECTION_BACKWARD, Engine->TimeInfo->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_a ) {
-                        CameraUpdate(Engine->Camera, DIR_LEFTWARD, Engine->TimeInfo->Delta);
+                        CameraUpdate(Engine->Camera, CAMERA_DIRECTION_LEFTWARD, Engine->TimeInfo->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_d ) {
-                        CameraUpdate(Engine->Camera, DIR_RIGHTWARD, Engine->TimeInfo->Delta);
+                        CameraUpdate(Engine->Camera, CAMERA_DIRECTION_RIGHTWARD, Engine->TimeInfo->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_SPACE ) {
-                        CameraUpdate(Engine->Camera, DIR_UPWARD, Engine->TimeInfo->Delta);
+                        CameraUpdate(Engine->Camera, CAMERA_DIRECTION_UPWARD, Engine->TimeInfo->Delta);
                     }
                     if( Event.key.keysym.sym == SDLK_z ) {
-                        CameraUpdate(Engine->Camera, DIR_DOWNWARD, Engine->TimeInfo->Delta);
+                        CameraUpdate(Engine->Camera, CAMERA_DIRECTION_DOWNWARD, Engine->TimeInfo->Delta);
                     }
                     break;
                 default:
@@ -455,7 +458,7 @@ void ComUpdateDelta(ComTimeInfo_t *TimeInfo,Camera_t *Camera)
                 TimeInfo->FPS,
                 1000.f/(float)TimeInfo->FPS);
         DPrintf("%s\n",TimeInfo->FPSString);
-        DPrintf("Current Camera Position:%f;%f;%f\n",Camera->Position.x,Camera->Position.y,Camera->Position.z);
+        DPrintf("Current Camera Position:%f;%f;%f\n",Camera->Position[0],Camera->Position[1],Camera->Position[2]);
         TimeInfo->LastFPSTime = 0;
         TimeInfo->FPS = 0;
     }
