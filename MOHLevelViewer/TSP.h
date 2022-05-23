@@ -60,11 +60,6 @@ typedef struct TSPBBox_s {
     TSPVec3_t Max;
 } TSPBBox_t;
 
-typedef struct BBox_s {
-    Vec3_t Min;
-    Vec3_t Max;
-} BBox_t;
-
 typedef struct TSPTextureInfo_s {
     TSPUv_t UV0;
     short   CBA;
@@ -265,10 +260,8 @@ TSP_t  *TSPLoad(char *FName,int TSPNumber);
 void    TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void    TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,Camera_t *Camera,int Reset);
 void    TSPUpdateDynamicFaces(TSP_t *TSPList,Camera_t *Camera,int DynamicDataIndex);
-void    TSPCreateVAO(TSP_t *TSP);
-void    TSPCreateNodeBBoxVAO(TSP_t *TSPList);
-void    TSPCreateCollisionVAO(TSP_t *TSPList);
-int     TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY);
+void    TSPCreateVAOs(TSP_t *TSPList);
+int     TSPGetPointYComponentFromKDTree(vec3 Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY);
 bool    TSPIsVersion3(TSP_t *TSP);
 void    TSPDumpDataToObjFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile);
 void    TSPDumpDataToPlyFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile);

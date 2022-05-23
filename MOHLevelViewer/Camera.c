@@ -37,14 +37,9 @@ void CameraUpdateVectors(Camera_t *Camera)
 {
     Camera->Forward[0] =  sin(DEGTORAD(Camera->Rotation[YAW])) * cos(DEGTORAD(Camera->Rotation[PITCH]));
     Camera->Forward[1] =  -sin(DEGTORAD(Camera->Rotation[PITCH]));
-    Camera->Forward[2] = -cos(DEGTORAD(Camera->Rotation[YAW])) * cos(DEGTORAD(Camera->Rotation[PITCH]));
+    Camera->Forward[2] =  -(cos(DEGTORAD(Camera->Rotation[YAW])) * cos(DEGTORAD(Camera->Rotation[PITCH])));
     
-    glm_vec3_cross(GLM_YUP,Camera->Forward,Camera->Right);
-/*    
-    Camera->Right[0] = -(float)(cos(DEGTORAD(Camera->Rotation[YAW])));
-    Camera->Right[1] = 0;
-    Camera->Right[2] = -(float)(sin(DEGTORAD(Camera->Rotation[YAW])));*/
-    
+    glm_vec3_cross(GLM_YUP,Camera->Forward,Camera->Right);    
     glm_vec3_normalize(Camera->Forward);
     glm_vec3_normalize(Camera->Right);
 }
@@ -79,8 +74,8 @@ void CameraOnMouseEvent(Camera_t *Camera,int Dx,int Dy)
         Dy = VidConfigHeight->IValue/2;
         Camera->HasFocus = 1;
     }
-    Camera->Rotation[PITCH] += ( ( Dy - (VidConfigHeight->IValue/2) ) / 10.f ) * CameraMouseSensitivity->FValue; // 0.001f;
-    Camera->Rotation[YAW] += ( ( Dx - (VidConfigWidth->IValue/2)) / 10.f ) * CameraMouseSensitivity->FValue; // 0.001f;
+    Camera->Rotation[PITCH] += ( Dy - (VidConfigHeight->IValue/2) ) * CameraMouseSensitivity->FValue * 0.1;
+    Camera->Rotation[YAW] += ( Dx - (VidConfigWidth->IValue/2) ) * CameraMouseSensitivity->FValue * 0.1;
     CameraOnAngleUpdate(Camera);
 }
 
@@ -143,27 +138,22 @@ void CameraBeginFrame(Camera_t *Camera)
     glm_vec3_add(Camera->Position,Camera->Forward,Direction);
     glm_lookat(Camera->Position,Direction,GLM_YUP,Camera->ViewMatrix);
 }
-void CameraSetRotation(Camera_t *Camera,Vec3_t Rotation)
+void CameraSetRotation(Camera_t *Camera,vec3 Rotation)
 {
     if( !Camera ) {
         DPrintf("CameraSetRotation:Invalid camera\n");
         return;
     }
-    Camera->Rotation[PITCH] = Rotation.x;
-    Camera->Rotation[YAW] = Rotation.y;
-    Camera->Rotation[ROLL] = Rotation.z;
-    
+    glm_vec3_copy(Rotation,Camera->Rotation);
     CameraOnAngleUpdate(Camera);
 }
-void CameraSetPosition(Camera_t *Camera,Vec3_t Position)
+void CameraSetPosition(Camera_t *Camera,vec3 Position)
 {
     if( !Camera ) {
         DPrintf("CameraSetPosition:Invalid camera\n");
         return;
     }
-    Camera->Position[0] = Position.x;
-    Camera->Position[1] = Position.y;
-    Camera->Position[2] = Position.z;
+    glm_vec3_copy(Position,Camera->Position);
 }
 Camera_t *CameraInit()
 {

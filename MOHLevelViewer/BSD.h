@@ -143,7 +143,7 @@ typedef struct BSDNode_s {
 
 typedef struct BSDTSPStreamNode_s {
     short TSPNumberRenderList[4];
-    Vec3_t Position;
+    vec3 Position;
     struct BSDTSPStreamNode_s *Next;
 } BSDTSPStreamNode_t;
 
@@ -314,14 +314,13 @@ typedef struct BSDRenderObject_s {
     BSDFaceV2_t    *FaceV2;
     int             NumFaces;
     VAO_t          *VAO;
-    Vec3_t          Position;
 } BSDRenderObject_t;
 
 typedef struct BSDRenderObjectDrawable_s {
-    int RenderObjectIndex;
-    Vec3_t Position;
-    Vec3_t Rotation;
-    Vec3_t Scale;
+    int     RenderObjectIndex;
+    vec3    Position;
+    vec3    Rotation;
+    vec3    Scale;
     struct BSDRenderObjectDrawable_s *Next;
 } BSDRenderObjectDrawable_t;
 
@@ -383,7 +382,7 @@ FILE    *BSDEarlyInit(BSD_t **BSD,char *MissionPath,int MissionNumber,int LevelN
 int     BSDLoad(BSD_t *BSD,int GameEngine,int Multiplayer,FILE *BSDFile);
 char   *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId);
 char   *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
-Vec3_t  BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,Vec3_t *Rotation);
+void    BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 *Rotation);
 void    BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM);
 void    BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void    BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);

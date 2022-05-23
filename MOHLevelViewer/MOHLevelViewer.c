@@ -264,63 +264,6 @@ void SkipFileSection(int SectionSize,FILE *InFile)
     assert((ftell(InFile) - CurrentSection) == SectionSize);
 }
 
-Vec3_t Vec3Build(float x,float y,float z)
-{
-    Vec3_t Temp;
-
-    Temp.x = x;
-    Temp.y = y;
-    Temp.z = z;
-
-    return Temp;
-}
-
-float Vec3Length(Vec3_t Vector)
-{
-    return sqrt (Vector.x*Vector.x + Vector.y*Vector.y + Vector.z*Vector.z);
-}
-
-void Vec3RotateXAxis(float Theta,Vec3_t *Vector)
-{
-    Vector->y = Vector->y*cos(Theta) - Vector->z*sin(Theta);
-    Vector->z = Vector->y*sin(Theta) + Vector->z*cos(Theta);
-}
-
-void Vec3Normalize(Vec3_t *VOut)
-{
-    VOut->x = VOut->x / Vec3Length(*VOut);
-    VOut->y = VOut->y / Vec3Length(*VOut);
-    VOut->z = VOut->z / Vec3Length(*VOut);
-}
-
-void Vec3Add(Vec3_t A,Vec3_t B,Vec3_t *VOut)
-{
-    VOut->x = A.x + B.x;
-    VOut->y = A.y + B.y;
-    VOut->z = A.z + B.z;
-}
-
-void Vec3Subtract(Vec3_t A,Vec3_t B,Vec3_t *VOut)
-{
-    VOut->x = A.x - B.x;
-    VOut->y = A.y - B.y;
-    VOut->z = A.z - B.z;
-}
-
-void Vec3Cross( Vec3_t A, Vec3_t B, Vec3_t *Out ) {
-    Out->x = A.y*B.z - A.z*B.y;
-    Out->y = A.z*B.x - A.x*B.z;
-    Out->z = A.x*B.y - A.y*B.x;
-}
-
-void Vec3Scale(Vec3_t InVec,float Amount,Vec3_t *OutVec)
-{
-    OutVec->x = InVec.x * Amount;
-    OutVec->y = InVec.y * Amount;
-    OutVec->z = InVec.z * Amount;
-}
-
-
 char *SysGetConfigPath()
 {
     return SDL_GetPrefPath(NULL,"MOHLevelViewer");
@@ -372,8 +315,6 @@ void EngineCheckEvents(Engine_t *Engine)
     while( SDL_PollEvent(&Event) ) {
         
         if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-//             VidConf.Width = Event.window.data1;
-//             VidConf.Height = Event.window.data2;
             ConfigSetNumber("VideoWidth",Event.window.data1);
             ConfigSetNumber("VideoHeight",Event.window.data2);
         }

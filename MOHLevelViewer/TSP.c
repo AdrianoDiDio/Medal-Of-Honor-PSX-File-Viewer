@@ -102,7 +102,33 @@ bool TSPIsVersion3(TSP_t *TSP)
     return TSP->Header.Version == 3;
 }
 
-void Vec4FromXYZ(float x,float y,float z,vec4 Out)
+TSPVec3_t TSPGLMVec3ToTSPVec3(vec3 In)
+{
+    TSPVec3_t Result;
+    Result.x = In[0];
+    Result.y = In[1];
+    Result.z = In[2];
+    return Result;
+}
+
+
+void TSPVec3ToVec2(TSPVec3_t In,vec2 Out)
+{
+    Out[0] = In.x;
+    Out[1] = In.z;
+}
+void TSPVec3ToGLMVec3(TSPVec3_t In,vec3 Out)
+{
+    Out[0] = In.x;
+    Out[1] = In.y;
+    Out[2] = In.z;
+}
+float TSPFixedToFloat(int input,int FixedShift)
+{
+    return ((float)input / (float)(1 << FixedShift));
+}
+
+void TSPvec4FromXYZ(float x,float y,float z,vec4 Out)
 {
     Out[0] = x;
     Out[1] = y;
@@ -212,7 +238,7 @@ void TSPDumpDataToObjFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile)
     char Buffer[256];
     int i;
     int t;
-    Vec3_t NewPos;
+    vec3 NewPos;
     
     if( !TSPList || !OutFile ) {
         bool InvalidFile = (OutFile == NULL ? true : false);
@@ -228,9 +254,9 @@ void TSPDumpDataToObjFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile)
         sprintf(Buffer,"o TSP%i\n",t);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
         for( i = Iterator->Header.NumVertices - 1; i >= 0 ; i-- ) {
-            NewPos = Vec3Build(Iterator->Vertex[i].Position.x,Iterator->Vertex[i].Position.y,Iterator->Vertex[i].Position.z);
-            Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
-            sprintf(Buffer,"v %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+            TSPVec3ToGLMVec3(Iterator->Vertex[i].Position,NewPos);
+            glm_vec3_rotate(NewPos, DEGTORAD(180.f), GLM_XUP);
+            sprintf(Buffer,"v %f %f %f %f %f %f\n",NewPos[0] / 4096.f,NewPos[1] / 4096.f,NewPos[2] / 4096.f,
                 Iterator->Color[i].rgba[0] / 255.f,Iterator->Color[i].rgba[1] / 255.f,Iterator->Color[i].rgba[2] / 255.f
             );
             fwrite(Buffer,strlen(Buffer),1,OutFile);            
@@ -303,7 +329,7 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile)
     char Buffer[256];
     int i;
     int j;
-    Vec3_t NewPos;
+    vec3 NewPos;
     int FaceCount;
     int VertexCount;
     int VertexOffset;
@@ -360,23 +386,23 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile)
                     int Vert0 = Iterator->Node[i].FaceList[j].Vert0;
                     int Vert1 = Iterator->Node[i].FaceList[j].Vert1;
                     int Vert2 = Iterator->Node[i].FaceList[j].Vert2;
-                    NewPos = Vec3Build(Iterator->Vertex[Vert0].Position.x,Iterator->Vertex[Vert0].Position.y,Iterator->Vertex[Vert0].Position.z);
-                    Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
-                    sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+                    TSPVec3ToGLMVec3(Iterator->Vertex[Vert0].Position,NewPos);
+                    glm_vec3_rotate(NewPos, DEGTORAD(180.f), GLM_XUP);
+                    sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos[0] / 4096.f,NewPos[1] / 4096.f,NewPos[2] / 4096.f,
                             Iterator->Color[Vert0].rgba[0] / 255.f,Iterator->Color[Vert0].rgba[1] / 255.f,Iterator->Color[Vert0].rgba[2] / 255.f,
                             U0,V0
                     );
                     fwrite(Buffer,strlen(Buffer),1,OutFile);
-                    NewPos = Vec3Build(Iterator->Vertex[Vert1].Position.x,Iterator->Vertex[Vert1].Position.y,Iterator->Vertex[Vert1].Position.z);
-                    Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
-                    sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+                    TSPVec3ToGLMVec3(Iterator->Vertex[Vert1].Position,NewPos);
+                    glm_vec3_rotate(NewPos, DEGTORAD(180.f), GLM_XUP);
+                    sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos[0] / 4096.f,NewPos[1] / 4096.f,NewPos[2] / 4096.f,
                             Iterator->Color[Vert1].rgba[0] / 255.f,Iterator->Color[Vert1].rgba[1] / 255.f,Iterator->Color[Vert1].rgba[2] / 255.f,
                             U1,V1
                     );
                     fwrite(Buffer,strlen(Buffer),1,OutFile);      
-                    NewPos = Vec3Build(Iterator->Vertex[Vert2].Position.x,Iterator->Vertex[Vert2].Position.y,Iterator->Vertex[Vert2].Position.z);
-                    Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
-                    sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+                    TSPVec3ToGLMVec3(Iterator->Vertex[Vert2].Position,NewPos);
+                    glm_vec3_rotate(NewPos, DEGTORAD(180.f), GLM_XUP);
+                    sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos[0] / 4096.f,NewPos[1] / 4096.f,NewPos[2] / 4096.f,
                             Iterator->Color[Vert2].rgba[0] / 255.f,Iterator->Color[Vert2].rgba[1] / 255.f,Iterator->Color[Vert2].rgba[2] / 255.f,
                             U2,V2
                     );
@@ -397,23 +423,23 @@ void TSPDumpDataToPlyFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile)
                 float U2 = (((float)Iterator->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
                 float V2 = /*255 -*/1.f-(((float)Iterator->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
 
-                NewPos = Vec3Build(Iterator->Vertex[Vert0].Position.x,Iterator->Vertex[Vert0].Position.y,Iterator->Vertex[Vert0].Position.z);
-                Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
-                sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+                TSPVec3ToGLMVec3(Iterator->Vertex[Vert0].Position,NewPos);
+                glm_vec3_rotate(NewPos, DEGTORAD(180.f), GLM_XUP);
+                sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos[0] / 4096.f,NewPos[1] / 4096.f,NewPos[2] / 4096.f,
                         Iterator->Color[Vert0].rgba[0] / 255.f,Iterator->Color[Vert0].rgba[1] / 255.f,Iterator->Color[Vert0].rgba[2] / 255.f,
                         U0,V0
                 );
                 fwrite(Buffer,strlen(Buffer),1,OutFile);
-                NewPos = Vec3Build(Iterator->Vertex[Vert1].Position.x,Iterator->Vertex[Vert1].Position.y,Iterator->Vertex[Vert1].Position.z);
-                Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
-                sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+                TSPVec3ToGLMVec3(Iterator->Vertex[Vert1].Position,NewPos);
+                glm_vec3_rotate(NewPos, DEGTORAD(180.f), GLM_XUP);
+                sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos[0] / 4096.f,NewPos[1] / 4096.f,NewPos[2] / 4096.f,
                         Iterator->Color[Vert1].rgba[0] / 255.f,Iterator->Color[Vert1].rgba[1] / 255.f,Iterator->Color[Vert1].rgba[2] / 255.f,
                         U1,V1
                 );
                 fwrite(Buffer,strlen(Buffer),1,OutFile);      
-                NewPos = Vec3Build(Iterator->Vertex[Vert2].Position.x,Iterator->Vertex[Vert2].Position.y,Iterator->Vertex[Vert2].Position.z);
-                Vec3RotateXAxis(DEGTORAD(180.f),&NewPos);
-                sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos.x / 4096.f,NewPos.y / 4096.f,NewPos.z / 4096.f,
+                TSPVec3ToGLMVec3(Iterator->Vertex[Vert2].Position,NewPos);
+                glm_vec3_rotate(NewPos, DEGTORAD(180.f), GLM_XUP);
+                sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",NewPos[0] / 4096.f,NewPos[1] / 4096.f,NewPos[2] / 4096.f,
                         Iterator->Color[Vert2].rgba[0] / 255.f,Iterator->Color[Vert2].rgba[1] / 255.f,Iterator->Color[Vert2].rgba[2] / 255.f,
                         U2,V2
                 );
@@ -443,14 +469,14 @@ bool TSPBoxInFrustum(TSPBBox_t BBox,mat4 MVPMatrix)
     
     glm_frustum_planes(MVPMatrix,FrustumPlaneList);
     
-    Vec4FromXYZ(BBox.Min.x,BBox.Min.y,BBox.Min.z,BoxCornerList[0]);
-    Vec4FromXYZ(BBox.Max.x,BBox.Min.y,BBox.Min.z,BoxCornerList[1]);
-    Vec4FromXYZ(BBox.Min.x,BBox.Max.y,BBox.Min.z,BoxCornerList[2]);
-    Vec4FromXYZ(BBox.Max.x,BBox.Max.y,BBox.Min.z,BoxCornerList[3]);
-    Vec4FromXYZ(BBox.Min.x,BBox.Min.y,BBox.Max.z,BoxCornerList[4]);
-    Vec4FromXYZ(BBox.Max.x,BBox.Min.y,BBox.Max.z,BoxCornerList[5]);
-    Vec4FromXYZ(BBox.Min.x,BBox.Max.y,BBox.Max.z,BoxCornerList[6]);
-    Vec4FromXYZ(BBox.Max.x,BBox.Max.y,BBox.Max.z,BoxCornerList[7]);
+    TSPvec4FromXYZ(BBox.Min.x,BBox.Min.y,BBox.Min.z,BoxCornerList[0]);
+    TSPvec4FromXYZ(BBox.Max.x,BBox.Min.y,BBox.Min.z,BoxCornerList[1]);
+    TSPvec4FromXYZ(BBox.Min.x,BBox.Max.y,BBox.Min.z,BoxCornerList[2]);
+    TSPvec4FromXYZ(BBox.Max.x,BBox.Max.y,BBox.Min.z,BoxCornerList[3]);
+    TSPvec4FromXYZ(BBox.Min.x,BBox.Min.y,BBox.Max.z,BoxCornerList[4]);
+    TSPvec4FromXYZ(BBox.Max.x,BBox.Min.y,BBox.Max.z,BoxCornerList[5]);
+    TSPvec4FromXYZ(BBox.Min.x,BBox.Max.y,BBox.Max.z,BoxCornerList[6]);
+    TSPvec4FromXYZ(BBox.Max.x,BBox.Max.y,BBox.Max.z,BoxCornerList[7]);
 
     for( i = 0; i < 6; i++ ) {
         BoxOutsideCount = 0;
@@ -929,12 +955,12 @@ void TSPCreateCollisionVAO(TSP_t *TSPList)
         Iterator->CollisionVAOList = VAO;
         free(VertexData);
     }
-
 }
 
-Vec3_t Vec3_FromTSPVec3(TSPVec3_t In)
+void TSPCreateVAOs(TSP_t *TSPList)
 {
-    return Vec3Build(In.x,In.y,In.z);
+    TSPCreateNodeBBoxVAO(TSPList);
+    TSPCreateCollisionVAO(TSPList);
 }
 
 void TSPPrintVec3(TSPVec3_t Vector)
@@ -1948,17 +1974,6 @@ TSPCollision_t *TSPGetCollisionDataFromPoint(TSP_t *TSPList,TSPVec3_t Point)
     return NULL;
 }
 
-void TSPVec3ToVec2(TSPVec3_t Point,vec2 Out)
-{
-    Out[0] = Point.x;
-    Out[1] = Point.z;
-}
-
-float TSPFixedToFloat(int input,int FixedShift)
-{
-    return ((float)input / (float)(1 << FixedShift));
-}
-
 int TSPGetYFromCollisionFace(TSPCollision_t *CollisionData,TSPVec3_t Point,TSPCollisionFace_t *Face)
 {
     float OutY;
@@ -2070,16 +2085,18 @@ int TSPCheckCollisionFaceIntersection(TSPCollision_t *CollisionData,TSPVec3_t Po
     return -1;
 }
 
-int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY)
+int TSPGetPointYComponentFromKDTree(vec3 Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY)
 {
     TSPCollision_t *CollisionData;
     TSPCollisionKDTreeNode_t *Node;
+    TSPVec3_t Position;
     int WorldBoundMinX;
     int WorldBoundMinZ;
     int MinValue;
     int CurrentNode;
     
-    CollisionData = TSPGetCollisionDataFromPoint(TSPList,Point);
+    Position = TSPGLMVec3ToTSPVec3(Point);
+    CollisionData = TSPGetCollisionDataFromPoint(TSPList,Position);
     
     if( CollisionData == NULL ) {
         DPrintf("TSPGetPointYComponentFromKDTree:Point wasn't in any collision data...\n");
@@ -2104,11 +2121,11 @@ int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *Property
             if( PropertySetFileIndex != NULL ) {
                 *PropertySetFileIndex = Node->PropertySetFileIndex;
             }
-            return TSPCheckCollisionFaceIntersection(CollisionData,Point,Node->Child1,~Node->Child0,OutY);
+            return TSPCheckCollisionFaceIntersection(CollisionData,Position,Node->Child1,~Node->Child0,OutY);
         }
         if( Node->Child1 < 0 ) {
             MinValue = WorldBoundMinZ + Node->MaxX;
-            if (Point.z < MinValue) {
+            if (Position.z < MinValue) {
                 CurrentNode = Node->Child0;
             } else {
                 CurrentNode = ~Node->Child1;
@@ -2116,7 +2133,7 @@ int TSPGetPointYComponentFromKDTree(TSPVec3_t Point,TSP_t *TSPList,int *Property
             }
         } else {
             MinValue = WorldBoundMinX + Node->MaxX;
-            if( Point.x < MinValue ) {
+            if( Position.x < MinValue ) {
                 CurrentNode = Node->Child0;
             } else {
                 CurrentNode = Node->Child1;

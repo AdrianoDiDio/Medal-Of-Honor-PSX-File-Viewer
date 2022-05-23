@@ -46,12 +46,4 @@ typedef struct Color3_s {
     Byte b;
 } Color3b_t;
 
-
-typedef struct Vec3_s
-{
-    float x;
-    float y;
-    float z;
-} Vec3_t;
-
 #endif //__TYPES_H_

@@ -62,6 +62,13 @@ Color3b_t StarsColors[8] = {
     
     FIXME:RenderObjectList,RenderObjectRealList,RenderObjectShowCaseList CLEANUP!
 */
+
+void BSDPositionToGLMVec3(BSDPosition_t In,vec3 Out)
+{
+    Out[0] = In.x;
+    Out[1] = In.y;
+    Out[2] = In.z;
+}
 void BSDDumpProperty(BSD_t *BSD,int PropertyIndex)
 {
     int i;
@@ -98,9 +105,9 @@ void BSDDumpFaceDataToObjFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObject
         Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[i];
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
         sprintf(Buffer,"v %f %f %f %f %f %f\n",
-                (OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f,
-                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,
-                (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+                (OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f,
+                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,
+                (OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f
 
         );
@@ -163,9 +170,9 @@ void BSDDumpFaceV2DataToObjFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObje
         Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[i];
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
         sprintf(Buffer,"v %f %f %f %f %f %f\n",
-                (OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f,
-                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,
-                (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+                (OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f,
+                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,
+                (OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f
         );
         fwrite(Buffer,strlen(Buffer),1,OutFile); 
@@ -214,7 +221,6 @@ void BSDDumpDataToObjFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
     mat4 RotationMatrix;
     mat4 ScaleMatrix;
     mat4 ModelMatrix;
-    vec3 ScaleVector;
 
     
     if( !BSD || !OutFile ) {
@@ -241,20 +247,17 @@ void BSDDumpDataToObjFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
         RotationAxis[0] = 0;
         RotationAxis[1] = 1;
         RotationAxis[2] = 0;
-        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation.y), RotationAxis);
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[1]), RotationAxis);
         RotationAxis[0] = 1;
         RotationAxis[1] = 0;
         RotationAxis[2] = 0;
-        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation.x), RotationAxis);
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[0]), RotationAxis);
         RotationAxis[0] = 0;
         RotationAxis[1] = 0;
         RotationAxis[2] = 1;
-        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation.z), RotationAxis);
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[2]), RotationAxis);
         
-        ScaleVector[0] = RenderObjectIterator->Scale.x;
-        ScaleVector[1] = RenderObjectIterator->Scale.y;
-        ScaleVector[2] = RenderObjectIterator->Scale.z;
-        glm_scale_make(ScaleMatrix,ScaleVector);
+        glm_scale_make(ScaleMatrix,RenderObjectIterator->Scale);
 
         glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
         
@@ -304,8 +307,8 @@ void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObject
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].z;
         Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert0];
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, 
-                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f, (OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f, (OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U0,V0);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
         Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert1];
@@ -313,8 +316,8 @@ void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObject
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, 
-                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U1,V1);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
         Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert2];
@@ -322,8 +325,8 @@ void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObject
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, 
-                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U2,V2);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
     }
@@ -365,8 +368,8 @@ void BSDDumpFaceV2DataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObje
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, 
-                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U0,V0);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
         Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert1];
@@ -374,8 +377,8 @@ void BSDDumpFaceV2DataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObje
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, 
-                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U1,V1);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
         Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert2];
@@ -383,8 +386,8 @@ void BSDDumpFaceV2DataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObje
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].y;
         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position.x) / 4096.f, 
-                (OutVector[1] - RenderObjectDrawable->Position.y) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position.z) / 4096.f,
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U2,V2);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
     }
@@ -397,7 +400,6 @@ void BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
     mat4 RotationMatrix;
     mat4 ScaleMatrix;
     mat4 ModelMatrix;
-    vec3 ScaleVector;
     int FaceCount;
     int VertexOffset;
     int i;
@@ -432,20 +434,17 @@ void BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
         RotationAxis[0] = 0;
         RotationAxis[1] = -1;
         RotationAxis[2] = 0;
-        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation.y), RotationAxis);
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[1]), RotationAxis);
         RotationAxis[0] = 1;
         RotationAxis[1] = 0;
         RotationAxis[2] = 0;
-        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation.x), RotationAxis);
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[0]), RotationAxis);
         RotationAxis[0] = 0;
         RotationAxis[1] = 0;
         RotationAxis[2] = 1;
-        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation.z), RotationAxis);
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[2]), RotationAxis);
         
-        ScaleVector[0] = RenderObjectIterator->Scale.x;
-        ScaleVector[1] = RenderObjectIterator->Scale.y;
-        ScaleVector[2] = RenderObjectIterator->Scale.z;
-        glm_scale_make(ScaleMatrix,ScaleVector);
+        glm_scale_make(ScaleMatrix,RenderObjectIterator->Scale);
 
         glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
         
@@ -471,7 +470,6 @@ void BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
 void BSDFixRenderObjectPosition(Level_t *Level)
 {
     BSDRenderObjectDrawable_t *RenderObjectIterator;
-    TSPVec3_t Point;
     int Result;
     int OutY;
     int Delta;
@@ -479,19 +477,16 @@ void BSDFixRenderObjectPosition(Level_t *Level)
     
     for( RenderObjectIterator = Level->BSD->RenderObjectDrawableList; RenderObjectIterator; 
         RenderObjectIterator = RenderObjectIterator->Next ) {
-        Point.x = RenderObjectIterator->Position.x;
-        Point.y = RenderObjectIterator->Position.y;
-        Point.z = RenderObjectIterator->Position.z;
-        Result = TSPGetPointYComponentFromKDTree(Point,Level->TSPList,&PropertySetIndex,&OutY);
+        Result = TSPGetPointYComponentFromKDTree(RenderObjectIterator->Position,Level->TSPList,&PropertySetIndex,&OutY);
         if( Result == -1 ) {
             DPrintf("BSDFixRenderObjectPosition:Not found in KD Tree!\n");
             continue;
         }
-        Delta = abs(Point.y - OutY);
+        Delta = abs(RenderObjectIterator->Position[1] - OutY);
         DPrintf("Delta is %i (Limit 55) PropertySetIndex:%i\n",Delta,PropertySetIndex);
         BSDDumpProperty(Level->BSD,PropertySetIndex);
         if( Delta < 55 ) {
-            RenderObjectIterator->Position.y = OutY;
+            RenderObjectIterator->Position[1] = OutY;
         }
     }
 }
@@ -723,9 +718,9 @@ void BSDCreateRenderObjectPointListVAO(BSD_t *BSD)
     NumSkip = 0;
     i = 0;
     for( Iterator = BSD->RenderObjectDrawableList; Iterator; Iterator = Iterator->Next ) {
-        RenderObjectData[RenderObjectDataPointer] =   Iterator->Position.x;
-        RenderObjectData[RenderObjectDataPointer+1] = Iterator->Position.y;
-        RenderObjectData[RenderObjectDataPointer+2] = Iterator->Position.z;
+        RenderObjectData[RenderObjectDataPointer] =   Iterator->Position[0];
+        RenderObjectData[RenderObjectDataPointer+1] = Iterator->Position[1];
+        RenderObjectData[RenderObjectDataPointer+2] = Iterator->Position[2];
         RenderObjectElement = BSD->RenderObjectTable.RenderObject[Iterator->RenderObjectIndex];
         if( RenderObjectElement.Type == BSD_RENDER_OBJECT_ENEMY ) {
             // BLUE
@@ -780,7 +775,7 @@ void BSDCreateRenderObjectPointListVAO(BSD_t *BSD)
     free(RenderObjectData);
 }
 
-void BSDAddNodeToRenderObjecDrawabletList(BSD_t *BSD,int IsMultiplayer,unsigned int NodeId,Vec3_t Position,Vec3_t Rotation)
+void BSDAddNodeToRenderObjecDrawabletList(BSD_t *BSD,int IsMultiplayer,unsigned int NodeId,vec3 Position,vec3 Rotation)
 {
     BSDRenderObjectDrawable_t *Object;
     unsigned int RenderObjectId;
@@ -802,17 +797,17 @@ void BSDAddNodeToRenderObjecDrawabletList(BSD_t *BSD,int IsMultiplayer,unsigned 
 
     Object = malloc(sizeof(BSDRenderObjectDrawable_t));
     Object->RenderObjectIndex = RenderObjectIndex;
-    Object->Position = Position;
+    glm_vec3_copy(Position,Object->Position);
     //PSX GTE Uses 4096 as unit value only when dealing with fixed math operation.
     //When dealing with rotation then 4096 = 360 degrees.
-    //We need to map it back to OpenGL standard format [0;360]. 
-    Object->Rotation.x = (Rotation.x  / 4096) * 360.f;
-    Object->Rotation.y = (Rotation.y  / 4096) * 360.f;
-    Object->Rotation.z = (Rotation.z  / 4096) * 360.f;
-    
-    Object->Scale.x = (float) (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleX  / 16 ) / 4096.f;
-    Object->Scale.y = (float) (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleY  / 16 ) / 4096.f;
-    Object->Scale.z = (float) (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleZ  / 16 ) / 4096.f;
+    //We need to map it back to OpenGL standard format [0;360].
+    glm_vec3_scale(Rotation, 360.f / 4096.f, Object->Rotation);
+//     Object->Rotation[0] = (Rotation.x  / 4096) * 360.f;
+//     Object->Rotation[1] = (Rotation.y  / 4096) * 360.f;
+//     Object->Rotation[2] = (Rotation.z  / 4096) * 360.f;
+    Object->Scale[0] = (float) (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleX  / 16 ) / 4096.f;
+    Object->Scale[1] = (float) (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleY  / 16 ) / 4096.f;
+    Object->Scale[2] = (float) (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleZ  / 16 ) / 4096.f;
     
     Object->Next = BSD->RenderObjectDrawableList;
     BSD->RenderObjectDrawableList = Object;
@@ -995,7 +990,7 @@ void BSDCreateMoonVAO(BSD_t *BSD,VRAM_t *VRAM)
     int Stride;
     int DataSize;
     int VertexPointer;
-    Vec3_t MoonPosition;
+    vec3 MoonPosition;
     
     
     if( !BSDIsMoonEnabled(BSD) ) {
@@ -1018,11 +1013,14 @@ void BSDCreateMoonVAO(BSD_t *BSD,VRAM_t *VRAM)
     
     VertexData = malloc(DataSize);
     VertexPointer = 0;
-    MoonPosition = Vec3Build((BSD->SkyData.MoonZ * 32) / 200,BSD->SkyData.MoonY,BSD->SkyData.MoonZ);
-    Vec3RotateXAxis(DEGTORAD(180.f),&MoonPosition);
-    x = MoonPosition.x;
-    y = MoonPosition.y;
-    z = MoonPosition.z;
+    MoonPosition[0] = (BSD->SkyData.MoonZ * 32) / 200;
+    MoonPosition[1] = BSD->SkyData.MoonY;
+    MoonPosition[2] = BSD->SkyData.MoonZ;
+    glm_vec3_rotate(MoonPosition, DEGTORAD(180.f), GLM_XUP);
+
+    x = MoonPosition[0];
+    y = MoonPosition[1];
+    z = MoonPosition[2];
     
     w = BSD_MOON_WIDTH * (BSD->SkyData.StarRadius * 4);
     h = BSD_MOON_HEIGHT * (BSD->SkyData.StarRadius * 4);
@@ -1149,18 +1147,17 @@ void BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM)
 
 
 
-Vec3_t BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,Vec3_t *Rotation)
+void BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 *Rotation)
 {
-    Vec3_t PlayerSpawn;
-    Vec3_t LocalRotation;
+    vec3 LocalRotation;
 
     int i;
     
-    PlayerSpawn = Vec3Build(0,0,0);
+    glm_vec3_zero(Position);
     
     if( !BSD ) {
         DPrintf("BSDGetPlayerSpawn:Invalid BSD\n");
-        return PlayerSpawn;
+        return;
     }
     
     for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
@@ -1170,17 +1167,19 @@ Vec3_t BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,Vec3_t *Rotation)
         if( BSD->NodeData.Node[i].SpawnIndex != SpawnIndex ) {
             continue;
         }
-        PlayerSpawn = Vec3Build(BSD->NodeData.Node[i].Position.x,BSD->NodeData.Node[i].Position.y,BSD->NodeData.Node[i].Position.z);
-        Vec3RotateXAxis(DEGTORAD(180.f),&PlayerSpawn);
+        Position[0] = BSD->NodeData.Node[i].Position.x;
+        Position[1] = BSD->NodeData.Node[i].Position.y;
+        Position[2] = BSD->NodeData.Node[i].Position.z;
+        glm_vec3_rotate(Position, DEGTORAD(180.f), GLM_XUP);
         if( Rotation ) {
-            LocalRotation = Vec3Build(BSD->NodeData.Node[i].Rotation.x,BSD->NodeData.Node[i].Rotation.y,BSD->NodeData.Node[i].Rotation.z);
-            Rotation->x = (LocalRotation.x / 4096.f) *  360.f;
-            Rotation->y = (LocalRotation.y / 4096.f) *  360.f;
-            Rotation->z = (LocalRotation.z / 4096.f) *  360.f;
+            LocalRotation[0] = BSD->NodeData.Node[i].Rotation.x;
+            LocalRotation[1] = BSD->NodeData.Node[i].Rotation.y;
+            LocalRotation[2] = BSD->NodeData.Node[i].Rotation.z;
+            glm_vec3_scale(LocalRotation,360.f/4096.f,*Rotation);
         }
         break;
     }
-    return PlayerSpawn;
+    return;
 }
 int BSDGetRenderObjectIndexById(BSD_t *BSD,int Id)
 {
@@ -1202,12 +1201,6 @@ BSDRenderObject_t *BSDGetRenderObjectById(BSD_t *BSD,int Id)
         }
     }
     return NULL;
-}
-bool isPointInsideAABB(Vec3_t Position, Vec3_t BoxMin,Vec3_t BoxMax)
-{
-  return (Position.x >= BoxMin.x && Position.x <= BoxMax.x) &&
-         (Position.y >= BoxMin.y && Position.y <= BoxMax.y) &&
-         (Position.z >= BoxMin.z && Position.z <= BoxMax.z);
 }
 
 unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId)
@@ -1508,21 +1501,10 @@ char *BSDGetCollisionVolumeStringFromType(int CollisionVolumeType)
 
 bool BSDPointInSphere(vec3 Point,BSDPosition_t Center,float Radius)
 {
-    Vec3_t Node;
-    float DeltaX;
-    float DeltaY;
-    float DeltaZ;
-  
-    Node.x = Center.x;
-    Node.y = Center.y;
-    Node.z = Center.z;
-    Vec3RotateXAxis(DEGTORAD(180.f),&Node);
-    
-    DeltaX = fabs(Point[0] - Node.x);
-    DeltaY = fabs(Point[1] - Node.y);
-    DeltaZ = fabs(Point[2] - Node.z);
-    
-    return ( DeltaX*DeltaX + DeltaY*DeltaY + DeltaZ*DeltaZ <= Radius*Radius );
+    vec3  NodePosition;
+    BSDPositionToGLMVec3(Center,NodePosition);
+    glm_vec3_rotate(NodePosition, DEGTORAD(180.f), GLM_XUP);
+    return (  glm_vec3_distance2(Point,NodePosition) <= Radius*Radius );
 }
 
 /*
@@ -1533,18 +1515,14 @@ bool BSDPointInSphere(vec3 Point,BSDPosition_t Center,float Radius)
 */
 bool BSDPointInCylinder(vec3 Point,BSDPosition_t Center,float Radius,float MinY,float MaxY)
 {
-//   int DeltaY;
-//   int DeltaX;
-    Vec3_t Node;
+    vec3  NodePosition;
     float DeltaX;
     float DeltaY;
     float DeltaZ;
     float Temp;
   
-    Node.x = Center.x;
-    Node.y = Center.y;
-    Node.z = Center.z;
-    Vec3RotateXAxis(DEGTORAD(180.f),&Node);
+    BSDPositionToGLMVec3(Center,NodePosition);
+    glm_vec3_rotate(NodePosition, DEGTORAD(180.f), GLM_XUP);
 
     //Make sure Min/Max are not swapped out.
     if( MaxY < MinY ) {
@@ -1553,9 +1531,9 @@ bool BSDPointInCylinder(vec3 Point,BSDPosition_t Center,float Radius,float MinY,
         MinY = Temp;
     }
     
-    DeltaX = Point[0] - Node.x;
-    DeltaY = Point[1] - Node.y;
-    DeltaZ = Point[2] - Node.z;
+    DeltaX = Point[0] - NodePosition[0];
+    DeltaY = Point[1] - NodePosition[1];
+    DeltaZ = Point[2] - NodePosition[2];
     
     if( DeltaX * DeltaX + DeltaZ * DeltaZ <= Radius * Radius ) {
         if( DeltaY >= MinY && DeltaY <= MaxY ) {
@@ -1567,7 +1545,7 @@ bool BSDPointInCylinder(vec3 Point,BSDPosition_t Center,float Radius,float MinY,
 
 bool BSDPointInBox(vec3 Point,BSDPosition_t Center,BSDPosition_t NodeRotation,float Width,float Height,float Depth)
 {
-    Vec3_t Node;
+    vec3 NodePosition;
     vec3 Delta;
     float HalfSizeX;
     float HalfSizeY;
@@ -1575,18 +1553,16 @@ bool BSDPointInBox(vec3 Point,BSDPosition_t Center,BSDPosition_t NodeRotation,fl
     vec3  Rotation;
     mat4  RotationMatrix;
   
-    Node.x = Center.x;
-    Node.y = Center.y;
-    Node.z = Center.z;
-    Vec3RotateXAxis(DEGTORAD(180.f),&Node);
+    BSDPositionToGLMVec3(Center,NodePosition);
+    glm_vec3_rotate(NodePosition, DEGTORAD(180.f), GLM_XUP);
     
     HalfSizeX = fabs(Width) / 2.f;
     HalfSizeY = fabs(Height)/ 2.f;
     HalfSizeZ = fabs(Depth) / 2.f;
 
-    Delta[0] = Point[0] - Node.x;
-    Delta[1] = Point[1] - Node.y;
-    Delta[2] = Point[2] - Node.z;
+    Delta[0] = Point[0] - NodePosition[0];
+    Delta[1] = Point[1] - NodePosition[1];
+    Delta[2] = Point[2] - NodePosition[2];
 
     if( NodeRotation.x != 0 || NodeRotation.y != 0 || NodeRotation.z != 0 ) {
 //         OOB Test...
@@ -1653,33 +1629,27 @@ void BSDGetObjectMatrix(BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 Res
 {
     vec3 temp;
     glm_mat4_identity(Result);
-//     glm_mat4_copy(Camera->ViewMatrix,ModelMatrix);
-    temp[0] = (RenderObjectDrawable->Position.x);
-    temp[1] = -(RenderObjectDrawable->Position.y);
-    temp[2] = -(RenderObjectDrawable->Position.z);
+    temp[0] = (RenderObjectDrawable->Position[0]);
+    temp[1] = -(RenderObjectDrawable->Position[1]);
+    temp[2] = -(RenderObjectDrawable->Position[2]);
 
     glm_translate(Result,temp);
     temp[0] = 0;
     temp[1] = -1;
     temp[2] = 0;
-    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation.y), temp);
+    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation[1]), temp);
     temp[0] = 1;
     temp[1] = 0;
     temp[2] = 0;
-    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation.x), temp);
+    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation[0]), temp);
     temp[0] = 0;
     temp[1] = 0;
     temp[2] = 1;
-    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation.z), temp);
-        
-    temp[0] = RenderObjectDrawable->Scale.x;
-    temp[1] = RenderObjectDrawable->Scale.y;
-    temp[2] = RenderObjectDrawable->Scale.z;
-    glm_scale(Result,temp);
+    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation[2]), temp);
+    glm_scale(Result,RenderObjectDrawable->Scale);
 }
 //TODO:Spawn the RenderObject when loading node data!
 //     Some nodes don't have a corresponding RenderObject like the PlayerSpawn.
-//     BSDSpawnEntity(int UBlockId,Vec3_t NodePos) => Store into a list and transform to vao.
 void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
 {
     Shader_t *Shader;
@@ -1688,6 +1658,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     mat4 MVPMatrix;
     mat4 ModelViewMatrix;
     mat4 ModelMatrix;
+    vec3 PSpawn;
     int MVPMatrixId;
     int EnableLightingId;
     int i;
@@ -1776,17 +1747,16 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
         glUseProgram(Shader->ProgramId);
         MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
         glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
-        Vec3_t PSpawn;
     
-        PSpawn = BSDGetPlayerSpawn(BSD,0,NULL);
+        BSDGetPlayerSpawn(BSD,0,PSpawn,NULL);
     
         for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
             vec3 temp;
             glm_mat4_identity(ModelViewMatrix);
             glm_mat4_identity(ModelMatrix);
-            temp[0] = ((PSpawn.x - (i * 200.f)));
-            temp[1] = (-PSpawn.y);
-            temp[2] = (PSpawn.z);
+            temp[0] = ((PSpawn[0] - (i * 200.f)));
+            temp[1] = (-PSpawn[1]);
+            temp[2] = (PSpawn[2]);
             glm_translate(ModelMatrix,temp);
             glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
             glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
@@ -2334,8 +2304,8 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFile
     int NodeNumReferencedRenderObjectIdOffset;
     int NumReferencedRenderObjectId;
     unsigned int NodeRenderObjectId;
-    Vec3_t NodePosition;
-    Vec3_t NodeRotation;
+    vec3 NodePosition;
+    vec3 NodeRotation;
     int PrevPos;
     int i;
 
@@ -2391,12 +2361,12 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFile
     }
         
                 
-    NodePosition.x = Node->Position.x;
-    NodePosition.y = Node->Position.y;
-    NodePosition.z = Node->Position.z;
-    NodeRotation.x = Node->Rotation.x;
-    NodeRotation.y = Node->Rotation.y;
-    NodeRotation.z = Node->Rotation.z;
+    NodePosition[0] = Node->Position.x;
+    NodePosition[1] = Node->Position.y;
+    NodePosition[2] = Node->Position.z;
+    NodeRotation[0] = Node->Rotation.x;
+    NodeRotation[1] = Node->Rotation.y;
+    NodeRotation[2] = Node->Rotation.z;
     
     if( Node->Id != BSD_TSP_LOAD_TRIGGER && Node->Size > 48 ) {
         PrevPos = GetCurrentFilePosition(BSDFile);
@@ -2426,7 +2396,7 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFile
         if( Node->Id == BSD_TSP_LOAD_TRIGGER ) {
             DPrintf("Node is a BSD_TSP_LOAD_TRIGGER.\n");
             StreamNode = malloc(sizeof(BSDTSPStreamNode_t));
-            StreamNode->Position = NodePosition;
+            glm_vec3_copy(NodePosition,StreamNode->Position);
             for( i = 0; i < 4; i++ ) {
                 StreamNode->TSPNumberRenderList[i] = -1;
                 fread(&StreamNode->TSPNumberRenderList[i],sizeof(short),1,BSDFile);

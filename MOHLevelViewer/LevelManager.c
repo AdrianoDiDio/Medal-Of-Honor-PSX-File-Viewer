@@ -667,8 +667,8 @@ void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t *V
 
 void LevelManagerSpawnCamera(LevelManager_t *LevelManager,Camera_t *Camera)
 {
-    Vec3_t Position;
-    Vec3_t Rotation;
+    vec3 Position;
+    vec3 Rotation;
     
     //LevelManager has not received a valid path yet.
     if( !LevelManager->IsPathSet ) {
@@ -678,7 +678,7 @@ void LevelManagerSpawnCamera(LevelManager_t *LevelManager,Camera_t *Camera)
     if( !LevelManagerIsLevelLoaded(LevelManager) ) {
         return;
     }
-    Position = LevelGetPlayerSpawn(LevelManager->CurrentLevel,0,&Rotation);
+    LevelGetPlayerSpawn(LevelManager->CurrentLevel,0,Position,&Rotation);
     CameraSetPosition(Camera,Position);
     CameraSetRotation(Camera,Rotation);
 }

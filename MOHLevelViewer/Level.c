@@ -52,7 +52,7 @@ void LevelUnload(Level_t *Level)
     if( !Level ) {
         return;
     }
-    DPrintf("LevelCleanUp:Deallocating previous allocated Level struct\n");
+    DPrintf("LevelCleanUp:Deallocating previously allocated Level struct\n");
     if( Level->BSD ) {
         BSDFree(Level->BSD);
     }
@@ -125,11 +125,9 @@ void LevelDraw(Level_t *Level,Camera_t *Camera,mat4 ProjectionMatrix)
     TSPDrawList(Level->TSPList,Level->VRAM,Camera,ProjectionMatrix);
 }
 
-Vec3_t LevelGetPlayerSpawn(Level_t *Level,int SpawnIndex,Vec3_t *Rotation)
+void LevelGetPlayerSpawn(Level_t *Level,int SpawnIndex,vec3 Position,vec3 *Rotation)
 {
-    Vec3_t Position;
-    Position = BSDGetPlayerSpawn(Level->BSD,SpawnIndex,Rotation);
-    return Position;
+    BSDGetPlayerSpawn(Level->BSD,SpawnIndex,Position,Rotation);
 }
 void LevelLoadSettings()
 {
@@ -170,6 +168,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,VideoSystem_t *VideoSystem,
     }
     GUIProgressBarReset(GUI);
     GUIProgressBarIncrement(GUI,VideoSystem,5,"Unloading Previous Level");
+    
     if( LevelIsLoaded(Level) ) {
         LevelUnload(Level);
     }
@@ -191,6 +190,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,VideoSystem_t *VideoSystem,
 
     BasePercentage = 5.f;
     GUIProgressBarIncrement(GUI,VideoSystem,BasePercentage,"Loading all images");
+    
     //Step.1 Load all the tims from taf.
     //0 is hardcoded...for the images it doesn't make any difference between 0 and 1
     //but if we need to load all the level sounds then 0 means Standard Mode while 1 American (All voices are translated to english!).
@@ -203,6 +203,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,VideoSystem_t *VideoSystem,
     }
     BasePercentage += 5;
     GUIProgressBarIncrement(GUI,VideoSystem,BasePercentage,"Early Loading BSD File");
+    
     //Step.2 Partially load the BSD file in order to get the TSP info.
     BSDFile = BSDEarlyInit(&Level->BSD,Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
     if( !BSDFile ) {
@@ -211,7 +212,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,VideoSystem_t *VideoSystem,
     }
     NumStepsLeft = (Level->BSD->TSPInfo.NumTSP) + 7;
     Increment = (100.f - BasePercentage)  / NumStepsLeft;
-//     assert(1!=1);
+
     //Read the TSP FILES
     //Step.3 Load all the TSP file based on the data read from the BSD file.
     //Note that we are going to load all the tsp file since we do not know 
@@ -247,8 +248,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,VideoSystem_t *VideoSystem,
     GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Loading Font");
     Level->Font = FontInit(Level->VRAM);
     GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Generating VAOs");
-    TSPCreateNodeBBoxVAO(Level->TSPList);
-    TSPCreateCollisionVAO(Level->TSPList);
+    TSPCreateVAOs(Level->TSPList);
     BSDCreateVAOs(Level->BSD,LocalGameEngine,Level->VRAM);
     GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Fixing Objects Position");
     BSDFixRenderObjectPosition(Level);
