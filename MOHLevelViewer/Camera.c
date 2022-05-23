@@ -87,14 +87,15 @@ void CameraUpdate(Camera_t *Camera,int Orientation, float Delta)
 
     
     CamSpeed = CameraSpeed->FValue * Delta * 128.f;
+    
+    glm_vec3_scale(Camera->Forward,CamSpeed,Forward);
+    glm_vec3_scale(Camera->Right,CamSpeed,Right);
 
     switch ( Orientation ) {
         case CAMERA_DIRECTION_FORWARD:
-            glm_vec3_scale(Camera->Forward,CamSpeed,Forward);
             glm_vec3_add(Camera->Position,Forward,Camera->Position);
             break;
         case CAMERA_DIRECTION_BACKWARD:
-            glm_vec3_scale(Camera->Forward,CamSpeed,Forward);
             glm_vec3_sub(Camera->Position,Forward,Camera->Position);
             break;
         case CAMERA_DIRECTION_UPWARD:
@@ -104,7 +105,6 @@ void CameraUpdate(Camera_t *Camera,int Orientation, float Delta)
             Camera->Position[1] -= CamSpeed;
             break;
         case CAMERA_DIRECTION_LEFTWARD:
-            glm_vec3_scale(Camera->Right,CamSpeed,Right);
             glm_vec3_add(Camera->Position,Right,Camera->Position);
             break;
         case CAMERA_DIRECTION_RIGHTWARD:

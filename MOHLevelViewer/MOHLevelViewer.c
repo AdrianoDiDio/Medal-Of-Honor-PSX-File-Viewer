@@ -270,19 +270,20 @@ char *SysGetConfigPath()
 }
 int SysMilliseconds()
 {
-    struct timeval tp;
-    int CTime;
-
-    gettimeofday(&tp, NULL);
-
-    if ( !StartSeconds ){
-        StartSeconds = tp.tv_sec;
-        return tp.tv_usec/1000;
-    }
-
-    CTime = (tp.tv_sec - StartSeconds)*1000 + tp.tv_usec / 1000;
-
-    return CTime;
+    return SDL_GetTicks();
+//     struct timeval tp;
+//     int CTime;
+// 
+//     gettimeofday(&tp, NULL);
+// 
+//     if ( !StartSeconds ){
+//         StartSeconds = tp.tv_sec;
+//         return tp.tv_usec/1000;
+//     }
+// 
+//     CTime = (tp.tv_sec - StartSeconds)*1000 + tp.tv_usec / 1000;
+// 
+//     return CTime;
 }
 
 void DPrintf(char *Fmt, ...)
@@ -322,7 +323,7 @@ void EngineCheckEvents(Engine_t *Engine)
             GUIToggleDebugWindow(Engine->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F2 ) {
-            GUIToggleSettingsWindow(Engine->GUI);
+            GUIToggleVideoSettingsWindow(Engine->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F3 ) {
             GUIToggleLevelSelectWindow(Engine->GUI);
@@ -596,11 +597,6 @@ Engine_t *EngineInit(int argc,char **argv)
     Engine->VideoSystem = NULL;
     
     ConfigInit();
-    
-    VidConfigWidth = ConfigGet("VideoWidth");
-    VidConfigHeight = ConfigGet("VideoHeight");
-    VidConfigRefreshRate = ConfigGet("VideoRefreshRate");
-    VidConfigFullScreen = ConfigGet("VideoFullScreen");
 
     Engine->VideoSystem = VideoSystemInit();
     

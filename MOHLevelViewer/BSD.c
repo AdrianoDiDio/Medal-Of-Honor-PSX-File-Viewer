@@ -1167,14 +1167,10 @@ void BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 *Rotation)
         if( BSD->NodeData.Node[i].SpawnIndex != SpawnIndex ) {
             continue;
         }
-        Position[0] = BSD->NodeData.Node[i].Position.x;
-        Position[1] = BSD->NodeData.Node[i].Position.y;
-        Position[2] = BSD->NodeData.Node[i].Position.z;
+        BSDPositionToGLMVec3(BSD->NodeData.Node[i].Position,Position);
         glm_vec3_rotate(Position, DEGTORAD(180.f), GLM_XUP);
         if( Rotation ) {
-            LocalRotation[0] = BSD->NodeData.Node[i].Rotation.x;
-            LocalRotation[1] = BSD->NodeData.Node[i].Rotation.y;
-            LocalRotation[2] = BSD->NodeData.Node[i].Rotation.z;
+            BSDPositionToGLMVec3(BSD->NodeData.Node[i].Rotation,LocalRotation);
             glm_vec3_scale(LocalRotation,360.f/4096.f,*Rotation);
         }
         break;
@@ -1629,15 +1625,16 @@ void BSDGetObjectMatrix(BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 Res
 {
     vec3 temp;
     glm_mat4_identity(Result);
-    temp[0] = (RenderObjectDrawable->Position[0]);
-    temp[1] = -(RenderObjectDrawable->Position[1]);
-    temp[2] = -(RenderObjectDrawable->Position[2]);
-
+    
+    glm_vec3_copy(RenderObjectDrawable->Position,temp);
+    glm_vec3_rotate(temp, DEGTORAD(180.f), GLM_XUP);    
     glm_translate(Result,temp);
+    
+    glm_vec3_copy(RenderObjectDrawable->Rotation,temp);
     temp[0] = 0;
-    temp[1] = -1;
+    temp[1] = 1;
     temp[2] = 0;
-    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation[1]), temp);
+    glm_rotate(Result,glm_rad(-RenderObjectDrawable->Rotation[1]), temp);
     temp[0] = 1;
     temp[1] = 0;
     temp[2] = 0;
@@ -1673,14 +1670,10 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
             if( BSD->NodeData.Node[i].MessageData == -1 ) {
                 continue;
             }
-//             if( Level->BSD->NodeData.Node[i].CollisionVolumeType != 2 ) {
-//                 continue;
-//             }
             if( BSDPointInNode(Camera->Position,&BSD->NodeData.Node[i]) ) {
                 DPrintf("Camera is inside node %i => %s\n",i,BSDNodeGetEnumStringFromNodeId(BSD->NodeData.Node[i].Id));
                 DPrintf("Node CollisionVolumeType:%s\n",BSDGetCollisionVolumeStringFromType(BSD->NodeData.Node[i].CollisionVolumeType));
                 if( BSD->NodeData.Node[i].Type == 5 ) {
-                    //TODO:Update the TSP faces based on the node dynamic index that maps to the dynamic block inside TSP file.
                     DPrintf("Node has dynamic face index set to %i\n",BSD->NodeData.Node[i].DynamicBlockIndex);
                 }
                 break;
@@ -1864,7 +1857,8 @@ void ParseRenderObjectVertexData(BSD_t *BSD,FILE *BSDFile)
                 DPrintf("Reading Color at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
                 fread(&BSD->RenderObjectList[i].Color[j],sizeof(Color1i_t),1,BSDFile);
                 DPrintf("Color %i => %i;%i;%i;%i\n",BSD->RenderObjectList[i].Color[j].c,
-                        BSD->RenderObjectList[i].Color[j].rgba[0],BSD->RenderObjectList[i].Color[j].rgba[1],BSD->RenderObjectList[i].Color[j].rgba[2],
+                        BSD->RenderObjectList[i].Color[j].rgba[0],BSD->RenderObjectList[i].Color[j].rgba[1],
+                        BSD->RenderObjectList[i].Color[j].rgba[2],
                         BSD->RenderObjectList[i].Color[j].rgba[3]
                 );
                 
@@ -1897,7 +1891,8 @@ void ParseRenderObjectFaceData(BSDRenderObject_t *RenderObject,FILE *BSDFile)
     RenderObject->Face = malloc(FaceListSize);
     memset(RenderObject->Face,0,FaceListSize);
     RenderObject->FaceV2 = NULL;
-    DPrintf("ParseRenderObjectFaceData:Reading Face definition at %i (Current:%i)\n",RenderObject->Data->FaceOffset + 2048,GetCurrentFilePosition(BSDFile)); 
+    DPrintf("ParseRenderObjectFaceData:Reading Face definition at %i (Current:%i)\n",
+            RenderObject->Data->FaceOffset + 2048,GetCurrentFilePosition(BSDFile)); 
     for( i = 0; i < RenderObject->NumFaces; i++ ) {
         DPrintf("ParseRenderObjectFaceData:Reading Face at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
         fread(&RenderObject->Face[i],sizeof(BSDFace_t),1,BSDFile);
@@ -2061,9 +2056,6 @@ void LoadRenderObjectsFaceData(BSD_t *BSD,int RenderObjectDataOffset,int GameEng
     This means that the file is not meant to be read sequentially but rather there are offset that tells you
     which part of the file you need to read...only the TSP info section seems to be static.
     
-    
-    
-    YUnknown in Node table info should be the size of the node table!!!
 */
 
 void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
@@ -2167,7 +2159,8 @@ void BSDReadAnimatedLightChunk(BSD_t *BSD,FILE *BSDFile)
         for( j = 0; j < AnimatedLight->NumColors; j++ ) {
             fread(&AnimatedLight->ColorList[j],sizeof(AnimatedLight->ColorList[j]),1,BSDFile);
             DPrintf("Color %i %i %i %i %i (As Int %u)\n",j,AnimatedLight->ColorList[j].rgba[0],
-                    AnimatedLight->ColorList[j].rgba[1],AnimatedLight->ColorList[j].rgba[2],AnimatedLight->ColorList[j].rgba[3],AnimatedLight->ColorList[j].c
+                    AnimatedLight->ColorList[j].rgba[1],AnimatedLight->ColorList[j].rgba[2],AnimatedLight->ColorList[j].rgba[3],
+                    AnimatedLight->ColorList[j].c
             );
         }
         fseek(BSDFile,PreviousFilePosition,SEEK_SET);
@@ -2360,13 +2353,8 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFile
         Node->DynamicBlockIndex = -1;
     }
         
-                
-    NodePosition[0] = Node->Position.x;
-    NodePosition[1] = Node->Position.y;
-    NodePosition[2] = Node->Position.z;
-    NodeRotation[0] = Node->Rotation.x;
-    NodeRotation[1] = Node->Rotation.y;
-    NodeRotation[2] = Node->Rotation.z;
+    BSDPositionToGLMVec3(Node->Position,NodePosition);
+    BSDPositionToGLMVec3(Node->Rotation,NodeRotation);
     
     if( Node->Id != BSD_TSP_LOAD_TRIGGER && Node->Size > 48 ) {
         PrevPos = GetCurrentFilePosition(BSDFile);

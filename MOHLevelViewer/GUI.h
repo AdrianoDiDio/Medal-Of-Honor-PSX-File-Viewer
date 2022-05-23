@@ -53,7 +53,7 @@ typedef struct GUI_s {
         
     char *ConfigFilePath;
     bool DebugWindowHandle;
-    bool SettingsWindowHandle;
+    bool VideoSettingsWindowHandle;
     bool LevelSelectWindowHandle;
     int NumActiveWindows;
     GUIProgressBar_t *ProgressBar;
@@ -71,7 +71,7 @@ extern Config_t *GUIShowFPS;
 
 GUI_t *GUIInit(VideoSystem_t *VideoSystem);
 void GUIToggleDebugWindow(GUI_t *GUI);
-void GUIToggleSettingsWindow(GUI_t *GUI);
+void GUIToggleVideoSettingsWindow(GUI_t *GUI);
 void GUIToggleLevelSelectWindow(GUI_t *GUI);
 void GUISetErrorMessage(GUI_t *GUI,char *Message);
 GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filters,FileDialogSelectCallback_t OnElementSelected,

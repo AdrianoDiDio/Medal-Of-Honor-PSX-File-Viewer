@@ -25,6 +25,7 @@ Config_t *VidConfigWidth;
 Config_t *VidConfigHeight;
 Config_t *VidConfigRefreshRate;
 Config_t *VidConfigFullScreen;
+Config_t *VidConfigVSync;
 
 void VideoSystemShutdown(VideoSystem_t *VideoSystem)
 {
@@ -175,8 +176,18 @@ void VideoSystemSwapBuffers(VideoSystem_t *VideoSystem)
 {
     SDL_GL_SwapWindow(VideoSystem->Window);
 }
-void VideoSystemOpenWindow(VideoSystem_t *VideoSystem)
+
+int VideoSystemSetSwapInterval(int Value)
 {
+    if( Value < -1 || Value > 1 ) {
+        Value = 1;
+    }
+    ConfigSetNumber("VideoVSync",Value);
+    return SDL_GL_SetSwapInterval(VidConfigVSync->IValue);
+}
+int VideoSystemOpenWindow(VideoSystem_t *VideoSystem)
+{
+    int Result;
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -199,8 +210,20 @@ void VideoSystemOpenWindow(VideoSystem_t *VideoSystem)
     VideoSystem->DPIScale = 1.f;
     if( !SDL_GetDisplayDPI(0, NULL, &VideoSystem->DPIScale, NULL) ) {
         VideoSystem->DPIScale /= 96.f;
-    }        
-    SDL_GL_SetSwapInterval(1);
+    }
+    if( VidConfigVSync->IValue > 1 || VidConfigVSync->IValue < -1 ) {
+        ConfigSetNumber("VideoVSync",1);
+    }
+    Result = VideoSystemSetSwapInterval(VidConfigVSync->IValue);
+    if( Result == -1 ) {
+        DPrintf("VideoSystemOpenWindow:Failed to set VSync using value %i...trying default one.\n",VidConfigVSync->IValue);
+        Result = VideoSystemSetSwapInterval(1);
+        if( Result == -1 ) {
+            printf("VideoSystemOpenWindow:Cannot set vsync...\n");
+            return 0;
+        }
+    }
+    return 1;
 }
 
 bool VideoSystemInitSDL()
@@ -211,6 +234,14 @@ bool VideoSystemInitSDL()
     return true;
 }
 
+void VideoSystemLoadConfigs()
+{        
+    VidConfigWidth = ConfigGet("VideoWidth");
+    VidConfigHeight = ConfigGet("VideoHeight");
+    VidConfigRefreshRate = ConfigGet("VideoRefreshRate");
+    VidConfigFullScreen = ConfigGet("VideoFullScreen");
+    VidConfigVSync = ConfigGet("VideoVSync");
+}
 
 VideoSystem_t *VideoSystemInit()
 {
@@ -227,13 +258,16 @@ VideoSystem_t *VideoSystemInit()
         printf("VideoSystemInit:Failed to allocate memory for VideoSystem struct\n");
         return NULL;
     }
-    
+    VideoSystemLoadConfigs();
     VideoSystemGetAvailableVideoModes(VideoSystem);
-    VideoSystemOpenWindow(VideoSystem);
+    if( !VideoSystemOpenWindow(VideoSystem) ) {
+        printf("VideoSystemInit:Failed to open window\n");
+        return NULL;
+    }
     glewExperimental = GL_TRUE;
     GlewError = glewInit();
     if (GlewError != GLEW_OK) {
-        DPrintf( "Failed to init GLEW\n");
+        DPrintf("VideoSystemInit:Failed to init GLEW\n");
         return NULL;
     }
     SysHideCursor();

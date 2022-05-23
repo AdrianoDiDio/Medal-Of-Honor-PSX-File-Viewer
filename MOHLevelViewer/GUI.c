@@ -36,6 +36,28 @@ const char* LevelMusicOptions[] = {
 
 int NumLevelMusicOptions = sizeof(LevelMusicOptions) / sizeof(LevelMusicOptions[0]);
 
+typedef struct VSyncSettings_s {
+    char *DisplayValue;
+    int Value;
+} VSyncSettings_t;
+
+const VSyncSettings_t VSyncOptions[] = { 
+    
+    {
+        "Disable",
+        0
+    },
+    {
+        "Standard",
+        1
+    },
+    {
+        "Adaptive",
+        -1
+    }
+};
+
+int NumVSyncOptions = sizeof(VSyncOptions) / sizeof(VSyncOptions[0]);
 
 void GUIReleaseContext(ImGuiContext *Context)
 {    
@@ -123,10 +145,10 @@ void GUIToggleDebugWindow(GUI_t *GUI)
     GUI->DebugWindowHandle = !GUI->DebugWindowHandle;
     GUIToggleHandle(GUI,GUI->DebugWindowHandle);
 }
-void GUIToggleSettingsWindow(GUI_t *GUI)
+void GUIToggleVideoSettingsWindow(GUI_t *GUI)
 {
-    GUI->SettingsWindowHandle = !GUI->SettingsWindowHandle;
-    GUIToggleHandle(GUI,GUI->SettingsWindowHandle);
+    GUI->VideoSettingsWindowHandle = !GUI->VideoSettingsWindowHandle;
+    GUIToggleHandle(GUI,GUI->VideoSettingsWindowHandle);
 
 }
 void GUIToggleLevelSelectWindow(GUI_t *GUI)
@@ -275,7 +297,8 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                     }
                     ConfigSetNumber("LevelEnableAnimatedLights",LevelEnableAnimatedLights->IValue);
                 }
-                if ( GUICheckBoxWithTooltip("Animated Surfaces",(bool *) &LevelEnableAnimatedSurfaces->IValue,LevelEnableAnimatedSurfaces->Description) ) {
+                if ( GUICheckBoxWithTooltip("Animated Surfaces",(bool *) &LevelEnableAnimatedSurfaces->IValue,
+                    LevelEnableAnimatedSurfaces->Description) ) {
                     ConfigSetNumber("LevelEnableAnimatedSurfaces",LevelEnableAnimatedSurfaces->IValue);
                 }
             }
@@ -308,7 +331,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
             igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);
             igText("Refresh Rate:%i",VidConfigRefreshRate->IValue);
             igSeparator();
-            igText("Camera Informations");
+            igText("Camera Info");
             igText("Position:%f;%f;%f",Camera->Position[0],Camera->Position[1],Camera->Position[2]);
             igText("Rotation:%f;%f;%f",Camera->Rotation[PITCH],Camera->Rotation[YAW],Camera->Rotation[ROLL]);
         }
@@ -350,7 +373,7 @@ void GUIDrawHelpOverlay()
     igEnd();
 }
 
-void GUIDrawFPSOverlay(ComTimeInfo_t *TimeInfo)
+void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
 {
     ImGuiViewport *Viewport;
     ImVec2 WorkPosition;
@@ -371,10 +394,13 @@ void GUIDrawFPSOverlay(ComTimeInfo_t *TimeInfo)
     WindowPivot.y = 0.f;
     igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
 
-    if( igBegin("FPS", NULL, WindowFlags) ) {
-        igText(TimeInfo->FPSString);
+    
+    if( GUIShowFPS->IValue ) {
+        if( igBegin("FPS", NULL, WindowFlags) ) {
+            igText(TimeInfo->FPSString);
+        }
+        igEnd(); 
     }
-    igEnd(); 
 }
 
 void GUISetProgressBarDialogTitle(GUI_t *GUI,char *Title)
@@ -447,22 +473,46 @@ void GUIProgressBarEnd(GUI_t *GUI)
     GUI->ProgressBar->IsOpen = 0;
     GUI->ProgressBar->CurrentPercentage = 0.f;
 }
-
-void GUIDrawSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
+int GUIGetVSyncOptionValue()
 {
-#if 1
     int i;
-//     if( !LevelManager->CurrentLevel ) {
-//         return;
-//     }
-    if( !GUI->SettingsWindowHandle ) {
+    for (i = 0; i < NumVSyncOptions; i++) {
+        if( VSyncOptions[i].Value == VidConfigVSync->IValue ) {
+            return i;
+        }
+    }
+    return 0;
+}
+void GUIDrawVideoSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
+{
+    int OldValue;
+    int IsSelected;
+    int i;
+    int CurrentVSyncOption;
+
+    if( !GUI->VideoSettingsWindowHandle ) {
         return;
     }
-    ImVec2 Size;
-    Size.x = Size.y = 0.f;
+    ImVec2 ZeroSize;
+    ZeroSize.x = ZeroSize.y = 0.f;
     int PreviewIndex = VideoSystem->CurrentVideoMode != -1 ? VideoSystem->CurrentVideoMode : 0;
-    if( igBegin("Settings",&GUI->SettingsWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
-        igText("Video Settings");
+    if( igBegin("Video Settings",&GUI->VideoSettingsWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
+        CurrentVSyncOption = GUIGetVSyncOptionValue();
+        if( igBeginCombo("VSync Options",VSyncOptions[CurrentVSyncOption].DisplayValue,0) ) {
+            for (i = 0; i < NumVSyncOptions; i++) {
+                IsSelected = (CurrentVSyncOption == i);
+                if (igSelectable_Bool(VSyncOptions[i].DisplayValue, IsSelected,0,ZeroSize)) {
+                    if( CurrentVSyncOption != i ) {
+                        OldValue = VidConfigVSync->IValue;
+                        if( VideoSystemSetSwapInterval(VSyncOptions[i].Value) < 0 ) {
+                            VideoSystemSetSwapInterval(OldValue);
+                        }
+                    }
+                }
+          
+            }
+            igEndCombo();
+        }
         igSeparator();
         //NOTE(Adriano):Only in Fullscreen mode we can select the video mode we want.
         if( VidConfigFullScreen->IValue ) {
@@ -471,7 +521,7 @@ void GUIDrawSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
                 for( i = 0; i < VideoSystem->NumVideoModes; i++ ) {
                     int IsSelected = ((VideoSystem->VideoModeList[i].Width == VidConfigWidth->IValue) && 
                         (VideoSystem->VideoModeList[i].Height == VidConfigHeight->IValue)) ? 1 : 0;
-                    if( igSelectable_Bool(VideoSystem->VideoModeList[i].Description,IsSelected,0,Size ) ) {
+                    if( igSelectable_Bool(VideoSystem->VideoModeList[i].Description,IsSelected,0,ZeroSize ) ) {
                         VideoSystemSetVideoSettings(VideoSystem,i);
                     }
                     if( IsSelected ) {
@@ -488,10 +538,9 @@ void GUIDrawSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
         }
     }
     igEnd();
-    if( !GUI->SettingsWindowHandle ) {
-        GUIToggleHandle(GUI,GUI->SettingsWindowHandle);
+    if( !GUI->VideoSettingsWindowHandle ) {
+        GUIToggleHandle(GUI,GUI->VideoSettingsWindowHandle);
     }
-#endif
 }
 
 void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem,Mission_t *Missions,int NumMissions)
@@ -655,9 +704,7 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSyste
     
     GUIBeginFrame();
     
-    if( GUIShowFPS->IValue ) {
-        GUIDrawFPSOverlay(TimeInfo);
-    }
+    GUIDrawDebugOverlay(TimeInfo);
     
     if( !GUI->NumActiveWindows ) {
         GUIDrawHelpOverlay();
@@ -685,7 +732,7 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSyste
         }
     }
     GUIDrawDebugWindow(GUI,LevelManager,Camera,VideoSystem);
-    GUIDrawSettingsWindow(GUI,VideoSystem);
+    GUIDrawVideoSettingsWindow(GUI,VideoSystem);
     GUIDrawLevelSelectWindow(GUI,LevelManager,VideoSystem);
 //     igShowDemoWindow(NULL);
     GUIEndFrame();

@@ -43,9 +43,11 @@ extern Config_t *VidConfigWidth;
 extern Config_t *VidConfigHeight;
 extern Config_t *VidConfigRefreshRate;
 extern Config_t *VidConfigFullScreen;
+extern Config_t *VidConfigVSync;
 
 VideoSystem_t   *VideoSystemInit();
 void            VideoSystemSetVideoSettings(VideoSystem_t *VideoSystem,int PreferredModeIndex);
+int             VideoSystemSetSwapInterval(int Value);
 void            VideoSystemCenterMouse(VideoSystem_t *VideoSystem);
 void            VideoSystemSwapBuffers(VideoSystem_t *VideoSystem);
 void            VideoSystemShutdown(VideoSystem_t *VideoSystem);
