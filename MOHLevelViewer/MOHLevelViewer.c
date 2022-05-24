@@ -343,29 +343,6 @@ void EngineCheckEvents(Engine_t *Engine)
                     CameraOnMouseEvent(Engine->Camera,Event.motion.x,Event.motion.y);
                     VideoSystemCenterMouse(Engine->VideoSystem);
                     break;
-                case SDL_KEYDOWN:
-                    if( Event.key.keysym.sym == SDLK_ESCAPE ) {
-                        Quit(Engine);
-                    }
-//                     if( Event.key.keysym.sym == SDLK_w ) {
-//                         CameraUpdate(Engine->Camera, CAMERA_DIRECTION_FORWARD, Engine->TimeInfo->Delta);
-//                     }
-//                     if( Event.key.keysym.sym == SDLK_s ) {
-//                         CameraUpdate(Engine->Camera, CAMERA_DIRECTION_BACKWARD, Engine->TimeInfo->Delta);
-//                     }
-//                     if( Event.key.keysym.sym == SDLK_a ) {
-//                         CameraUpdate(Engine->Camera, CAMERA_DIRECTION_LEFTWARD, Engine->TimeInfo->Delta);
-//                     }
-//                     if( Event.key.keysym.sym == SDLK_d ) {
-//                         CameraUpdate(Engine->Camera, CAMERA_DIRECTION_RIGHTWARD, Engine->TimeInfo->Delta);
-//                     }
-//                     if( Event.key.keysym.sym == SDLK_SPACE ) {
-//                         CameraUpdate(Engine->Camera, CAMERA_DIRECTION_UPWARD, Engine->TimeInfo->Delta);
-//                     }
-//                     if( Event.key.keysym.sym == SDLK_z ) {
-//                         CameraUpdate(Engine->Camera, CAMERA_DIRECTION_DOWNWARD, Engine->TimeInfo->Delta);
-//                     }
-                    break;
                 default:
                     break;
             }
@@ -496,8 +473,6 @@ void GLDebugOutput(GLenum Source, GLenum Type, unsigned int Id, GLenum Severity,
 
 void GLSetDefaultState()
 {
-//     glShadeModel( GL_SMOOTH );
-
     glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 
     glClearDepth( 1.0f );
@@ -512,15 +487,8 @@ void GLSetDefaultState()
     glDebugMessageCallback(GLDebugOutput, NULL);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 #endif
-
-//     glEnableClientState( GL_VERTEX_ARRAY );
 }
 
-
-void GLFrame(Camera_t *Camera,VideoSystem_t *VideoSystem)
-{
-
-}
 void Quit(Engine_t *Engine)
 {
     EngineShutDown(Engine);
@@ -660,6 +628,6 @@ int main(int argc,char **argv)
     while( 1 ) {
         EngineFrame(Engine);
     }
-// 
+    
     return 0;
 }

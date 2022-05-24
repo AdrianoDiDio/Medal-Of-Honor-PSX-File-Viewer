@@ -70,6 +70,11 @@ void LevelUnload(Level_t *Level)
     }
     Level->MissionNumber = 0;
     Level->LevelNumber = 0;
+    Level->BSD = NULL;
+    Level->TSPList = NULL;
+    Level->ImageList = NULL;
+    Level->VRAM = NULL;
+    Level->Font = NULL;
 }
 void LevelCleanUp(Level_t *Level)
 {

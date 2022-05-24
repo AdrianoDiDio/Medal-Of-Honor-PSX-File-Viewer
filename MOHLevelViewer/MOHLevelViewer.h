@@ -59,7 +59,6 @@ typedef struct Engine_s {
    const Byte       *KeyState;
 } Engine_t;
 
-void        DumpLevel(Level_t* Level);
 void        DPrintf(char *Fmt, ...) Attribute((format(printf,1,2)));
 int         asprintf(char **Strp, const char *Fmt, ...);
 char        *StringCopy(const char *From);
@@ -71,8 +70,6 @@ void        SkipFileSection(int SectionSize,FILE *InFile);
 void        CreateDirIfNotExists(char *DirName);
 char        *SwitchExt(const char *In, const char *Ext);
 char        *GetBaseName(char *Path);
-bool        GLInitCompatibilityProfile(const char *Driver);
-void        GLSet3D();
 Engine_t    *EngineInit(int argc,char **argv);
 void        EngineShutDown(Engine_t *Engine);
 float       Rand01();

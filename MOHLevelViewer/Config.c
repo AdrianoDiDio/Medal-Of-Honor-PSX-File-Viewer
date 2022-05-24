@@ -310,7 +310,7 @@ void ConfigRegisterDefaultSettings()
     ConfigRegister("VideoVSync","-1","Enable or disable vsync.Possible values are:-1 enable adaptive VSync (where supported),\n"
                     "0 Disables it and 1 enables standard VSync.");
     
-    ConfigRegister("CameraSpeed","80.f",NULL);
+    ConfigRegister("CameraSpeed","30.f",NULL);
     ConfigRegister("CameraMouseSensitivity","1.f",NULL);
 
     ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to "

@@ -88,6 +88,10 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
     
     DPrintf("Compiling Vertex Shader: %s\n", VertexShaderFile);
     ShaderSource = ShaderRead(VertexShaderFile);
+    if( !ShaderSource ) {
+        printf("Failed to open vertex shader %s\n",VertexShaderFile);
+        return NULL;
+    }
     glShaderSource(VertexShaderId, 1, (const GLchar**) &ShaderSource, NULL);
     glCompileShader(VertexShaderId);
 
@@ -106,6 +110,10 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
     free(ShaderSource);
     DPrintf("Compiling Fragment Shader: %s\n", FragmentShaderFile);
     ShaderSource = ShaderRead(FragmentShaderFile);
+    if( !ShaderSource ) {
+        printf("Failed to open fragment shader %s\n",FragmentShaderFile);
+        return NULL;
+    }
     glShaderSource(FragmentShaderId, 1, (const GLchar**) &ShaderSource, NULL);
     glCompileShader(FragmentShaderId);
 

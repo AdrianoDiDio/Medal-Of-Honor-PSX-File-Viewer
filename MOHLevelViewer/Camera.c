@@ -88,9 +88,6 @@ void CameraUpdate(Camera_t *Camera,int Orientation, float Delta)
     
     CamSpeed = CameraSpeed->FValue * Delta * 128.f;
     
-//     if( CamSpeed > 128 ) {
-//         CamSpeed = 128;
-//     }
     glm_vec3_scale(Camera->Forward,CamSpeed,Forward);
     glm_vec3_scale(Camera->Right,CamSpeed,Right);
 
@@ -155,24 +152,25 @@ void CameraCheckKeyEvents(Camera_t *Camera,const Byte *KeyState,float Delta)
         CameraUpdate(Camera,CAMERA_DIRECTION_DOWNWARD,Delta);
     }
 }
-void CameraBeginFrame(Camera_t *Camera,const Byte *KeyState,float Delta)
+void CameraUpdateViewMatrix(Camera_t *Camera)
 {
     vec3 Direction;
+    glm_mat4_identity(Camera->ViewMatrix);
+    glm_vec3_add(Camera->Position,Camera->Forward,Direction);
+    glm_lookat(Camera->Position,Direction,GLM_YUP,Camera->ViewMatrix);
+}
+void CameraBeginFrame(Camera_t *Camera,const Byte *KeyState,float Delta)
+{
+    //NOTE(Adriano):Update it even if not focused in order to have a valid matrix available to all subsystems.
+    CameraUpdateViewMatrix(Camera);
     
     if( !Camera->HasFocus ) {
         return;
     }
     
     CameraCheckKeyEvents(Camera,KeyState,Delta);
+} 
 
-//     if( KeyState[SDL_SCANCODE_W] ) {
-//         CameraUpdate(Camera,CAMERA_DIRECTION_FORWARD,Delta);
-//     }
-    
-    glm_mat4_identity(Camera->ViewMatrix);
-    glm_vec3_add(Camera->Position,Camera->Forward,Direction);
-    glm_lookat(Camera->Position,Direction,GLM_YUP,Camera->ViewMatrix);
-}
 void CameraSetRotation(Camera_t *Camera,vec3 Rotation)
 {
     if( !Camera ) {
