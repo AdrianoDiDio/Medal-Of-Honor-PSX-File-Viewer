@@ -88,6 +88,9 @@ void CameraUpdate(Camera_t *Camera,int Orientation, float Delta)
     
     CamSpeed = CameraSpeed->FValue * Delta * 128.f;
     
+//     if( CamSpeed > 128 ) {
+//         CamSpeed = 128;
+//     }
     glm_vec3_scale(Camera->Forward,CamSpeed,Forward);
     glm_vec3_scale(Camera->Right,CamSpeed,Right);
 
@@ -131,9 +134,41 @@ void CameraUpdate(Camera_t *Camera,int Orientation, float Delta)
             break;
     }
 }
-void CameraBeginFrame(Camera_t *Camera)
+void CameraCheckKeyEvents(Camera_t *Camera,const Byte *KeyState,float Delta)
+{
+    if( KeyState[SDL_SCANCODE_W] ) {
+        CameraUpdate(Camera,CAMERA_DIRECTION_FORWARD,Delta);
+    }
+    if( KeyState[SDL_SCANCODE_S] ) {
+        CameraUpdate(Camera,CAMERA_DIRECTION_BACKWARD,Delta);
+    }
+    if( KeyState[SDL_SCANCODE_A] ) {
+        CameraUpdate(Camera,CAMERA_DIRECTION_LEFTWARD,Delta);
+    }
+    if( KeyState[SDL_SCANCODE_D] ) {
+        CameraUpdate(Camera,CAMERA_DIRECTION_RIGHTWARD,Delta);
+    }
+    if( KeyState[SDL_SCANCODE_SPACE] ) {
+        CameraUpdate(Camera,CAMERA_DIRECTION_UPWARD,Delta);
+    }
+    if( KeyState[SDL_SCANCODE_Z] ) {
+        CameraUpdate(Camera,CAMERA_DIRECTION_DOWNWARD,Delta);
+    }
+}
+void CameraBeginFrame(Camera_t *Camera,const Byte *KeyState,float Delta)
 {
     vec3 Direction;
+    
+    if( !Camera->HasFocus ) {
+        return;
+    }
+    
+    CameraCheckKeyEvents(Camera,KeyState,Delta);
+
+//     if( KeyState[SDL_SCANCODE_W] ) {
+//         CameraUpdate(Camera,CAMERA_DIRECTION_FORWARD,Delta);
+//     }
+    
     glm_mat4_identity(Camera->ViewMatrix);
     glm_vec3_add(Camera->Position,Camera->Forward,Direction);
     glm_lookat(Camera->Position,Direction,GLM_YUP,Camera->ViewMatrix);

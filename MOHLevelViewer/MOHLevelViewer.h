@@ -55,7 +55,8 @@ typedef struct Engine_s {
    VideoSystem_t    *VideoSystem;
    Camera_t         *Camera;
    LevelManager_t   *LevelManager;
-   GUI_t            *GUI; 
+   GUI_t            *GUI;
+   const Byte       *KeyState;
 } Engine_t;
 
 void        DumpLevel(Level_t* Level);

@@ -312,7 +312,6 @@ void SysShowCursor()
 void EngineCheckEvents(Engine_t *Engine)
 {
     SDL_Event Event;
-
     while( SDL_PollEvent(&Event) ) {
         
         if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
@@ -348,24 +347,24 @@ void EngineCheckEvents(Engine_t *Engine)
                     if( Event.key.keysym.sym == SDLK_ESCAPE ) {
                         Quit(Engine);
                     }
-                    if( Event.key.keysym.sym == SDLK_w ) {
-                        CameraUpdate(Engine->Camera, CAMERA_DIRECTION_FORWARD, Engine->TimeInfo->Delta);
-                    }
-                    if( Event.key.keysym.sym == SDLK_s ) {
-                        CameraUpdate(Engine->Camera, CAMERA_DIRECTION_BACKWARD, Engine->TimeInfo->Delta);
-                    }
-                    if( Event.key.keysym.sym == SDLK_a ) {
-                        CameraUpdate(Engine->Camera, CAMERA_DIRECTION_LEFTWARD, Engine->TimeInfo->Delta);
-                    }
-                    if( Event.key.keysym.sym == SDLK_d ) {
-                        CameraUpdate(Engine->Camera, CAMERA_DIRECTION_RIGHTWARD, Engine->TimeInfo->Delta);
-                    }
-                    if( Event.key.keysym.sym == SDLK_SPACE ) {
-                        CameraUpdate(Engine->Camera, CAMERA_DIRECTION_UPWARD, Engine->TimeInfo->Delta);
-                    }
-                    if( Event.key.keysym.sym == SDLK_z ) {
-                        CameraUpdate(Engine->Camera, CAMERA_DIRECTION_DOWNWARD, Engine->TimeInfo->Delta);
-                    }
+//                     if( Event.key.keysym.sym == SDLK_w ) {
+//                         CameraUpdate(Engine->Camera, CAMERA_DIRECTION_FORWARD, Engine->TimeInfo->Delta);
+//                     }
+//                     if( Event.key.keysym.sym == SDLK_s ) {
+//                         CameraUpdate(Engine->Camera, CAMERA_DIRECTION_BACKWARD, Engine->TimeInfo->Delta);
+//                     }
+//                     if( Event.key.keysym.sym == SDLK_a ) {
+//                         CameraUpdate(Engine->Camera, CAMERA_DIRECTION_LEFTWARD, Engine->TimeInfo->Delta);
+//                     }
+//                     if( Event.key.keysym.sym == SDLK_d ) {
+//                         CameraUpdate(Engine->Camera, CAMERA_DIRECTION_RIGHTWARD, Engine->TimeInfo->Delta);
+//                     }
+//                     if( Event.key.keysym.sym == SDLK_SPACE ) {
+//                         CameraUpdate(Engine->Camera, CAMERA_DIRECTION_UPWARD, Engine->TimeInfo->Delta);
+//                     }
+//                     if( Event.key.keysym.sym == SDLK_z ) {
+//                         CameraUpdate(Engine->Camera, CAMERA_DIRECTION_DOWNWARD, Engine->TimeInfo->Delta);
+//                     }
                     break;
                 default:
                     break;
@@ -573,7 +572,7 @@ void EngineFrame(Engine_t *Engine)
     }
     ComUpdateDelta(Engine->TimeInfo,Engine->Camera);
     EngineCheckEvents(Engine);
-    CameraBeginFrame(Engine->Camera);
+    CameraBeginFrame(Engine->Camera,Engine->KeyState,Engine->TimeInfo->Delta);
     LevelManagerUpdate(Engine->LevelManager,Engine->Camera);
     EngineDraw(Engine);
     
@@ -604,6 +603,9 @@ Engine_t *EngineInit(int argc,char **argv)
         printf("EngineInit:Failed to Initialize Video system...\n");
         return NULL;
     }
+    
+    Engine->KeyState = SDL_GetKeyboardState(NULL);
+    
     Engine->Camera = CameraInit();
     
     if( !Engine->Camera ) {

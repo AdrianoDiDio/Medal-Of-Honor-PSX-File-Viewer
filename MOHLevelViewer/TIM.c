@@ -489,7 +489,7 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
         return NULL;
     }
     if( ResultImage->Header.Magic != 0x10 ) {
-        printf("Wrong signature detected (%i (%#08x)).\n",ResultImage->Header.Magic,ResultImage->Header.Magic);
+        DPrintf("Wrong signature detected (%i (%#08x)).\n",ResultImage->Header.Magic,ResultImage->Header.Magic);
         DPrintf("Current offset in file is %li\n",ftell(TIMImage));
         free(ResultImage);
         return NULL;

@@ -55,7 +55,7 @@ extern Config_t *CameraSpeed;
 extern Config_t *CameraMouseSensitivity;
 
 Camera_t    *CameraInit();
-void        CameraBeginFrame(Camera_t *Camera);
+void        CameraBeginFrame(Camera_t *Camera,const Byte *KeyState,float Delta);
 void        CameraLostFocus(Camera_t *Camera);
 void        CameraSetPosition(Camera_t *Camera,vec3 Position);
 void        CameraSetRotation(Camera_t *Camera,vec3 Rotation);
