@@ -159,16 +159,10 @@ void CameraUpdateViewMatrix(Camera_t *Camera)
     glm_vec3_add(Camera->Position,Camera->Forward,Direction);
     glm_lookat(Camera->Position,Direction,GLM_YUP,Camera->ViewMatrix);
 }
-void CameraBeginFrame(Camera_t *Camera,const Byte *KeyState,float Delta)
+void CameraBeginFrame(Camera_t *Camera)
 {
     //NOTE(Adriano):Update it even if not focused in order to have a valid matrix available to all subsystems.
     CameraUpdateViewMatrix(Camera);
-    
-    if( !Camera->HasFocus ) {
-        return;
-    }
-    
-    CameraCheckKeyEvents(Camera,KeyState,Delta);
 } 
 
 void CameraSetRotation(Camera_t *Camera,vec3 Rotation)
@@ -187,6 +181,7 @@ void CameraSetPosition(Camera_t *Camera,vec3 Position)
         return;
     }
     glm_vec3_copy(Position,Camera->Position);
+    CameraUpdateViewMatrix(Camera);
 }
 Camera_t *CameraInit()
 {

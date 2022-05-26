@@ -313,7 +313,6 @@ void EngineCheckEvents(Engine_t *Engine)
 {
     SDL_Event Event;
     while( SDL_PollEvent(&Event) ) {
-        
         if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
             ConfigSetNumber("VideoWidth",Event.window.data1);
             ConfigSetNumber("VideoHeight",Event.window.data2);
@@ -338,17 +337,17 @@ void EngineCheckEvents(Engine_t *Engine)
             //NOTE(Adriano):GUI is now open...tell the camera to zero-out the mouse delta immediately after we close the GUI.
             CameraLostFocus(Engine->Camera);
         } else {
-            switch( Event.type ) {
-                case SDL_MOUSEMOTION:
-                    CameraOnMouseEvent(Engine->Camera,Event.motion.x,Event.motion.y);
-                    VideoSystemCenterMouse(Engine->VideoSystem);
-                    break;
-                default:
-                    break;
+            if( Event.type == SDL_MOUSEMOTION ) {
+                CameraOnMouseEvent(Engine->Camera,Event.motion.x,Event.motion.y);
+                VideoSystemCenterMouse(Engine->VideoSystem);   
             }
         }
     }
-    
+    //NOTE(Adriano):If the GUI is closed and we pumped all the events then
+    //check if any key is down and update the camera.
+    if( !GUIIsActive(Engine->GUI) ) {
+        CameraCheckKeyEvents(Engine->Camera,Engine->KeyState,Engine->TimeInfo->Delta);
+    }
 }
 
 void ComUpdateDelta(ComTimeInfo_t *TimeInfo,Camera_t *Camera)
@@ -540,7 +539,7 @@ void EngineFrame(Engine_t *Engine)
     }
     ComUpdateDelta(Engine->TimeInfo,Engine->Camera);
     EngineCheckEvents(Engine);
-    CameraBeginFrame(Engine->Camera,Engine->KeyState,Engine->TimeInfo->Delta);
+    CameraBeginFrame(Engine->Camera);
     LevelManagerUpdate(Engine->LevelManager,Engine->Camera);
     EngineDraw(Engine);
     

@@ -75,14 +75,7 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
     if( (Result = ShaderGet(ShaderName)) != NULL ) {
         return Result;
     }
-    
-    Result = malloc(sizeof(Shader_t));
-    
-    if( !Result ) {
-        DPrintf("ShaderCache:Failed to allocate struct\n");
-        return NULL;
-    }
-    
+        
     VertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     FragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     
@@ -150,6 +143,12 @@ Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShad
         }
     }
     
+    Result = malloc(sizeof(Shader_t));
+    
+    if( !Result ) {
+        DPrintf("ShaderCache:Failed to allocate struct\n");
+        return NULL;
+    }
     Result->Name = StringCopy(ShaderName);
     Result->ProgramId = ProgramId;
     

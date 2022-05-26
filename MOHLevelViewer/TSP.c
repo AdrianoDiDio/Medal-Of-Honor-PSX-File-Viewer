@@ -979,6 +979,11 @@ void TSPDrawNodeBBox(TSPNode_t *Node,mat4 MVPMatrix)
     int MVPMatrixId;
     
     Shader = ShaderCache("TSPBBoxShader","Shaders/TSPBBoxVertexShader.glsl","Shaders/TSPBBoxFragmentShader.glsl");
+    
+    if( !Shader ) {
+        DPrintf("TSPDrawNodeBBox:Invalid Shader\n");
+        return;
+    }
     glUseProgram(Shader->ProgramId);
     
     MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
@@ -1000,11 +1005,16 @@ void TSPDrawCollisionData(TSP_t *TSP,mat4 MVPMatrix)
     int MVPMatrixId;
     
     if( !TSP ) {
-        DPrintf("Invalid TSP...\n");
+        DPrintf("TSPDrawCollisionData:Invalid TSP...\n");
         return;
     }
     
     Shader = ShaderCache("TSPCollisionShader","Shaders/TSPCollisionVertexShader.glsl","Shaders/TSPCollisionFragmentShader.glsl");
+    
+    if( !Shader ) {
+        DPrintf("TSPDrawCollisionData:Invalid Shader\n");
+        return;
+    }
     glUseProgram(Shader->ProgramId);
 
     MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
@@ -1052,35 +1062,37 @@ void TSPDrawNode(TSPNode_t *Node,VRAM_t *VRAM,mat4 MVPMatrix)
     if( Node->NumFaces != 0 ) {
         if( LevelDrawSurfaces->IValue ) {
             Shader = ShaderCache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
-            glUseProgram(Shader->ProgramId);
+            if( Shader ) {
+                glUseProgram(Shader->ProgramId);
 
-            MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-            glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
-            EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
-            PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
-            TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
-            glUniform1i(TextureIndexId, 0);
-            glUniform1i(PaletteTextureId,  1);
-            glUniform1i(EnableLightingId, LevelEnableAmbientLight->IValue);
-            if( LevelEnableWireFrameMode->IValue ) {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            } else {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+                glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+                EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
+                PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
+                TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+                glUniform1i(TextureIndexId, 0);
+                glUniform1i(PaletteTextureId,  1);
+                glUniform1i(EnableLightingId, LevelEnableAmbientLight->IValue);
+                if( LevelEnableWireFrameMode->IValue ) {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                } else {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                }
+                glActiveTexture(GL_TEXTURE0 + 0);
+                glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
+                glActiveTexture(GL_TEXTURE0 + 1);
+                glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
+
+                glDisable(GL_BLEND);
+                glBindVertexArray(Node->OpaqueFacesVAO->VAOId[0]);
+                glDrawArrays(GL_TRIANGLES, 0, Node->OpaqueFacesVAO->Count);
+                glBindVertexArray(0);
+                glActiveTexture(GL_TEXTURE0 + 0);
+                glBindTexture(GL_TEXTURE_2D,0);
+                glDisable(GL_BLEND);
+                glBlendColor(1.f, 1.f, 1.f, 1.f);
+                glUseProgram(0);
             }
-            glActiveTexture(GL_TEXTURE0 + 0);
-            glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
-            glActiveTexture(GL_TEXTURE0 + 1);
-            glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
-
-            glDisable(GL_BLEND);
-            glBindVertexArray(Node->OpaqueFacesVAO->VAOId[0]);
-            glDrawArrays(GL_TRIANGLES, 0, Node->OpaqueFacesVAO->Count);
-            glBindVertexArray(0);
-            glActiveTexture(GL_TEXTURE0 + 0);
-            glBindTexture(GL_TEXTURE_2D,0);
-            glDisable(GL_BLEND);
-            glBlendColor(1.f, 1.f, 1.f, 1.f);
-            glUseProgram(0);
         }
     } else {
         TSPDrawNode(Node->Child[1],VRAM,MVPMatrix);
@@ -1379,6 +1391,11 @@ void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM,mat4 MVPMatrix)
     }
     
     Shader = ShaderCache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
+    
+    if( !Shader ) {
+        DPrintf("TSPDrawTransparentFaces:Invalid Shader.\n");
+        return;
+    }
     glUseProgram(Shader->ProgramId);
 
     MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");

@@ -106,11 +106,16 @@ void GUIFree(GUI_t *GUI)
  */
 int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
 {
-    if( !GUI->NumActiveWindows ) {
+    if( !GUIIsActive(GUI) ) {
         return 0;
     }
     ImGui_ImplSDL2_ProcessEvent(Event);
     return 1;
+}
+
+int GUIIsActive(GUI_t *GUI)
+{
+    return GUI->NumActiveWindows > 0;
 }
 
 /*
@@ -392,10 +397,10 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
     WindowPosition.y = (WorkPosition.y + 10.f);
     WindowPivot.x = 1.f;
     WindowPivot.y = 0.f;
-    igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
 
     
     if( GUIShowFPS->IValue ) {
+        igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
         if( igBegin("FPS", NULL, WindowFlags) ) {
             igText(TimeInfo->FPSString);
         }

@@ -159,6 +159,10 @@ void FontDrawChar(Font_t *Font,mat4 ProjectionMatrix,char c,float x,float y,Colo
     color[3] = Color.a;
     
     Shader = ShaderCache("FontShader","Shaders/FontVertexShader.glsl","Shaders/FontFragmentShader.glsl");
+    if( !Shader ) {
+        DPrintf("FontDrawChar:Invalid shader\n");
+        return;
+    }
     glUseProgram(Shader->ProgramId);
     OrthoMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
     ColorId = glGetUniformLocation(Shader->ProgramId,"Color");

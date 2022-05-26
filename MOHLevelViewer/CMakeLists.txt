@@ -8,7 +8,7 @@ set(SOURCE_FILES Config.c Video.c ShaderManager.c VAO.c Sound.c Camera.c GUI.c T
                  VRAM.c Level.c LevelManager.c MOHLevelViewer.c
 )
                  
-set(IMGUI_SOURCE_FILES Libs/cimgui/cimgui.cpp 
+set(IMGUI_SOURCE_FILES Libs/cimgui/cimgui.cpp
                        Libs/cimgui/imgui/imgui.cpp 
                        Libs/cimgui/imgui/imgui_draw.cpp 
                        Libs/cimgui/imgui/imgui_demo.cpp 
@@ -50,8 +50,7 @@ find_package(OpenGL REQUIRED)
 
 add_library(cimgui STATIC ${IMGUI_SOURCE_FILES})
 target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${CMAKE_SOURCE_DIR}/IMGUIConfig.h\"")
-target_link_libraries(cimgui ${FREETYPE_LIBRARIES} ${SDL2_LIBRARIES})
-
+target_link_libraries(cimgui ${SDL2_LIBRARIES})
 if(WIN32)
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
   add_definitions("-DIMGUI_IMPL_API=extern \"C\" __declspec\(dllexport\)")

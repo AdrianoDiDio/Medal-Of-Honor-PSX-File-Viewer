@@ -257,6 +257,8 @@ typedef struct BSDAnimatedLight_s {
     int Delay;
     
     Color1i_t *ColorList;
+    
+    int LastUpdateTime;
 } BSDAnimatedLight_t;
 
 typedef struct BSDAnimatedLightTable_s {

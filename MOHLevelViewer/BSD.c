@@ -23,22 +23,25 @@
 #include "MOHLevelViewer.h"
 #include "ShaderManager.h"
 
-Color3b_t StarsColors[8] = {
-    //R   G   B
-    //128;128;128
+// Color3b_t StarsColors[8] = {
+//     //R   G   B
+//     {128,128,128},
+//     {240,96,64},
+//     {128,128,32},
+//     {240,64,69},
+//     {96,96,240},
+//     {255,255,255},
+//     {255,128,64},
+//     {128,64,255}
+// };
+Color3b_t StarsColors[7] = {
     {128,128,128},
-    //96;64;128
+    {96,64,128},
     {240,96,64},
-    //32;240;64
-    {128,128,32},
-    //96;96;240
-    {240,64,69},
-    //255;255;255
+    {32,240,64},
     {96,96,240},
-    //64;128;64
     {255,255,255},
-    {255,128,64},
-    {128,64,255}
+    {64,128,64},
 };
 // Color1i_t StarsColors[7] = {
 //     //R   G   B
@@ -578,20 +581,26 @@ int BSDAreStarsEnabled(BSD_t *BSD)
 void BSDUpdateAnimatedLights(BSD_t *BSD)
 {
     BSDAnimatedLight_t *AnimatedLight;
+    int Now;
     int i;
     for( i = 0; i < BSD->AnimatedLightsTable.NumAnimatedLights; i++ ) {
         AnimatedLight = &BSD->AnimatedLightsTable.AnimatedLightsList[i];
         if( !AnimatedLight->NumColors ) {
             continue;
         }
+        Now = SysMilliseconds();
+        //NOTE(Adriano):Avoid running too fast...
+        if( (Now - AnimatedLight->LastUpdateTime ) < 30 ) {
+            continue;
+        }
+        AnimatedLight->LastUpdateTime = Now;
         AnimatedLight->Delay--;
         if( AnimatedLight->Delay <= 0 ) {
             AnimatedLight->ColorIndex++;
             if( AnimatedLight->ColorIndex >= AnimatedLight->NumColors ) {
                 AnimatedLight->ColorIndex = 0;
             }
-            //PSX runs at 30FPS...increment the delay in order to simulate that speed...
-            AnimatedLight->Delay = AnimatedLight->ColorList[AnimatedLight->ColorIndex].rgba[3] * 6;
+            AnimatedLight->Delay = AnimatedLight->ColorList[AnimatedLight->ColorIndex].rgba[3];
             AnimatedLight->CurrentColor = AnimatedLight->ColorList[AnimatedLight->ColorIndex].c;
         }
     }
@@ -1097,7 +1106,7 @@ void BSDCreateStarsVAO(BSD_t *BSD)
         R = (BSD->SkyData.StarRadius*256) * sqrt(Rand01());
         Theta = Rand01() * 2 * M_PI;
         Phi = acos(2.0 * Rand01() - 1.0);/*BSDRand01() * M_PI;*/
-        RandColor = StarsColors[RandRangeI(0,7)];
+        RandColor = StarsColors[RandRangeI(0,6)];
         BSD->SkyData.StarsColors[i].rgba[0] = RandColor.r;
         BSD->SkyData.StarsColors[i].rgba[1] = RandColor.g;
         BSD->SkyData.StarsColors[i].rgba[2] = RandColor.b;
@@ -1447,7 +1456,7 @@ char *BSDRenderObjectGetWeaponNameFromId(int RenderObjectId)
         case BSD_RENDER_OBJECT_WEAPON_M1_GARAND:
             return "M1 Garand";
         default:
-            //Should never happens!
+            //Should never happen!
             return "Unknown";
     }
 }
@@ -1695,77 +1704,82 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     
     if( LevelDrawBSDRenderObjectsAsPoints->IValue ) {    
         Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
-        glUseProgram(Shader->ProgramId);
-
-        MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-        glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
-        glBindVertexArray(BSD->RenderObjectPointVAO->VAOId[0]);
-        glPointSize(10.f);
-        glDrawArrays(GL_POINTS, 0, BSD->NumRenderObjectPoint);
-        glBindVertexArray(0);
-        glUseProgram(0);
+        if( Shader ) {
+            glUseProgram(Shader->ProgramId);
+            MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+            glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+            glBindVertexArray(BSD->RenderObjectPointVAO->VAOId[0]);
+            glPointSize(10.f);
+            glDrawArrays(GL_POINTS, 0, BSD->NumRenderObjectPoint);
+            glBindVertexArray(0);
+            glUseProgram(0);
+        }
     }
     
     
     if( LevelDrawBSDRenderObjects->IValue ) {
         Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
-        glUseProgram(Shader->ProgramId);
-        MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-        EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
-        glUniform1i(EnableLightingId, LevelEnableAmbientLight->IValue);
-        glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
+        if( Shader ) {
+            glUseProgram(Shader->ProgramId);
+            MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+            EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
+            glUniform1i(EnableLightingId, LevelEnableAmbientLight->IValue);
+            glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
 
-        for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; 
-            RenderObjectIterator = RenderObjectIterator->Next ) {
-            glm_mat4_identity(ModelViewMatrix);
-            BSDGetObjectMatrix(RenderObjectIterator,ModelMatrix);
-            glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
-            glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);            
-            glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
-            glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+            for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; 
+                RenderObjectIterator = RenderObjectIterator->Next ) {
+                glm_mat4_identity(ModelViewMatrix);
+                BSDGetObjectMatrix(RenderObjectIterator,ModelMatrix);
+                glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
+                glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);            
+                glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+                glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
 
-            for( VAOIterator = BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].VAO; VAOIterator; 
-                VAOIterator = VAOIterator->Next ) {
-                glBindVertexArray(VAOIterator->VAOId[0]);
-                glDrawArrays(GL_TRIANGLES, 0, VAOIterator->Count);
-                glBindVertexArray(0);
+                for( VAOIterator = BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].VAO; VAOIterator; 
+                    VAOIterator = VAOIterator->Next ) {
+                    glBindVertexArray(VAOIterator->VAOId[0]);
+                    glDrawArrays(GL_TRIANGLES, 0, VAOIterator->Count);
+                    glBindVertexArray(0);
+                }
             }
+            glBindTexture(GL_TEXTURE_2D,0);
+            glUseProgram(0);
         }
-        glBindTexture(GL_TEXTURE_2D,0);
-        glUseProgram(0);
     }
     
     if( LevelDrawBSDShowcase->IValue ) {
         Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
-        glUseProgram(Shader->ProgramId);
-        MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-        glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
-    
-        BSDGetPlayerSpawn(BSD,0,PSpawn,NULL);
-    
-        for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-            vec3 temp;
-            glm_mat4_identity(ModelViewMatrix);
-            glm_mat4_identity(ModelMatrix);
-            temp[0] = ((PSpawn[0] - (i * 200.f)));
-            temp[1] = (-PSpawn[1]);
-            temp[2] = (PSpawn[2]);
-            glm_translate(ModelMatrix,temp);
-            glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
-            glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
-            
-            //Emulate PSX Coordinate system...
-            glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
-            glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+        if( Shader ) {
+            glUseProgram(Shader->ProgramId);
+            MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+            glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
+        
+            BSDGetPlayerSpawn(BSD,0,PSpawn,NULL);
+        
+            for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
+                vec3 temp;
+                glm_mat4_identity(ModelViewMatrix);
+                glm_mat4_identity(ModelMatrix);
+                temp[0] = ((PSpawn[0] - (i * 200.f)));
+                temp[1] = (-PSpawn[1]);
+                temp[2] = (PSpawn[2]);
+                glm_translate(ModelMatrix,temp);
+                glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
+                glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
+                
+                //Emulate PSX Coordinate system...
+                glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+                glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
 
-            for( VAOIterator = BSD->RenderObjectList[i].VAO; VAOIterator; VAOIterator = VAOIterator->Next ) {
-                glBindVertexArray(VAOIterator->VAOId[0]);
-                glDrawArrays(GL_TRIANGLES, 0, VAOIterator->Count);
-                glBindVertexArray(0);
+                for( VAOIterator = BSD->RenderObjectList[i].VAO; VAOIterator; VAOIterator = VAOIterator->Next ) {
+                    glBindVertexArray(VAOIterator->VAOId[0]);
+                    glDrawArrays(GL_TRIANGLES, 0, VAOIterator->Count);
+                    glBindVertexArray(0);
+                }
             }
+            glBindTexture(GL_TEXTURE_2D,0);
+            glUseProgram(0);
         }
-        glBindTexture(GL_TEXTURE_2D,0);
-        glUseProgram(0);
     }
 }
 
@@ -1790,32 +1804,35 @@ void BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     glDepthMask(0);
     if( BSDIsMoonEnabled(BSD) ) {
         Shader = ShaderCache("MoonShader","Shaders/MoonVertexShader.glsl","Shaders/MoonFragmentShader.glsl");
-        glUseProgram(Shader->ProgramId);
-        MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-        glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
+        if( Shader ) {
+            glUseProgram(Shader->ProgramId);
+            MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+            glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
 
-        glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+            glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
 
-        glBindVertexArray(BSD->SkyData.MoonVAO->VAOId[0]);
-        glDrawArrays(GL_TRIANGLES, 0, BSD->SkyData.MoonVAO->Count);
-        glBindVertexArray(0);
-                
-        glBindTexture(GL_TEXTURE_2D,0);
-        glUseProgram(0);
+            glBindVertexArray(BSD->SkyData.MoonVAO->VAOId[0]);
+            glDrawArrays(GL_TRIANGLES, 0, BSD->SkyData.MoonVAO->Count);
+            glBindVertexArray(0);
+                    
+            glBindTexture(GL_TEXTURE_2D,0);
+            glUseProgram(0);
+        }
     }
     if( BSDAreStarsEnabled(BSD) ) {
         BSDUpdateStarsColors(BSD);
-        
         Shader = ShaderCache("StarsShader","Shaders/StarsVertexShader.glsl","Shaders/StarsFragmentShader.glsl");
-        glUseProgram(Shader->ProgramId);
-        MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-        
-        glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
-        glPointSize(2.f);
-        glBindVertexArray(BSD->SkyData.StarsVAO->VAOId[0]);
-        glDrawArrays(GL_POINTS, 0, 255);
-        glBindVertexArray(0);
-        glUseProgram(0);
+        if( Shader ) {
+            glUseProgram(Shader->ProgramId);
+            MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+            
+            glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+            glPointSize(2.f);
+            glBindVertexArray(BSD->SkyData.StarsVAO->VAOId[0]);
+            glDrawArrays(GL_POINTS, 0, 255);
+            glBindVertexArray(0);
+            glUseProgram(0);
+        }
     }
     glDepthMask(1);
 }
@@ -2146,6 +2163,7 @@ void BSDReadAnimatedLightChunk(BSD_t *BSD,FILE *BSDFile)
         if( AnimatedLight->NumColors == 0 ) {
             continue;
         }
+        AnimatedLight->LastUpdateTime = 0;
         AnimatedLight->ColorList = malloc(AnimatedLight->NumColors * sizeof(Color1i_t));
         DPrintf("Animated Light: %i\n",i);
         DPrintf("StartingColorOffset:%i\n",AnimatedLight->StartingColorOffset);
