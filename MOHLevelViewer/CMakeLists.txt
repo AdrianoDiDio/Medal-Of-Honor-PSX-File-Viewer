@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
-include(FetchContent)
 
+include(FetchContent)
 project(MOHLevelViewer)
 
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
+set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
+set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
+  
 set(SOURCE_FILES Config.c Video.c ShaderManager.c VAO.c Sound.c Camera.c GUI.c TSP.c 
                  TIM.c Font.c BSD.c BSDTwoPlayers.c 
                  VRAM.c Level.c LevelManager.c MOHLevelViewer.c
@@ -42,8 +46,16 @@ include_directories(${SDL2_INCLUDE_DIRS})
 
 add_subdirectory(Libs/glew-cmake/build/cmake)
 
-find_package(PNG REQUIRED)
-include_directories(${PNG_INCLUDE_DIRS})
+add_subdirectory(Libs/zlib)
+
+set(PNG_BUILD_ZLIB ON CACHE BOOL "" FORCE)
+set(PNG_SHARED ON CACHE BOOL "" FORCE)
+set(PNG_STATIC OFF CACHE BOOL "" FORCE)
+set(PNG_EXECUTABLES OFF CACHE BOOL "" FORCE)
+set(PNG_TESTS OFF CACHE BOOL "" FORCE) 
+set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
+set(ZLIB_LIBRARIES "zlib")
+add_subdirectory(Libs/libpng)
 
 set(OpenGL_GL_PREFERENCE LEGACY)
 find_package(OpenGL REQUIRED)
@@ -77,4 +89,4 @@ include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(Libs/cimgui/generator/output/)
 include_directories(Libs/cimgui/)
 include_directories(Libs/ImGuiFileDialog/)
-target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES} glew_s ${PNG_LIBRARIES} ${OPENGL_LIBRARIES} m cimgui)
+target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES} glew_s png ${OPENGL_LIBRARIES} m cimgui)

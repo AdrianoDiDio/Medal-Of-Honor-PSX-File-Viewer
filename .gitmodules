@@ -10,3 +10,9 @@
 [submodule "MOHLevelViewer/Libs/glew-cmake"]
 	path = MOHLevelViewer/Libs/glew-cmake
 	url = https://github.com/Perlmint/glew-cmake.git
+[submodule "MOHLevelViewer/Libs/zlib"]
+	path = MOHLevelViewer/Libs/zlib
+	url = https://github.com/madler/zlib
+[submodule "MOHLevelViewer/Libs/libpng"]
+	path = MOHLevelViewer/Libs/libpng
+	url = https://github.com/glennrp/libpng.git

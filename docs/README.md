@@ -24,7 +24,7 @@
       - [Vertex](#vertex)
       - [Color](#color)
       - [Faces](#faces)
-        * [UV Coordinates(UV)](#uv-coordinates)
+        * [UV Coordinates](#uv-coordinates)
       - [Texture Info](#texture-info)
         * [Face Data](#face-data)
       - [Dynamic Data](#dynamic-data)
@@ -118,7 +118,8 @@ share/MOHLevelViewer on Linux and %AppData% on Windows).**
 MOHLevelViewer uses the following libraries:  
 
 **SDL2**: https://www.libsdl.org/  
-**libpng**:http://www.libpng.org/
+**zlib**: https://github.com/madler/zlib  
+**libpng**:http://www.libpng.org/  
 **IMGUI**: https://github.com/ocornut/imgui/  
 **IMGUI_FileDialog**:  https://github.com/aiekick/ImGuiFileDialog  
 The font file shipped with the program is:  
