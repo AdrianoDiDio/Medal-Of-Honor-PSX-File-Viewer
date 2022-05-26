@@ -24,7 +24,7 @@
       - [Vertex](#vertex)
       - [Color](#color)
       - [Faces](#faces)
-        * [UV Coordinates(UV)](#uv-coordinates-uv-)
+        * [UV Coordinates(UV)](#uv-coordinates)
       - [Texture Info](#texture-info)
         * [Face Data](#face-data)
       - [Dynamic Data](#dynamic-data)
@@ -73,27 +73,28 @@ It was tested under Linux and Windows but it should also run on any other
 platform.  
 Game Files are not available into this repository and you need a copy of
 the game in order to use it.  
+
 Some sample screenshot taken from MOHLevelViewer:  
 
-<p float="left">
-    <img src="Images/MOH_MSN9LVL4_Screen1.png "title-1" height="250">
-    <figcaption>Screenshot taken from the last Mission of Medal Of Honor
-    using MOHLevelViewer.</figcaption>
-    <img src="Images/MOHU_MSN2LVL1_Screen1.png" height="250">
-    <figcaption>
-    Screenshot taken from the first Mission of Medal Of Honor:Underground
-    using MOHLevelViewer
-    </figcaption>
+<img src="Images/MOH_MSN9LVL4_Screen1.png" width="600" />
 
-</p>
+*Screenshot taken from the last Mission of Medal Of Honor
+using MOHLevelViewer.*
+
+<img src="Images/MOHU_MSN2LVL1_Screen1.png" width="600" />
+
+*Screenshot taken from the first Mission of Medal Of
+Honor:Underground using MOHLevelViewer.*
 
 ## Programs
 ### MOHLevelViewer
-MOHLevelViewer is able to load and render any level from the games Medal Of
-Honor and Medal Of Honor:Underground.  
-At the moment only the level files and objects are loaded and rendered.  
-It is able to load level (that can be exported along with object to an Obj
-or Ply file) and the music (that can be exported to wav).  
+MOHLevelViewer is able to load and render any level from
+the games Medal Of Honor and Medal Of Honor:Underground.  
+At the moment only the level files and objects are loaded
+and rendered.  
+It is able to load level (that can be exported along with
+object to an Obj or Ply file) and the music (that can be
+exported to wav).  
 
 #### Build
 Before building make sure to fetch all the submodules by typing:  
@@ -314,7 +315,7 @@ This is used by each face in order to simulate lights.
 
 #### Faces
 
-##### UV Coordinates(UV)
+##### UV Coordinates
 Used for texture coordinates.
 
 | Type | Size | Description |
@@ -329,11 +330,11 @@ Starting from version 3 texture data is stored in a separate structure:
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| [UV](#uv) | 2 byte  | UV0 |
+| [UV](#uv-coordinates) | 2 byte  | UV0 |
 | short | 2 byte  | CBA |
-| [UV](#uv) | 2 byte  | UV1|
+| [UV](#uv-coordinates) | 2 byte  | UV1|
 | short | 2 byte  | [TSB](#tsb) (Texture Info) |
-| [UV](#uv) | 2 byte  | UV2|
+| [UV](#uv-coordinates) | 2 byte  | UV2|
 | short | 2 byte  | Pad |
 
 ##### Face Data
@@ -345,11 +346,11 @@ Each face is made by 3 vertices that forms a triangle.
 | unsigned short | 2 bytes  | V0 First vertex and color index in array |
 | unsigned short | 2 bytes  | V1 Second vertex and color index in array |
 | unsigned short | 2 bytes  | V2 Third vertex and color index in array |
-| [UV](#uv-coordinatesuv) | 2 byte  | UV0 Texture coordinate for vertex 0  |
+| [UV](#uv-coordinates) | 2 byte  | UV0 Texture coordinate for vertex 0  |
 | short | 2 bytes  | CBA (Contains CLUT Data for TIM Images, Not Used)  |
-| [UV](#uv-coordinatesuv) | 2 bytes  | UV1 Texture coordinate for vertex 1  |
+| [UV](#uv-coordinates) | 2 bytes  | UV1 Texture coordinate for vertex 1  |
 | short | 2 bytes  | TSB that contains info about the used texture ( read [TSB](#tsb) for more information)|
-| [UV](#uv-coordinatesuv) | 2 bytes  | UV2 Texture coordinate for vertex 2  |
+| [UV](#uv-coordinates) | 2 bytes  | UV2 Texture coordinate for vertex 2  |
 
 Starting from Version 3 a different type of face format is used:
 
