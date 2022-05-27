@@ -81,7 +81,7 @@ Some sample screenshot taken from MOHLevelViewer:
 *Screenshot taken from the last Mission of Medal Of Honor
 using MOHLevelViewer.*
 
-<img src="Images/MOHU_MSN2LVL1_Screen1.png" width="600" />
+<img src="Images/MOHU_MSN2LVL1_Screen2.png" width="600" />
 
 *Screenshot taken from the first Mission of Medal Of
 Honor:Underground using MOHLevelViewer.*
@@ -150,6 +150,9 @@ save it in the current folder.
 If the file contains more than one TIM then it creates a folder with the
 same name as <File> (without the extension) and all the images that were
 found in the file will be saved inside that folder.
+#### Credits
+TIMExtractor uses the following libraries:  
+**libpng**: http://www.libpng.org/  
 
 ### VAB Extractor
 
@@ -170,7 +173,8 @@ If it is a TAF file, then it will convert all the files that are found
 inside otherwise if IsVag is set to 1 will convert only one file to
 wav.
 #### Credits
-**libsndfile**: https://github.com/libsndfile/libsndfile
+VABExtractor uses the following libraries:  
+**libsndfile**: https://github.com/libsndfile/libsndfile  
 ## File Formats
 ### Common Formats
 #### TSB
@@ -216,7 +220,7 @@ If Version is 1:
 | int  | 4 bytes  | Dynamic Data Offset |
 | int  | 4 bytes  | Collision Data Offset |
 
-Otherwise two new fields are added:
+Otherwise, in version 3, two new fields are added:
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |

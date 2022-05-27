@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 
 include(FetchContent)
+
 project(MOHLevelViewer)
+
+# cmake_policy(SET CMAKE_POLICY_DEFAULT_CMP0074 NEW)
+set(CMAKE_POLICY_DEFAULT_CMP0074 NEW)
 
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
@@ -41,20 +45,26 @@ set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 
 include_directories(Libs/cimgui/imgui)
 
-find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIRS})
+set(SDL2_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
+add_subdirectory(Libs/SDL)
+include_directories(Libs/SDL/include)
+
+set(GLEW_CUSTOM_OUTPUT_DIRS ON CACHE BOOL "" FORCE)
 
 add_subdirectory(Libs/glew-cmake/build/cmake)
 
-add_subdirectory(Libs/zlib)
+add_subdirectory(Libs/zlib ${CMAKE_CURRENT_BINARY_DIR}/Libs/zlib)
 
-set(PNG_BUILD_ZLIB ON CACHE BOOL "" FORCE)
+set(ZLIB_ROOT Libs/zlib)
+
+set(ZLIB_LIBRARY zlib)
+set(PNG_BUILD_ZLIB OFF CACHE BOOL "" FORCE)
 set(PNG_SHARED ON CACHE BOOL "" FORCE)
 set(PNG_STATIC OFF CACHE BOOL "" FORCE)
 set(PNG_EXECUTABLES OFF CACHE BOOL "" FORCE)
 set(PNG_TESTS OFF CACHE BOOL "" FORCE) 
 set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
-set(ZLIB_LIBRARIES "zlib")
+
 add_subdirectory(Libs/libpng)
 
 set(OpenGL_GL_PREFERENCE LEGACY)
@@ -62,7 +72,7 @@ find_package(OpenGL REQUIRED)
 
 add_library(cimgui STATIC ${IMGUI_SOURCE_FILES})
 target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${CMAKE_SOURCE_DIR}/IMGUIConfig.h\"")
-target_link_libraries(cimgui ${SDL2_LIBRARIES})
+target_link_libraries(cimgui SDL2)
 if(WIN32)
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
   add_definitions("-DIMGUI_IMPL_API=extern \"C\" __declspec\(dllexport\)")
@@ -89,4 +99,10 @@ include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(Libs/cimgui/generator/output/)
 include_directories(Libs/cimgui/)
 include_directories(Libs/ImGuiFileDialog/)
-target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES} glew_s png ${OPENGL_LIBRARIES} m cimgui)
+target_link_libraries(${PROJECT_NAME} SDL2 glew_s png ${OPENGL_LIBRARIES} m cimgui)
+
+add_custom_command(TARGET ${PROJECT_NAME}
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Fonts/ $<TARGET_FILE_DIR:${PROJECT_NAME}>/Fonts/
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Shaders/ $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders/
+)

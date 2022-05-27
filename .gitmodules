@@ -16,3 +16,6 @@
 [submodule "MOHLevelViewer/Libs/libpng"]
 	path = MOHLevelViewer/Libs/libpng
 	url = https://github.com/glennrp/libpng.git
+[submodule "MOHLevelViewer/Libs/SDL"]
+	path = MOHLevelViewer/Libs/SDL
+	url = https://github.com/libsdl-org/SDL.git

@@ -1691,15 +1691,17 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     }
     if( LevelDrawBSDNodesAsPoints->IValue ) {    
         Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
-        glUseProgram(Shader->ProgramId);
+        if( Shader ) {
+            glUseProgram(Shader->ProgramId);
 
-        MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-        glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
-        glBindVertexArray(BSD->NodeVAO->VAOId[0]);
-        glPointSize(10.f);
-        glDrawArrays(GL_POINTS, 0, BSD->NodeData.Header.NumNodes);
-        glBindVertexArray(0);
-        glUseProgram(0);
+            MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+            glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+            glBindVertexArray(BSD->NodeVAO->VAOId[0]);
+            glPointSize(10.f);
+            glDrawArrays(GL_POINTS, 0, BSD->NodeData.Header.NumNodes);
+            glBindVertexArray(0);
+            glUseProgram(0);
+        }
     }
     
     if( LevelDrawBSDRenderObjectsAsPoints->IValue ) {    
