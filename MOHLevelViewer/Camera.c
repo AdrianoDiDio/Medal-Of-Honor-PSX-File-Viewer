@@ -70,12 +70,12 @@ void CameraLostFocus(Camera_t *Camera)
 void CameraOnMouseEvent(Camera_t *Camera,int Dx,int Dy)
 {
     if( !Camera->HasFocus ) {
-        Dx = VidConfigWidth->IValue/2;
-        Dy = VidConfigHeight->IValue/2;
+        Dx = 0;
+        Dy = 0;
         Camera->HasFocus = 1;
     }
-    Camera->Rotation[PITCH] += ( Dy - (VidConfigHeight->IValue/2) ) * CameraMouseSensitivity->FValue * 0.1;
-    Camera->Rotation[YAW] += ( Dx - (VidConfigWidth->IValue/2) ) * CameraMouseSensitivity->FValue * 0.1;
+    Camera->Rotation[PITCH] += Dy  * CameraMouseSensitivity->FValue * 0.2;
+    Camera->Rotation[YAW]   += Dx  * CameraMouseSensitivity->FValue * 0.2;
     CameraOnAngleUpdate(Camera);
 }
 

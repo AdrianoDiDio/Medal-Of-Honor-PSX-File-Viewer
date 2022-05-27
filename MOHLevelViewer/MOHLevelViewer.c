@@ -338,8 +338,7 @@ void EngineCheckEvents(Engine_t *Engine)
             CameraLostFocus(Engine->Camera);
         } else {
             if( Event.type == SDL_MOUSEMOTION ) {
-                CameraOnMouseEvent(Engine->Camera,Event.motion.x,Event.motion.y);
-                VideoSystemCenterMouse(Engine->VideoSystem);   
+                CameraOnMouseEvent(Engine->Camera,Event.motion.xrel,Event.motion.yrel);
             }
         }
     }

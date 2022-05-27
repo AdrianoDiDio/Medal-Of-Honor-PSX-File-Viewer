@@ -45,6 +45,11 @@ void VideoSystemCenterMouse(VideoSystem_t *VideoSystem)
 {
     SDL_WarpMouseInWindow(VideoSystem->Window,VidConfigWidth->IValue/2,VidConfigHeight->IValue/2);
 }
+
+void VideoSystemGrabMouse(bool Grab)
+{
+    SDL_SetRelativeMouseMode(Grab);
+}
 SDL_DisplayMode *SDLGetCurrentDisplayModeV2(VideoSystem_t *VideoSystem)
 {
     static SDL_DisplayMode Result;
@@ -270,6 +275,6 @@ VideoSystem_t *VideoSystemInit()
         DPrintf("VideoSystemInit:Failed to init GLEW\n");
         return NULL;
     }
-    SysHideCursor();
+    VideoSystemGrabMouse(1);
     return VideoSystem;
 }

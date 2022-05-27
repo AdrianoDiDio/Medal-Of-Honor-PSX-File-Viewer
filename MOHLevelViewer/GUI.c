@@ -126,7 +126,9 @@ int GUIIsActive(GUI_t *GUI)
 void GUIPushWindow(GUI_t *GUI)
 {
     if( !GUI->NumActiveWindows ) {
-        SysShowCursor();
+        //NOTE(Adriano):We have pushed a new window to the stack release the mouse and show
+        //the cursor.
+        VideoSystemGrabMouse(0);
     }
     GUI->NumActiveWindows++;
 }
@@ -134,7 +136,8 @@ void GUIPopWindow(GUI_t *GUI)
 {
     GUI->NumActiveWindows--;
     if( !GUI->NumActiveWindows ) {
-        SysHideCursor();
+        //NOTE(Adriano):All the windows have been closed...grab the mouse!
+        VideoSystemGrabMouse(1);
     }
 }
 void GUIToggleHandle(GUI_t *GUI,int HandleValue)
