@@ -1611,8 +1611,9 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
                     TSP->Node[i].FaceList[CurrentFaceIndex].SwapV1V2 = 0;
                     //NOTE(Adriano):Store the offset at which the face is read in order to be able to retrieve it when using dynamic block data.
                     TSP->Node[i].FaceList[CurrentFaceIndex].FileOffset = FaceOffset;
-                    DPrintf("TSPReadNodeChunk:Got Vert0:%i %i %i\n",TSP->Node[i].FaceList[CurrentFaceIndex].Vert0,TSP->Node[i].FaceList[CurrentFaceIndex].Vert1,
-                        TSP->Node[i].FaceList[CurrentFaceIndex].Vert2
+                    DPrintf("TSPReadNodeChunk:Got Vert0:%i %i %i\n",TSP->Node[i].FaceList[CurrentFaceIndex].Vert0,
+                            TSP->Node[i].FaceList[CurrentFaceIndex].Vert1,
+                            TSP->Node[i].FaceList[CurrentFaceIndex].Vert2
                     );
                     assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 < TSP->Header.NumVertices);
                     assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 < TSP->Header.NumVertices);

@@ -30,8 +30,6 @@ Color4f_t    c_Yellow = {  1.f,  1.f, 0,   1.f};
 Color4f_t    c_White    = {   1.f,  1.f, 1.f, 1.f};
 Color4f_t    c_Grey =  {   0.75, 0.75,0.75,1.f};
 
-int StartSeconds = 0;
-
 Byte HighNibble(Byte In)
 {
     return (In >> 0x4) & 0xF;
@@ -270,20 +268,7 @@ char *SysGetConfigPath()
 }
 int SysMilliseconds()
 {
-    return SDL_GetTicks();
-//     struct timeval tp;
-//     int CTime;
-// 
-//     gettimeofday(&tp, NULL);
-// 
-//     if ( !StartSeconds ){
-//         StartSeconds = tp.tv_sec;
-//         return tp.tv_usec/1000;
-//     }
-// 
-//     CTime = (tp.tv_sec - StartSeconds)*1000 + tp.tv_usec / 1000;
-// 
-//     return CTime;
+    return SDL_GetTicks64();
 }
 
 void DPrintf(char *Fmt, ...)

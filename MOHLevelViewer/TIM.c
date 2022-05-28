@@ -68,11 +68,6 @@ int GetAlphaValue(unsigned short Color)
     STP = GetSTP(Color);
     if( STP ) {
         Result = 255;
-//         if( IsClutColorZero(Color) ) {
-//             Result = 255;
-//         } else {
-//             Result = 200;
-//         }
     } else {
         if( IsClutColorZero(Color) ) {
             Result = 0;
@@ -142,9 +137,7 @@ Byte *TIMExpandCLUTImageData(TIMImage_t *Image)
     }
     return Data;
 }
-/*
-    Going RGBA now....
-*/
+
 Byte *TIMToOpenGL32(TIMImage_t *Image)
 {
     Byte *Data;
@@ -551,19 +544,11 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     fread(&ResultImage->Width,sizeof(ResultImage->Width),1,TIMImage);
     fread(&ResultImage->Height,sizeof(ResultImage->Height),1,TIMImage);
     ResultImage->RowCount = ResultImage->Width;
-    //TODO:Store this info together with the image.
-    switch( ResultImage->Header.BPP ) {
-//         case BPP_4:
-//             ResultImage->TexturePage = 1 + ((ResultImage->FrameBufferX - 1) / 64);
-//             break;
-//         case BPP_8:
-//             ResultImage->TexturePage = 1 + ((ResultImage->FrameBufferX - 1) / 128);
-//             break;
-        default:
-            ResultImage->TexturePage = (ResultImage->FrameBufferX / 64) /*+ 1*/;
-            ResultImage->CLUTTexturePage = (ResultImage->Header.CLUTOrgX / 64) /*+ 1*/;
-            break;
-    }
+
+
+    ResultImage->TexturePage = (ResultImage->FrameBufferX / 64);
+    ResultImage->CLUTTexturePage = (ResultImage->Header.CLUTOrgX / 64);
+
     DPrintf("FrameBuffer Coordinates %ux%u page %i\n",ResultImage->FrameBufferX,ResultImage->FrameBufferY,ResultImage->TexturePage);
     DPrintf("Image has calculated texture page as %i\n",ResultImage->TexturePage);
     //Texture Page is Zero based.
@@ -579,12 +564,9 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     DPrintf("NumPixels is %i\n",ResultImage->NumPixels);
     DPrintf("FrameBuffer Coordinates %ux%u page %i\n",ResultImage->FrameBufferX,ResultImage->FrameBufferY,ResultImage->TexturePage);
     DPrintf("Image is %ux%u RowCount is %u\n",ResultImage->Width,ResultImage->Height,ResultImage->RowCount);
-//     if( ResultImage->FrameBufferX == 512 && ResultImage->FrameBufferY == 0 ) {
-//         exit(0);
-//     }
+
     ResultImage->Data = malloc((ResultImage->RowCount * ResultImage->Height) * sizeof(unsigned short));
     for( i = 0; i < ResultImage->RowCount * ResultImage->Height; i++ ) {
-        int Ret;
         Ret = fread(&ResultImage->Data[i],sizeof(ResultImage->Data[i]),1,TIMImage);
         assert(Ret == 1);
     }
@@ -602,7 +584,7 @@ TIMImage_t *TIMGetAllImages(char *File)
     TIMFile = fopen(File,"rb");
     
     if( !TIMFile ) {
-        printf("Error opening file %s!\n",File);
+        printf("TIMGetAllImages:Error opening file %s!\n",File);
         return NULL;
     }
     List = NULL;
@@ -616,6 +598,7 @@ TIMImage_t *TIMGetAllImages(char *File)
         List = Image;
         NumImages++;
     }
+    DPrintf("TIMGetAllImages:Loaded %i images\n",NumImages);
     fclose(TIMFile);
     return List;
 }
