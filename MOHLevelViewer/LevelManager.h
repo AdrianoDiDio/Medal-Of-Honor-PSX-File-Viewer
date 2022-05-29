@@ -50,7 +50,6 @@ typedef struct LevelManager_s {
     GUIFileDialog_t *FileDialog;
     GUIFileDialog_t *ExportFileDialog;
     Level_t *CurrentLevel;
-    SoundSystem_t *SoundSystem;
     int     HasToSpawnCamera;
     int     IsPathSet;
     int     GameEngine;
@@ -59,20 +58,21 @@ typedef struct LevelManager_s {
 typedef struct LevelManagerDialogData_s {
     LevelManager_t *LevelManager;
     VideoSystem_t  *VideoSystem;
+    SoundSystem_t  *SoundSystem;
     int             OutputFormat;
 } LevelManagerDialogData_t;
 
-LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem);
-void            LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
+LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem);
+void            LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
                                       int MissionNumber,int LevelNumber);
-void            LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,int SoundValue);
+void            LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,SoundSystem_t *SoundSystem,int SoundValue);
 int             LevelManagerIsLevelLoaded(LevelManager_t *LevelManager);
 int             LevelManagerGetGameEngine(LevelManager_t *LevelManager);
-int             LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,char *Path);
+int             LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,char *Path);
 void            LevelManagerUpdate(LevelManager_t *LevelManager,Camera_t *Camera);
 void            LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera);
-void            LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem);
-void            LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t  *VideoSystem,int OutputFormat);
+void            LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem);
+void            LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t  *VideoSystem,SoundSystem_t *SoundSystem,int OutputFormat);
 void            LevelManagerCleanUp(LevelManager_t *LevelManager);
 
 extern Mission_t MOHMissionsList[];

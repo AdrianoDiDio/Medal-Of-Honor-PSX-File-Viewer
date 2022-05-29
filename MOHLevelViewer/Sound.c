@@ -473,9 +473,9 @@ SoundSystem_t *SoundSystemInit()
     if( ObtainedAudioSpec.freq != DesiredAudioSpec.freq || ObtainedAudioSpec.channels != DesiredAudioSpec.channels || 
         ObtainedAudioSpec.samples != DesiredAudioSpec.samples
     ) {
-        DPrintf("SoundSystemInit:Wanted a frequency of %i with %i samples and %i channels...\n",DesiredAudioSpec.freq,DesiredAudioSpec.samples,
+        printf("SoundSystemInit:Wanted a frequency of %i with %i samples and %i channels...\n",DesiredAudioSpec.freq,DesiredAudioSpec.samples,
                 DesiredAudioSpec.channels);
-        DPrintf("...Obtained a frequency of %i with %i samples and %i channels.\n",ObtainedAudioSpec.freq,ObtainedAudioSpec.samples,
+        printf("...Obtained a frequency of %i with %i samples and %i channels.\n",ObtainedAudioSpec.freq,ObtainedAudioSpec.samples,
                 ObtainedAudioSpec.channels);
         SDL_CloseAudioDevice(SoundSystem->Device);
         assert(1!=1);

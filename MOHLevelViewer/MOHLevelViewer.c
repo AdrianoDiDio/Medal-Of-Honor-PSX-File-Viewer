@@ -312,7 +312,7 @@ void EngineCheckEvents(Engine_t *Engine)
             GUIToggleLevelSelectWindow(Engine->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
-            LevelManagerToggleFileDialog(Engine->LevelManager,Engine->GUI,Engine->VideoSystem);
+            LevelManagerToggleFileDialog(Engine->LevelManager,Engine->GUI,Engine->VideoSystem,Engine->SoundSystem);
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit(Engine);
@@ -496,6 +496,9 @@ void EngineShutDown(Engine_t *Engine)
     if( Engine->VideoSystem ) {
         VideoSystemShutdown(Engine->VideoSystem);
     }
+    if( Engine->SoundSystem ) {
+        SoundSystemCleanUp(Engine->SoundSystem);
+    }
     if( Engine->Camera ) {
         CameraCleanUp(Engine->Camera);
     }
@@ -512,7 +515,7 @@ void EngineDraw(Engine_t *Engine)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     LevelManagerDraw(Engine->LevelManager,Engine->Camera);
     glDisable (GL_DEPTH_TEST);
-    GUIDraw(Engine->GUI,Engine->LevelManager,Engine->Camera,Engine->VideoSystem,Engine->TimeInfo);
+    GUIDraw(Engine->GUI,Engine->LevelManager,Engine->Camera,Engine->VideoSystem,Engine->SoundSystem,Engine->TimeInfo);
     glEnable(GL_DEPTH_TEST);
 }
 void EngineFrame(Engine_t *Engine)
@@ -556,6 +559,13 @@ Engine_t *EngineInit(int argc,char **argv)
 //         return NULL;
     }
     
+    Engine->SoundSystem = SoundSystemInit();
+    
+    if( !Engine->SoundSystem ) {
+        printf("EngineInit:Failed to initialize Audio system\n");
+        goto Failure;
+    }
+    
     Engine->KeyState = SDL_GetKeyboardState(NULL);
     
     Engine->Camera = CameraInit();
@@ -587,7 +597,7 @@ Engine_t *EngineInit(int argc,char **argv)
         goto Failure;
     }
     
-    Engine->LevelManager = LevelManagerInit(Engine->GUI,Engine->VideoSystem);
+    Engine->LevelManager = LevelManagerInit(Engine->GUI,Engine->VideoSystem,Engine->SoundSystem);
     
     if( !Engine->LevelManager ) {
         printf("EngineInit:Failed to initialize LevelManager\n");
