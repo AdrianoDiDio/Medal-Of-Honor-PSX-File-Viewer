@@ -559,6 +559,7 @@ void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
     PlyObjectOutFile = fopen(PlyObjectFile,"w");
     if( !PlyObjectOutFile ) {
         DPrintf("LevelManagerExportToPly:Failed to open %s for writing\n",PlyObjectFile);
+        fclose(PlyLevelOutFile);
         return;
     }
     GUISetProgressBarDialogTitle(GUI,"Exporting to Ply...");
@@ -808,13 +809,15 @@ LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem)
         printf("LevelManagerInit:Failed to allocate memory for struct\n");
         return NULL;
     }
-    LevelManager->SoundSystem = SoundSystemInit();
     LevelManager->CurrentLevel = malloc(sizeof(Level_t));
-    LevelManager->HasToSpawnCamera = 0;
+
     if( !LevelManager->CurrentLevel ) {
         DPrintf("LevelManagerInit:Failed to allocate memory for level struct\n");
+        free(LevelManager);
         return NULL;
     }
+    LevelManager->SoundSystem = SoundSystemInit();
+    LevelManager->HasToSpawnCamera = 0;
     LevelManager->FileDialog = GUIFileDialogRegister(GUI,"Select Directory",NULL,
                                                      LevelManagerOnDirSelected,LevelManagerOnDirSelectionCancelled);
     LevelManager->ExportFileDialog = GUIFileDialogRegister(GUI,

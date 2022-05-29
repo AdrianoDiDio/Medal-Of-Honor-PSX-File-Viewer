@@ -447,16 +447,18 @@ SoundSystem_t *SoundSystemInit()
     SDL_AudioSpec ObtainedAudioSpec;
     
     SoundSystem = malloc(sizeof(SoundSystem_t));
+
+    if( !SoundSystem ) {
+        DPrintf("SoundSystemInit:Failed to initialize sound system.\n");
+        return NULL;
+    }
+
     SoundSystem->MusicList = NULL;
     SoundSystem->AmbientMusicList = NULL;
     SoundSystem->CurrentMusic = NULL;
     
     SoundVolume = ConfigGet("SoundVolume");
     
-    if( !SoundSystem ) {
-        DPrintf("SoundSystemInit:Failed to initialize sound system.\n");
-        return NULL;
-    }
     
     SDL_zero(DesiredAudioSpec);
     DesiredAudioSpec.freq = SOUND_SYSTEM_FREQUENCY;

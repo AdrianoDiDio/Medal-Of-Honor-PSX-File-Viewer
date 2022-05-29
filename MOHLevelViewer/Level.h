@@ -61,6 +61,7 @@ extern Config_t *LevelDrawCollisionData;
 extern Config_t *LevelDrawBSPTree;
 extern Config_t *LevelDrawSurfaces;
 extern Config_t *LevelDrawBSDNodesAsPoints;
+extern Config_t *LevelDrawBSDNodesCollisionVolumes;
 extern Config_t *LevelDrawBSDRenderObjectsAsPoints;
 extern Config_t *LevelDrawBSDRenderObjects;
 extern Config_t *LevelDrawBSDShowcase;

@@ -27,6 +27,7 @@ Config_t *LevelDrawCollisionData;
 Config_t *LevelDrawBSPTree;
 Config_t *LevelDrawSurfaces;
 Config_t *LevelDrawBSDNodesAsPoints;
+Config_t *LevelDrawBSDNodesCollisionVolumes;
 Config_t *LevelDrawBSDRenderObjectsAsPoints;
 Config_t *LevelDrawBSDRenderObjects;
 Config_t *LevelDrawBSDShowcase;
@@ -141,6 +142,7 @@ void LevelLoadSettings()
     LevelDrawBSPTree = ConfigGet("LevelDrawBSPTree");
     LevelDrawSurfaces = ConfigGet("LevelDrawSurfaces");
     LevelDrawBSDNodesAsPoints = ConfigGet("LevelDrawBSDNodesAsPoints");
+    LevelDrawBSDNodesCollisionVolumes = ConfigGet("LevelDrawBSDNodesCollisionVolumes");
     LevelDrawBSDRenderObjectsAsPoints = ConfigGet("LevelDrawBSDRenderObjectsAsPoints");
     LevelDrawBSDRenderObjects = ConfigGet("LevelDrawBSDRenderObjects");
     LevelDrawBSDShowcase = ConfigGet("LevelDrawBSDShowcase");

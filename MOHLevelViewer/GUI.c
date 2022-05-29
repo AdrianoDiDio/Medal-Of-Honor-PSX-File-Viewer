@@ -275,6 +275,10 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                     LevelDrawBSDNodesAsPoints->Description) ) {
                     ConfigSetNumber("LevelDrawBSDNodesAsPoints",LevelDrawBSDNodesAsPoints->IValue);
                 }
+                if( GUICheckBoxWithTooltip("Draw BSD nodes collision volumes",(bool *) &LevelDrawBSDNodesCollisionVolumes->IValue,
+                    LevelDrawBSDNodesCollisionVolumes->Description ) ) {
+                        ConfigSetNumber("LevelDrawBSDNodesCollisionVolumes",LevelDrawBSDNodesCollisionVolumes->IValue);
+                }
                 if( GUICheckBoxWithTooltip("Draw BSD RenderObjects as Points",(bool *) &LevelDrawBSDRenderObjectsAsPoints->IValue,
                                         LevelDrawBSDRenderObjectsAsPoints->Description) ) {
                     ConfigSetNumber("LevelDrawBSDRenderObjectsAsPoints",LevelDrawBSDRenderObjectsAsPoints->IValue);

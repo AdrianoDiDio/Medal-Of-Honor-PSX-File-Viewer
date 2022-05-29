@@ -552,7 +552,8 @@ Engine_t *EngineInit(int argc,char **argv)
     
     if( !Engine->VideoSystem ) {
         printf("EngineInit:Failed to Initialize Video system...\n");
-        return NULL;
+        goto Failure;
+//         return NULL;
     }
     
     Engine->KeyState = SDL_GetKeyboardState(NULL);
@@ -561,13 +562,13 @@ Engine_t *EngineInit(int argc,char **argv)
     
     if( !Engine->Camera ) {
         printf("EngineInit:Failed to Initialize Camera System\n");
-        return NULL;
+        goto Failure;
     }
     
     Engine->TimeInfo = malloc(sizeof(ComTimeInfo_t));
     if( !Engine->TimeInfo ) {
         printf("EngineInit:Failed to allocate memory for time info\n");
-        return NULL;
+        goto Failure;
     }
     memset(Engine->TimeInfo,0,sizeof(ComTimeInfo_t));
     
@@ -583,16 +584,21 @@ Engine_t *EngineInit(int argc,char **argv)
     Engine->GUI = GUIInit(Engine->VideoSystem);
     if( !Engine->GUI ) {
         printf("EngineInit:Failed to initialize GUI system\n");
-        return NULL;
+        goto Failure;
     }
     
     Engine->LevelManager = LevelManagerInit(Engine->GUI,Engine->VideoSystem);
     
     if( !Engine->LevelManager ) {
         printf("EngineInit:Failed to initialize LevelManager\n");
-        return NULL;
+        goto Failure;
     }
+
     return Engine;
+
+Failure:
+    EngineShutDown(Engine);
+    return NULL;
 }
 
 int main(int argc,char **argv)

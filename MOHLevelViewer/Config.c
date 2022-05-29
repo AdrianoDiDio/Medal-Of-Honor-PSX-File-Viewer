@@ -325,6 +325,7 @@ void ConfigRegisterDefaultSettings()
                                         "a yellow one a leaf (containing actual level data).");
     ConfigRegister("LevelDrawSurfaces","1","Draw the level surfaces");
     ConfigRegister("LevelDrawBSDNodesAsPoints","1","When enabled draws all the BSD nodes as points.");
+    ConfigRegister("LevelDrawBSDNodesCollisionVolumes","0","When enabled draws all the BSD nodes collision volumes.");
     ConfigRegister("LevelDrawBSDRenderObjectsAsPoints","1","When enabled draws all the BSD RenderObjects as Points");
     ConfigRegister("LevelDrawBSDRenderObjects","1","When enabled draws all the supported render objects");
     ConfigRegister("LevelDrawBSDShowcase","0","When enabled draws all the loaded RenderObjects near the player spawn.");

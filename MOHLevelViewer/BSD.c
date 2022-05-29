@@ -545,6 +545,9 @@ void BSDFree(BSD_t *BSD)
     VAOFree(BSD->NodeVAO);
     VAOFree(BSD->RenderObjectPointVAO);
     
+    for( i = 0; i < BSD_MAX_NUM_COLLISION_VOLUME_TYPE; i++ ) {
+        VAOFree(BSD->CollisionVolumeVAO[i]);
+    }
     if( BSDIsMoonEnabled(BSD) ) {
         VAOFree(BSD->SkyData.MoonVAO);
     }
@@ -655,7 +658,41 @@ int BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index)
     }
     return BSD->AnimatedLightsTable.AnimatedLightsList[Index].CurrentColor;
 }
-
+void BSDGetNodeColorById(int NodeId,vec3 OutColor)
+{
+    switch( NodeId ) {
+        case BSD_TSP_LOAD_TRIGGER:
+            OutColor[0] = 0;
+            OutColor[1] = 0;
+            OutColor[2] = 1;
+            break;
+        case BSD_PLAYER_SPAWN:
+            OutColor[0] = 0;
+            OutColor[1] = 1;
+            OutColor[2] = 0;
+            break;
+        case BSD_NODE_SCRIPT:
+            OutColor[0] = 1;
+            OutColor[1] = 1;
+            OutColor[2] = 0;
+            break;
+        case BSD_ANIMATED_OBJECT:
+            OutColor[0] = 1;
+            OutColor[1] = 0;
+            OutColor[2] = 1;
+            break;
+        case BSD_LADDER:
+            OutColor[0] = 0;
+            OutColor[1] = 0.64f;
+            OutColor[2] = 0;
+            break;
+        default:
+            OutColor[0] = 1;
+            OutColor[1] = 0;
+            OutColor[2] = 0;
+            break;
+    }
+}
 void BSDCreatePointListVAO(BSD_t *BSD)
 {
     float *NodeData;
@@ -663,6 +700,7 @@ void BSDCreatePointListVAO(BSD_t *BSD)
     int    Stride;
     int    NodeDataSize;
     int    i;
+    vec3   NodeColor;
     
     Stride = (3 + 3) * sizeof(float);
     NodeDataSize = Stride * BSD->NodeData.Header.NumNodes;
@@ -672,38 +710,10 @@ void BSDCreatePointListVAO(BSD_t *BSD)
         NodeData[NodeDataPointer] =   BSD->NodeData.Node[i].Position.x;
         NodeData[NodeDataPointer+1] = BSD->NodeData.Node[i].Position.y;
         NodeData[NodeDataPointer+2] = BSD->NodeData.Node[i].Position.z;
-
-        if( BSD->NodeData.Node[i].Id == BSD_TSP_LOAD_TRIGGER ) {
-            // BLUE
-            NodeData[NodeDataPointer+3] = 0.f;
-            NodeData[NodeDataPointer+4] = 0.f;
-            NodeData[NodeDataPointer+5] = 1.f;
-        } else if (BSD->NodeData.Node[i].Id == BSD_PLAYER_SPAWN ) {
-            // GREEN
-            NodeData[NodeDataPointer+3] = 0.f;
-            NodeData[NodeDataPointer+4] = 1.f;
-            NodeData[NodeDataPointer+5] = 0.f;
-        } else if( BSD->NodeData.Node[i].Id == BSD_NODE_SCRIPT ) {
-            // Yellow
-            NodeData[NodeDataPointer+3] = 1.f;
-            NodeData[NodeDataPointer+4] = 1.f;
-            NodeData[NodeDataPointer+5] = 0.f;
-        } else if( BSD->NodeData.Node[i].Id == BSD_ANIMATED_OBJECT ) {
-            // Fuchsia -- Interactive Objects (Door,Objectives,MG42).
-            NodeData[NodeDataPointer+3] = 1.f;
-            NodeData[NodeDataPointer+4] = 0.f;
-            NodeData[NodeDataPointer+5] = 1.f;
-        } else if ( BSD->NodeData.Node[i].Id == BSD_LADDER ) {
-            // Orange
-            NodeData[NodeDataPointer+3] = 1.f;
-            NodeData[NodeDataPointer+4] = 0.64f;
-            NodeData[NodeDataPointer+5] = 0.f;
-        } else {
-            // RED
-            NodeData[NodeDataPointer+3] = 1.f;
-            NodeData[NodeDataPointer+4] = 0.f;
-            NodeData[NodeDataPointer+5] = 0.f;
-        }
+        BSDGetNodeColorById(BSD->NodeData.Node[i].Id,NodeColor);
+        NodeData[NodeDataPointer+3] = NodeColor[0];
+        NodeData[NodeDataPointer+4] = NodeColor[1];
+        NodeData[NodeDataPointer+5] = NodeColor[2];
         NodeDataPointer += 6;
     }
     BSD->NodeVAO = VAOInitXYZRGB(NodeData,NodeDataSize,Stride,0,3,0);            
@@ -1129,6 +1139,240 @@ void BSDCreateSkyVAOs(BSD_t *BSD,VRAM_t *VRAM)
     BSDCreateStarsVAO(BSD);
 }
 
+VAO_t *BSDCreateSphereCollisionVAO()
+{
+    float *VertexData;
+    int VertexPointer;
+    int IndexSize;
+    int *IndexData;
+    int IndexPointer;
+    unsigned int k1, k2;
+    int Stride;
+    int VertexSize;
+    float xz;
+    float y;
+    int i;
+    int j;
+    int NumSectors;
+    int NumStack;
+    float SectorStep;
+    float StackStep;
+    float SectorAngle;
+    float StackAngle;
+    VAO_t *Result;
+
+    NumSectors = 36;
+    NumStack = 18;
+    
+    Stride = 3 * sizeof(float);
+    VertexSize = ((NumSectors+1) * 3) * (NumStack+1) * sizeof(float);
+    VertexData = malloc(VertexSize);
+    VertexPointer = 0;
+    
+    SectorStep = 2.0f * M_PI / (float)(NumSectors);
+    StackStep  =  M_PI / (float)(NumStack);
+    
+    for( i = 0; i <= NumStack; i++ ) {
+        StackAngle = M_PI / 2 - i * StackStep;
+        xz = cos(StackAngle);
+        y = sin(StackAngle);
+        for( j = 0; j <= NumSectors; j++ ) {
+            SectorAngle = j * SectorStep;
+            VertexData[VertexPointer++] =  xz * cos(SectorAngle);
+            VertexData[VertexPointer++] = y;
+            VertexData[VertexPointer++] = xz * sin(SectorAngle);
+        }
+    }
+    IndexSize = ( NumStack * ( ( (NumSectors - 2) * 6) + (6) ) ) * sizeof(int);
+    IndexData = malloc(IndexSize);
+    IndexPointer = 0;
+    for(i = 0; i < NumStack; ++i) {
+        k1 = i * (NumSectors + 1);
+        k2 = k1 + NumSectors + 1;
+
+        for(j = 0; j < NumSectors; j++, k1++, k2++) {
+            if(i != 0) {
+                IndexData[IndexPointer++] = k1;
+                IndexData[IndexPointer++] = k2;
+                IndexData[IndexPointer++] = k1+1;
+            }
+
+            if(i != (NumStack-1)) {
+                IndexData[IndexPointer++] = k1+1;
+                IndexData[IndexPointer++] = k2;
+                IndexData[IndexPointer++] = k2+1;
+            }
+        }
+    }
+    Result = VAOInitXYZIBO(VertexData,VertexSize,Stride,IndexData,IndexSize,IndexPointer);
+    free(VertexData);
+    free(IndexData);
+    return Result;
+}
+
+VAO_t *BSDCreateCylinderCollisionVAO()
+{
+    float *VertexData;
+    int VertexPointer;
+    int VertexCount;
+    int *IndexData;
+    int IndexPointer;
+    int IndexSize;
+    float Radius;
+    float Height;
+    int k1;
+    int k2;
+    int Stride;
+    int VertexSize;
+    int i;
+    int k;
+    int j;
+    int NumSlice;
+    float SliceAngleStep;
+    float CurrentSliceAngle;
+    int TopVertexIndex;
+    int BottomVertexIndex;
+    float *CosineTable;
+    float *SineTable;
+    VAO_t *Result;
+
+    //        XYZ
+    Stride = (3) * sizeof(float);
+    NumSlice = 36;
+    SliceAngleStep = 2.0f * M_PI / (float)(NumSlice);
+    CurrentSliceAngle = 0.f;
+    //                      SIDE                        TOP                     BOTTOM                  CAPS
+    VertexCount = ( ( ( (NumSlice + 1) * 3 ) * 2) + ( (NumSlice + 1) * 3 ) + ( (NumSlice + 1) * 3 ) + (2 * 3) );
+    VertexSize = Stride * VertexCount;
+    VertexData = malloc(VertexSize);
+    VertexPointer = 0;
+    Radius = 1;
+    
+    CurrentSliceAngle = 0;
+    
+    CosineTable = malloc((NumSlice + 1) *sizeof(float));
+    SineTable = malloc((NumSlice + 1) *sizeof(float));
+    for(i = 0; i <= NumSlice; i++) {
+        CosineTable[i] = cos(CurrentSliceAngle);
+        SineTable[i] = sin(CurrentSliceAngle);
+        CurrentSliceAngle += SliceAngleStep;
+    }
+
+    for(i = 0; i <= 1; i++) {
+        Height = -0.5 + i;
+        for(j = 0; j <= NumSlice; j++) {
+            VertexData[VertexPointer++] =  CosineTable[j] * Radius;
+            VertexData[VertexPointer++] = Height;
+            VertexData[VertexPointer++] = SineTable[j] * Radius;
+        }
+    }
+    
+    BottomVertexIndex = VertexPointer / 3;
+    VertexData[VertexPointer++] =  0;
+    VertexData[VertexPointer++] = -Height;
+    VertexData[VertexPointer++] = 0;
+    for( i = 0; i <= NumSlice; i++ ) {
+        VertexData[VertexPointer++] =  CosineTable[i] * Radius;
+        VertexData[VertexPointer++] = -Height;
+        VertexData[VertexPointer++] = -SineTable[i] * Radius;
+    }
+    TopVertexIndex = VertexPointer / 3;
+    VertexData[VertexPointer++] =  0;
+    VertexData[VertexPointer++] = Height;
+    VertexData[VertexPointer++] = 0;
+
+    for( i = 0; i <= NumSlice; i++ ) {
+        VertexData[VertexPointer++] =  CosineTable[i] * Radius;
+        VertexData[VertexPointer++] = Height;
+        VertexData[VertexPointer++] = SineTable[i] * Radius;
+    }
+
+    //                 SIDE             TOP             BOTTOM
+    IndexSize = ( (NumSlice * 6) + (NumSlice * 3) + (NumSlice * 3) ) * sizeof(int);
+    IndexData = malloc(IndexSize);
+    k1 = 0;
+    k2 = NumSlice + 1;
+    IndexPointer = 0;
+    for(j = 0; j < NumSlice; j++, k1++, k2++) {
+        IndexData[IndexPointer++] = k1;
+        IndexData[IndexPointer++] = k1+1;
+        IndexData[IndexPointer++] = k2;
+        IndexData[IndexPointer++] = k2;
+        IndexData[IndexPointer++] = k1+1;
+        IndexData[IndexPointer++] = k2+1;
+    }
+    
+    
+    for(i = 0, k = BottomVertexIndex + 1; i < NumSlice; i++, k++) {
+        if(i < (NumSlice - 1)){
+            IndexData[IndexPointer++] = BottomVertexIndex;
+            IndexData[IndexPointer++] = k+1;
+            IndexData[IndexPointer++] = k;
+        } else {
+            IndexData[IndexPointer++] = BottomVertexIndex;
+            IndexData[IndexPointer++] = BottomVertexIndex+1;
+            IndexData[IndexPointer++] = k;
+        }
+    }
+    for(i = 0, k = TopVertexIndex + 1; i < NumSlice; i++, k++) {
+        if(i < (NumSlice - 1)){
+            IndexData[IndexPointer++] = TopVertexIndex;
+            IndexData[IndexPointer++] = k;
+            IndexData[IndexPointer++] = k+1;
+        } else {
+            IndexData[IndexPointer++] = TopVertexIndex;
+            IndexData[IndexPointer++] = k;
+            IndexData[IndexPointer++] = TopVertexIndex+1;
+        }
+    }
+    Result = VAOInitXYZIBO(VertexData,VertexSize,Stride,IndexData,IndexSize,IndexPointer);
+    free(VertexData);
+    free(IndexData);
+    free(CosineTable);
+    free(SineTable);
+    return Result;
+}
+
+VAO_t *BSDCreateBoxCollisionVAO()
+{
+    VAO_t *Result;
+    float BoxVertices[24] = {
+        -1.0, -1.0, -1.0,
+        1.0,  -1.0,  -1.0,
+        1.0,   1.0,  -1.0,
+        -1.0,  1.0, -1.0,
+        -1.0, -1.0, 1.0,
+        1.0,  -1.0,  1.0,
+        1.0,   1.0,  1.0,
+        -1.0,  1.0, 1.0
+    };
+    int BoxIndices[36] = {
+        0, 1, 2,
+        2, 3, 0,
+        1, 5, 6,
+        6, 2, 1,
+        7, 6, 5,
+        5, 4, 7,
+        4, 0, 3,
+        3, 7, 4,
+        4, 5, 1,
+        1, 0, 4,
+        3, 2, 6,
+        6, 7, 3
+    };
+
+    Result = VAOInitXYZIBO(BoxVertices,sizeof(BoxVertices),3*sizeof(float),BoxIndices,sizeof(BoxIndices),36);
+    return Result;
+}
+
+void BSDCreateCollisionVolumeVAOs(BSD_t *BSD)
+{
+    BSD->CollisionVolumeVAO[BSD_COLLISION_VOLUME_TYPE_SPHERE] = BSDCreateSphereCollisionVAO();
+    BSD->CollisionVolumeVAO[BSD_COLLISION_VOLUME_TYPE_CYLINDER] = BSDCreateCylinderCollisionVAO();
+    BSD->CollisionVolumeVAO[BSD_COLLISION_VOLUME_TYPE_BOX] = BSDCreateBoxCollisionVAO();
+
+
+}
 void BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM)
 {
     BSDRenderObject_t *RenderObjectData;
@@ -1152,6 +1396,7 @@ void BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM)
     BSDCreatePointListVAO(BSD);
     BSDCreateRenderObjectPointListVAO(BSD);
     BSDCreateSkyVAOs(BSD,VRAM);
+    BSDCreateCollisionVolumeVAOs(BSD);
 }
 
 
@@ -1654,6 +1899,163 @@ void BSDGetObjectMatrix(BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 Res
     glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation[2]), temp);
     glm_scale(Result,RenderObjectDrawable->Scale);
 }
+void BSDDrawSphereCollisionVolume(BSDNode_t *Node,mat4 ViewMatrix,mat4 ProjectionMatrix,int MVPMatrixId,int ColorId,int IndexCount)
+{
+    mat4 ModelMatrix;
+    mat4 ModelViewMatrix;
+    mat4 MVPMatrix;
+    vec3 NodePosition;
+    vec3 Scale;
+    vec3 Color;
+    float Radius;
+    if( !Node ) {
+        return;
+    }
+    Radius = Node->CollisionInfo0;
+    BSDPositionToGLMVec3(Node->Position,NodePosition);
+    glm_mat4_identity(ModelMatrix);
+    glm_mat4_identity(ModelViewMatrix);
+    glm_vec3_rotate(NodePosition, DEGTORAD(180.f), GLM_XUP);
+    glm_translate(ModelMatrix,NodePosition);
+    Scale[0] = Radius;
+    Scale[1] = Radius;
+    Scale[2] = Radius;
+    glm_scale(ModelMatrix,Scale);
+    glm_mat4_mul(ViewMatrix,ModelMatrix,ModelViewMatrix);
+    glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
+    glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+    BSDGetNodeColorById(Node->Id,Color);
+    glUniform3fv(ColorId,1,Color);
+    glDrawElements(GL_TRIANGLES, IndexCount, GL_UNSIGNED_INT, 0);
+}
+void BSDDrawCylinderCollisionVolume(BSDNode_t *Node,mat4 ViewMatrix,mat4 ProjectionMatrix,int MVPMatrixId,int ColorId,int IndexCount)
+{
+    mat4 ModelMatrix;
+    mat4 ModelViewMatrix;
+    mat4 MVPMatrix;
+    vec3 NodePosition;
+    vec3 Scale;
+    vec3 Color;
+    float Radius;
+    float Height;
+    if( !Node ) {
+        return;
+    }
+    Radius = Node->CollisionInfo0;
+    Height = fabs(Node->CollisionInfo2 - Node->CollisionInfo1);
+    BSDPositionToGLMVec3(Node->Position,NodePosition);
+    glm_mat4_identity(ModelMatrix);
+    glm_mat4_identity(ModelViewMatrix);
+    glm_vec3_rotate(NodePosition, DEGTORAD(180.f), GLM_XUP);
+    glm_translate(ModelMatrix,NodePosition);
+    Scale[0] = Radius;
+    Scale[1] = Height;
+    Scale[2] = Radius;
+    glm_scale(ModelMatrix,Scale);
+    glm_mat4_mul(ViewMatrix,ModelMatrix,ModelViewMatrix);
+    glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
+    glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+    BSDGetNodeColorById(Node->Id,Color);
+    glUniform3fv(ColorId,1,Color);
+    glDrawElements(GL_TRIANGLES, IndexCount, GL_UNSIGNED_INT, 0);
+}
+void BSDDrawBoxCollisionVolume(BSDNode_t *Node,mat4 ViewMatrix,mat4 ProjectionMatrix,int MVPMatrixId,int ColorId,int IndexCount)
+{
+    mat4 ModelMatrix;
+    mat4 ModelViewMatrix;
+    mat4 MVPMatrix;
+    vec3 NodePosition;
+    vec3 Axis;
+    vec3 Scale;
+    vec3 LocalRotation;
+    vec3 Color;
+    float Width;
+    float Height;
+    float Depth;
+    
+    if( !Node ) {
+        return;
+    }
+    Width = Node->CollisionInfo0;
+    Height = Node->CollisionInfo1;
+    Depth = Node->CollisionInfo2;
+    
+    BSDPositionToGLMVec3(Node->Position,NodePosition);
+    glm_mat4_identity(ModelMatrix);
+    glm_mat4_identity(ModelViewMatrix);
+    glm_vec3_rotate(NodePosition, DEGTORAD(180.f), GLM_XUP);
+    glm_translate(ModelMatrix,NodePosition);
+    BSDPositionToGLMVec3(Node->Rotation,LocalRotation);
+    glm_vec3_scale(LocalRotation,360.f/4096.f,LocalRotation);
+    Axis[0] = 0;
+    Axis[1] = 1;
+    Axis[2] = 0;
+    glm_rotate(ModelMatrix,glm_rad(-LocalRotation[1]), Axis);
+    Axis[0] = 1;
+    Axis[1] = 0;
+    Axis[2] = 0;
+    glm_rotate(ModelMatrix,glm_rad(LocalRotation[0]), Axis);
+    Axis[0] = 0;
+    Axis[1] = 0;
+    Axis[2] = 1;
+    glm_rotate(ModelMatrix,glm_rad(LocalRotation[2]), Axis);
+    Scale[0] = Width;
+    Scale[1] = Height;
+    Scale[2] = Depth;
+    glm_scale(ModelMatrix,Scale);
+    glm_mat4_mul(ViewMatrix,ModelMatrix,ModelViewMatrix);
+    glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
+    glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+    BSDGetNodeColorById(Node->Id,Color);
+    glUniform3fv(ColorId,1,Color);
+    glDrawElements(GL_TRIANGLES, IndexCount, GL_UNSIGNED_INT, 0);
+}
+void BSDDrawCollisionVolumes(BSD_t *BSD,Camera_t *Camera,mat4 ProjectionMatrix)
+{
+    Shader_t *Shader;
+    int MVPMatrixId;
+    int ColorId;
+    int i;
+
+    if( !LevelDrawBSDNodesCollisionVolumes->IValue ) {
+        return;
+    }
+    Shader = ShaderCache("BSDCollisionShader","Shaders/BSDCollisionVertexShader.glsl","Shaders/BSDCollisionFragmentShader.glsl");
+    if( !Shader ) {
+        return;
+    }
+    glUseProgram(Shader->ProgramId);
+    MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+    ColorId = glGetUniformLocation(Shader->ProgramId,"InColor");
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
+        if( BSD->NodeData.Node[i].CollisionVolumeType < 0 || BSD->NodeData.Node[i].CollisionVolumeType > BSD_MAX_NUM_COLLISION_VOLUME_TYPE ) {
+            continue;
+        }
+        glBindVertexArray(BSD->CollisionVolumeVAO[BSD->NodeData.Node[i].CollisionVolumeType]->VAOId[0]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BSD->CollisionVolumeVAO[BSD->NodeData.Node[i].CollisionVolumeType]->IBOId[0]);
+
+        switch( BSD->NodeData.Node[i].CollisionVolumeType ) {
+            case BSD_COLLISION_VOLUME_TYPE_SPHERE:
+                BSDDrawSphereCollisionVolume(&BSD->NodeData.Node[i],Camera->ViewMatrix,ProjectionMatrix,MVPMatrixId,ColorId,
+                                             BSD->CollisionVolumeVAO[BSD->NodeData.Node[i].CollisionVolumeType]->Count);
+                break;
+            case BSD_COLLISION_VOLUME_TYPE_CYLINDER:
+                BSDDrawCylinderCollisionVolume(&BSD->NodeData.Node[i],Camera->ViewMatrix,ProjectionMatrix,MVPMatrixId,ColorId,
+                                             BSD->CollisionVolumeVAO[BSD->NodeData.Node[i].CollisionVolumeType]->Count);
+                break;
+            case BSD_COLLISION_VOLUME_TYPE_BOX:
+                BSDDrawBoxCollisionVolume(&BSD->NodeData.Node[i],Camera->ViewMatrix,ProjectionMatrix,MVPMatrixId,ColorId,
+                                             BSD->CollisionVolumeVAO[BSD->NodeData.Node[i].CollisionVolumeType]->Count);
+                break;
+        }
+        glBindVertexArray(0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    }
+    glDisable(GL_BLEND);
+
+}
 //TODO:Spawn the RenderObject when loading node data!
 //     Some nodes don't have a corresponding RenderObject like the PlayerSpawn.
 void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
@@ -1670,7 +2072,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     int i;
     
     glm_mat4_mul(ProjectionMatrix,Camera->ViewMatrix,MVPMatrix);
-     
+    
     //Emulate PSX Coordinate system...
     glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
     
@@ -1689,6 +2091,9 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
             }
         }
     }
+    
+    BSDDrawCollisionVolumes(BSD,Camera,ProjectionMatrix);
+    
     if( LevelDrawBSDNodesAsPoints->IValue ) {    
         Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
         if( Shader ) {
@@ -2604,21 +3009,3 @@ FILE *BSDEarlyInit(BSD_t **BSD,char *MissionPath,int MissionNumber,int LevelNumb
     *BSD = LocalBSD;
     return BSDFile;
 }
-
-#ifdef __STANDALONE
-int main(int argc,char **argv) {
-    FILE *BSDFile;
-    BSD_t BSD;
-    BSDTableElement_t *Element;
-    int Jump;
-    int NodeTableEnd;
-    int i;
-
-    if( argc == 1 ) {
-        printf("%s <Input.bsd> will extract the content of Input.bsd in the current folder.\n",argv[0]);
-        return -1;
-    }
-    BSDParseFile(argv[1]);
-    return 0;
-}
-#endif

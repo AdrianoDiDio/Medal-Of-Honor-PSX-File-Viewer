@@ -39,6 +39,7 @@ pvs_studio_add_target(TARGET MOHLevelViewer.Analyze ALL
                       LOG FORMAT fullhtml
                       SUPPRESS_BASE suppress_base.json
                       ANALYZE ${PROJECT_NAME}
+                      ARGS -e ${CMAKE_SOURCE_DIR}/Libs/*
                       MODE GA:1,2)
                     
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)

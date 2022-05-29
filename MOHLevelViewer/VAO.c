@@ -344,7 +344,42 @@ VAO_t *VAOInitXYZRGBIBO(float *Data,int DataSize,int Stride,unsigned short *Inde
     
     return VAO;
 }
-
+VAO_t *VAOInitXYZIBO(float *Data,int DataSize,int Stride,int *Index,int IndexSize,int Count)
+{
+    VAO_t *VAO;
+    
+    VAO = malloc(sizeof(VAO_t));
+    
+    if( !VAO ) {
+        DPrintf("VAOInitXYZRGBIBO:Failed to allocate VAO struct\n");
+        return NULL;
+    }
+    
+    glGenVertexArrays(1, &VAO->VAOId[0]);
+    glBindVertexArray(VAO->VAOId[0]);
+        
+    glGenBuffers(1, VAO->VBOId);
+    glBindBuffer(GL_ARRAY_BUFFER, VAO->VBOId[0]);
+    glBufferData(GL_ARRAY_BUFFER, DataSize,Data, GL_STATIC_DRAW);
+    glVertexAttribPointer(0,3,GL_FLOAT,false,Stride,0);
+    glEnableVertexAttribArray(0);
+    
+    glGenBuffers(1, VAO->IBOId);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VAO->IBOId[0]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, IndexSize,Index,GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    
+    VAO->Count = Count;
+    VAO->TSB = -1;
+    VAO->TextureId = -1;
+    VAO->Next = NULL;
+    
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
+    
+    return VAO;
+}
 VAO_t *VAOInitXYZ(float *Data,int DataSize,int Stride,int VertexOffset,int Count)
 {
     VAO_t *VAO;
