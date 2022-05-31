@@ -27,6 +27,7 @@
     FONT DESCRIPTION
 
 Each taf file contains the data of the used font.
+Font data is contained inside page 15 of the VRAM.
 It starts at 224;0 and ends at 244;0.
 This means that we have 2 columns where each column has a width of 10.
 Each Font Sprite has an eight of 7.
@@ -34,6 +35,9 @@ Each Font Sprite has an eight of 7.
 
 224;0 234;0
 224;7 234;7
+
+NOTE that the font only contains a limited set of characters and we need to
+map them from ASCII to the one available in the set.
 */
 
 static const uint8_t ASCII_To_MOH_Table[128] = {

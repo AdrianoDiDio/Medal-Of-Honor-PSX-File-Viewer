@@ -124,6 +124,7 @@ void LevelDraw(Level_t *Level,Camera_t *Camera,mat4 ProjectionMatrix)
 {
     if( !Level ) {
         DPrintf("LevelDraw:Invalid Level\n");
+        return;
     }
              
     BSDDrawSky(Level->BSD,Level->VRAM,Camera,ProjectionMatrix);

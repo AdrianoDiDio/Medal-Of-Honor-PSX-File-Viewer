@@ -478,7 +478,6 @@ SoundSystem_t *SoundSystemInit()
         printf("...Obtained a frequency of %i with %i samples and %i channels.\n",ObtainedAudioSpec.freq,ObtainedAudioSpec.samples,
                 ObtainedAudioSpec.channels);
         SDL_CloseAudioDevice(SoundSystem->Device);
-        assert(1!=1);
         free(SoundSystem);
         return NULL;
     }

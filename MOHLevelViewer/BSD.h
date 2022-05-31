@@ -47,7 +47,6 @@ typedef struct LevelManager_s LevelManager_t;
 #define BSD_MOON_TEXTURE_X 192
 #define BSD_MOON_TEXTURE_Y 96
 
-#define BSD_MAX_NUM_COLLISION_VOLUME_TYPE 3
 
 typedef enum  {
     //NOTE(Adriano): Spawn node has an additional attribute at 0x34(52) indicating if it is the first or the second.
@@ -102,7 +101,8 @@ typedef enum {
 typedef enum {
     BSD_COLLISION_VOLUME_TYPE_SPHERE = 0,
     BSD_COLLISION_VOLUME_TYPE_CYLINDER,
-    BSD_COLLISION_VOLUME_TYPE_BOX
+    BSD_COLLISION_VOLUME_TYPE_BOX,
+    BSD_COLLISION_VOLUME_MAX_VALUE
 } BSDCollisionVolumeType_t;
 
 typedef struct BSDPosition_s {
@@ -373,7 +373,7 @@ typedef struct BSD_s {
     //
     VAO_t       *NodeVAO;
     VAO_t       *RenderObjectPointVAO;
-    VAO_t       *CollisionVolumeVAO[BSD_MAX_NUM_COLLISION_VOLUME_TYPE];
+    VAO_t       *CollisionVolumeVAO[BSD_COLLISION_VOLUME_MAX_VALUE];
     int          NumRenderObjectPoint;
     //Easy lookup to see if the camera is in that node position so that
     //we can update the TSPNumberRenderList.

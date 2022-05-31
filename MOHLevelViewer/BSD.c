@@ -545,7 +545,7 @@ void BSDFree(BSD_t *BSD)
     VAOFree(BSD->NodeVAO);
     VAOFree(BSD->RenderObjectPointVAO);
     
-    for( i = 0; i < BSD_MAX_NUM_COLLISION_VOLUME_TYPE; i++ ) {
+    for( i = 0; i < BSD_COLLISION_VOLUME_MAX_VALUE; i++ ) {
         VAOFree(BSD->CollisionVolumeVAO[i]);
     }
     if( BSDIsMoonEnabled(BSD) ) {
@@ -2030,7 +2030,7 @@ void BSDDrawCollisionVolumes(BSD_t *BSD,Camera_t *Camera,mat4 ProjectionMatrix)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
-        if( BSD->NodeData.Node[i].CollisionVolumeType < 0 || BSD->NodeData.Node[i].CollisionVolumeType > BSD_MAX_NUM_COLLISION_VOLUME_TYPE ) {
+        if( BSD->NodeData.Node[i].CollisionVolumeType < 0 || BSD->NodeData.Node[i].CollisionVolumeType > BSD_COLLISION_VOLUME_MAX_VALUE ) {
             continue;
         }
         glBindVertexArray(BSD->CollisionVolumeVAO[BSD->NodeData.Node[i].CollisionVolumeType]->VAOId[0]);
@@ -2091,9 +2091,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
             }
         }
     }
-    
-    BSDDrawCollisionVolumes(BSD,Camera,ProjectionMatrix);
-    
+        
     if( LevelDrawBSDNodesAsPoints->IValue ) {    
         Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
         if( Shader ) {
@@ -2188,6 +2186,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
             glUseProgram(0);
         }
     }
+    BSDDrawCollisionVolumes(BSD,Camera,ProjectionMatrix);
 }
 
 void BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)

@@ -45,8 +45,8 @@ pvs_studio_add_target(TARGET MOHLevelViewer.Analyze ALL
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 
 include_directories(Libs/cimgui/imgui)
-
 set(SDL2_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
+set(SDL2_DISABLE_UNINSTALL ON CACHE BOOL "" FORCE)
 add_subdirectory(Libs/SDL)
 include_directories(Libs/SDL/include)
 
