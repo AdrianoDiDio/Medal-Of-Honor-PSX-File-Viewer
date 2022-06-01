@@ -4,13 +4,16 @@ include(FetchContent)
 
 project(MOHLevelViewer)
 
-# cmake_policy(SET CMAKE_POLICY_DEFAULT_CMP0074 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0074 NEW)
 
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
-  
+
+SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+SET(CMAKE_INSTALL_RPATH "$\{ORIGIN\}")
+
 set(SOURCE_FILES Config.c Video.c ShaderManager.c VAO.c Sound.c Camera.c GUI.c TSP.c 
                  TIM.c Font.c BSD.c BSDTwoPlayers.c 
                  VRAM.c Level.c LevelManager.c MOHLevelViewer.c
@@ -74,6 +77,8 @@ find_package(OpenGL REQUIRED)
 add_library(cimgui STATIC ${IMGUI_SOURCE_FILES})
 target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${CMAKE_SOURCE_DIR}/IMGUIConfig.h\"")
 target_link_libraries(cimgui SDL2)
+
+target_compile_options(${PROJECT_NAME} PRIVATE "-fdiagnostics-color=always")
 if(WIN32)
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
   add_definitions("-DIMGUI_IMPL_API=extern \"C\" __declspec\(dllexport\)")
@@ -84,7 +89,6 @@ if(WIN32)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:-Wall;-fsanitize=address>")
   target_link_options(${PROJECT_NAME} PRIVATE  "$<$<CONFIG:DEBUG>:-fsanitize=address>")
-  target_link_options(${PROJECT_NAME} PRIVATE -Wl,-rpath=${ORIGIN})
   target_link_libraries(cimgui dl)
   add_definitions("-DIMGUI_IMPL_API=extern \"C\" ")
 endif()

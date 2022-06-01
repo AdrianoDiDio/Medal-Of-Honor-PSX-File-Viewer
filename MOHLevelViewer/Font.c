@@ -141,7 +141,7 @@ void FontLoadChar(Font_t *Font,VRAM_t *VRAM,int CharIndex,float RowX,float RowY)
     VertexData[VertexPointer+2] = u0 + TexWidth;
     VertexData[VertexPointer+3] = v0;
     VertexPointer += 4;        
-    Font->Characters[CharIndex] = VAOInitXYUV(VertexData,DataSize,Stride,0,2,-1,-1,true);
+    Font->Characters[CharIndex] = VAOInitXYUV(VertexData,DataSize,Stride,0,2,true);
     free(VertexData);
 }
 

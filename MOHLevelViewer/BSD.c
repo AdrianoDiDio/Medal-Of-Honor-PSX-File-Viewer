@@ -905,8 +905,7 @@ void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData,VRAM_t *VRAM)
         VertexData[VertexPointer+7] = RenderObjectData->Color[Vert2].rgba[2] / 255.f;
         VertexPointer += 8;
     }
-    VAO = VAOInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,-1,-1,
-                        RenderObjectData->NumFaces * 3);
+    VAO = VAOInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,RenderObjectData->NumFaces * 3);
     VAO->Next = RenderObjectData->VAO;
     RenderObjectData->VAO = VAO;
     free(VertexData);
@@ -985,8 +984,7 @@ void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData,VRAM_t *VRAM)
         VertexData[VertexPointer+7] = RenderObjectData->Color[Vert2].rgba[2] / 255.f;
         VertexPointer += 8;
     }
-    VAO = VAOInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,-1,-1,
-                        RenderObjectData->NumFaces * 3);
+    VAO = VAOInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,RenderObjectData->NumFaces * 3);
     VAO->Next = RenderObjectData->VAO;
     RenderObjectData->VAO = VAO;
     free(VertexData);
@@ -1086,7 +1084,7 @@ void BSDCreateMoonVAO(BSD_t *BSD,VRAM_t *VRAM)
     VertexData[VertexPointer+3] = u0 + TexWidth;
     VertexData[VertexPointer+4] = v0;
     VertexPointer += 5;        
-    BSD->SkyData.MoonVAO = VAOInitXYZUV(VertexData,DataSize,Stride,0,3,-1,-1,6);
+    BSD->SkyData.MoonVAO = VAOInitXYZUV(VertexData,DataSize,Stride,0,3,6);
     free(VertexData);
 }
 
@@ -1800,7 +1798,8 @@ bool BSDPointInBox(vec3 Point,BSDPosition_t Center,BSDPosition_t NodeRotation,fl
     float HalfSizeX;
     float HalfSizeY;
     float HalfSizeZ;
-    vec3  Rotation;
+    vec3  Axis;
+    vec3  LocalRotation;
     mat4  RotationMatrix;
   
     BSDPositionToGLMVec3(Center,NodePosition);
@@ -1816,12 +1815,21 @@ bool BSDPointInBox(vec3 Point,BSDPosition_t Center,BSDPosition_t NodeRotation,fl
 
     if( NodeRotation.x != 0 || NodeRotation.y != 0 || NodeRotation.z != 0 ) {
 //         OOB Test...
-        Rotation[0] = -glm_rad(((NodeRotation.x / 4096.f) * 360.f));
-        Rotation[1] = -glm_rad(((NodeRotation.y / 4096.f) * 360.f));
-        Rotation[2] = -glm_rad(((NodeRotation.z / 4096.f) * 360.f));
-    
+        BSDPositionToGLMVec3(NodeRotation,LocalRotation);
+        glm_vec3_scale(LocalRotation,360.f/4096.f,LocalRotation);
         glm_mat4_identity(RotationMatrix);
-        glm_euler_yxz(Rotation,RotationMatrix);
+        Axis[0] = 0;
+        Axis[1] = 1;
+        Axis[2] = 0;
+        glm_rotate(RotationMatrix,glm_rad(-LocalRotation[1]), Axis);
+        Axis[0] = 1;
+        Axis[1] = 0;
+        Axis[2] = 0;
+        glm_rotate(RotationMatrix,glm_rad(LocalRotation[0]), Axis);
+        Axis[0] = 0;
+        Axis[1] = 0;
+        Axis[2] = 1;
+        glm_rotate(RotationMatrix,glm_rad(LocalRotation[2]), Axis);
         glm_mat4_mulv3(RotationMatrix, Delta, 1, Delta);
     }
     

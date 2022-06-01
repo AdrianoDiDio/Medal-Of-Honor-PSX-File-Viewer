@@ -287,7 +287,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                     LevelDrawBSDRenderObjects->Description) ) {
                     ConfigSetNumber("LevelDrawBSDRenderObjects",LevelDrawBSDRenderObjects->IValue);
                 }
-                if( GUICheckBoxWithTooltip("Enable BSD RenderObjects Shwocase Rendering",(bool *) &LevelDrawBSDShowcase->IValue,
+                if( GUICheckBoxWithTooltip("Enable BSD RenderObjects Showcase Rendering",(bool *) &LevelDrawBSDShowcase->IValue,
                                         LevelDrawBSDShowcase->Description) ) {
                     ConfigSetNumber("LevelDrawBSDShowcase",LevelDrawBSDShowcase->IValue);
                 }

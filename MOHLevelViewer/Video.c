@@ -36,8 +36,6 @@ void VideoSystemShutdown(VideoSystem_t *VideoSystem)
     free(VideoSystem->VideoModeList);
     SDL_GL_DeleteContext(VideoSystem->GLContext);
     SDL_DestroyWindow(VideoSystem->Window);
-    SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-    SDL_Quit();
     free(VideoSystem);
 }
 
@@ -231,14 +229,6 @@ int VideoSystemOpenWindow(VideoSystem_t *VideoSystem)
     return 1;
 }
 
-bool VideoSystemInitSDL()
-{
-    if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0 ) {
-        return false;
-    }
-    return true;
-}
-
 void VideoSystemLoadConfigs()
 {        
     VidConfigWidth = ConfigGet("VideoWidth");
@@ -252,12 +242,7 @@ VideoSystem_t *VideoSystemInit()
 {
     VideoSystem_t *VideoSystem;
     int GlewError;
-    
-    if( !VideoSystemInitSDL() ) {
-        printf("VideoSystemInit:Failed to initialize SDL subsystems\n");
-        return NULL;
-    }
-    
+        
     VideoSystem = malloc(sizeof(VideoSystem_t));
     if( !VideoSystem ) {
         printf("VideoSystemInit:Failed to allocate memory for VideoSystem struct\n");

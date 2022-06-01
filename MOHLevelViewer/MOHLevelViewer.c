@@ -367,11 +367,12 @@ void ComUpdateDelta(ComTimeInfo_t *TimeInfo,Camera_t *Camera)
 
 /*
  Suppressed messages:
- Id = 131204 => Message:Texture state usage warning
+ Id = 131204 => Message:Texture state usage warning.
+ Id = 131185 => Buffer Usage Hint.
  */
 void GLDebugOutput(GLenum Source, GLenum Type, unsigned int Id, GLenum Severity, GLsizei Length, const char *Message, const void *UserParam)
 {
-    if( Id == 131204 ) {
+    if( Id == 131204 || Id == 131185) {
         return;
     }
     DPrintf("---------------\n");
@@ -479,6 +480,11 @@ void Quit(Engine_t *Engine)
     ConfigFree();
     exit(0);
 }
+void EngineQuitSDL()
+{
+    SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+    SDL_Quit();
+}
 void EngineShutDown(Engine_t *Engine)
 {
     if( !Engine ) {
@@ -502,6 +508,7 @@ void EngineShutDown(Engine_t *Engine)
     if( Engine->Camera ) {
         CameraCleanUp(Engine->Camera);
     }
+    EngineQuitSDL();
     free(Engine);
 }
 
@@ -532,6 +539,14 @@ void EngineFrame(Engine_t *Engine)
     
     VideoSystemSwapBuffers(Engine->VideoSystem);
 }
+
+int EngineInitSDL()
+{
+    if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0 ) {
+        return false;
+    }
+    return true;
+}
 Engine_t *EngineInit(int argc,char **argv)
 {
     Engine_t *Engine;
@@ -548,15 +563,20 @@ Engine_t *EngineInit(int argc,char **argv)
     Engine->Camera = NULL;
     Engine->TimeInfo = NULL;
     Engine->VideoSystem = NULL;
+    Engine->SoundSystem = NULL;
     
     ConfigInit();
 
+    if( !EngineInitSDL() ) {
+        printf("EngineInit:Failed to initialize SDL subsystems.\n");
+        goto Failure;
+    }
+    
     Engine->VideoSystem = VideoSystemInit();
     
     if( !Engine->VideoSystem ) {
         printf("EngineInit:Failed to Initialize Video system...\n");
         goto Failure;
-//         return NULL;
     }
     
     Engine->SoundSystem = SoundSystemInit();
