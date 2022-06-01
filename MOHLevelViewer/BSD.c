@@ -2243,7 +2243,7 @@ void BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
             glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
             glPointSize(2.f);
             glBindVertexArray(BSD->SkyData.StarsVAO->VAOId[0]);
-            glDrawArrays(GL_POINTS, 0, 255);
+            glDrawArrays(GL_POINTS, 0, BSD_SKY_MAX_STARS_NUMBER);
             glBindVertexArray(0);
             glUseProgram(0);
         }
