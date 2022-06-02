@@ -41,7 +41,6 @@ Config_t *LevelEnableMusicTrack;
 int LevelIsLoaded(Level_t *Level)
 {
     if( !Level ) {
-        DPrintf("LevelIsLoaded:Invalid level\n");
         return 0;
     }
     return (Level->MissionNumber != 0 && Level->LevelNumber != 0);
@@ -53,7 +52,7 @@ void LevelUnload(Level_t *Level)
     if( !Level ) {
         return;
     }
-    DPrintf("LevelCleanUp:Deallocating previously allocated Level struct\n");
+    DPrintf("LevelUnload:Deallocating previously allocated Level struct\n");
     if( Level->BSD ) {
         BSDFree(Level->BSD);
     }
@@ -154,8 +153,8 @@ void LevelLoadSettings()
     LevelEnableAnimatedSurfaces = ConfigGet("LevelEnableAnimatedSurfaces");
     LevelEnableMusicTrack = ConfigGet("LevelEnableMusicTrack");
 }
-bool LevelInit(Level_t *Level,GUI_t *GUI,VideoSystem_t *VideoSystem,
-               SoundSystem_t *SoundSystem,char *BasePath,int MissionNumber,int LevelNumber,int *GameEngine)
+Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,char *BasePath,int MissionNumber,int LevelNumber,
+               int *GameEngine)
 {
     FILE *BSDFile;
     char Buffer[512];
@@ -167,19 +166,16 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,VideoSystem_t *VideoSystem,
     int NumStepsLeft;
     float Increment;
     int IsMultiplayer;
-
+    Level_t *Level;
     
+    Level = malloc(sizeof(Level_t));
     //Attempt to load the level...
     if( !Level ){
-        DPrintf("LevelInit:Fatal error...called without a valid level...\n");
-        return false;
+        printf("LevelInit:Fatal error...couldn't allocate memory for level struct...\n");
+        goto Failure;
     }
     GUIProgressBarReset(GUI);
     GUIProgressBarIncrement(GUI,VideoSystem,5,"Unloading Previous Level");
-    
-    if( LevelIsLoaded(Level) ) {
-        LevelUnload(Level);
-    }
     
     Level->Font = NULL;
     Level->BSD = NULL;
@@ -207,7 +203,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,VideoSystem_t *VideoSystem,
 
     if( !Level->ImageList ) {
         DPrintf("LevelInit:Failed to load TAF file %s\n",Buffer);
-        return false;
+        goto Failure;
     }
     BasePercentage += 5;
     GUIProgressBarIncrement(GUI,VideoSystem,BasePercentage,"Early Loading BSD File");
@@ -216,7 +212,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,VideoSystem_t *VideoSystem,
     BSDFile = BSDEarlyInit(&Level->BSD,Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
     if( !BSDFile ) {
         DPrintf("LevelInit:Failed to load BSD file\n");
-        return false;
+        goto Failure;
     }
     NumStepsLeft = (Level->BSD->TSPInfo.NumTSP) + 7;
     Increment = (100.f - BasePercentage)  / NumStepsLeft;
@@ -236,7 +232,7 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,VideoSystem_t *VideoSystem,
         TSP = TSPLoad(Buffer,i);
         if( !TSP ) {
             DPrintf("LevelInit:Failed to load TSP File %s\n",Buffer);
-            return false;
+            goto Failure;
         }
         TSP->Next = Level->TSPList;
         Level->TSPList = TSP;
@@ -268,6 +264,8 @@ bool LevelInit(Level_t *Level,GUI_t *GUI,VideoSystem_t *VideoSystem,
     }
     DPrintf("LevelInit:Allocated level struct\n");
     GUIProgressBarIncrement(GUI,VideoSystem,100,"Ready");
-    return true;
-    
+    return Level;
+Failure:
+    LevelCleanUp(Level);
+    return NULL;
 }

@@ -615,6 +615,22 @@ void LevelManagerOnExportDirCancelled(GUIFileDialog_t *FileDialog,GUI_t *GUI)
     LevelManagerCloseDialog(GUI,FileDialog);
 }
 
+/*
+ * Initialize the game from the config string.
+ * Returns 0 if the config value is not valid 1 otherwise.
+ * Note that the config is cleared if was not valid.
+ */
+int LevelManagerLoadFromConfig(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem)
+{
+    if( !LevelManagerBasePath->Value[0] ) {
+        return 0;
+    }
+    if( !LevelManagerInitWithPath(LevelManager,GUI,VideoSystem,SoundSystem,LevelManagerBasePath->Value) ) {
+        ConfigSet("GameBasePath","");
+        return 0;
+    }
+    return 1;
+}
 void LevelManagerOnDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Path,char *File,void *UserData)
 {
     LevelManagerDialogData_t *LevelManagerDialogData;
@@ -623,6 +639,7 @@ void LevelManagerOnDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Path
     LevelManagerDialogData = (LevelManagerDialogData_t *) UserData;
     LoadStatus = LevelManagerInitWithPath(LevelManagerDialogData->LevelManager,GUI,LevelManagerDialogData->VideoSystem,
                                           LevelManagerDialogData->SoundSystem,Path);
+
     if( !LoadStatus ) {
         GUISetErrorMessage(GUI,"Selected path doesn't seems to contain any game file...\n"
         "Please select a folder containing MOH or MOH:Undergound.");
@@ -719,7 +736,11 @@ void LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera)
 
 int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,char *Path)
 {
+    Level_t *Level;
+    int Loaded;
     int GameEngine;
+    char *Buffer;
+    
     if( !LevelManager ) {
         DPrintf("LevelManagerInitWithPath:Called without a valid struct\n");
         return 0;
@@ -729,34 +750,31 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
         return 0;
     }
     GUIProgressBarBegin(GUI,"Loading Mission 1 Level 1");
-    if( LevelManager->BasePath ) {
-        free(LevelManager->BasePath);
-    }
-    LevelManager->BasePath = StringCopy(Path);
-    LevelManager->IsPathSet = 0;
-    LevelManager->HasToSpawnCamera = 0;
-    if( !LevelInit(LevelManager->CurrentLevel,GUI,VideoSystem,SoundSystem,LevelManager->BasePath,1,1,&GameEngine) ) {
-        if( GUI != NULL ) {
-            GUISetProgressBarDialogTitle(GUI,"Mission 2 Level 1");
+    Loaded = 0;
+    for( int i = 1; i <= 2; i++ ) {
+        asprintf(&Buffer,"Loading Mission %i Level 1",i);
+        GUISetProgressBarDialogTitle(GUI,Buffer);
+        Level = LevelInit(GUI,VideoSystem,SoundSystem,Path,i,1,&GameEngine);
+        free(Buffer);
+        if( Level ) {
+            if( LevelManager->BasePath ) {
+                free(LevelManager->BasePath);
+            }
+            if( LevelManagerIsLevelLoaded(LevelManager) ) {
+                LevelCleanUp(LevelManager->CurrentLevel);
+            }
+            Loaded = 1;
+            LevelManager->IsPathSet = Loaded;
+            LevelManager->BasePath = StringCopy(Path);
+            LevelManager->CurrentLevel = Level;
+            LevelManager->GameEngine = GameEngine;
+            sprintf(LevelManager->EngineName,"%s",GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
+            LevelManager->HasToSpawnCamera = 1;
+            break;
         }
-        if( !LevelInit(LevelManager->CurrentLevel,GUI,VideoSystem,SoundSystem,LevelManager->BasePath,2,1,&GameEngine) ) {
-            DPrintf("LevelManagerInitWithPath:Invalid path...\n");
-            //NOTE(Adriano):Make sure to reset everything back to default before leaving this function...
-            LevelUnload(LevelManager->CurrentLevel);
-        } else {
-            LevelManager->IsPathSet = 1;
-        }
-    } else {
-        LevelManager->IsPathSet = 1;
-    }
-    if( LevelManager->IsPathSet != 0 ) {
-        LevelManager->GameEngine = GameEngine;
-        sprintf(LevelManager->EngineName,"%s",GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
-        LevelManager->HasToSpawnCamera = 1;
-//         LevelManagerSpawnCamera(LevelManager,Camera);
     }
     GUIProgressBarEnd(GUI);
-    return LevelManager->IsPathSet;
+    return Loaded;
 }
 void LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
                            int MissionNumber,int LevelNumber)
@@ -774,9 +792,9 @@ void LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t
     }
     asprintf(&Buffer,"Loading Mission %i Level %i...",MissionNumber,LevelNumber);
     GUIProgressBarBegin(GUI,Buffer);
-    LevelInit(LevelManager->CurrentLevel,GUI,VideoSystem,SoundSystem,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
+    LevelCleanUp(LevelManager->CurrentLevel);
+    LevelManager->CurrentLevel = LevelInit(GUI,VideoSystem,SoundSystem,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
     LevelManager->HasToSpawnCamera = 1;
-//     LevelManagerSpawnCamera(LevelManager,Camera);
     GUIProgressBarEnd(GUI);
     free(Buffer);
 }
@@ -800,24 +818,19 @@ void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
         DialogData->SoundSystem = SoundSystem;
         GUIFileDialogOpenWithUserData(GUI,LevelManager->FileDialog,DialogData);
     }
-
 }
+
 LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem)
 {
     LevelManager_t *LevelManager;
-    int OpenDialog;
+
     LevelManager = malloc(sizeof(LevelManager_t));
+    
     if( !LevelManager ) {
         printf("LevelManagerInit:Failed to allocate memory for struct\n");
         return NULL;
     }
-    LevelManager->CurrentLevel = malloc(sizeof(Level_t));
-
-    if( !LevelManager->CurrentLevel ) {
-        DPrintf("LevelManagerInit:Failed to allocate memory for level struct\n");
-        free(LevelManager);
-        return NULL;
-    }
+    LevelManager->CurrentLevel = NULL;
     LevelManager->HasToSpawnCamera = 0;
     LevelManager->FileDialog = GUIFileDialogRegister(GUI,"Select Directory",NULL,
                                                      LevelManagerOnDirSelected,LevelManagerOnDirSelectionCancelled);
@@ -828,19 +841,10 @@ LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSyst
     LevelManager->BasePath = NULL;
     //No path has been provided to it yet.
     LevelManager->IsPathSet = 0;
-    memset(LevelManager->CurrentLevel,0,sizeof(Level_t));
     
     LevelManagerBasePath = ConfigGet("GameBasePath");
-    OpenDialog = 0;
-    if( LevelManagerBasePath->Value[0] ) {
-        if( !LevelManagerInitWithPath(LevelManager,GUI,VideoSystem,SoundSystem,LevelManagerBasePath->Value) ) {
-            ConfigSet("GameBasePath","");
-            OpenDialog = 1;
-        }
-    } else {
-        OpenDialog = 1;
-    }
-    if( OpenDialog ) {
+
+    if( !LevelManagerLoadFromConfig(LevelManager,GUI,VideoSystem,SoundSystem) ) {
         LevelManagerToggleFileDialog(LevelManager,GUI,VideoSystem,SoundSystem);
     }
     return LevelManager;
