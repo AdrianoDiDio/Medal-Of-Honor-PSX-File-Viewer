@@ -67,7 +67,7 @@ int FontGetStride()
 //          XY  UV
     return (2 + 2) * sizeof(float);
 }
-void FontLoadChar(Font_t *Font,VRAM_t *VRAM,int CharIndex,float RowX,float RowY)
+void FontLoadChar(Font_t *Font,const VRAM_t *VRAM,int CharIndex,float RowX,float RowY)
 {
     float x;
     float y;
@@ -184,7 +184,7 @@ void FontDrawChar(Font_t *Font,mat4 ProjectionMatrix,char c,float x,float y,Colo
     glBindVertexArray(0);
 }
 
-void FontDrawString(Font_t *Font,VRAM_t *VRAM,mat4 ProjectionMatrix,char *String,float x,float y,Color4f_t Color)
+void FontDrawString(Font_t *Font,const VRAM_t *VRAM,mat4 ProjectionMatrix,const char *String,float x,float y,Color4f_t Color)
 {
 
     float Spacing = 10.f;
@@ -207,7 +207,7 @@ void FontDrawString(Font_t *Font,VRAM_t *VRAM,mat4 ProjectionMatrix,char *String
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void FontLoad(Font_t *Font,VRAM_t *VRAM)
+void FontLoad(Font_t *Font,const VRAM_t *VRAM)
 {
     int i;
     float RowPosition;
@@ -226,7 +226,7 @@ void FontLoad(Font_t *Font,VRAM_t *VRAM)
     }
 }
 
-Font_t *FontInit(VRAM_t *VRAM)
+Font_t *FontInit(const VRAM_t *VRAM)
 {
     Font_t *Font;
     Font = malloc(sizeof(Font_t));

@@ -60,17 +60,17 @@ typedef struct Engine_s {
    const Byte       *KeyState;
 } Engine_t;
 
-void        DPrintf(char *Fmt, ...) Attribute((format(printf,1,2)));
+void        DPrintf(const char *Fmt, ...) Attribute((format(printf,1,2)));
 int         asprintf(char **Strp, const char *Fmt, ...);
 char        *StringCopy(const char *From);
-int         StringToInt(char *String);
+int         StringToInt(const char *String);
 int         GetFileLength(FILE *Fp);
-char        *ReadTextFile(char *File,int Length);
+char        *ReadTextFile(const char *File,int Length);
 int         GetCurrentFilePosition(FILE *Fp);
 void        SkipFileSection(int SectionSize,FILE *InFile);
 void        CreateDirIfNotExists(char *DirName);
 char        *SwitchExt(const char *In, const char *Ext);
-char        *GetBaseName(char *Path);
+char        *GetBaseName(const char *Path);
 Engine_t    *EngineInit(int argc,char **argv);
 void        EngineShutDown(Engine_t *Engine);
 float       Rand01();

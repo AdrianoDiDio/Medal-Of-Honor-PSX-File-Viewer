@@ -458,7 +458,7 @@ void LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,SoundSystem_t 
 {
     LevelSetMusicTrackSettings(LevelManager->CurrentLevel,SoundSystem,LevelManager->GameEngine,SoundValue);
 }
-void LevelManagerExportToObj(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,char *Directory)
+void LevelManagerExportToObj(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *Directory)
 {
     char *EngineName;
     char *ObjectFile;
@@ -501,7 +501,8 @@ void LevelManagerExportToObj(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
     free(ObjectFile);
     fclose(OutFile);
 }
-void LevelManagerExportMusicToWav(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,char *Directory)
+void LevelManagerExportMusicToWav(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
+                                  const char *Directory)
 {
     char *EngineName;
     
@@ -521,7 +522,8 @@ void LevelManagerExportMusicToWav(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
     GUIProgressBarIncrement(GUI,VideoSystem,100,"Done.");
     free(EngineName);
 }
-void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,char *Directory)
+void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
+                             const char *Directory)
 {
     char *EngineName;
     char *PlyLevelFile;
@@ -581,7 +583,7 @@ void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
 }
 
 
-void LevelManagerOnExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Directory,char *File,void *UserData)
+void LevelManagerOnExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Directory,const char *File,void *UserData)
 {
     LevelManagerDialogData_t *Exporter;
     LevelManager_t *LevelManager;
@@ -631,7 +633,7 @@ int LevelManagerLoadFromConfig(LevelManager_t *LevelManager,GUI_t *GUI,VideoSyst
     }
     return 1;
 }
-void LevelManagerOnDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Path,char *File,void *UserData)
+void LevelManagerOnDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Path,const char *File,void *UserData)
 {
     LevelManagerDialogData_t *LevelManagerDialogData;
     int LoadStatus;
@@ -734,7 +736,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera)
     LevelDraw(LevelManager->CurrentLevel,Camera,ProjectionMatrix);
 }
 
-int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,char *Path)
+int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,const char *Path)
 {
     Level_t *Level;
     int Loaded;

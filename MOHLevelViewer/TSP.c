@@ -84,6 +84,7 @@ void TSPFree(TSP_t *TSP)
     VAOFree(TSP->VAOList);
     VAOFree(TSP->CollisionVAOList);
     VAOFree(TSP->TransparentVAO);
+    free(TSP->FName);
     free(TSP);
 }
 
@@ -2162,7 +2163,7 @@ int TSPGetPointYComponentFromKDTree(vec3 Point,TSP_t *TSPList,int *PropertySetFi
     return -1;
 }
 
-TSP_t *TSPLoad(char *FName,int TSPNumber)
+TSP_t *TSPLoad(const char *FName,int TSPNumber)
 {
     FILE *TSPFile;
     TSP_t *TSP;
@@ -2181,7 +2182,7 @@ TSP_t *TSPLoad(char *FName,int TSPNumber)
     TSP->Face = NULL;
     TSP->TransparentFaceList = NULL;
     TSP->TransparentVAO = NULL;
-    strcpy(TSP->FName,GetBaseName(FName));
+    TSP->FName = GetBaseName(FName);
     
     fread(&TSP->Header.Id,sizeof(TSP->Header.Id),1,TSPFile);
     fread(&TSP->Header.Version,sizeof(TSP->Header.Version),1,TSPFile);

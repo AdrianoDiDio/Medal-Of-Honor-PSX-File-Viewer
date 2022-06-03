@@ -71,10 +71,10 @@ void SoundSystemUnlockDevice(SoundSystem_t *SoundSystem);
 void SoundSystemPlayMusic(SoundSystem_t *SoundSystem,int IsAmbient);
 void SoundSystemStopMusic(SoundSystem_t *SoundSystem);
 void SoundSystemPause(SoundSystem_t *SoundSystem);
-void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,char *MissionPath,int MissionNumber,int LevelNumber,int GameEngine);
+void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,const char *MissionPath,int MissionNumber,int LevelNumber,int GameEngine);
 int SoundSystemGetSoundDuration(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds);
 int SoundSystemGetCurrentSoundTime(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds);
-int SoundSystemDumpMusicToWav(SoundSystem_t *SoundSystem,char *EngineName,char *OutDirectory);
+int SoundSystemDumpMusicToWav(SoundSystem_t *SoundSystem,const char *EngineName,const char *OutDirectory);
 void SoundSystemCleanUp(SoundSystem_t *SoundSystem);
 
 extern Config_t *SoundVolume;

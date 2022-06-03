@@ -27,7 +27,7 @@ void VRAMFree(VRAM_t *VRAM)
     SDL_FreeSurface(VRAM->Page.Surface);
     free(VRAM);
 }
-void VRAMWritePNG(SDL_Surface *ImageSurface,char *OutName)
+void VRAMWritePNG(SDL_Surface *ImageSurface,const char *OutName)
 {
     FILE *PNGImage;
     png_structp PNGPtr;
@@ -84,7 +84,7 @@ void VRAMWritePNG(SDL_Surface *ImageSurface,char *OutName)
     png_destroy_write_struct(&PNGPtr,&PNGInfoPtr);
     fclose(PNGImage);
 }
-void VRAMSave(VRAM_t *VRAM,char *File)
+void VRAMSave(VRAM_t *VRAM,const char *File)
 {
     VRAMWritePNG(VRAM->Page.Surface,File);
 }
@@ -96,7 +96,7 @@ void VRAMDump(VRAM_t *VRAM)
     VRAMSave(VRAM,OutName);
 }
 
-void VRAMDumpDataToFile(VRAM_t *VRAM,char *OutBaseDir)
+void VRAMDumpDataToFile(VRAM_t *VRAM,const char *OutBaseDir)
 {
     
     char OutName[1024];

@@ -130,7 +130,7 @@ char *StringToUpper(char *In)
     return Result;
 }
 
-int StringToInt(char *String)
+int StringToInt(const char *String)
 {
     char *EndPtr;    
     long Value;
@@ -147,17 +147,17 @@ int StringToInt(char *String)
     return Value;
 }
 
-char *GetBaseName(char *Path)
+char *GetBaseName(const char *Path)
 {
     char *Out;
     Out = strrchr(Path, PATH_SEPARATOR);
     if (Out == NULL) {
-        Out = Path;
+        return strdup(Path);
     } else {
         //Skip remaining dir separator.
         Out++;
     }
-    return Out;
+    return strdup(Out);
 }
 
 void CreateDirIfNotExists(char *DirName) {
@@ -213,7 +213,7 @@ int GetFileLength(FILE *Fp)
     return Length;
 }
 
-char *ReadTextFile(char *File,int Length)
+char *ReadTextFile(const char *File,int Length)
 {
     FILE *Fp;
     int FileSize;
@@ -271,7 +271,7 @@ int SysMilliseconds()
     return SDL_GetTicks64();
 }
 
-void DPrintf(char *Fmt, ...)
+void DPrintf(const char *Fmt, ...)
 {
     char Temp[1000];
     va_list arglist;

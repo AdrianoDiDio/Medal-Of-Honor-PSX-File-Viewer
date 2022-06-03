@@ -573,7 +573,7 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     return ResultImage;
 }
 
-TIMImage_t *TIMGetAllImages(char *File)
+TIMImage_t *TIMGetAllImages(const char *File)
 {
     TIMImage_t *List;
     FILE *TIMFile;

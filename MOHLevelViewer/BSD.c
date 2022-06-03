@@ -1610,7 +1610,7 @@ bool BSDIsRenderObjectPresent(BSD_t *BSD,unsigned int RenderObjectId) {
     }
     return true;
 }
-char *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId)
+const char *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId)
 {
     switch( NodeId ) {
         case BSD_PLAYER_SPAWN:
@@ -1636,7 +1636,7 @@ char *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId)
     }
 }
 
-char *BSDRenderObjectGetWeaponNameFromId(int RenderObjectId)
+const char *BSDRenderObjectGetWeaponNameFromId(int RenderObjectId)
 {
     switch( RenderObjectId ) {
         case BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_1:
@@ -1671,7 +1671,7 @@ char *BSDRenderObjectGetWeaponNameFromId(int RenderObjectId)
     }
 }
 
-char *BSDRenderObjectGetEnumStringFromType(int RenderObjectType)
+const char *BSDRenderObjectGetEnumStringFromType(int RenderObjectType)
 {
     switch( RenderObjectType ) {
         case BSD_RENDER_OBJECT_CARRY_AUX_ELEMENTS:
@@ -2470,13 +2470,13 @@ void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
     }
     
     PreviousFilePosition = GetCurrentFilePosition(BSDFile);
-    fseek(BSDFile,sizeof(BSD_Header_t) + BSD_PROPERTY_SET_FILE_POSITION,SEEK_SET);
+    fseek(BSDFile,sizeof(BSDHeader_t) + BSD_PROPERTY_SET_FILE_POSITION,SEEK_SET);
     fread(&PropertySetFileOffset,sizeof(PropertySetFileOffset),1,BSDFile);
     if( PropertySetFileOffset == 0 ) {
         DPrintf("BSDReadPropertySetFile:BSD File has no property file set.\n");
         return;
     }
-    fseek(BSDFile,sizeof(BSD_Header_t) + PropertySetFileOffset,SEEK_SET);
+    fseek(BSDFile,sizeof(BSDHeader_t) + PropertySetFileOffset,SEEK_SET);
     fread(&BSD->PropertySetFile.NumProperties,sizeof(BSD->PropertySetFile.NumProperties),1,BSDFile);
     DPrintf("BSDReadPropertySetFile:Reading %i properties at %i (%i).\n",BSD->PropertySetFile.NumProperties,
             GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
@@ -2931,7 +2931,7 @@ int BSDLoad(BSD_t *BSD,int GameEngine,int IsMultiplayer,FILE *BSDFile)
 }
 
 
-FILE *BSDEarlyInit(BSD_t **BSD,char *MissionPath,int MissionNumber,int LevelNumber)
+FILE *BSDEarlyInit(BSD_t **BSD,const char *MissionPath,int MissionNumber,int LevelNumber)
 {
     BSD_t *LocalBSD;
     FILE *BSDFile;

@@ -153,7 +153,7 @@ void LevelLoadSettings()
     LevelEnableAnimatedSurfaces = ConfigGet("LevelEnableAnimatedSurfaces");
     LevelEnableMusicTrack = ConfigGet("LevelEnableMusicTrack");
 }
-Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,char *BasePath,int MissionNumber,int LevelNumber,
+Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,const char *BasePath,int MissionNumber,int LevelNumber,
                int *GameEngine)
 {
     FILE *BSDFile;

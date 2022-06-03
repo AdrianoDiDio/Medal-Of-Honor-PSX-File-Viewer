@@ -24,7 +24,6 @@
 #include "VAO.h"
 #include "VRAM.h"
 
-typedef struct LevelManager_s LevelManager_t;
 #define MOH_BSD_NUM_ENTRY 26
 
 #define MOH_RENDER_OBJECT_SIZE 256
@@ -47,6 +46,7 @@ typedef struct LevelManager_s LevelManager_t;
 #define BSD_MOON_TEXTURE_X 192
 #define BSD_MOON_TEXTURE_Y 96
 
+#include "VRAM.h"
 
 typedef enum  {
     //NOTE(Adriano): Spawn node has an additional attribute at 0x34(52) indicating if it is the first or the second.
@@ -276,14 +276,10 @@ typedef struct BSDTSPInfo_s {
     int  u3; // Always 0...Maybe PAD
 } BSDTSPInfo_t;
 
-typedef struct BSD_Header_Element_s {
-    int Value;
-} BSD_Header_Element_t;
-
-typedef struct BSD_Header_s {
+typedef struct BSDHeader_s {
     int NumHeadElements;
     int Sector[511];
-} BSD_Header_t;
+} BSDHeader_t;
 
 typedef struct BSDFace_s {
     BSDUv_t UV0;
@@ -356,7 +352,7 @@ typedef struct BSDSky_s {
 } BSDSky_t;
 
 typedef struct BSD_s {
-    BSD_Header_t Header;
+    BSDHeader_t Header;
     BSDTSPInfo_t TSPInfo;
     char Unknown[72];
     BSDAnimatedLightTable_t   AnimatedLightsTable;
@@ -383,28 +379,27 @@ typedef struct BSD_s {
 typedef struct Level_s Level_t;
 typedef struct Camera_s Camera_t;
 
-FILE    *BSDEarlyInit(BSD_t **BSD,char *MissionPath,int MissionNumber,int LevelNumber);
-int     BSDLoad(BSD_t *BSD,int GameEngine,int Multiplayer,FILE *BSDFile);
-char   *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId);
-char   *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
-void    BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 *Rotation);
-void    BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM);
-void    BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
-void    BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
-void    BSDClearNodesFlag(BSD_t *BSD);
-int     BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD,Camera_t *Camera);
-unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId);
-unsigned int BSDMPNodeIdToRenderObjectId(unsigned int NodeId);
-int     BSDGetRenderObjectIndexById(BSD_t *BSD,int Id);
-bool    BSDIsRenderObjectPresent(BSD_t *BSD,unsigned int RenderObjectId);
-void    BSDFixRenderObjectPosition(Level_t *Level);
-int     BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index);
-void    BSDDumpDataToObjFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile);
-void    BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile);
-void    BSDUpdateAnimatedLights(BSD_t *BSD);
-void    BSDUpdateStarsColors(BSD_t *BSD);
-int     BSDIsMoonEnabled(BSD_t *BSD);
-int     BSDAreStarsEnabled(BSD_t *BSD);
-void    BSDFree(BSD_t *BSD);
-
+FILE            *BSDEarlyInit(BSD_t **BSD,const char *MissionPath,int MissionNumber,int LevelNumber);
+int             BSDLoad(BSD_t *BSD,int GameEngine,int Multiplayer,FILE *BSDFile);
+const char      *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId);
+const char      *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
+void            BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 *Rotation);
+void            BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM);
+void            BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
+void            BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
+void            BSDClearNodesFlag(BSD_t *BSD);
+int             BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD,Camera_t *Camera);
+unsigned int    BSDNodeIdToRenderObjectId(unsigned int NodeId);
+unsigned int    BSDMPNodeIdToRenderObjectId(unsigned int NodeId);
+int             BSDGetRenderObjectIndexById(BSD_t *BSD,int Id);
+bool            BSDIsRenderObjectPresent(BSD_t *BSD,unsigned int RenderObjectId);
+void            BSDFixRenderObjectPosition(Level_t *Level);
+int             BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index);
+void            BSDDumpDataToObjFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile);
+void            BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile);
+void            BSDUpdateAnimatedLights(BSD_t *BSD);
+void            BSDUpdateStarsColors(BSD_t *BSD);
+int             BSDIsMoonEnabled(BSD_t *BSD);
+int             BSDAreStarsEnabled(BSD_t *BSD);
+void            BSDFree(BSD_t *BSD);
 #endif //__BSDVIEWER_H_

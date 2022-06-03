@@ -23,8 +23,6 @@
 #include "VAO.h"
 #include "VRAM.h"
 
-typedef struct LevelManager_s LevelManager_t;
-typedef struct BSD_s BSD_t;
 typedef enum {
     TSP_FX_NONE = 1,
     TSP_FX_TRANSPARENT_FACE = 2,
@@ -235,7 +233,7 @@ typedef struct TSPHeader_s {
 
 
 typedef struct TSP_s {
-    char FName[256];
+    char *FName;
     TSPHeader_t Header;
     TSPNode_t   *Node;
     TSPFace_t   *Face;
@@ -253,10 +251,10 @@ typedef struct TSP_s {
     struct TSP_s *Next;
 } TSP_t;
 
-typedef struct Level_s Level_t;
 typedef struct Camera_s Camera_t;
+typedef struct BSD_s BSD_t;
 
-TSP_t  *TSPLoad(char *FName,int TSPNumber);
+TSP_t  *TSPLoad(const char *FName,int TSPNumber);
 void    TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void    TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,Camera_t *Camera,int Reset);
 void    TSPUpdateDynamicFaces(TSP_t *TSPList,Camera_t *Camera,int DynamicDataIndex);

@@ -196,7 +196,8 @@ bool GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...)
 void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem)
 {
     ImVec2 ZeroSize;
-    SDL_version Version;
+    SDL_version LinkedVersion;
+    SDL_version CompiledVersion;
     int MaxLengthMinutes;
     int MaxLengthSeconds;
     int CurrentLengthMinutes;
@@ -336,8 +337,10 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
             igText("NumActiveWindows:%i",GUI->NumActiveWindows);
             igSeparator();
             igText("OpenGL Version: %s",glGetString(GL_VERSION));
-            SDL_GetVersion(&Version);
-            igText("SDL Version: %u.%u.%u",Version.major,Version.minor,Version.patch);
+            SDL_GetVersion(&LinkedVersion);
+            SDL_VERSION(&CompiledVersion);
+            igText("SDL Compiled Version: %u.%u.%u",CompiledVersion.major,CompiledVersion.minor,CompiledVersion.patch);
+            igText("SDL Linked Version: %u.%u.%u",LinkedVersion.major,LinkedVersion.minor,LinkedVersion.patch);
             igSeparator();
             igText("Display Informations");
             igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);
@@ -415,7 +418,7 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
     }
 }
 
-void GUISetProgressBarDialogTitle(GUI_t *GUI,char *Title)
+void GUISetProgressBarDialogTitle(GUI_t *GUI,const char *Title)
 {
     if( GUI->ProgressBar->DialogTitle ) {
         free(GUI->ProgressBar->DialogTitle);
@@ -425,7 +428,7 @@ void GUISetProgressBarDialogTitle(GUI_t *GUI,char *Title)
     GUI->ProgressBar->IsOpen = 0;
 }
 
-void GUIProgressBarBegin(GUI_t *GUI,char *Title)
+void GUIProgressBarBegin(GUI_t *GUI,const char *Title)
 {
     igSetCurrentContext(GUI->ProgressBar->Context);
     GUI->ProgressBar->IsOpen = 0;
@@ -439,7 +442,7 @@ void GUIProgressBarReset(GUI_t *GUI)
     }
     GUI->ProgressBar->CurrentPercentage = 0;
 }
-void GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increment,char *Message)
+void GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increment,const char *Message)
 {
     ImGuiViewport *Viewport;
     ImVec2 ScreenCenter;
@@ -629,7 +632,7 @@ void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager,VideoSyste
     }
 }
 
-void GUISetErrorMessage(GUI_t *GUI,char *Message)
+void GUISetErrorMessage(GUI_t *GUI,const char *Message)
 {
     if( !GUI ) {
         DPrintf("GUISetErrorMessage:Invalid GUI struct\n");
@@ -808,7 +811,7 @@ void GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *FileDialog)
  OnElementSelected and OnDialogCancelled are two callback that can be set to NULL if we are not interested in the result.
  NOTE that setting them to NULL or the cancel callback to NULL doesn't close the dialog.
  */
-GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filters,FileDialogSelectCallback_t OnElementSelected,
+GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,const char *WindowTitle,const char *Filters,FileDialogSelectCallback_t OnElementSelected,
                                        FileDialogCancelCallback_t OnDialogCancelled)
 {
     GUIFileDialog_t *FileDialog;
@@ -840,7 +843,7 @@ GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filter
     
     return FileDialog;
 }
-void GUIFileDialogSetTitle(GUIFileDialog_t *FileDialog,char *Title)
+void GUIFileDialogSetTitle(GUIFileDialog_t *FileDialog,const char *Title)
 {
     if(!FileDialog) {
         DPrintf("GUIFileDialogSetTitle:Invalid dialog\n");
@@ -873,7 +876,7 @@ void GUIFileDialogSetOnDialogCancelledCallback(GUIFileDialog_t *FileDialog,FileD
     FileDialog->OnDialogCancelled = OnDialogCancelled;
 }
 
-void GUIContextInit(ImGuiContext *Context,VideoSystem_t *VideoSystem,char *ConfigFilePath)
+void GUIContextInit(ImGuiContext *Context,VideoSystem_t *VideoSystem,const char *ConfigFilePath)
 {
     ImGuiIO *IO;
     ImGuiStyle *Style;

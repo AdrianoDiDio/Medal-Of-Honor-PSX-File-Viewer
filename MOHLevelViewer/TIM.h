@@ -57,7 +57,7 @@ typedef struct TIMImage_s {
 } TIMImage_t;
 
 TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages);
-TIMImage_t *TIMGetAllImages(char *File);
+TIMImage_t *TIMGetAllImages(const char *File);
 Byte *TIMExpandCLUTImageData(TIMImage_t *Image);
 Byte *TIMToOpenGL24(TIMImage_t *Image);
 Byte *TIMToOpenGL32(TIMImage_t *Image);

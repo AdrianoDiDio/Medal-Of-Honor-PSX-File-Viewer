@@ -39,9 +39,9 @@ void ConfigFree()
         free(Temp);
     }
 }
-void ConfigTokenizeSettings(char *String)
+void ConfigTokenizeSettings(const char *String)
 {
-    char *Temp;
+    const char *Temp;
     char  ConfigBuffer[1024];
     char *ConfigLine[2];
     int   NumArgs;
@@ -199,7 +199,7 @@ void ConfigSaveSettings()
     fclose(ConfigFile);
     free(PrefPath);
 }
-Config_t *ConfigGet(char *Name)
+Config_t *ConfigGet(const char *Name)
 {
     Config_t *Config;
     for(Config = ConfigList; Config; Config = Config->Next ){
@@ -210,7 +210,7 @@ Config_t *ConfigGet(char *Name)
     return NULL;
 }
 
-void ConfigUpdateValue(Config_t *Config,char *Value)
+void ConfigUpdateValue(Config_t *Config,const char *Value)
 {
     if( !Config ) {
         DPrintf("ConfigUpdateValue:Invalid config.\n");
@@ -229,7 +229,7 @@ void ConfigUpdateValue(Config_t *Config,char *Value)
  the default config file.
  Returns 1 if operation succeeded 0 otherwise.
  */
-int ConfigSet(char *Name,char *Value)
+int ConfigSet(const char *Name,const char *Value)
 {
     Config_t *Config;
     if( !Name ) {
@@ -251,7 +251,7 @@ int ConfigSet(char *Name,char *Value)
     return 0;
 }
 
-int ConfigSetNumber(char *Name,float Value)
+int ConfigSetNumber(const char *Name,float Value)
 {
     char SmallBuf[64];
     int Truncated;
@@ -273,7 +273,7 @@ int ConfigSetNumber(char *Name,float Value)
  otherwise a new config entry is created and added to the list and the return value will be 1.
  If the config cannot be created due to memory allocation errors then -1 is returned.
  */
-int ConfigRegister(char *Name,char *Value,char *Description)
+int ConfigRegister(const char *Name,const char *Value,const char *Description)
 {
     Config_t *Config;
     

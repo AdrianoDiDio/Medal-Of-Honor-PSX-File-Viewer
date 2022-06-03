@@ -18,7 +18,6 @@
     along with MOHLevelViewer.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */ 
-#include "Common.h"
 #include "ShaderManager.h"
 #include "MOHLevelViewer.h"
 
@@ -37,7 +36,7 @@ void ShaderManagerFree()
         free(Temp);
     }
 }
-char *ShaderRead(char *ShaderPath)
+char *ShaderRead(const char *ShaderPath)
 {
     char *Result;
     Result = ReadTextFile(ShaderPath,0);
@@ -61,7 +60,7 @@ Shader_t *ShaderGet(const char *ShaderName)
 }
 
 
-Shader_t *ShaderCache(char *ShaderName,char *VertexShaderFile,char *FragmentShaderFile)
+Shader_t *ShaderCache(const char *ShaderName,const char *VertexShaderFile,const char *FragmentShaderFile)
 {
     Shader_t *Result;
     char *ShaderInfoLog;

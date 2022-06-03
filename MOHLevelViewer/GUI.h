@@ -26,7 +26,7 @@
 typedef struct GUI_s GUI_t;
 typedef struct GUIFileDialog_s GUIFileDialog_t;
 
-typedef void (*FileDialogSelectCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI,char *Directory,char *File,void *UserData);
+typedef void (*FileDialogSelectCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Directory,const char *File,void *UserData);
 typedef void (*FileDialogCancelCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI);
 
 typedef struct GUIProgressBar_s {
@@ -74,10 +74,10 @@ int             GUIIsActive(GUI_t *GUI);
 void            GUIToggleDebugWindow(GUI_t *GUI);
 void            GUIToggleVideoSettingsWindow(GUI_t *GUI);
 void            GUIToggleLevelSelectWindow(GUI_t *GUI);
-void            GUISetErrorMessage(GUI_t *GUI,char *Message);
-GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,char *WindowTitle,char *Filters,FileDialogSelectCallback_t OnElementSelected,
+void            GUISetErrorMessage(GUI_t *GUI,const char *Message);
+GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,const char *WindowTitle,const char *Filters,FileDialogSelectCallback_t OnElementSelected,
                                        FileDialogCancelCallback_t OnDialogCancelled);
-void            GUIFileDialogSetTitle(GUIFileDialog_t *FileDialog,char *Title);
+void            GUIFileDialogSetTitle(GUIFileDialog_t *FileDialog,const char *Title);
 void            GUIFileDialogSetOnElementSelectedCallback(GUIFileDialog_t *FileDialog,FileDialogSelectCallback_t OnElementSelected);
 void            GUIFileDialogSetOnDialogCancelledCallback(GUIFileDialog_t *FileDialog,FileDialogCancelCallback_t OnDialogCancelled);
 int             GUIFileDialogIsOpen(GUIFileDialog_t *FileDialog);
@@ -86,11 +86,11 @@ void            GUIFileDialogOpenWithUserData(GUI_t *GUI,GUIFileDialog_t *FileDi
 void            *GUIFileDialogGetUserData(GUIFileDialog_t *FileDialog);
 void            GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *FileDialog);
 int             GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
-void            GUIProgressBarBegin(GUI_t *GUI,char *Title);
+void            GUIProgressBarBegin(GUI_t *GUI,const char *Title);
 void            GUIProgressBarEnd(GUI_t *GUI);
 void            GUIProgressBarReset(GUI_t *GUI);
-void            GUISetProgressBarDialogTitle(GUI_t *GUI,char *Title);
-void            GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increment,char *Message);
+void            GUISetProgressBarDialogTitle(GUI_t *GUI,const char *Title);
+void            GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increment,const char *Message);
 void            GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
                         ComTimeInfo_t *TimeInfo);
 void            GUIFree(GUI_t *GUI);

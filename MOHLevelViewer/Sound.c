@@ -233,7 +233,7 @@ float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
     }
     return Result;
 }
-void SoundSystemDumpMusic(VBMusic_t *Music,char *EngineName,char *OutDirectory)
+void SoundSystemDumpMusic(VBMusic_t *Music,const char *EngineName,const char *OutDirectory)
 {
     WAVHeader_t WAVHeader;
     FILE *WAVFile;
@@ -289,7 +289,7 @@ void SoundSystemDumpMusic(VBMusic_t *Music,char *EngineName,char *OutDirectory)
     free(WAVFileName);
     fclose(WAVFile);
 }
-int SoundSystemDumpMusicToWav(SoundSystem_t *SoundSystem,char *EngineName,char *OutDirectory)
+int SoundSystemDumpMusicToWav(SoundSystem_t *SoundSystem,const char *EngineName,const char *OutDirectory)
 {
     VBMusic_t *Iterator;
     if( !SoundSystem->MusicList ) {
@@ -314,7 +314,7 @@ int SoundSystemDumpMusicToWav(SoundSystem_t *SoundSystem,char *EngineName,char *
  * feed it to SDL (doing an internal conversion to change the frequency and the number of channels) in
  * order to be able to play it.
  */
-VBMusic_t *SoundSystemLoadVBFile(char *VBFileName)
+VBMusic_t *SoundSystemLoadVBFile(const char *VBFileName)
 {
     VBMusic_t *Music;
     FILE *VBFile;
@@ -362,7 +362,7 @@ VBMusic_t *SoundSystemLoadVBFile(char *VBFileName)
         fclose(VBFile);
         return NULL;
     }
-    Music->Name = StringCopy(GetBaseName(VBFileName));
+    Music->Name = GetBaseName(VBFileName);
     Music->Size = ConverterSrcData.output_frames * 2 * sizeof(float);
     Music->Duration = SoundSystemCalculateSoundDuration(Music->Size,44100,2,32);
     Music->DataPointer = 0;
@@ -385,7 +385,7 @@ void SoundSystemAddMusicToList(VBMusic_t **MusicList,VBMusic_t *Music)
         LastNode->Next = Music;
     }
 }
-void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,char *MissionPath,int MissionNumber,int LevelNumber,int GameEngine)
+void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,const char *MissionPath,int MissionNumber,int LevelNumber,int GameEngine)
 {
     VBMusic_t *Music;
     char *Buffer;

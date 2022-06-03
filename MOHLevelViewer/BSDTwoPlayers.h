@@ -30,7 +30,7 @@
 #define BSD2P_ENTRY_TABLE_SIZE     0x68
 
 typedef struct BSD2P_s {
-    BSD_Header_t Header;
+    BSDHeader_t Header;
     int          NodeOffset;
     BSDRenderObjectBlock_t  RenderObjectTable;
     BSDNodeInfo_t NodeData;

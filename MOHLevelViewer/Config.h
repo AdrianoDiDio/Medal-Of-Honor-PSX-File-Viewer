@@ -33,10 +33,10 @@ typedef struct Config_s {
 extern Config_t *ConfigList;
 
 void        ConfigInit();
-int         ConfigSet(char *Name,char *Value);
-int         ConfigSetNumber(char *Name,float Value);
-Config_t    *ConfigGet(char *Name);
-int         ConfigRegister(char *Name,char *Value,char *Description);
+int         ConfigSet(const char *Name,const char *Value);
+int         ConfigSetNumber(const char *Name,float Value);
+Config_t    *ConfigGet(const char *Name);
+int         ConfigRegister(const char *Name,const char *Value,const char *Description);
 void        ConfigSaveSettings();
 void        ConfigFree();
 #endif//__CONFIG_H_
