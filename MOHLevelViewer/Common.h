@@ -32,6 +32,7 @@
 #include <errno.h>
 
 #include <png.h>
+#include "samplerate.h"
 #include <SDL.h>
 #include <GL/glew.h>
 

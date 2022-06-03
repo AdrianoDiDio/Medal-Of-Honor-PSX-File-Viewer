@@ -130,6 +130,7 @@ MOHLevelViewer uses the following libraries:
 **libpng**:http://www.libpng.org/  
 **IMGUI**: https://github.com/ocornut/imgui/  
 **IMGUI_FileDialog**:  https://github.com/aiekick/ImGuiFileDialog  
+**LibSampleRate**: https://github.com/libsndfile/libsamplerate  
 The font file shipped with the program is:  
 **DroidSans.ttf**: https://www.fontsquirrel.com/fonts/droid-sans
 

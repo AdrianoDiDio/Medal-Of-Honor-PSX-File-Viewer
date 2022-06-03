@@ -23,17 +23,6 @@
 #include "MOHLevelViewer.h"
 #include "ShaderManager.h"
 
-// Color3b_t StarsColors[8] = {
-//     //R   G   B
-//     {128,128,128},
-//     {240,96,64},
-//     {128,128,32},
-//     {240,64,69},
-//     {96,96,240},
-//     {255,255,255},
-//     {255,128,64},
-//     {128,64,255}
-// };
 Color3b_t StarsColors[7] = {
     {128,128,128},
     {96,64,128},
@@ -43,28 +32,6 @@ Color3b_t StarsColors[7] = {
     {255,255,255},
     {64,128,64},
 };
-// Color1i_t StarsColors[7] = {
-//     //R   G   B
-//     //128;128;128
-//     {4034953344},
-//     //96;64;128
-//     {2155888736},
-//     //32;240;64
-//     {1077997600},
-//     //96;96;240
-//     {4293943392},
-//     //255;255;255
-//     {2164260863},
-//     //64;128;64
-//     {4282417216},
-//     {0}
-// };
-/*
-    1_1.BSD Compartment Trigger => 3246.604492;9.330523;-8456.515625
-    673.832092;22.795897;-3504.162842
-    
-    FIXME:RenderObjectList,RenderObjectRealList,RenderObjectShowCaseList CLEANUP!
-*/
 
 void BSDPositionToGLMVec3(BSDPosition_t In,vec3 Out)
 {

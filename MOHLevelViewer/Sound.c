@@ -89,7 +89,7 @@ void SoundSystemOnAudioUpdate(void *UserData,Byte *Stream,int Length)
     if( SoundVolume->IValue > 128 || SoundVolume->IValue < 0 ) {
         ConfigSetNumber("SoundVolume",128);
     }
-    SDL_MixAudioFormat(Stream, &CurrentMusic->Data[CurrentMusic->DataPointer], AUDIO_S16, ChunkLength, SoundVolume->IValue);
+    SDL_MixAudioFormat(Stream, &CurrentMusic->Data[CurrentMusic->DataPointer], AUDIO_F32, ChunkLength, SoundVolume->IValue);
     CurrentMusic->DataPointer += ChunkLength;
 }
 
@@ -125,18 +125,18 @@ void SoundSystemUnlockDevice(SoundSystem_t *SoundSystem)
 {
     SDL_UnlockAudioDevice(SoundSystem->Device);
 }
-short SoundSystemQuantize(double Sample)
+float SoundSystemQuantize(double Sample)
 {
     int OutSample;
     OutSample = (int ) (Sample + 0.5);
     if ( OutSample < -32768 ) {
-        return -32768;
+        return -1.f;
     }
     if ( OutSample > 32767 ) {
-        return 32767;
+        return 1.f;
     }
     
-    return (short) OutSample;
+    return (float) Sample / 32768.f;
 }
 int SoundSystemCalculateSoundDuration(int Size,int Frequency,int NumChannels,int BitDepth)
 {
@@ -157,15 +157,14 @@ int SoundSystemGetCurrentSoundTime(SoundSystem_t *SoundSystem,int *Minutes,int *
     if( !SoundSystem->CurrentMusic ) {
         return 0;
     }
-    CurrentLength = SoundSystemCalculateSoundDuration(SoundSystem->CurrentMusic->DataPointer,44100,2,16);
+    CurrentLength = SoundSystemCalculateSoundDuration(SoundSystem->CurrentMusic->DataPointer,44100,2,32);
     *Minutes = CurrentLength / 60;
     *Seconds = CurrentLength % 60;
     return CurrentLength;
 }
-short *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
+float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
 {
-//     VBMusic_t *VBMusic;
-    short *Result;
+    float *Result;
     int VBFileSize;
     Byte Header;
     Byte Shift;
@@ -198,8 +197,8 @@ short *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
     NumFramePerBlock = 28;
     NumTotalSample = VBFileSize / 16;
     *NumFrames = NumTotalSample * NumFramePerBlock;
-    //Size depends from the number of channels (in this case is 1).
-    Size = *NumFrames * 1 * sizeof(short);
+    //Size depends from the number of channels (in this case is 2).
+    Size = *NumFrames * 2 * sizeof(float);
     Result = malloc(Size);
     NumWrittenBytes = 0;
     for( i = 0; i < NumTotalSample; i++ ) {
@@ -227,6 +226,7 @@ short *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
                 Sample[BaseIndex] += (State[0] * ADPCMFilterGainPositive[Predictor] + State[1] * ADPCMFilterGainNegative[Predictor] );
                 State[1] = State[0];
                 State[0] = Sample[BaseIndex];
+                Result[NumWrittenBytes++] = SoundSystemQuantize(Sample[BaseIndex]);
                 Result[NumWrittenBytes++] = SoundSystemQuantize(Sample[BaseIndex]);
             }
         }
@@ -271,12 +271,12 @@ void SoundSystemDumpMusic(VBMusic_t *Music,char *EngineName,char *OutDirectory)
     WAVHeader.FormatHeader[3] = ' ';
     
     WAVHeader.FormatSize = 16;
-    WAVHeader.AudioFormat = 1;
+    WAVHeader.AudioFormat = 3; // 32 bits floating point sample.
     WAVHeader.NumChannels = 2;
     WAVHeader.SampleRate = 44100;
-    WAVHeader.ByteRate = (44100 * 2 * (16 / 8));
-    WAVHeader.BlockAlign = (2 * (16/8));
-    WAVHeader.BitsPerSample = 16;
+    WAVHeader.ByteRate = (44100 * 2 * (32 / 8));
+    WAVHeader.BlockAlign = (2 * (32/8));
+    WAVHeader.BitsPerSample = 32;
     
     WAVHeader.DataHeader[0] = 'd';
     WAVHeader.DataHeader[1] = 'a';
@@ -318,9 +318,13 @@ VBMusic_t *SoundSystemLoadVBFile(char *VBFileName)
 {
     VBMusic_t *Music;
     FILE *VBFile;
-    SDL_AudioStream *AudioStream;
-    short *PCMData;
+    float  *PCMData;
+    float  *ConvertedData;
     int    NumFrames;
+    float SamplingRatio;
+    int   ResamplingStatus;
+    SRC_DATA ConverterSrcData;
+    
     if( !VBFileName ) {
         DPrintf("SoundSystemLoadVBFile:Invalid file\n");
         return NULL;
@@ -335,6 +339,22 @@ VBMusic_t *SoundSystemLoadVBFile(char *VBFileName)
         fclose(VBFile);
         return NULL;
     }
+    //Perform a fast conversion to a more appropriate format...
+    SamplingRatio = (float) SOUND_SYSTEM_FREQUENCY / 22050.f;
+    ConvertedData = malloc( NumFrames * SamplingRatio * 2 * sizeof(float));
+    ConverterSrcData.data_in = PCMData;
+    ConverterSrcData.input_frames = NumFrames;
+    ConverterSrcData.data_out = ConvertedData;
+    ConverterSrcData.output_frames = NumFrames * SamplingRatio;
+    ConverterSrcData.src_ratio = SamplingRatio;
+    ResamplingStatus = src_simple(&ConverterSrcData, SRC_LINEAR, 2);
+    if( ResamplingStatus != 0 ) {
+        DPrintf("SoundSystemLoadVBFile:Failed to resample audio %s.\n",src_strerror(ResamplingStatus));
+        free(PCMData);
+        free(ConvertedData);
+        fclose(VBFile);
+        return NULL;
+    }
     Music = malloc(sizeof(VBMusic_t));
     if( !Music ) {
         DPrintf("SoundSystemLoadVBFile:Failed to allocate memory for music data\n");
@@ -343,17 +363,11 @@ VBMusic_t *SoundSystemLoadVBFile(char *VBFileName)
         return NULL;
     }
     Music->Name = StringCopy(GetBaseName(VBFileName));
-    //Perform a fast conversion to a more appropriate format...
-    AudioStream = SDL_NewAudioStream(AUDIO_S16, 1, 22050, AUDIO_S16, 2, 44100);
-    SDL_AudioStreamPut(AudioStream, PCMData, NumFrames * sizeof (Sint16));
-    SDL_AudioStreamFlush(AudioStream);
-    Music->Size = SDL_AudioStreamAvailable(AudioStream);
-    Music->Duration = SoundSystemCalculateSoundDuration(Music->Size,44100,2,16);
+    Music->Size = ConverterSrcData.output_frames * 2 * sizeof(float);
+    Music->Duration = SoundSystemCalculateSoundDuration(Music->Size,44100,2,32);
     Music->DataPointer = 0;
-    Music->Data = malloc(Music->Size);
+    Music->Data = (Byte *) ConverterSrcData.data_out;
     Music->Next = NULL;
-    SDL_AudioStreamGet(AudioStream,Music->Data,Music->Size);
-    SDL_FreeAudioStream(AudioStream);
     free(PCMData);
     fclose(VBFile);
     return Music;

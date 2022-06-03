@@ -344,11 +344,11 @@ void ComUpdateDelta(ComTimeInfo_t *TimeInfo,Camera_t *Camera)
     TimeInfo->Delta = TimeInfo->UpdateLength * 0.001f;
 
 
-    // update the frame counter
+    // Update the frame counter
     TimeInfo->LastFPSTime += TimeInfo->UpdateLength;
     TimeInfo->FPS++;
     TimeInfo->LastLoopTime = Now;
-    // update our FPS counter if a second has passed since
+    // Update our FPS counter if a second has passed since
     // we last recorded
     if (TimeInfo->LastFPSTime >= 1000 ) {
         sprintf(TimeInfo->FPSString,"FPS:%i\nMs: %.2f ms\nLast FPS Time:%f\nDelta:%f",

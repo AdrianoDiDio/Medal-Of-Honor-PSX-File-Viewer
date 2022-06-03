@@ -834,9 +834,8 @@ LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSyst
     LevelManager->HasToSpawnCamera = 0;
     LevelManager->FileDialog = GUIFileDialogRegister(GUI,"Select Directory",NULL,
                                                      LevelManagerOnDirSelected,LevelManagerOnDirSelectionCancelled);
-    LevelManager->ExportFileDialog = GUIFileDialogRegister(GUI,
-                                                           "Export Level",
-                                                           NULL,LevelManagerOnExportDirSelected,LevelManagerOnExportDirCancelled);
+    LevelManager->ExportFileDialog = GUIFileDialogRegister(GUI,"Export Level",NULL,
+                                                           LevelManagerOnExportDirSelected,LevelManagerOnExportDirCancelled);
 
     LevelManager->BasePath = NULL;
     //No path has been provided to it yet.

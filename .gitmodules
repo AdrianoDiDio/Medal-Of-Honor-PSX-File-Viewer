@@ -19,3 +19,6 @@
 [submodule "MOHLevelViewer/Libs/SDL"]
 	path = MOHLevelViewer/Libs/SDL
 	url = https://github.com/libsdl-org/SDL.git
+[submodule "MOHLevelViewer/Libs/libsamplerate"]
+	path = MOHLevelViewer/Libs/libsamplerate
+	url = https://github.com/libsndfile/libsamplerate
