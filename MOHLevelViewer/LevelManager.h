@@ -63,7 +63,7 @@ typedef struct LevelManagerDialogData_s {
 } LevelManagerDialogData_t;
 
 LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem);
-void            LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
+int             LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
                                       int MissionNumber,int LevelNumber);
 void            LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,SoundSystem_t *SoundSystem,int SoundValue);
 int             LevelManagerIsLevelLoaded(LevelManager_t *LevelManager);
@@ -76,9 +76,9 @@ void            LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t 
 void            LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t  *VideoSystem,SoundSystem_t *SoundSystem,int OutputFormat);
 void            LevelManagerCleanUp(LevelManager_t *LevelManager);
 
-extern Mission_t MOHMissionsList[];
+extern const Mission_t MOHMissionsList[];
 extern int NumMOHMissions;
-extern Mission_t MOHUMissionsList[];
+extern const Mission_t MOHUMissionsList[];
 extern int NumMOHUMissions;
 
 extern Config_t *LevelManagerBasePath;

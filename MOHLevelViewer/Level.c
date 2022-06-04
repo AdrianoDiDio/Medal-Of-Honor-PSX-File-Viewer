@@ -175,7 +175,6 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
         goto Failure;
     }
     GUIProgressBarReset(GUI);
-    GUIProgressBarIncrement(GUI,VideoSystem,5,"Unloading Previous Level");
     
     Level->Font = NULL;
     Level->BSD = NULL;
@@ -192,7 +191,7 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
     DPrintf("LevelInit:Working directory:%s\n",BasePath);
     DPrintf("LevelInit:Loading level %s Mission %i Level %i\n",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 
-    BasePercentage = 5.f;
+    BasePercentage = 0.f;
     GUIProgressBarIncrement(GUI,VideoSystem,BasePercentage,"Loading all images");
     
     //Step.1 Load all the tims from taf.
@@ -205,7 +204,7 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
         DPrintf("LevelInit:Failed to load TAF file %s\n",Buffer);
         goto Failure;
     }
-    BasePercentage += 5;
+    BasePercentage += 10;
     GUIProgressBarIncrement(GUI,VideoSystem,BasePercentage,"Early Loading BSD File");
     
     //Step.2 Partially load the BSD file in order to get the TSP info.

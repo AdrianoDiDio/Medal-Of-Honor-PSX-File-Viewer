@@ -58,6 +58,7 @@ typedef struct GUI_s {
     int NumActiveWindows;
     GUIProgressBar_t *ProgressBar;
     char *ErrorMessage;
+    ImGuiID ErrorID;
     
 } GUI_t;
 

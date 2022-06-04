@@ -99,6 +99,19 @@ void GUIFree(GUI_t *GUI)
     free(GUI);
 }
 
+void GUIPrepareModalWindow()
+{
+    ImGuiIO *IO;
+    ImVec2 Pivot; 
+    ImVec2 ModalPosition;
+    
+    IO = igGetIO();
+    Pivot.x = 0.5f;
+    Pivot.y = 0.5f;
+    ModalPosition.x = IO->DisplaySize.x * 0.5;
+    ModalPosition.y = IO->DisplaySize.y * 0.5;
+    igSetNextWindowPos(ModalPosition, ImGuiCond_Always, Pivot);
+}
 /*
  * Process a new event from the SDL system only when
  * it is active.
@@ -559,17 +572,23 @@ void GUIDrawVideoSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
 }
 
 void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
-                      Mission_t *Missions,int NumMissions)
+                      const Mission_t *Missions,int NumMissions)
 {
+    static int FailedMissionNumber = -1;
+    static int FailedLevelNumber = -1;
     int TreeNodeFlags;
     int i;
     int j;
     int DisableNode;
     int CurrentMission;
     int CurrentLevel;
+    ImVec2 ButtonSize;
     
+    ButtonSize.x = 120;
+    ButtonSize.y = 0;
     CurrentMission = -1;
     CurrentLevel = -1;
+    
     if( LevelManagerIsLevelLoaded(LevelManager) ) {
         CurrentMission = LevelManager->CurrentLevel->MissionNumber;
         CurrentLevel = LevelManager->CurrentLevel->LevelNumber;
@@ -592,16 +611,31 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *Vid
                 }
                 if( igTreeNodeEx_Str(Missions[i].Levels[j].LevelName,TreeNodeFlags) ) {
                     if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
-                        LevelManagerLoadLevel(LevelManager,GUI,VideoSystem,SoundSystem,
-                                              Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber);
-                        //Close it if we selected a level.
-                        GUI->LevelSelectWindowHandle = 0;
-                        break;
+                        if( LevelManagerLoadLevel(LevelManager,GUI,VideoSystem,SoundSystem,
+                                              Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber) ) {
+                            //Close it if we selected a level.
+                            GUI->LevelSelectWindowHandle = 0;
+                        } else {
+                            FailedMissionNumber = i;
+                            FailedLevelNumber = j;
+                            igOpenPopup_Str("Load Level Error",0);
+                            GUIPushWindow(GUI);
+                        }
                     }
                 }
                 if( DisableNode ) {
                     igEndDisabled();
                 }
+            }
+            GUIPrepareModalWindow();
+            if( igBeginPopupModal("Load Level Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
+                assert(FailedMissionNumber != -1 && FailedLevelNumber != -1 );
+                igText("Failed to load the level \"%s\"",Missions[FailedMissionNumber].Levels[FailedLevelNumber].LevelName);
+                if (igButton("OK", ButtonSize) ) {
+                    GUIPopWindow(GUI);
+                    igCloseCurrentPopup(); 
+                }
+                igEndPopup();
             }
             igTreePop();
         }
@@ -714,9 +748,6 @@ void GUIRenderFileDialogs(GUI_t *GUI)
 void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,ComTimeInfo_t *TimeInfo)
 {
     ImVec2 ButtonSize;
-    ImVec2 ModalPosition;
-    ImVec2 Pivot;
-    ImGuiIO *IO;
     
     GUIBeginFrame();
     
@@ -730,14 +761,9 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSyste
     
     GUIRenderFileDialogs(GUI);
     if( GUI->ErrorMessage ) {
-        IO = igGetIO();
         ButtonSize.x = 120;
         ButtonSize.y = 0;
-        Pivot.x = 0.5f;
-        Pivot.y = 0.5f;
-        ModalPosition.x = IO->DisplaySize.x * 0.5;
-        ModalPosition.y = IO->DisplaySize.y * 0.5;
-        igSetNextWindowPos(ModalPosition, ImGuiCond_Always, Pivot);
+        GUIPrepareModalWindow();
         if( igBeginPopupModal("Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
             igText(GUI->ErrorMessage);
             if (igButton("OK", ButtonSize) ) {

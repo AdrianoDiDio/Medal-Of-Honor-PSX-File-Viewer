@@ -22,7 +22,7 @@
 #include "LevelManager.h"
 #include "MOHLevelViewer.h"
 
-Mission_t MOHMissionsList[] = {
+const Mission_t MOHMissionsList[] = {
     {
         "Rescue The G3 Officer",
         1,
@@ -205,7 +205,7 @@ Mission_t MOHMissionsList[] = {
     }
 };
 int NumMOHMissions = sizeof(MOHMissionsList) / sizeof(MOHMissionsList[0]);
-Mission_t MOHUMissionsList[] = {
+const Mission_t MOHUMissionsList[] = {
     {
         "Occupied!",
         2,
@@ -778,27 +778,36 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
     GUIProgressBarEnd(GUI);
     return Loaded;
 }
-void LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
+int LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
                            int MissionNumber,int LevelNumber)
 {
+    Level_t *Level;
     char *Buffer;
+
     if( !LevelManager->IsPathSet ) {
         DPrintf("LevelManagerLoadLevel:Called without a valid path set\n");
-        return;
+        return 0;
     }
     if( LevelManagerIsLevelLoaded(LevelManager) ) {
         if( LevelManager->CurrentLevel->MissionNumber == MissionNumber && LevelManager->CurrentLevel->LevelNumber == LevelNumber ) {
             DPrintf("LevelManagerLoadLevel:Attempted to load the same level...\n");
-            return;
+            return 0;
         }
     }
     asprintf(&Buffer,"Loading Mission %i Level %i...",MissionNumber,LevelNumber);
     GUIProgressBarBegin(GUI,Buffer);
-    LevelCleanUp(LevelManager->CurrentLevel);
-    LevelManager->CurrentLevel = LevelInit(GUI,VideoSystem,SoundSystem,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
-    LevelManager->HasToSpawnCamera = 1;
+    Level = LevelInit(GUI,VideoSystem,SoundSystem,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
     GUIProgressBarEnd(GUI);
+    if( !Level ) {
+        printf("LevelManagerLoadLevel:Couldn't load mission %i level %i...\n",MissionNumber,LevelNumber);
+        free(Buffer);
+        return 0;
+    }
+    LevelCleanUp(LevelManager->CurrentLevel);
+    LevelManager->CurrentLevel = Level;
+    LevelManager->HasToSpawnCamera = 1;
     free(Buffer);
+    return 1;
 }
 
 void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem)
