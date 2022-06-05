@@ -27,54 +27,76 @@ void TSPFree(TSP_t *TSP)
 {
     TSPRenderingFace_t *Temp;
     int i;
-//     TSP->Node
-//     TSPRecursiveNodeFree(&TSP->Node[0]);
-    for( i = 0; i < TSP->Header.NumNodes; i++ ) {
-        VAOFree(TSP->Node[i].BBoxVAO);
-        VAOFree(TSP->Node[i].OpaqueFacesVAO);
-        VAOFree(TSP->Node[i].LeafCollisionFaceListVAO);
-        while( TSP->Node[i].OpaqueFaceList ) {
-            Temp = TSP->Node[i].OpaqueFaceList;
-            TSP->Node[i].OpaqueFaceList = TSP->Node[i].OpaqueFaceList->Next;
-            free(Temp);
-        }
-        if( TSP->Node[i].FaceList ) {
-            free(TSP->Node[i].FaceList);
-        }
-        //Don't bother traversing the tree since we can walk the whole array and free all the pointers...
-        TSP->Node[i].Child[0] = NULL;
-        TSP->Node[i].Child[1] = NULL;
-        TSP->Node[i].Next = NULL;
+    
+    if( !TSP ) {
+        return;
     }
-    free(TSP->Node);
+    
+    if( TSP->Node ) {
+        for( i = 0; i < TSP->Header.NumNodes; i++ ) {
+            VAOFree(TSP->Node[i].BBoxVAO);
+            VAOFree(TSP->Node[i].OpaqueFacesVAO);
+            VAOFree(TSP->Node[i].LeafCollisionFaceListVAO);
+            while( TSP->Node[i].OpaqueFaceList ) {
+                Temp = TSP->Node[i].OpaqueFaceList;
+                TSP->Node[i].OpaqueFaceList = TSP->Node[i].OpaqueFaceList->Next;
+                free(Temp);
+            }
+            if( TSP->Node[i].FaceList ) {
+                free(TSP->Node[i].FaceList);
+            }
+            //Don't bother traversing the tree since we can walk the whole array and free all the pointers...
+            TSP->Node[i].Child[0] = NULL;
+            TSP->Node[i].Child[1] = NULL;
+            TSP->Node[i].Next = NULL;
+        }
+        free(TSP->Node);
+    }
     if( TSP->Face ) {
         free(TSP->Face);
     }
     if( TSP->TextureData ) {
         free(TSP->TextureData);
     }
-    free(TSP->Vertex);
-    free(TSP->Color);
-    
-    if( TSP->Header.NumDynamicDataBlock != 0 ) {
-        for( i = 0; i < TSP->Header.NumDynamicDataBlock; i++ ) {
-            free(TSP->DynamicData[i].FaceIndexList);
-            if( TSP->DynamicData[i].FaceDataList ) {
-                free(TSP->DynamicData[i].FaceDataList);
+    if( TSP->Vertex ) {
+        free(TSP->Vertex);
+    }
+    if( TSP->Color ) {
+        free(TSP->Color);
+    }
+    if( TSP->DynamicData ) {
+        if( TSP->Header.NumDynamicDataBlock != 0 ) {
+            for( i = 0; i < TSP->Header.NumDynamicDataBlock; i++ ) {
+                free(TSP->DynamicData[i].FaceIndexList);
+                if( TSP->DynamicData[i].FaceDataList ) {
+                    free(TSP->DynamicData[i].FaceDataList);
+                }
+                if( TSP->DynamicData[i].FaceDataListV3 ) {
+                    free(TSP->DynamicData[i].FaceDataListV3);
+                }
             }
-            if( TSP->DynamicData[i].FaceDataListV3 ) {
-                free(TSP->DynamicData[i].FaceDataListV3);
-            }
+            free(TSP->DynamicData);
         }
-        free(TSP->DynamicData);
     }
     
-    free(TSP->CollisionData->KDTree);
-    free(TSP->CollisionData->FaceIndexList);
-    free(TSP->CollisionData->Vertex);
-    free(TSP->CollisionData->Normal);
-    free(TSP->CollisionData->Face);
-    free(TSP->CollisionData);
+    if( TSP->CollisionData ) {
+        if( TSP->CollisionData->KDTree ) {
+            free(TSP->CollisionData->KDTree);
+        }
+        if( TSP->CollisionData->FaceIndexList ) {
+            free(TSP->CollisionData->FaceIndexList);
+        }
+        if( TSP->CollisionData->Vertex ) {
+            free(TSP->CollisionData->Vertex);
+        }
+        if( TSP->CollisionData->Normal ) {
+            free(TSP->CollisionData->Normal);
+        }
+        if( TSP->CollisionData->Face ) {
+            free(TSP->CollisionData->Face);
+        }
+        free(TSP->CollisionData);
+    }
     
     while( TSP->TransparentFaceList ) {
         Temp = TSP->TransparentFaceList;
@@ -1545,7 +1567,7 @@ void TSPLookUpChildNode(TSP_t *TSP,FILE *InFile)
 
 */
 
-void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
 {
     TSPFaceV3_t TempFace;
     int CurrentFaceIndex;
@@ -1557,16 +1579,16 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
     if( !TSP || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
         printf("TSPReadNodeChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
-        return;
+        return 0;
     }
     if( TSP->Header.NumNodes == 0 ) {
         DPrintf("TSPReadNodeChunk:0 nodes found in file %s.\n",TSP->FName);
-        return;
+        return 0;
     }
     TSP->Node = malloc(TSP->Header.NumNodes * sizeof(TSPNode_t));
     if( !TSP->Node ) {
         DPrintf("TSPReadNodeChunk:Failed to allocate memory for node array.\n");
-        return;
+        return 0;
     }
     memset(TSP->Node,0,TSP->Header.NumNodes * sizeof(TSPNode_t));
     for( i = 0; i < TSP->Header.NumNodes; i++ ) {
@@ -1599,7 +1621,7 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
                 TSP->Node[i].FaceList = malloc(TSP->Node[i].NumFaces * sizeof(TSPFaceV3_t));
                 if( !TSP->Node[i].FaceList ) {
                     DPrintf("TSPReadNodeChunk:Failed to allocate memory for face list\n");
-                    return;
+                    return 0;
                 }
                 PrevFilePosition = ftell(InFile);
                 fseek(InFile,TSP->Node[i].BaseData + TSP->Header.FaceOffset,SEEK_SET);
@@ -1675,9 +1697,10 @@ void TSPReadNodeChunk(TSP_t *TSP,FILE *InFile)
     }
     TSPLookUpChildNode(TSP,InFile);
     DPrintf("Current file offset is %li\n",ftell(InFile));
+    return 1;
 }
 
-void TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
 {
     int Ret;
     int i;
@@ -1686,11 +1709,11 @@ void TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
     if( !TSP || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
         printf("TSPReadFaceChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
-        return;
+        return 0;
     }
     if( TSP->Header.NumFaces == 0 ) {
         DPrintf("TSPReadFaceChunk:0 faces found in file %s.\n",TSP->FName);
-        return;
+        return 0;
     }
     //HACK:For the moment we calculate the number of faces by using the vertex offset
     //     Ignoring the NumFace param in the TSP header
@@ -1703,14 +1726,14 @@ void TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
     TSP->Face = malloc(TSP->Header.NumFaces * sizeof(TSPFace_t));
     if( !TSP->Face ) {
         DPrintf("TSPReadFaceChunk:Failed to allocate memory for face array\n");
-        return;
+        return 0;
     }
     for( i = 0; i < TSP->Header.NumFaces; i++ ) {
         DPrintf("Reading Face %i at %li\n",i,ftell(InFile));
         Ret = fread(&TSP->Face[i],sizeof(TSPFace_t),1,InFile);
         if( Ret != 1 ) {
             DPrintf("TSPReadFaceChunk:Early failure when reading face %i\n",i);
-            return;
+            return 0;
         }
 #if 1
 //     if( i <= 4 ) {
@@ -1723,9 +1746,10 @@ void TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
 //     }
 #endif
     }
+    return 1;
 }
 
-void TSPReadVertexChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadVertexChunk(TSP_t *TSP,FILE *InFile)
 {
     int Ret;
     int i;
@@ -1733,34 +1757,35 @@ void TSPReadVertexChunk(TSP_t *TSP,FILE *InFile)
     if( !TSP || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
         printf("TSPReadVertexChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
-        return;
+        return 0;
     }
     
     if( TSP->Header.NumVertices == 0 ) {
         DPrintf("TSPReadVertexChunk:No vertices found in file %s.\n",TSP->FName);
-        return;
+        return 0;
     }
     
     TSP->Vertex = malloc(TSP->Header.NumVertices * sizeof(TSPVert_t));
     
     if( !TSP->Vertex ) {
         DPrintf("TSPReadVertexChunk:Failed to allocate memory for Verte array\n");
-        return;
+        return 0;
     }
     
     for( i = 0; i < TSP->Header.NumVertices; i++ ) {
         Ret = fread(&TSP->Vertex[i],sizeof(TSPVert_t),1,InFile);
         if( Ret != 1 ) {
             DPrintf("TSPReadVertexChunk:Early failure when reading vertex %i\n",i);
-            return;
+            return 0;
         }
 //         DPrintf(" -- Vertex %i --\n",i);
 //         PrintTSPVec3(TSP->Vertex[i].Position);
         assert(TSP->Vertex[i].Pad == 104 || TSP->Vertex[i].Pad == 105);
     }
+    return 1;
 }
 
-void TSPReadColorChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadColorChunk(TSP_t *TSP,FILE *InFile)
 {
     int Ret;
     int i;
@@ -1768,30 +1793,31 @@ void TSPReadColorChunk(TSP_t *TSP,FILE *InFile)
     if( !TSP || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
         printf("TSPReadColorChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
-        return;
+        return 0;
     }
     if( TSP->Header.NumVertices == 0 ) {
         DPrintf("TSPReadColorChunk:0 colors found in file %s.\n",TSP->FName);
-        return;
+        return 0;
     }
     
     TSP->Color = malloc(TSP->Header.NumColors * sizeof(Color1i_t));
     
     if( !TSP->Color ) {
         DPrintf("TSPReadColorChunk:Failed to allocate memory for color array\n");
-        return;
+        return 0;
     }
     
     for( i = 0; i < TSP->Header.NumColors; i++ ) {
         Ret = fread(&TSP->Color[i],sizeof(Color1i_t),1,InFile);
         if( Ret != 1 ) {
             DPrintf("TSPReadColorChunk:Early failure when reading color %i\n",i);
-            return;
+            return 0;
         }
     }
+    return 1;
 }
 
-void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
 {
     int i;
     int j;
@@ -1802,8 +1828,10 @@ void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
     if( !TSP || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
         printf("TSPReadDynamicDataChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
-        return;
+        return 0;
     }
+    //NOTE(Adriano):This is not an error condition since TSP files are allowed
+    //to not have a dynamic block.
     if( TSP->Header.NumDynamicDataBlock == 0 ) {
         DPrintf("TSPReadDynamicDataChunk:TSP has no Dynamic Data set.\n");
         if( TSPIsVersion3(TSP) ) {
@@ -1811,14 +1839,14 @@ void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
         } else {
             fseek(InFile,TSP->Header.CollisionOffset,SEEK_SET);
         }
-        return;
+        return 1;
     }
     DPrintf("TSPReadDynamicDataChunk:TSP has %i Dynamic Data Block.\n",TSP->Header.NumDynamicDataBlock);
     TSP->DynamicData = malloc(TSP->Header.NumDynamicDataBlock * sizeof(TSPDynamicData_t));
     
     if( !TSP->DynamicData ) {
         DPrintf("TSPReadDynamicDataChunk:Failed to allocate memory for dynamic data array\n");
-        return;
+        return 0;
     }
     
     for( i = 0; i < TSP->Header.NumDynamicDataBlock; i++ ) {
@@ -1846,7 +1874,7 @@ void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
         TSP->DynamicData[i].FaceIndexList = malloc(TSP->DynamicData[i].Header.NumFacesIndex * sizeof(short));
         if( !TSP->DynamicData[i].FaceIndexList ) {
             DPrintf("TSPReadDynamicDataChunk:Failed to allocate memory for dynamic face index list\n");
-            return;
+            return 0;
         }
         for( j = 0; j < TSP->DynamicData[i].Header.NumFacesIndex; j++ ) {
             fread(&TSP->DynamicData[i].FaceIndexList[j],sizeof(TSP->DynamicData[i].FaceIndexList[j]),1,InFile);
@@ -1859,7 +1887,7 @@ void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
                         TSP->DynamicData[i].Header.FaceDataSizeMultiplier);
             if( !TSP->DynamicData[i].FaceDataListV3 ) {
                 DPrintf("TSPReadDynamicDataChunk:Failed to allocate memory for dynamic face data list\n");
-                return;
+                return 0;
             }
             for( j = 0; j < TSP->DynamicData[i].Header.NumFacesIndex * TSP->DynamicData[i].Header.FaceDataSizeMultiplier; j++ ) {
                 fread(&TSP->DynamicData[i].FaceDataListV3[j],sizeof(TSP->DynamicData[i].FaceDataListV3[j]),1,InFile);
@@ -1869,7 +1897,7 @@ void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
                 TSP->DynamicData[i].Header.FaceDataSizeMultiplier);
             if( !TSP->DynamicData[i].FaceDataList ) {
                 DPrintf("TSPReadDynamicDataChunk:Failed to allocate memory for dynamic face data list\n");
-                return;
+                return 0;
             }
             for( j = 0; j < TSP->DynamicData[i].Header.NumFacesIndex * TSP->DynamicData[i].Header.FaceDataSizeMultiplier; j++ ) {
                 fread(&TSP->DynamicData[i].FaceDataList[j],sizeof(TSP->DynamicData[i].FaceDataList[j]),1,InFile);
@@ -1884,9 +1912,10 @@ void TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
             fseek(InFile,TSP->DynamicData[i].Header.Size - Delta,SEEK_CUR);
         }
     }
+    return 1;
 }
 
-void TSPReadTextureInfoChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadTextureInfoChunk(TSP_t *TSP,FILE *InFile)
 {
     int i;
     int Ret;
@@ -1894,24 +1923,24 @@ void TSPReadTextureInfoChunk(TSP_t *TSP,FILE *InFile)
     if( !TSP || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
         printf("TSPReadTextureInfoChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
-        return;
+        return 0;
     }
     if( TSP->Header.NumTextureInfo == 0 || TSP->Header.NumTextureInfo == -1 ) {
         DPrintf("TSPReadTextureInfoChunk:0 textures found in file %s.\n",TSP->FName);
-        return;
+        return 0;
     }
     assert(sizeof(TSPTextureInfo_t) == 12);
     TSP->TextureData = malloc(TSP->Header.NumTextureInfo * sizeof(TSPTextureInfo_t));
     if( !TSP->TextureData ) {
         DPrintf("TSPReadTextureInfoChunk:Failed to allocate memory for texture data array\n");
-        return;
+        return 0;
     }
     for( i = 0; i < TSP->Header.NumTextureInfo; i++ ) {
         DPrintf("Reading texture info at %li\n",ftell(InFile));
         Ret = fread(&TSP->TextureData[i],sizeof(TSPTextureInfo_t),1,InFile);
             if( Ret != 1 ) {
                 DPrintf("TSPReadTextureInfoChunk:Early failure when reading face texture data %i\n",i);
-                return;
+                return 0;
             }
             DPrintf(" -- Texture for Face V3 %i --\n",i);
             DPrintf("TSB:%u\n",TSP->TextureData[i].TSB);
@@ -1921,10 +1950,10 @@ void TSPReadTextureInfoChunk(TSP_t *TSP,FILE *InFile)
             DPrintf("U2:V2:%i %i\n",TSP->TextureData[i].UV2.u,TSP->TextureData[i].UV2.v);
             DPrintf("Padding:%i\n",TSP->TextureData[i].Padding);
     }
-
+    return 1;
 }
 
-void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
 {
     short Pad;
     int Ret;
@@ -1933,13 +1962,13 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     if( !TSP || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
         printf("TSPReadCollisionChunk: Invalid %s.\n",InvalidFile ? "file" : "tsp struct");
-        return;
+        return 0;
     }
     
     TSP->CollisionData = malloc(sizeof(TSPCollision_t));
     if( !TSP->CollisionData ) {
         DPrintf("TSPReadCollisionChunk:Failed to allocate memory for CollisionData\n");
-        return;
+        return 0;
     }
     
     TSP->CollisionData->KDTree = NULL;
@@ -1951,6 +1980,7 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     Ret = fread(&TSP->CollisionData->Header,sizeof(TSPCollisionHeader_t),1,InFile);
     if( Ret != 1 ) {
         DPrintf("TSPReadCollisionChunk:Early failure when reading collision header.\n");
+        return 0;
     }
     DPrintf("TSPReadCollisionChunk:Header\n");
 //     DPrintf("U0|U1|U2|U3:%u %u %u %u\n",TSP->CollisionData->Header.U0,TSP->CollisionData->Header.U1,TSP->CollisionData->Header.U2,
@@ -1969,25 +1999,25 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     TSP->CollisionData->KDTree = malloc(TSP->CollisionData->Header.NumCollisionKDTreeNodes * sizeof(TSPCollisionKDTreeNode_t));
     if( !TSP->CollisionData->KDTree ) {
         DPrintf("TSPReadCollisionChunk:Failed to allocate memory for KD-Tree\n");
-        goto Failure;
+        return 0;
     }
     for( i = 0; i < TSP->CollisionData->Header.NumCollisionKDTreeNodes; i++ ) {
         Ret = fread(&TSP->CollisionData->KDTree[i],sizeof(TSP->CollisionData->KDTree[i]),1,InFile);
         if( Ret != 1 ) {
             DPrintf("TSPReadCollisionChunk:Early failure when reading KDTree nodes.\n");
-            return;
+            return 0;
         }
     }
     TSP->CollisionData->FaceIndexList = malloc(TSP->CollisionData->Header.NumCollisionFaceIndex * sizeof(short));
     if( !TSP->CollisionData->FaceIndexList ) {
         DPrintf("TSPReadCollisionChunk:Failed to allocate memory for Face Index Array\n");
-        goto Failure;
+        return 0;
     }
     for( i = 0; i < TSP->CollisionData->Header.NumCollisionFaceIndex; i++ ) {
         Ret = fread(&TSP->CollisionData->FaceIndexList[i],sizeof(TSP->CollisionData->FaceIndexList[i]),1,InFile);
         if( Ret != 1 ) {
             DPrintf("TSPReadCollisionChunk:Early failure when reading Collison Face Index data.\n");
-            return;
+            return 0;
         }
 //         DPrintf("-- H %i at %i --\n",i,GetCurrentFilePosition(InFile));
 //         DPrintf("%i\n",TSP->CollisionData->H[i]);
@@ -2002,13 +2032,13 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     TSP->CollisionData->Vertex = malloc(TSP->CollisionData->Header.NumVertices * sizeof(TSPVert_t));
     if( !TSP->CollisionData->Vertex ) {
         DPrintf("TSPReadCollisionChunk:Failed to allocate memory for Vertex Array\n");
-        goto Failure;
+        return 0;
     }
     for( i = 0; i < TSP->CollisionData->Header.NumVertices; i++ ) {
         Ret = fread(&TSP->CollisionData->Vertex[i],sizeof(TSP->CollisionData->Vertex[i]),1,InFile);
         if( Ret != 1 ) {
             DPrintf("TSPReadCollisionChunk:Early failure when reading vertex data.\n");
-            return;
+            return 0;
         }
 //         DPrintf("-- Vertex %i --\n",i);
 //         PrintTSPVec3(TSP->CollisionData->Vertex[i].Position);
@@ -2019,13 +2049,13 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     TSP->CollisionData->Normal = malloc(TSP->CollisionData->Header.NumNormals * sizeof(TSPVert_t));
     if( !TSP->CollisionData->Normal ) {
         DPrintf("TSPReadCollisionChunk:Failed to allocate memory for Normal Array\n");
-        goto Failure;
+        return 0;
     }
     for( i = 0; i < TSP->CollisionData->Header.NumNormals; i++ ) {
         Ret = fread(&TSP->CollisionData->Normal[i],sizeof(TSP->CollisionData->Normal[i]),1,InFile);
         if( Ret != 1 ) {
             DPrintf("TSPReadCollisionChunk:Early failure when reading normal data.\n");
-            return;
+            return 0;
         }
         DPrintf("-- Normal %i --\n",i);
         DPrintf("%i;%i;%i\n",TSP->CollisionData->Normal[i].Position.x,TSP->CollisionData->Normal[i].Position.y,
@@ -2037,13 +2067,13 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     TSP->CollisionData->Face = malloc(TSP->CollisionData->Header.NumFaces * sizeof(TSPCollisionFace_t));
     if( !TSP->CollisionData->Face ) {
         DPrintf("TSPReadCollisionChunk:Failed to allocate memory for Face Array\n");
-        goto Failure;
+        return 0;
     }
     for( i = 0; i < TSP->CollisionData->Header.NumFaces; i++ ) {
         Ret = fread(&TSP->CollisionData->Face[i],sizeof(TSP->CollisionData->Face[i]),1,InFile);
         if( Ret != 1 ) {
             DPrintf("TSPReadCollisionChunk:Early failure when reading face data.\n");
-            return;
+            return 0;
         }
         DPrintf("-- Face %i --\n",i);
 //         DPrintf("V0|V1|V2:%u %u %u\n",TSP->CollisionData->Face[i].V0,TSP->CollisionData->Face[i].V1,TSP->CollisionData->Face[i].V2);
@@ -2054,24 +2084,7 @@ void TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
         DPrintf("Normal Index:%u\n",TSP->CollisionData->Face[i].NormalIndex);
 
     }
-    return;
-Failure:
-    if( TSP->CollisionData->KDTree ) {
-        free(TSP->CollisionData->KDTree);
-    }
-    if( TSP->CollisionData->FaceIndexList ) {
-        free(TSP->CollisionData->FaceIndexList);
-    }
-    if( TSP->CollisionData->Vertex ) {
-        free(TSP->CollisionData->Vertex);
-    }
-    if( TSP->CollisionData->Normal ) {
-        free(TSP->CollisionData->Normal);
-    }
-    if( TSP->CollisionData->Face ) {
-        free(TSP->CollisionData->Face);
-    }
-    return;
+    return 1;
 }
 
 TSPCollision_t *TSPGetCollisionDataFromPoint(TSP_t *TSPList,TSPVec3_t Point)
@@ -2263,25 +2276,31 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
     TSP_t *TSP;
     
     TSPFile = fopen(FName,"rb");
+    TSP = NULL;
     
     if( TSPFile == NULL ) {
         DPrintf("Failed opening TSP File %s.\n",FName);
-        return NULL;
+        goto Failure;
     }
     TSP = malloc(sizeof(TSP_t));
     
     if( !TSP ) {
         DPrintf("TSPLoad:Failed to allocate memory for TSP struct\n");
-        fclose(TSPFile);
-        return NULL;
+        goto Failure;
     }
+    TSP->Node = NULL;
+    TSP->CollisionData = NULL;
     TSP->VAOList = NULL;
     TSP->CollisionVAOList = NULL;
     TSP->Next = NULL;
     TSP->Number = TSPNumber;
     TSP->Face = NULL;
+    TSP->Vertex = NULL;
+    TSP->Color = NULL;
+    TSP->TextureData = NULL;
     TSP->TransparentFaceList = NULL;
     TSP->TransparentVAO = NULL;
+    TSP->DynamicData = NULL;
     TSP->FName = GetBaseName(FName);
     
     fread(&TSP->Header.Id,sizeof(TSP->Header.Id),1,TSPFile);
@@ -2328,26 +2347,46 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
     DPrintf("NumTextureInfo:%i TextureInfoOffset:%i\n",TSP->Header.NumTextureInfo,TSP->Header.TextureInfoOffset);
 
     assert(ftell(TSPFile) == TSP->Header.NodeOffset);
-    TSPReadNodeChunk(TSP,TSPFile);
+    if( !TSPReadNodeChunk(TSP,TSPFile) ) {
+        goto Failure;
+    }
     if( TSPIsVersion3(TSP) ) {
         fseek(TSPFile,TSP->Header.VertexOffset,SEEK_SET);
     } else {
         assert(ftell(TSPFile) == TSP->Header.FaceOffset);
-        TSPReadFaceChunk(TSP,TSPFile);
+        if( !TSPReadFaceChunk(TSP,TSPFile) ) {
+            goto Failure;
+        }
     }
     assert(ftell(TSPFile) == TSP->Header.VertexOffset);
-    TSPReadVertexChunk(TSP,TSPFile);
+    if( !TSPReadVertexChunk(TSP,TSPFile) ) {
+        goto Failure;
+    }
     assert(TSP->Header.NumB == 0);
     assert(ftell(TSPFile) == TSP->Header.ColorOffset);
-    TSPReadColorChunk(TSP,TSPFile);
+    if( !TSPReadColorChunk(TSP,TSPFile) ) {
+        goto Failure;
+    }
     assert(TSP->Header.NumC == 0);
-    TSPReadDynamicDataChunk(TSP,TSPFile);
+    if( !TSPReadDynamicDataChunk(TSP,TSPFile) ) {
+        goto Failure;
+    }
     if( TSPIsVersion3(TSP) ) {
         assert(ftell(TSPFile) == TSP->Header.TextureInfoOffset);
-        TSPReadTextureInfoChunk(TSP,TSPFile);
+        if( !TSPReadTextureInfoChunk(TSP,TSPFile) ) {
+            goto Failure;
+        }
     }
     assert(ftell(TSPFile) == TSP->Header.CollisionOffset);
-    TSPReadCollisionChunk(TSP,TSPFile);
+    if( !TSPReadCollisionChunk(TSP,TSPFile) ) {
+        goto Failure;
+    }
     fclose(TSPFile);
     return TSP;
+Failure:
+    TSPFree(TSP);
+    if( TSPFile ) {
+        fclose(TSPFile);
+    }
+    return NULL;
 }

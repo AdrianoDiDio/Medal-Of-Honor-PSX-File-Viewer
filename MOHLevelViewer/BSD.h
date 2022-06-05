@@ -373,7 +373,8 @@ typedef struct BSD_s {
     int          NumRenderObjectPoint;
     //Easy lookup to see if the camera is in that node position so that
     //we can update the TSPNumberRenderList.
-    BSDTSPStreamNode_t *TSPStreamNodeList;    
+    BSDTSPStreamNode_t *TSPStreamNodeList;  
+    
 } BSD_t;
 
 typedef struct Level_s Level_t;

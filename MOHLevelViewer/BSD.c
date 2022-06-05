@@ -492,21 +492,35 @@ void BSDFree(BSD_t *BSD)
     BSDAnimatedLight_t *AnimatedLight;
     int i;
     
+    if( !BSD ) {
+        return;
+    }
+    
     for( i = 0; i < BSD_ANIMATED_LIGHTS_TABLE_SIZE; i++ ) {
         AnimatedLight = &BSD->AnimatedLightsTable.AnimatedLightsList[i];
         if( AnimatedLight->NumColors == 0 ) {
             continue;
         }
-        free(AnimatedLight->ColorList);
+        if( AnimatedLight->ColorList ) {
+            free(AnimatedLight->ColorList);
+        }
     }
-    free(BSD->NodeData.Table);
-    free(BSD->NodeData.Node);
+    if( BSD->NodeData.Table ) {
+        free(BSD->NodeData.Table);
+    }
+    if( BSD->NodeData.Node ) {
+        free(BSD->NodeData.Node);
+    }
     
-    for( i = 0; i < BSD->PropertySetFile.NumProperties; i++ ) {
-        free(BSD->PropertySetFile.Property[i].NodeList);
+    if( BSD->PropertySetFile.Property ) {
+        for( i = 0; i < BSD->PropertySetFile.NumProperties; i++ ) {
+            free(BSD->PropertySetFile.Property[i].NodeList);
+        }
+        free(BSD->PropertySetFile.Property);
     }
-    free(BSD->PropertySetFile.Property);
-    free(BSD->RenderObjectTable.RenderObject);
+    if( BSD->RenderObjectTable.RenderObject ) {
+        free(BSD->RenderObjectTable.RenderObject);
+    }
     BSDRenderObjectListCleanUp(BSD);
 
     VAOFree(BSD->NodeVAO);
@@ -1212,9 +1226,7 @@ VAO_t *BSDCreateCylinderCollisionVAO()
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
     Radius = 1;
-    
-    CurrentSliceAngle = 0;
-    
+        
     CosineTable = malloc((NumSlice + 1) *sizeof(float));
     SineTable = malloc((NumSlice + 1) *sizeof(float));
     for(i = 0; i <= NumSlice; i++) {
@@ -2217,19 +2229,29 @@ void BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     }
     glDepthMask(1);
 }
-void ParseRenderObjectVertexData(BSD_t *BSD,FILE *BSDFile)
+int BSDParseRenderObjectVertexData(BSD_t *BSD,FILE *BSDFile)
 {
     int Size;
     int i;
     int j;
     
     BSD->RenderObjectList = malloc(BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObject_t));
+    if( !BSD->RenderObjectList ) {
+        DPrintf("BSDParseRenderObjectVertexData:Failed to allocate memory for RenderObjectList\n");
+        return 0;
+    }
     memset(BSD->RenderObjectList,0,BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObject_t));
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
+        BSD->RenderObjectList[i].Vertex = NULL;
+        BSD->RenderObjectList[i].Color = NULL;
         BSD->RenderObjectList[i].Data = &BSD->RenderObjectTable.RenderObject[i];
         if( BSD->RenderObjectList[i].Data->VertOffset != 0 ) {
             Size = BSD->RenderObjectList[i].Data->NumVertex * sizeof(BSDPosition_t);
             BSD->RenderObjectList[i].Vertex = malloc(Size);
+            if( !BSD->RenderObjectList[i].Vertex ) {
+                DPrintf("BSDParseRenderObjectVertexData:Failed to allocate memory for VertexData\n");
+                return 0;
+            } 
             memset(BSD->RenderObjectList[i].Vertex,0,Size);
             fseek(BSDFile,BSD->RenderObjectList[i].Data->VertOffset + 2048,SEEK_SET);
             DPrintf("Reading Vertex definition at %i (Current:%i)\n",
@@ -2247,6 +2269,10 @@ void ParseRenderObjectVertexData(BSD_t *BSD,FILE *BSDFile)
         if( BSD->RenderObjectList[i].Data->ColorOffset != 0 ) {
             Size = BSD->RenderObjectList[i].Data->NumVertex * sizeof(Color1i_t);
             BSD->RenderObjectList[i].Color = malloc(Size);
+            if( !BSD->RenderObjectList[i].Color ) {
+                DPrintf("BSDParseRenderObjectVertexData:Failed to allocate memory for ColorData\n");
+                return 0;
+            } 
             memset(BSD->RenderObjectList[i].Color,0,Size);
             fseek(BSDFile,BSD->RenderObjectList[i].Data->ColorOffset + 2048,SEEK_SET);
             DPrintf("Reading Color definition at %i (Current:%i)\n",
@@ -2262,10 +2288,10 @@ void ParseRenderObjectVertexData(BSD_t *BSD,FILE *BSDFile)
                 
             }
         }
-
     }
+    return 1;
 }
-void ParseRenderObjectFaceData(BSDRenderObject_t *RenderObject,FILE *BSDFile)
+int BSDParseRenderObjectFaceData(BSDRenderObject_t *RenderObject,FILE *BSDFile)
 {
     unsigned short LV0;
     unsigned short LV1;
@@ -2274,25 +2300,28 @@ void ParseRenderObjectFaceData(BSDRenderObject_t *RenderObject,FILE *BSDFile)
     int i;
     
     if( !RenderObject ) {
-        DPrintf("ParseRenderObjectFaceData:Invalid RenderObject!\n");
-        return;
+        DPrintf("BSDParseRenderObjectFaceData:Invalid RenderObject!\n");
+        return 0;
     }
     if( RenderObject->Data->FaceOffset == 0 ) {
-        DPrintf("ParseRenderObjectFaceData:Invalid FaceOffset!\n");
-        return;
+        DPrintf("BSDParseRenderObjectFaceData:Invalid FaceOffset!\n");
+        return 0;
     }
     
     fseek(BSDFile,RenderObject->Data->FaceOffset + 2048,SEEK_SET);
     fread(&RenderObject->NumFaces,sizeof(int),1,BSDFile);
-    DPrintf("ParseRenderObjectFaceData:Reading %i faces\n",RenderObject->NumFaces);
+    DPrintf("BSDParseRenderObjectFaceData:Reading %i faces\n",RenderObject->NumFaces);
     FaceListSize = RenderObject->NumFaces * sizeof(BSDFace_t);
     RenderObject->Face = malloc(FaceListSize);
+    if( !RenderObject->Face ) {
+        DPrintf("BSDParseRenderObjectFaceData:Failed to allocate memory for face array\n");
+        return 0;
+    }
     memset(RenderObject->Face,0,FaceListSize);
-    RenderObject->FaceV2 = NULL;
-    DPrintf("ParseRenderObjectFaceData:Reading Face definition at %i (Current:%i)\n",
+    DPrintf("BSDParseRenderObjectFaceData:Reading Face definition at %i (Current:%i)\n",
             RenderObject->Data->FaceOffset + 2048,GetCurrentFilePosition(BSDFile)); 
     for( i = 0; i < RenderObject->NumFaces; i++ ) {
-        DPrintf("ParseRenderObjectFaceData:Reading Face at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+        DPrintf("BSDParseRenderObjectFaceData:Reading Face at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
         fread(&RenderObject->Face[i],sizeof(BSDFace_t),1,BSDFile);
         DPrintf(" -- FACE %i --\n",i);
         DPrintf("Tex info %i | Color mode %i | Texture Page %i\n",RenderObject->Face[i].TexInfo,
@@ -2313,9 +2342,10 @@ void ParseRenderObjectFaceData(BSDRenderObject_t *RenderObject,FILE *BSDFile)
                 RenderObject->Vertex[LV1].x,RenderObject->Vertex[LV1].y,RenderObject->Vertex[LV1].z,
                 RenderObject->Vertex[LV2].x,RenderObject->Vertex[LV2].y,RenderObject->Vertex[LV2].z);
     }
+    return 1;
 }
 
-void ParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffset,FILE *BSDFile)
+int BSDParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffset,FILE *BSDFile)
 {
     int FaceListSize;
     int CurrentFaceIndex;
@@ -2326,23 +2356,26 @@ void ParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffset,
     BSDFaceV2_t TempFace;
     
     if( !RenderObject ) {
-        DPrintf("ParseRenderObjectFaceDataV2:Invalid RenderObject!\n");
-        return;
+        DPrintf("BSDParseRenderObjectFaceDataV2:Invalid RenderObject!\n");
+        return 0;
     }
     if( RenderObject->Data->FaceOffset == 0 ) {
-        DPrintf("ParseRenderObjectFaceDataV2:Invalid FaceOffset!\n");
-        return;
+        DPrintf("BSDParseRenderObjectFaceDataV2:Invalid FaceOffset!\n");
+        return 0;
     }
     fseek(BSDFile,FaceOffset,SEEK_SET);
     fread(&RenderObject->NumFaces,sizeof(RenderObject->NumFaces),1,BSDFile);
     fseek(BSDFile,RenderObject->Data->FaceOffset + 2048,SEEK_SET);
-    RenderObject->Face = NULL;
     FaceListSize = RenderObject->NumFaces * sizeof(BSDFaceV2_t);
     RenderObject->FaceV2 = malloc(FaceListSize);
+    if( !RenderObject->FaceV2 ) {
+        DPrintf("BSDParseRenderObjectFaceDataV2:Failed to allocate memory for face array\n");
+        return 0;
+    }
     memset(RenderObject->FaceV2,0,FaceListSize);
     CurrentFaceIndex = 0;
     while( CurrentFaceIndex < RenderObject->NumFaces ) {
-        DPrintf("ParseRenderObjectFaceDataV2:Reading Face at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);                                
+        DPrintf("BSDParseRenderObjectFaceDataV2:Reading Face at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);                                
         fread(&RenderObject->FaceV2[CurrentFaceIndex].V0V1,sizeof(RenderObject->FaceV2[CurrentFaceIndex].V0V1),1,BSDFile);
         fread(&RenderObject->FaceV2[CurrentFaceIndex].V2,sizeof(RenderObject->FaceV2[CurrentFaceIndex].V2),1,BSDFile);
         fread(&RenderObject->FaceV2[CurrentFaceIndex].UV0,sizeof(RenderObject->FaceV2[CurrentFaceIndex].UV0),1,BSDFile);
@@ -2376,11 +2409,11 @@ void ParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffset,
         TempFace.UV2 = RenderObject->FaceV2[CurrentFaceIndex].UV2;
         CurrentFaceIndex++;
         while( 1 ) {
-            DPrintf("ParseRenderObjectFaceDataV2:Reading additional face %i \n",CurrentFaceIndex);
+            DPrintf("BSDParseRenderObjectFaceDataV2:Reading additional face %i \n",CurrentFaceIndex);
             fread(&Marker,sizeof(Marker),1,BSDFile);
-            DPrintf("ParseRenderObjectFaceDataV2:Found Marker %u (Vertex %i) Texture:%u Mask %i\n",Marker,Marker & 0x1FFF,Marker >> 16,0x1FFF);
+            DPrintf("BSDParseRenderObjectFaceDataV2:Found Marker %u (Vertex %i) Texture:%u Mask %i\n",Marker,Marker & 0x1FFF,Marker >> 16,0x1FFF);
             if( ( Marker & 0x1FFF ) == 0x1FFF || Marker == 0x1fff1fff ) {
-                DPrintf("ParseRenderObjectFaceDataV2:Aborting since a marker was found\n");
+                DPrintf("BSDParseRenderObjectFaceDataV2:Aborting since a marker was found\n");
                 break;
             }
             RenderObject->FaceV2[CurrentFaceIndex].TexInfo = TempFace.TexInfo;
@@ -2410,25 +2443,26 @@ void ParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffset,
             RenderObject->FaceV2[CurrentFaceIndex].UV2.u = TempFace.UV2.u;
             RenderObject->FaceV2[CurrentFaceIndex].UV2.v = TempFace.UV2.v;
 
-            DPrintf("ParseRenderObjectFaceDataV2:Vert0:%i Vert1:%i Vert2:%i Additional Face %i\n",TempFace.Vert0,TempFace.Vert1,
+            DPrintf("BSDParseRenderObjectFaceDataV2:Vert0:%i Vert1:%i Vert2:%i Additional Face %i\n",TempFace.Vert0,TempFace.Vert1,
                     TempFace.Vert2,RenderObject->FaceV2[CurrentFaceIndex].V2 >> 16);
             CurrentFaceIndex++;
         }
         if( Marker == 0x1fff1fff ) {
-            DPrintf("ParseRenderObjectFaceDataV2:Sentinel Face found Done reading faces for renderobject %i\n",RenderObject->Data->Id);
-            DPrintf("ParseRenderObjectFaceDataV2:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,RenderObject->NumFaces);
+            DPrintf("BSDParseRenderObjectFaceDataV2:Sentinel Face found Done reading faces for renderobject %i\n",RenderObject->Data->Id);
+            DPrintf("BSDParseRenderObjectFaceDataV2:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,RenderObject->NumFaces);
             assert(CurrentFaceIndex == RenderObject->NumFaces);
             break;
         }
     }
+    return 1;
 }
-void LoadRenderObjectsFaceData(BSD_t *BSD,int RenderObjectDataOffset,int GameEngine,FILE *BSDFile)
+int BSDLoadRenderObjectsFaceData(BSD_t *BSD,int RenderObjectDataOffset,int GameEngine,FILE *BSDFile)
 {
     int FaceOffset;
     int i;
     if( !BSD->RenderObjectList ) {
-        DPrintf("LoadRenderObjectsFaceData:Object list is empty...\n");
-        return;
+        DPrintf("BSDLoadRenderObjectsFaceData:Object list is empty...\n");
+        return 0;
     }
     assert(sizeof(BSDFace_t) == 16);
 
@@ -2436,14 +2470,21 @@ void LoadRenderObjectsFaceData(BSD_t *BSD,int RenderObjectDataOffset,int GameEng
         if( BSD->RenderObjectList[i].Data->FaceOffset == 0 ) {
             continue;
         }
-        DPrintf("LoadRenderObjectsFaceData:RenderObject Id %u\n",BSD->RenderObjectList[i].Data->Id);
+        DPrintf("BSDLoadRenderObjectsFaceData:RenderObject Id %u\n",BSD->RenderObjectList[i].Data->Id);
+        BSD->RenderObjectList[i].Face = NULL;
+        BSD->RenderObjectList[i].FaceV2 = NULL;
         if( GameEngine == MOH_GAME_UNDERGROUND ) {
             FaceOffset = ( RenderObjectDataOffset + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) ) + 260;
-            ParseRenderObjectFaceDataV2(&BSD->RenderObjectList[i],FaceOffset,BSDFile);
+            if( !BSDParseRenderObjectFaceDataV2(&BSD->RenderObjectList[i],FaceOffset,BSDFile) ) {
+                return 0;
+            }
         } else {
-            ParseRenderObjectFaceData(&BSD->RenderObjectList[i],BSDFile);
+            if( !BSDParseRenderObjectFaceData(&BSD->RenderObjectList[i],BSDFile) ) {
+                return 0;
+            }
         }
     }
+    return 1;
 }
 
 /*
@@ -2456,7 +2497,7 @@ void LoadRenderObjectsFaceData(BSD_t *BSD,int RenderObjectDataOffset,int GameEng
     
 */
 
-void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
+int BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
 {
     int PreviousFilePosition;
     int PropertySetFileOffset;
@@ -2466,7 +2507,7 @@ void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
     if( !BSD || !BSDFile ) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         DPrintf("BSDReadPropertySetFile: Invalid %s\n",InvalidFile ? "file" : "bsd");
-        return;
+        return 0;
     }
     
     PreviousFilePosition = GetCurrentFilePosition(BSDFile);
@@ -2474,7 +2515,7 @@ void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
     fread(&PropertySetFileOffset,sizeof(PropertySetFileOffset),1,BSDFile);
     if( PropertySetFileOffset == 0 ) {
         DPrintf("BSDReadPropertySetFile:BSD File has no property file set.\n");
-        return;
+        return 0;
     }
     fseek(BSDFile,sizeof(BSDHeader_t) + PropertySetFileOffset,SEEK_SET);
     fread(&BSD->PropertySetFile.NumProperties,sizeof(BSD->PropertySetFile.NumProperties),1,BSDFile);
@@ -2482,6 +2523,10 @@ void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
             GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
     BSD->PropertySetFile.NumProperties++;
     BSD->PropertySetFile.Property = malloc(sizeof(BSDProperty_t) * BSD->PropertySetFile.NumProperties);
+    if( !BSD->PropertySetFile.Property ) {
+        DPrintf("BSDReadPropertySetFile:Couldn't allocate memory for Property array\n");
+        return 0;
+    }
     for( i = 0; i < BSD->PropertySetFile.NumProperties; i++ ) {
         DPrintf("BSDReadPropertySetFile:Reading property %i at %i (%i)\n",i,GetCurrentFilePosition(BSDFile),
             GetCurrentFilePosition(BSDFile) - 2048
@@ -2492,6 +2537,10 @@ void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
         
         SkipFileSection(1,BSDFile);
         BSD->PropertySetFile.Property[i].NodeList = malloc(BSD->PropertySetFile.Property[i].NumNodes * sizeof(unsigned short));
+        if( !BSD->PropertySetFile.Property[i].NodeList ) {
+            DPrintf("BSDReadPropertySetFile:Couldn't allocate memory for Property node array\n");
+            return 0;
+        }
         DPrintf("BSDReadPropertySetFile:Reading %li bytes.\n",BSD->PropertySetFile.Property[i].NumNodes * sizeof(unsigned short));
         for( j = 0; j <  BSD->PropertySetFile.Property[i].NumNodes; j++ ) {
             fread(&BSD->PropertySetFile.Property[i].NodeList[j],sizeof(BSD->PropertySetFile.Property[i].NodeList[j]),1,BSDFile);
@@ -2501,6 +2550,7 @@ void BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
     }
     DPrintf("BSDReadPropertySetFile:Property end at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
     fseek(BSDFile,PreviousFilePosition,SEEK_SET);
+    return 1;
 }
 
 int BSDGetTSPDynamicIndexOffsetFromNodeType(int Type)
@@ -2516,7 +2566,7 @@ int BSDGetTSPDynamicIndexOffsetFromNodeType(int Type)
             return -1;
     }
 }
-void BSDReadAnimatedLightChunk(BSD_t *BSD,FILE *BSDFile)
+int BSDReadAnimatedLightChunk(BSD_t *BSD,FILE *BSDFile)
 {
     BSDAnimatedLight_t *AnimatedLight;
     int i;
@@ -2526,7 +2576,7 @@ void BSDReadAnimatedLightChunk(BSD_t *BSD,FILE *BSDFile)
     if( !BSD || !BSDFile ) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         printf("BSDReadAnimatedLightChunk: Invalid %s\n",InvalidFile ? "file" : "BSD struct");
-        return;
+        return 0;
     }
     
     assert((GetCurrentFilePosition(BSDFile) - 2048) == BSD_ANIMATED_LIGHTS_FILE_POSITION);
@@ -2546,6 +2596,10 @@ void BSDReadAnimatedLightChunk(BSD_t *BSD,FILE *BSDFile)
         }
         AnimatedLight->LastUpdateTime = 0;
         AnimatedLight->ColorList = malloc(AnimatedLight->NumColors * sizeof(Color1i_t));
+        if( !AnimatedLight->ColorList ) {
+            DPrintf("BSDReadAnimatedLightChunk:Failed to allocate memory for Color List\n");
+            return 0;
+        }
         DPrintf("Animated Light: %i\n",i);
         DPrintf("StartingColorOffset:%i\n",AnimatedLight->StartingColorOffset);
         DPrintf("StartingColorOffset No Header:%i\n",AnimatedLight->StartingColorOffset + 2048);
@@ -2565,14 +2619,15 @@ void BSDReadAnimatedLightChunk(BSD_t *BSD,FILE *BSDFile)
         fseek(BSDFile,PreviousFilePosition,SEEK_SET);
     }
     DPrintf("AnimatedLightsTable ends at %i\n",GetCurrentFilePosition(BSDFile));
+    return 1;
 }
 
-void BSDReadEntryTableChunk(BSD_t *BSD,FILE *BSDFile)
+int BSDReadEntryTableChunk(BSD_t *BSD,FILE *BSDFile)
 {    
     if( !BSD || !BSDFile ) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         printf("BSDReadEntryTableChunk: Invalid %s\n",InvalidFile ? "file" : "BSD struct");
-        return;
+        return 0;
     }
     DPrintf("EntryTable is at %i\n",GetCurrentFilePosition(BSDFile));
     assert((GetCurrentFilePosition(BSDFile) - 2048) == BSD_ENTRY_TABLE_FILE_POSITION);
@@ -2590,14 +2645,15 @@ void BSDReadEntryTableChunk(BSD_t *BSD,FILE *BSDFile)
     DPrintf("Data6 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off6,BSD->EntryTable.Off6 + 2048,BSD->EntryTable.Num6);
     DPrintf("Data7 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off7,BSD->EntryTable.Off7 + 2048,BSD->EntryTable.Num7);
     DPrintf("Data8 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off8,BSD->EntryTable.Off8 + 2048,BSD->EntryTable.Num8);
+    return 1;
 }
 
-void BSDReadSkyChunk(BSD_t *BSD,FILE *BSDFile)
+int BSDReadSkyChunk(BSD_t *BSD,FILE *BSDFile)
 {    
     if( !BSD || !BSDFile ) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         printf("BSDReadSkyChunk: Invalid %s\n",InvalidFile ? "file" : "BSD struct");
-        return;
+        return 0;
     }
 
     assert((GetCurrentFilePosition(BSDFile)  - 2048) == BSD_SKY_DATA_FILE_POSITION);
@@ -2614,9 +2670,10 @@ void BSDReadSkyChunk(BSD_t *BSD,FILE *BSDFile)
     
     DPrintf("MoonY:%i MoonZ:%i\n",BSD->SkyData.MoonY,BSD->SkyData.MoonZ);
     DPrintf("Star Radius:%i\n",BSD->SkyData.StarRadius);
+    return 1;
 }
 
-void BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
+int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
 {
     int FirstRenderObjectPosition;
     int PreviousFilePosition;
@@ -2625,7 +2682,7 @@ void BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
     if( !BSD || !BSDFile ) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         printf("BSDReadRenderObjectChunk: Invalid %s\n",InvalidFile ? "file" : "BSD struct");
-        return;
+        return 0;
     }
     
     fread(&BSD->RenderObjectTable.NumRenderObject,sizeof(BSD->RenderObjectTable.NumRenderObject),1,BSDFile);
@@ -2636,6 +2693,10 @@ void BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
     assert(sizeof(BSDRenderObjectElement_t) == MOH_RENDER_OBJECT_SIZE);
     
     BSD->RenderObjectTable.RenderObject = malloc(BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObjectElement_t));
+    if( !BSD->RenderObjectTable.RenderObject ) {
+        DPrintf("BSDReadRenderObjectChunk:Failed to allocate memory for RenderObject Array\n");
+        return 0;
+    }
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
         if( GameEngine == MOH_GAME_UNDERGROUND ) {
             assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectPosition + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE));
@@ -2684,9 +2745,14 @@ void BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
     }
     // Prepare vertices to be rendered!
     PreviousFilePosition = ftell(BSDFile);
-    ParseRenderObjectVertexData(BSD,BSDFile);
-    LoadRenderObjectsFaceData(BSD,FirstRenderObjectPosition,GameEngine,BSDFile);
+    if( !BSDParseRenderObjectVertexData(BSD,BSDFile) ) {
+        return 0;
+    }
+    if( !BSDLoadRenderObjectsFaceData(BSD,FirstRenderObjectPosition,GameEngine,BSDFile) ) {
+        return 0;
+    }
     fseek(BSDFile,PreviousFilePosition,SEEK_SET);
+    return 1;
 }
 
 void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFilePosition,FILE *BSDFile)
@@ -2818,7 +2884,7 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFile
         DPrintf("Zero Offset.\n");
     }
 }
-void BSDReadNodeChunk(BSD_t *BSD,int IsMultiplayer,FILE *BSDFile)
+int BSDReadNodeChunk(BSD_t *BSD,int IsMultiplayer,FILE *BSDFile)
 {
     int NodeFilePosition;
     int NodeTableEnd;
@@ -2828,7 +2894,7 @@ void BSDReadNodeChunk(BSD_t *BSD,int IsMultiplayer,FILE *BSDFile)
     if( !BSD || !BSDFile ) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         printf("BSDReadNodeTableChunk: Invalid %s\n",InvalidFile ? "file" : "BSD struct");
-        return;
+        return 0;
     }
     assert( GetCurrentFilePosition(BSDFile) == (BSD->EntryTable.NodeTableOffset + 2048));
     DPrintf("BSDReadNodeTableChunk:Reading node table at %i...\n",GetCurrentFilePosition(BSDFile));
@@ -2840,6 +2906,10 @@ void BSDReadNodeChunk(BSD_t *BSD,int IsMultiplayer,FILE *BSDFile)
     DPrintf("U4: %i\n",BSD->NodeData.Header.u4);
     DPrintf("U5: %i\n",BSD->NodeData.Header.u5);
     BSD->NodeData.Table = malloc(BSD->NodeData.Header.NumNodes * sizeof(BSDNodeTableEntry_t));
+    if( !BSD->NodeData.Table ) {
+        DPrintf("BSDReadNodeChunk:Failed to allocate memory for node table\n");
+        return 0;
+    }
     DPrintf("BSDReadNodeTableChunk:Nodetable starts at %i\n",GetCurrentFilePosition(BSDFile));
     for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
         fread(&BSD->NodeData.Table[i],sizeof(BSD->NodeData.Table[i]),1,BSDFile);
@@ -2854,6 +2924,10 @@ void BSDReadNodeChunk(BSD_t *BSD,int IsMultiplayer,FILE *BSDFile)
     //TODO:Load each node entry one by one (not using a single fread) since
     //     there are many types of node that contains different data...
     BSD->NodeData.Node = malloc(BSD->NodeData.Header.NumNodes * sizeof(BSDNode_t));
+    if( !BSD->NodeData.Node ) {
+        DPrintf("BSDReadNodeChunk:Failed to allocate memory for node array\n");
+        return 0;
+    }
     for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
         NodeFilePosition = GetCurrentFilePosition(BSDFile);
         DPrintf(" -- NODE %i (Pos %i PosNoHeader %i)-- \n",i,NodeFilePosition,NodeFilePosition - 2048);
@@ -2873,6 +2947,7 @@ void BSDReadNodeChunk(BSD_t *BSD,int IsMultiplayer,FILE *BSDFile)
         NextNodeOffset = NodeFilePosition + BSD->NodeData.Node[i].Size;
         fseek(BSDFile,NextNodeOffset,SEEK_SET);
     }
+    return 1;
 }
 
 int BSDLoad(BSD_t *BSD,int GameEngine,int IsMultiplayer,FILE *BSDFile)
@@ -2884,7 +2959,9 @@ int BSDLoad(BSD_t *BSD,int GameEngine,int IsMultiplayer,FILE *BSDFile)
     BSDAnimatedLight_t *AnimatedLight;
     
     fread(&BSD->Unknown,sizeof(BSD->Unknown),1,BSDFile);
-    BSDReadAnimatedLightChunk(BSD,BSDFile);
+    if( !BSDReadAnimatedLightChunk(BSD,BSDFile) ) {
+        return 0;
+    }
     //This section seems unused and should be constant in size (320 bytes).
     //TODO:Remove this useless code and just jump 320 bytes...
     MemBegin = GetCurrentFilePosition(BSDFile);
@@ -2901,16 +2978,22 @@ int BSDLoad(BSD_t *BSD,int GameEngine,int IsMultiplayer,FILE *BSDFile)
     //This file section of 80 bytes contains the begin/end offset of some entries.
     //Like the NodeListTableStart/NodeListEnd after the header (+2048).
     //We can have a max of 20 offsets or 10 Begin/End Definitions.
-    BSDReadEntryTableChunk(BSD,BSDFile);
+    if( !BSDReadEntryTableChunk(BSD,BSDFile) ) {
+        return 0;
+    }
     
-    BSDReadSkyChunk(BSD,BSDFile);
+    if( !BSDReadSkyChunk(BSD,BSDFile) ) {
+        return 0;
+    }
     
     if( GameEngine == MOH_GAME_UNDERGROUND ) {
         SkipFileSection(16,BSDFile);
     }
     
     DPrintf("Current Position after entries is %i\n",GetCurrentFilePosition(BSDFile));
-    BSDReadRenderObjectChunk(BSD,GameEngine,BSDFile);
+    if( !BSDReadRenderObjectChunk(BSD,GameEngine,BSDFile) ) {
+        return 0;
+    }
     DPrintf("Current Position after RenderObject Table is: %i\n",GetCurrentFilePosition(BSDFile));
     //NOTE(Adriano):Altough we are able to load all the animated lights and grab the color data from there, BSD files are not meant to be read
     //              sequentially, this means that we need to skip a certain amount of bytes which corresponds to the area pointed 
@@ -2924,8 +3007,12 @@ int BSDLoad(BSD_t *BSD,int GameEngine,int IsMultiplayer,FILE *BSDFile)
         SkipFileSection(Jump,BSDFile);
     }
     DPrintf("Current Position after Color List Block is: %i\n",GetCurrentFilePosition(BSDFile));
-    BSDReadNodeChunk(BSD,IsMultiplayer,BSDFile);
-    BSDReadPropertySetFile(BSD,BSDFile);
+    if( !BSDReadNodeChunk(BSD,IsMultiplayer,BSDFile) ) {
+        return 0;
+    }
+    if( !BSDReadPropertySetFile(BSD,BSDFile) ) {
+        return 0;
+    }
     fclose(BSDFile);
     return 1;
 }
@@ -2950,6 +3037,12 @@ FILE *BSDEarlyInit(BSD_t **BSD,const char *MissionPath,int MissionNumber,int Lev
     }
     LocalBSD = malloc(sizeof(BSD_t));
     
+    if( !LocalBSD ) {
+        DPrintf("BSDEarlyInit:Failed allocating memory for BSD data\n");
+        fclose(BSDFile);
+        return NULL;
+    }
+    
     LocalBSD->TSPStreamNodeList = NULL;
 //     BSD->RenderObjectRealList = NULL;
     LocalBSD->RenderObjectList = NULL;
@@ -2961,6 +3054,15 @@ FILE *BSDEarlyInit(BSD_t **BSD,const char *MissionPath,int MissionNumber,int Lev
     LocalBSD->NumRenderObjectPoint = 0;
     LocalBSD->SkyData.MoonVAO = NULL;
     LocalBSD->SkyData.StarsVAO = NULL;
+    
+    LocalBSD->NodeData.Table = NULL;
+    LocalBSD->NodeData.Node = NULL;
+    
+    LocalBSD->PropertySetFile.Property = NULL;
+    
+    for( i = 0; i < BSD_ANIMATED_LIGHTS_TABLE_SIZE; i++ ) {
+        LocalBSD->AnimatedLightsTable.AnimatedLightsList[i].ColorList = NULL;
+    }
 
     
     assert(sizeof(LocalBSD->Header) == 2048);

@@ -245,7 +245,9 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
     GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Loading BSD");
     //Step.4 Resume loading the BSD after we successfully loaded the TSP.
     DPrintf("LevelInit: Detected game %s\n",LocalGameEngine == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
-    BSDLoad(Level->BSD,LocalGameEngine,IsMultiplayer,BSDFile);
+    if( !BSDLoad(Level->BSD,LocalGameEngine,IsMultiplayer,BSDFile) ) {
+        goto Failure;
+    }
     GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Loading VRAM");
     Level->VRAM = VRAMInit(Level->ImageList);
     GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Loading Font");
