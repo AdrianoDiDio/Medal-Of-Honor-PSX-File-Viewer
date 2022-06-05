@@ -176,7 +176,6 @@ void GUIToggleLevelSelectWindow(GUI_t *GUI)
 {
     GUI->LevelSelectWindowHandle = !GUI->LevelSelectWindowHandle;
     GUIToggleHandle(GUI,GUI->LevelSelectWindowHandle);
-
 }
 void GUIBeginFrame()
 {
@@ -613,13 +612,12 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *Vid
                     if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
                         if( LevelManagerLoadLevel(LevelManager,GUI,VideoSystem,SoundSystem,
                                               Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber) ) {
-                            //Close it if we selected a level.
+                            //Close it if we selected a level and it was loaded properly.
                             GUI->LevelSelectWindowHandle = 0;
                         } else {
                             FailedMissionNumber = i;
                             FailedLevelNumber = j;
                             igOpenPopup_Str("Load Level Error",0);
-                            GUIPushWindow(GUI);
                         }
                     }
                 }
@@ -630,9 +628,8 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *Vid
             GUIPrepareModalWindow();
             if( igBeginPopupModal("Load Level Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
                 assert(FailedMissionNumber != -1 && FailedLevelNumber != -1 );
-                igText("Failed to load the level \"%s\"",Missions[FailedMissionNumber].Levels[FailedLevelNumber].LevelName);
+                igText("Failed to load level \"%s\"",Missions[FailedMissionNumber].Levels[FailedLevelNumber].LevelName);
                 if (igButton("OK", ButtonSize) ) {
-                    GUIPopWindow(GUI);
                     igCloseCurrentPopup(); 
                 }
                 igEndPopup();

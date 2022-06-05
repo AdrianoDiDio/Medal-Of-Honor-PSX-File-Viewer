@@ -105,11 +105,20 @@ Byte *TIMExpandCLUTImageData(TIMImage_t *Image)
     int x;
     int y;
     int WritePointer;
+    
+    if( !Image ) {
+        DPrintf("TIMExpandCLUTImageData:Invalid Image\n");
+        return NULL;
+    }
     if( Image->Header.BPP != BPP_4 && Image->Header.BPP != BPP_8 ) {
         DPrintf("TIMExpandCLUTImageData:Cannot expand CLUT data on a non-paletted image.\n");
         return NULL;
     }
     Data = malloc(Image->Width * Image->Height );
+    if( !Data ) {
+        DPrintf("TIMExpandCLUTImageData:Couldn't allocate memory for image.\n");
+        return NULL;
+    }
     WritePointer = 0;
     if( Image->Header.BPP == BPP_8  ) {
         for (y = 0; y < Image->Height; y++) {
@@ -145,7 +154,17 @@ Byte *TIMToOpenGL32(TIMImage_t *Image)
     int y;
     int xOffs;
     
+    if( !Image ) {
+        DPrintf("TIMToOpenGL32:Invalid Image\n");
+        return NULL;
+    }
+    
     Data = malloc(Image->Width * Image->Height * 4);
+    
+    if( !Data ) {
+        DPrintf("TIMToOpenGL32:Couldn't allocate memory for image.\n");
+        return NULL;
+    }
 
     if( Image->Header.BPP == BPP_8  ) {
         for (y = 0; y < Image->Height; y++) {
@@ -222,8 +241,18 @@ Byte *TIMToOpenGL24(TIMImage_t *Image)
     int y;
     int xOffs;
     
+    if( !Image ) {
+        DPrintf("TIMToOpenGL24:Invalid Image\n");
+        return NULL;
+    }
+    
     Data = malloc(Image->Width * Image->Height * 3);
-
+    
+    if( !Data ) {
+        DPrintf("TIMToOpenGL24:Couldn't allocate memory for image.\n");
+        return NULL;
+    }
+    
     if( Image->Header.BPP == BPP_8  ) {
         for (y = 0; y < Image->Height; y++) {
             xOffs = 0;
@@ -444,23 +473,26 @@ void WritePNGImage(char *OutName,TIMImage_t *Image)
     fclose(PNGImage);
 }
 
-void GetPalette(FILE *TIMIMage,TIMImage_t *Image)
+void TIMGetPalette(FILE *TIMIMage,TIMImage_t *Image)
 {
     unsigned short i;
     
     fread(&Image->Header.CLUTSize,sizeof(Image->Header.CLUTSize),1,TIMIMage);
     fread(&Image->Header.CLUTOrgX,sizeof(Image->Header.CLUTOrgX),1,TIMIMage);
     fread(&Image->Header.CLUTOrgY,sizeof(Image->Header.CLUTOrgY),1,TIMIMage);
-    fread(&Image->Header.NumClutColors,sizeof(Image->Header.NumClutColors),1,TIMIMage);
-    fread(&Image->Header.NumCluts,sizeof(Image->Header.NumCluts),1,TIMIMage);
+    fread(&Image->Header.NumCLUTColors,sizeof(Image->Header.NumCLUTColors),1,TIMIMage);
+    fread(&Image->Header.NumCLUTs,sizeof(Image->Header.NumCLUTs),1,TIMIMage);
 
-    
-    DPrintf("ClutSize is %i\n",Image->Header.CLUTSize);
-    DPrintf("ClutLocation is %ux%u\n",Image->Header.CLUTOrgX,Image->Header.CLUTOrgY);
-    DPrintf("NumClutColors is %u\n",Image->Header.NumClutColors);
-    DPrintf("NumCluts is %u\n",Image->Header.NumCluts);
-    Image->CLUT = malloc(Image->Header.NumClutColors * sizeof(unsigned short));
-    for( i = 0; i < Image->Header.NumClutColors; i++ ) {
+    DPrintf("CLUTSize is %i\n",Image->Header.CLUTSize);
+    DPrintf("CLUTLocation is %ux%u\n",Image->Header.CLUTOrgX,Image->Header.CLUTOrgY);
+    DPrintf("NumCLUTColors is %u\n",Image->Header.NumCLUTColors);
+    DPrintf("NumCLUTs is %u\n",Image->Header.NumCLUTs);
+    Image->CLUT = malloc(Image->Header.NumCLUTColors * sizeof(unsigned short));
+    if( !Image->CLUT ) {
+        DPrintf("TIMGetPalette:Failed to allocate memory for CLUT data\n");
+        return;
+    }
+    for( i = 0; i < Image->Header.NumCLUTColors; i++ ) {
         fread(&Image->CLUT[i],sizeof(Image->CLUT[i]),1,TIMIMage);
     }
 }
@@ -474,6 +506,11 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     int i;
 
     ResultImage = malloc(sizeof(TIMImage_t));
+    
+    if( !ResultImage ) {
+        DPrintf("TIMLoadImage:Failed to allocate memory for image\n");
+        return NULL;
+    }
     
     Ret = fread(&ResultImage->Header.Magic,sizeof(ResultImage->Header.Magic),1,TIMImage);
     if( Ret != 1 ) {
@@ -534,7 +571,7 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     }
     
     if( ResultImage->Header.BPP == BPP_4 || ResultImage->Header.BPP == BPP_8 ) {
-        GetPalette(TIMImage,ResultImage);
+        TIMGetPalette(TIMImage,ResultImage);
     } else {
         ResultImage->CLUT = NULL;
     }
@@ -566,6 +603,11 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     DPrintf("Image is %ux%u RowCount is %u\n",ResultImage->Width,ResultImage->Height,ResultImage->RowCount);
 
     ResultImage->Data = malloc((ResultImage->RowCount * ResultImage->Height) * sizeof(unsigned short));
+    if( !ResultImage->Data ) {
+        DPrintf("TIMLoadImage:Failed to allocate memory for image data\n");
+        free(ResultImage);
+        return NULL;
+    }
     for( i = 0; i < ResultImage->RowCount * ResultImage->Height; i++ ) {
         Ret = fread(&ResultImage->Data[i],sizeof(ResultImage->Data[i]),1,TIMImage);
         assert(Ret == 1);

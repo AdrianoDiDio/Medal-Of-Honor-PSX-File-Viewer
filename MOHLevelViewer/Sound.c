@@ -184,7 +184,7 @@ float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
     int  n;
     
     if( !VBFile ) {
-        DPrintf("SoundSystemLoadVBFile:Invalid file\n");
+        DPrintf("SoundSystemConvertADPCMToPCM:Invalid file\n");
         return NULL;
     }
 
@@ -200,6 +200,10 @@ float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
     //Size depends from the number of channels (in this case is 2).
     Size = *NumFrames * 2 * sizeof(float);
     Result = malloc(Size);
+    if( !Result ) {
+        DPrintf("SoundSystemConvertADPCMToPCM:Couldn't allocate memory for PCM data\n");
+        return NULL;
+    }
     NumWrittenBytes = 0;
     for( i = 0; i < NumTotalSample; i++ ) {
         fread(&Header,sizeof(Header),1,VBFile);

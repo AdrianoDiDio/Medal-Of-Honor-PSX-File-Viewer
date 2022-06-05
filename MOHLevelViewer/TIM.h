@@ -36,8 +36,8 @@ typedef struct TIMHeader_s {
     unsigned int CLUTSize;
     unsigned short CLUTOrgX; // Hard-Wired clut memory location.
     unsigned short CLUTOrgY; // Hard-Wired clut memory location.
-    unsigned short NumClutColors;
-    unsigned short NumCluts;
+    unsigned short NumCLUTColors;
+    unsigned short NumCLUTs;
 } TIMHeader_t;
 
 typedef struct TIMImage_s {

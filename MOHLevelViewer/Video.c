@@ -161,6 +161,10 @@ void VideoSystemGetAvailableVideoModes(VideoSystem_t *VideoSystem)
     //NOTE(Adriano):We are forcing this to display 0.
     NumAvailableVideoModes = SDL_GetNumDisplayModes(0);
     VideoSystem->VideoModeList = malloc(NumAvailableVideoModes * sizeof(VideoMode_t));
+    if( !VideoSystem->VideoModeList ) {
+        DPrintf("VideoSystemGetAvailableVideoModes:Unable to allocate memory for video mode list.\n");
+        return;
+    }
     //Pickup the maximum supported resolution as the default one.
     VideoSystem->CurrentVideoMode = 0;
     for( i = 0; i < NumAvailableVideoModes; i++ ) {

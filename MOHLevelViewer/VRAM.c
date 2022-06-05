@@ -258,8 +258,8 @@ void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
 
     SrcRect.x = DestX;
     SrcRect.y = DestY;
-    SrcRect.w = Image->Header.NumClutColors;
-    SrcRect.h = Image->Header.NumCluts;
+    SrcRect.w = Image->Header.NumCLUTColors;
+    SrcRect.h = Image->Header.NumCLUTs;
     if( Image->Header.BPP == BPP_4 ) {
         if( SrcRect.w > 16 ) {
             SrcRect.w = 16;

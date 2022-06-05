@@ -66,7 +66,7 @@ LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSyst
 int             LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
                                       int MissionNumber,int LevelNumber);
 void            LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,SoundSystem_t *SoundSystem,int SoundValue);
-int             LevelManagerIsLevelLoaded(LevelManager_t *LevelManager);
+int             LevelManagerIsLevelLoaded(const LevelManager_t *LevelManager);
 int             LevelManagerGetGameEngine(LevelManager_t *LevelManager);
 int             LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
                                          const char *Path);

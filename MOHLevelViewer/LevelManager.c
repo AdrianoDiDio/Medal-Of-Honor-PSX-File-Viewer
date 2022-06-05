@@ -406,7 +406,7 @@ int NumMOHUMissions = sizeof(MOHUMissionsList) / sizeof(MOHUMissionsList[0]);
 
 Config_t *LevelManagerBasePath;
 
-int LevelManagerIsLevelLoaded(LevelManager_t *LevelManager)
+int LevelManagerIsLevelLoaded(const LevelManager_t *LevelManager)
 {
     if( !LevelManager ) {
         DPrintf("LevelManagerIsLevelLoaded:Called without a valid LevelManager\n");
@@ -686,7 +686,7 @@ void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t *V
     GUIFileDialogOpenWithUserData(GUI,LevelManager->ExportFileDialog,Exporter);
 }
 
-void LevelManagerSpawnCamera(LevelManager_t *LevelManager,Camera_t *Camera)
+void LevelManagerSpawnCamera(const LevelManager_t *LevelManager,Camera_t *Camera)
 {
     vec3 Position;
     vec3 Rotation;

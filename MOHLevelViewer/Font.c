@@ -98,6 +98,11 @@ void FontLoadChar(Font_t *Font,const VRAM_t *VRAM,int CharIndex,float RowX,float
     TexHeight = ((float)MOH_FONT_CHAR_HEIGHT) / ImageHeight;
     
     VertexData = malloc(FontGetStride() * 6/** sizeof(float)*/);
+    
+    if( !VertexData ) {
+        DPrintf("FontLoadChar:Couldn't allocate memory for vertex data.\n");
+        return;
+    }
     VertexPointer = 0;
     
     x = 0;

@@ -189,6 +189,9 @@ char *SwitchExt(const char *In, const char *Ext)
         StrippedFileNameLength = strlen(In);
     }
     NewExt = malloc(StrippedFileNameLength + strlen(Ext) + 1);
+    if( !NewExt ) {
+        return NULL;
+    }
     strncpy(NewExt,In,StrippedFileNameLength);
     NewExt[StrippedFileNameLength] = '\0';
     //Now append the extension to the string.

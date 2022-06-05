@@ -28,9 +28,6 @@ typedef struct Shader_s
     struct Shader_s *Next;
 } Shader_t;
 
-extern Shader_t *ShaderList;
-extern int NumShaders;
-
 Shader_t    *ShaderCache(const char *ShaderName,const char *VertexShaderFile,const char *FragmentShaderFile);
 Shader_t    *ShaderGet(const char *ShaderName);
 void        ShaderManagerInit();
