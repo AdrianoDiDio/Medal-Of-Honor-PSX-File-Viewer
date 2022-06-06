@@ -24,6 +24,10 @@
 
 void VRAMFree(VRAM_t *VRAM)
 {
+    glDeleteTextures(1,&VRAM->Page.TextureId);
+    glDeleteTextures(1,&VRAM->TextureIndexPage.TextureId);
+    glDeleteTextures(1,&VRAM->Page.TextureId);
+
     SDL_FreeSurface(VRAM->Page.Surface);
     free(VRAM);
 }

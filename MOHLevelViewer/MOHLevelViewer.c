@@ -633,7 +633,7 @@ Failure:
     EngineShutDown(Engine);
     return NULL;
 }
-
+#define TEST_ENGINE 0
 int main(int argc,char **argv)
 {
     Engine_t *Engine;
@@ -647,6 +647,32 @@ int main(int argc,char **argv)
         EngineShutDown(Engine);
         return -1;
     }
+    
+#if TEST_ENGINE
+    //NOTE(Adriano):Quick test to check if everything is working.
+    if( argc != 3 ) {
+        printf("Engine test failed...Game Path were not specified\n");
+        EngineShutDown(Engine);
+        return -1;
+    }
+    LevelManagerInitWithPath(Engine->LevelManager,Engine->GUI,Engine->VideoSystem,Engine->SoundSystem,argv[1]);
+    for( int i = 0; i < NumMOHMissions; i++ ) {
+        //NOTE(Adriano):LevelManagerInitWithPath loads the first level...make sure to skip it.
+        for( int j = (MOHMissionsList[i].MissionNumber == 1 ? 1 : 0); j < MOHMissionsList[i].NumLevels; j++ ) {
+            assert( LevelManagerLoadLevel(Engine->LevelManager,Engine->GUI,Engine->VideoSystem,Engine->SoundSystem,
+                           MOHMissionsList[i].MissionNumber,MOHMissionsList[i].Levels[j].LevelNumber));
+        }
+    }
+    LevelManagerInitWithPath(Engine->LevelManager,Engine->GUI,Engine->VideoSystem,Engine->SoundSystem,argv[2]);
+    for( int i = 0; i < NumMOHUMissions; i++ ) {
+        //NOTE(Adriano):LevelManagerInitWithPath loads the first level...make sure to skip it.
+        for( int j = (MOHUMissionsList[i].MissionNumber == 2 ? 1 : 0); j < MOHUMissionsList[i].NumLevels; j++ ) {
+            assert(LevelManagerLoadLevel(Engine->LevelManager,Engine->GUI,Engine->VideoSystem,Engine->SoundSystem,
+                           MOHUMissionsList[i].MissionNumber,MOHUMissionsList[i].Levels[j].LevelNumber) );
+        }
+    }
+    Quit(Engine);
+#endif
     while( 1 ) {
         EngineFrame(Engine);
     }

@@ -39,9 +39,18 @@ void VideoSystemShutdown(VideoSystem_t *VideoSystem)
     free(VideoSystem);
 }
 
+void VideoSystemSetWindowResizable(VideoSystem_t *VideoSystem,int Resizable)
+{
+    SDL_SetWindowResizable(VideoSystem->Window,Resizable);
+}
 void VideoSystemCenterMouse(VideoSystem_t *VideoSystem)
 {
     SDL_WarpMouseInWindow(VideoSystem->Window,VidConfigWidth->IValue/2,VidConfigHeight->IValue/2);
+}
+
+void VideoSystemGetCurrentWindowSize(VideoSystem_t *VideoSystem,int *Width,int *Height)
+{
+    SDL_GetWindowSize(VideoSystem->Window,Width,Height);
 }
 
 void VideoSystemGrabMouse(bool Grab)

@@ -88,7 +88,7 @@ void            *GUIFileDialogGetUserData(GUIFileDialog_t *FileDialog);
 void            GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *FileDialog);
 int             GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
 void            GUIProgressBarBegin(GUI_t *GUI,const char *Title);
-void            GUIProgressBarEnd(GUI_t *GUI);
+void            GUIProgressBarEnd(GUI_t *GUI,VideoSystem_t *VideoSystem);
 void            GUIProgressBarReset(GUI_t *GUI);
 void            GUISetProgressBarDialogTitle(GUI_t *GUI,const char *Title);
 void            GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increment,const char *Message);

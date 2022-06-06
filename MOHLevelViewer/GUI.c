@@ -454,8 +454,14 @@ void GUIProgressBarReset(GUI_t *GUI)
     }
     GUI->ProgressBar->CurrentPercentage = 0;
 }
+/*
+    This function can be seen as a complete rendering loop.
+    Each time we increment the progress bar, we check for any pending event that the GUI
+    can handle and then we clear the display, show the current progress and swap buffers.
+ */
 void GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increment,const char *Message)
 {
+    SDL_Event Event;
     ImGuiViewport *Viewport;
     ImVec2 ScreenCenter;
     ImVec2 Pivot;
@@ -464,14 +470,19 @@ void GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increme
     if( !GUI ) {
         return;
     }
-        
+    
+    //NOTE(Adriano):Process any window event that could be generated during load.
+    while( SDL_PollEvent(&Event) ) {
+        ImGui_ImplSDL2_ProcessEvent(&Event);
+    }
+    //NOTE(Adriano):Since we are checking for events these function have now an updated view of the current window size.
     Viewport = igGetMainViewport();
+    
     ImGuiViewport_GetCenter(&ScreenCenter,Viewport);
 
     Pivot.x = 0.5f;
     Pivot.y = 0.5f;
-    //Update it
-    //Clear Screen init progress bar
+
     glClear(GL_COLOR_BUFFER_BIT );
     
 
@@ -494,11 +505,21 @@ void GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increme
     VideoSystemSwapBuffers(VideoSystem);
 }
 
-void GUIProgressBarEnd(GUI_t *GUI)
+void GUIProgressBarEnd(GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
+    int Width;
+    int Height;
+    
     igSetCurrentContext(GUI->DefaultContext);
     GUI->ProgressBar->IsOpen = 0;
     GUI->ProgressBar->CurrentPercentage = 0.f;
+    VideoSystemGetCurrentWindowSize(VideoSystem,&Width,&Height);
+    if( Width != VidConfigWidth->IValue ) {
+        ConfigSetNumber("VideoWidth",Width);
+    }
+    if( Height != VidConfigHeight->IValue ) {
+        ConfigSetNumber("VideoHeight",Height);
+    }
 }
 int GUIGetVSyncOptionValue()
 {

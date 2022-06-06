@@ -27,6 +27,7 @@ void VAOFree(VAO_t *VAO)
     VAO_t *Temp;
     while( VAO ) {
         glDeleteBuffers(1, VAO->VBOId);
+        glDeleteBuffers(1, VAO->IBOId);
         glDeleteVertexArrays(1, VAO->VAOId);
         Temp = VAO;
         VAO = VAO->Next;

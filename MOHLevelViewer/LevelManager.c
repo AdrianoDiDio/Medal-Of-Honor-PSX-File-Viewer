@@ -607,7 +607,7 @@ void LevelManagerOnExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,cons
             break;
     }
         
-    GUIProgressBarEnd(GUI);
+    GUIProgressBarEnd(GUI,Exporter->VideoSystem);
     GUIFileDialogClose(GUI,FileDialog);
     free(Exporter);
 }
@@ -775,7 +775,7 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
             break;
         }
     }
-    GUIProgressBarEnd(GUI);
+    GUIProgressBarEnd(GUI,VideoSystem);
     return Loaded;
 }
 int LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
@@ -797,7 +797,7 @@ int LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t 
     asprintf(&Buffer,"Loading Mission %i Level %i...",MissionNumber,LevelNumber);
     GUIProgressBarBegin(GUI,Buffer);
     Level = LevelInit(GUI,VideoSystem,SoundSystem,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
-    GUIProgressBarEnd(GUI);
+    GUIProgressBarEnd(GUI,VideoSystem);
     if( !Level ) {
         printf("LevelManagerLoadLevel:Couldn't load mission %i level %i...\n",MissionNumber,LevelNumber);
         free(Buffer);
