@@ -650,11 +650,14 @@ int main(int argc,char **argv)
     
 #if TEST_ENGINE
     //NOTE(Adriano):Quick test to check if everything is working.
+    int StartTime;
     if( argc != 3 ) {
         printf("Engine test failed...Game Path were not specified\n");
-        EngineShutDown(Engine);
+        printf("Engine test requires 2 arguments <MOH Path> <MOH:Underground Path>\n");
+        Quit(Engine);
         return -1;
     }
+    StartTime = SysMilliseconds();
     LevelManagerInitWithPath(Engine->LevelManager,Engine->GUI,Engine->VideoSystem,Engine->SoundSystem,argv[1]);
     for( int i = 0; i < NumMOHMissions; i++ ) {
         //NOTE(Adriano):LevelManagerInitWithPath loads the first level...make sure to skip it.
@@ -671,6 +674,7 @@ int main(int argc,char **argv)
                            MOHUMissionsList[i].MissionNumber,MOHUMissionsList[i].Levels[j].LevelNumber) );
         }
     }
+    DPrintf("Engine Test Completed...took %i ms to load all the levels\n",(SysMilliseconds() - StartTime));
     Quit(Engine);
 #endif
     while( 1 ) {

@@ -46,6 +46,7 @@ pvs_studio_add_target(TARGET MOHLevelViewer.Analyze ALL
                       MODE GA:1,2)
                     
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
+set_target_properties(${PROJECT_NAME} PROPERTIES RELEASE_POSTFIX -Release)
 
 add_subdirectory(Libs/libsamplerate)
 include_directories(Libs/libsamplerate/include/)

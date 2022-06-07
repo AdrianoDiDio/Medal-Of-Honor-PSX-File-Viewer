@@ -539,27 +539,27 @@ int TSPIsFaceDynamic(TSP_t *TSP,int Face)
     return false;
 }
 
-int TSPGetNodeTransparentFaceCount(TSP_t *TSP,TSPNode_t *Node)
+void TSPNodeCountTransparentFaces(TSP_t *TSP,TSPNode_t *Node)
 {
     TSPTextureInfo_t TextureInfo;
     int Base;
     int Target;
     int i;
-    int Result;
+    
     if( !Node ) {
-        DPrintf("TSPGetTransparentNodeFaceCount:Invalid Node data\n");
-        return 0;
+        DPrintf("TSPNodeCountTransparentFaces:Invalid Node data\n");
+        return;
     }
+    Node->NumTransparentFaces = 0;
     if( Node->NumFaces <= 0 ) {
-        DPrintf("TSPGetTransparentNodeFaceCount:Node is not a leaf...\n");
-        return 0;
+        DPrintf("TSPNodeCountTransparentFaces:Node is not a leaf...\n");
+        return;
     }
-    Result = 0;
     if( TSPIsVersion3(TSP) ) {
         for( i = 0; i < Node->NumFaces; i++ ) {
             TextureInfo = TSP->TextureData[Node->FaceList[i].TextureDataIndex];
             if( (TextureInfo.TSB & 0x4000) != 0 ) {
-                Result++;
+                Node->NumTransparentFaces++;
             }
         }
     } else {
@@ -567,11 +567,11 @@ int TSPGetNodeTransparentFaceCount(TSP_t *TSP,TSPNode_t *Node)
         Target = Base + Node->NumFaces;
         for( i = Base; i < Target; i++ ) {
             if( (TSP->Face[i].TSB & 0x4000 ) != 0 ) {
-                Result++;
+                Node->NumTransparentFaces++;
             }
         }
     }
-    return Result;
+    return;
 }
 
 int TSPGetColorIndex(int Color)
@@ -660,8 +660,8 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
     ColorOffset = 5;
     CLUTOffset = 8;
     ColorModeOffset = 10;
-                
-    NumTransparentFaces = TSPGetNodeTransparentFaceCount(TSP,Node);
+
+    NumTransparentFaces = Node->NumTransparentFaces;
     VertexSize = Stride * 3;
     TotalVertexSize = VertexSize * (Node->NumFaces - NumTransparentFaces);
     VertexData = malloc(VertexSize);
@@ -827,7 +827,8 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         NumTransparentFaces = 0;
         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
-                NumTransparentFaces += TSPGetNodeTransparentFaceCount(Iterator,&Iterator->Node[i]);
+            TSPNodeCountTransparentFaces(Iterator,&Iterator->Node[i]);
+            NumTransparentFaces += Iterator->Node[i].NumTransparentFaces;
         }
         Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
         TransparentVertexSize = Stride * 3 * NumTransparentFaces;
