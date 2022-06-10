@@ -197,7 +197,6 @@ void FontDrawString(Font_t *Font,const VRAM_t *VRAM,mat4 ProjectionMatrix,const 
     
     currentX = x;
     
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBindTexture(GL_TEXTURE_2D, VRAM->Page.TextureId);
     while( *String ) {
         if( *String == ' ' ) {

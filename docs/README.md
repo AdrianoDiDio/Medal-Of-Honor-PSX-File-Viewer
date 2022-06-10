@@ -643,7 +643,7 @@ moon and how the stars are projected across the screen.
 There can be a maximum number of 255 stars across the screen and they are
 generated randomly using the Radius variable.  
 The stars colors are selected from a fixed array of colors that has a size
-of 8 and can be found inside the source file.  
+of 7 and can be found inside the source file (BSD.c).  
 
 ##### RenderObject Block
 After the entry block we find the number of RenderObject stored as an int
@@ -694,7 +694,7 @@ In order to load the faces from these objects in MOH:Underground we need to
 read both offset 256 and 260 in order to get the Face Offset and  the
 Number of faces that needs to be drawn.  
 
-**NOTE that ScaleX/Y/Z Values must be divided by 4 and the value found is
+**NOTE that ScaleX/Y/Z Values must be divided by 16 and the value found is
 in fixed point format where 4096 is equal to 1.**
 
 By trial and error the following RenderObject Types were found:

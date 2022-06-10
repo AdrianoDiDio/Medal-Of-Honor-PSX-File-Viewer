@@ -638,7 +638,6 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
     int VRAMPage;
     int ABRRate;
     int DynamicIndex;
-//     TSPDynamicFaceData_t *DynamicData;
     TSPRenderingFace_t *RenderingFace;
     TSPTextureInfo_t TextureInfo;
     VAO_t *VAO;
@@ -1116,6 +1115,9 @@ void TSPDrawNode(TSPNode_t *Node,VRAM_t *VRAM,mat4 MVPMatrix)
                 glDisable(GL_BLEND);
                 glBlendColor(1.f, 1.f, 1.f, 1.f);
                 glUseProgram(0);
+                if( LevelEnableWireFrameMode->IValue ) {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                }
             }
         }
     } else {
@@ -1472,6 +1474,9 @@ void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM,mat4 MVPMatrix)
     glDisable(GL_BLEND);
     glBlendColor(1.f, 1.f, 1.f, 1.f);
     glUseProgram(0);
+    if( LevelEnableWireFrameMode->IValue ) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 }
 void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
 {

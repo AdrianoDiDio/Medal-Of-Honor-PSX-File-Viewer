@@ -86,7 +86,7 @@ void SoundSystemOnAudioUpdate(void *UserData,Byte *Stream,int Length)
     if( ChunkLength > Length ) {
         ChunkLength = Length;
     }
-    if( SoundVolume->IValue > 128 || SoundVolume->IValue < 0 ) {
+    if( SoundVolume->IValue < 0 || SoundVolume->IValue > 128 ) {
         ConfigSetNumber("SoundVolume",128);
     }
     SDL_MixAudioFormat(Stream, &CurrentMusic->Data[CurrentMusic->DataPointer], AUDIO_F32, ChunkLength, SoundVolume->IValue);
@@ -138,9 +138,13 @@ float SoundSystemQuantize(double Sample)
     
     return (float) Sample / 32768.f;
 }
+int SoundSystemGetByteRate(int Frequency,int NumChannels,int BitDepth)
+{
+    return (Frequency * NumChannels * (BitDepth / 8));
+}
 int SoundSystemCalculateSoundDuration(int Size,int Frequency,int NumChannels,int BitDepth)
 {
-    return Size / (Frequency * NumChannels * (BitDepth / 8));
+    return Size / SoundSystemGetByteRate(Frequency,NumChannels,BitDepth);
 }
 int SoundSystemGetSoundDuration(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds)
 {
@@ -157,7 +161,7 @@ int SoundSystemGetCurrentSoundTime(SoundSystem_t *SoundSystem,int *Minutes,int *
     if( !SoundSystem->CurrentMusic ) {
         return 0;
     }
-    CurrentLength = SoundSystemCalculateSoundDuration(SoundSystem->CurrentMusic->DataPointer,44100,2,32);
+    CurrentLength = SoundSystemCalculateSoundDuration(SoundSystem->CurrentMusic->DataPointer,SOUND_SYSTEM_FREQUENCY,SOUND_SYSTEM_NUM_CHANNELS,32);
     *Minutes = CurrentLength / 60;
     *Seconds = CurrentLength % 60;
     return CurrentLength;
@@ -230,6 +234,7 @@ float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
                 Sample[BaseIndex] += (State[0] * ADPCMFilterGainPositive[Predictor] + State[1] * ADPCMFilterGainNegative[Predictor] );
                 State[1] = State[0];
                 State[0] = Sample[BaseIndex];
+                //Duplicate the audio for both channels...
                 Result[NumWrittenBytes++] = SoundSystemQuantize(Sample[BaseIndex]);
                 Result[NumWrittenBytes++] = SoundSystemQuantize(Sample[BaseIndex]);
             }
@@ -278,7 +283,7 @@ void SoundSystemDumpMusic(VBMusic_t *Music,const char *EngineName,const char *Ou
     WAVHeader.AudioFormat = 3; // 32 bits floating point sample.
     WAVHeader.NumChannels = 2;
     WAVHeader.SampleRate = 44100;
-    WAVHeader.ByteRate = (44100 * 2 * (32 / 8));
+    WAVHeader.ByteRate = SoundSystemGetByteRate(44100,2,32);
     WAVHeader.BlockAlign = (2 * (32/8));
     WAVHeader.BitsPerSample = 32;
     
@@ -327,6 +332,7 @@ VBMusic_t *SoundSystemLoadVBFile(const char *VBFileName)
     int    NumFrames;
     float SamplingRatio;
     int   ResamplingStatus;
+    int   NumChannels;
     SRC_DATA ConverterSrcData;
     
     if( !VBFileName ) {
@@ -344,14 +350,18 @@ VBMusic_t *SoundSystemLoadVBFile(const char *VBFileName)
         return NULL;
     }
     //Perform a fast conversion to a more appropriate format...
+    //NOTE(Adriano):Level Music will always have a frequency of 22050 Hz...
+    //This is not true when loading sound effects which can use a frequency of
+    //11025 Hz or 22050 Hz.
     SamplingRatio = (float) SOUND_SYSTEM_FREQUENCY / 22050.f;
-    ConvertedData = malloc( NumFrames * SamplingRatio * 2 * sizeof(float));
+    NumChannels = 2;
+    ConvertedData = malloc( NumFrames * SamplingRatio * NumChannels * sizeof(float));
     ConverterSrcData.data_in = PCMData;
     ConverterSrcData.input_frames = NumFrames;
     ConverterSrcData.data_out = ConvertedData;
     ConverterSrcData.output_frames = NumFrames * SamplingRatio;
     ConverterSrcData.src_ratio = SamplingRatio;
-    ResamplingStatus = src_simple(&ConverterSrcData, SRC_LINEAR, 2);
+    ResamplingStatus = src_simple(&ConverterSrcData, SRC_LINEAR, NumChannels);
     if( ResamplingStatus != 0 ) {
         DPrintf("SoundSystemLoadVBFile:Failed to resample audio %s.\n",src_strerror(ResamplingStatus));
         free(PCMData);
@@ -367,8 +377,8 @@ VBMusic_t *SoundSystemLoadVBFile(const char *VBFileName)
         return NULL;
     }
     Music->Name = GetBaseName(VBFileName);
-    Music->Size = ConverterSrcData.output_frames * 2 * sizeof(float);
-    Music->Duration = SoundSystemCalculateSoundDuration(Music->Size,44100,2,32);
+    Music->Size = ConverterSrcData.output_frames * NumChannels * sizeof(float);
+    Music->Duration = SoundSystemCalculateSoundDuration(Music->Size,SOUND_SYSTEM_FREQUENCY,SOUND_SYSTEM_NUM_CHANNELS,32);
     Music->DataPointer = 0;
     Music->Data = (Byte *) ConverterSrcData.data_out;
     Music->Next = NULL;
@@ -476,7 +486,6 @@ SoundSystem_t *SoundSystemInit()
     SoundSystem->CurrentMusic = NULL;
     
     SoundVolume = ConfigGet("SoundVolume");
-    
     
     SDL_zero(DesiredAudioSpec);
     DesiredAudioSpec.freq = SOUND_SYSTEM_FREQUENCY;

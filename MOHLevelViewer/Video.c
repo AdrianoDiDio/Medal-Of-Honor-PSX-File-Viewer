@@ -227,7 +227,7 @@ int VideoSystemOpenWindow(VideoSystem_t *VideoSystem)
     if( !SDL_GetDisplayDPI(0, NULL, &VideoSystem->DPIScale, NULL) ) {
         VideoSystem->DPIScale /= 96.f;
     }
-    if( VidConfigVSync->IValue > 1 || VidConfigVSync->IValue < -1 ) {
+    if( VidConfigVSync->IValue < -1 || VidConfigVSync->IValue > 1 ) {
         ConfigSetNumber("VideoVSync",1);
     }
     Result = VideoSystemSetSwapInterval(VidConfigVSync->IValue);
@@ -273,6 +273,7 @@ VideoSystem_t *VideoSystemInit()
         DPrintf("VideoSystemInit:Failed to init GLEW\n");
         return NULL;
     }
+    SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
     VideoSystemGrabMouse(1);
     return VideoSystem;
 }

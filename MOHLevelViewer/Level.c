@@ -88,7 +88,7 @@ void LevelCleanUp(Level_t *Level)
 void LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int GameEngine,int SoundValue)
 {
     int IsAmbient;
-    if( SoundValue > 3 || SoundValue < 0 ) {
+    if( SoundValue < 0 || SoundValue > 2 ) {
         SoundValue = 1;
     }
     if( !SoundValue ) {

@@ -62,6 +62,11 @@ typedef struct GUI_s {
     
 } GUI_t;
 
+typedef struct VSyncSettings_s {
+    char *DisplayValue;
+    int Value;
+} VSyncSettings_t;
+
 typedef struct LevelManager_s LevelManager_t;
 typedef struct Camera_s Camera_t;
 typedef struct ComTimeInfo_s ComTimeInfo_t;

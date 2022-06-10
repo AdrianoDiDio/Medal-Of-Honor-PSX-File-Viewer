@@ -36,11 +36,6 @@ const char* LevelMusicOptions[] = {
 
 int NumLevelMusicOptions = sizeof(LevelMusicOptions) / sizeof(LevelMusicOptions[0]);
 
-typedef struct VSyncSettings_s {
-    char *DisplayValue;
-    int Value;
-} VSyncSettings_t;
-
 const VSyncSettings_t VSyncOptions[] = { 
     
     {
@@ -471,7 +466,7 @@ void GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increme
         return;
     }
     
-    //NOTE(Adriano):Process any window event that could be generated during load.
+    //NOTE(Adriano):Process any window event that could be generated while showing the progress bar.
     while( SDL_PollEvent(&Event) ) {
         ImGui_ImplSDL2_ProcessEvent(&Event);
     }
@@ -513,6 +508,7 @@ void GUIProgressBarEnd(GUI_t *GUI,VideoSystem_t *VideoSystem)
     igSetCurrentContext(GUI->DefaultContext);
     GUI->ProgressBar->IsOpen = 0;
     GUI->ProgressBar->CurrentPercentage = 0.f;
+    //NOTE(Adriano):Make sure to update the current window size.
     VideoSystemGetCurrentWindowSize(VideoSystem,&Width,&Height);
     if( Width != VidConfigWidth->IValue ) {
         ConfigSetNumber("VideoWidth",Width);
