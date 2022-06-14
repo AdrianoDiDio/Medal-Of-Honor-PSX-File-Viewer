@@ -363,7 +363,7 @@ Each face is made by 3 vertices that forms a triangle.
 | [UV](#uv-coordinates) | 2 byte  | UV0 Texture coordinate for vertex 0  |
 | short | 2 bytes  | CBA (Contains CLUT Data for TIM Images, Not Used)  |
 | [UV](#uv-coordinates) | 2 bytes  | UV1 Texture coordinate for vertex 1  |
-| short | 2 bytes  | TSB that contains info about the used texture ( read [TSB](#tsb) for more information)|
+| short | 2 bytes  | TSB that contains info about the used texture (see [TSB](#tsb) section for more information)|
 | [UV](#uv-coordinates) | 2 bytes  | UV2 Texture coordinate for vertex 2  |
 
 Starting from Version 3 a different type of face format is used:
@@ -372,7 +372,7 @@ Starting from Version 3 a different type of face format is used:
 | ---- | ---- | ----------- |
 | unsigned int | 4 bytes  | V0,V1 First and Second vertex/color index in array |
 | unsigned short | 2 bytes  | V2 Third vertex and color index in array |
-| unsigned short | 2 bytes  | Texture Index in texture array |
+| unsigned short | 2 bytes  | Texture Index in texture array (see [Texture Info](#texture-info) section for more information) |
 
 this format is not meant to be loaded directly but rather the [BSP Node struct](#bsp-node) must be used to load it.  
 The way it works it's based on the offset found in the Node data that

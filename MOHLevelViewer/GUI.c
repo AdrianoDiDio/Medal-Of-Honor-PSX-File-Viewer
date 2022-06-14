@@ -148,7 +148,10 @@ void GUIPopWindow(GUI_t *GUI)
         VideoSystemGrabMouse(1);
     }
 }
-void GUIToggleHandle(GUI_t *GUI,int HandleValue)
+/*
+ * Push or Pop a window from the stack based on the handle value.
+ */
+void GUIUpdateWindowStack(GUI_t *GUI,int HandleValue)
 {
     if( HandleValue ) {
         GUIPushWindow(GUI);
@@ -159,18 +162,18 @@ void GUIToggleHandle(GUI_t *GUI,int HandleValue)
 void GUIToggleDebugWindow(GUI_t *GUI)
 {
     GUI->DebugWindowHandle = !GUI->DebugWindowHandle;
-    GUIToggleHandle(GUI,GUI->DebugWindowHandle);
+    GUIUpdateWindowStack(GUI,GUI->DebugWindowHandle);
 }
 void GUIToggleVideoSettingsWindow(GUI_t *GUI)
 {
     GUI->VideoSettingsWindowHandle = !GUI->VideoSettingsWindowHandle;
-    GUIToggleHandle(GUI,GUI->VideoSettingsWindowHandle);
+    GUIUpdateWindowStack(GUI,GUI->VideoSettingsWindowHandle);
 
 }
 void GUIToggleLevelSelectWindow(GUI_t *GUI)
 {
     GUI->LevelSelectWindowHandle = !GUI->LevelSelectWindowHandle;
-    GUIToggleHandle(GUI,GUI->LevelSelectWindowHandle);
+    GUIUpdateWindowStack(GUI,GUI->LevelSelectWindowHandle);
 }
 void GUIBeginFrame()
 {
@@ -360,7 +363,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
     }
     
     if( !GUI->DebugWindowHandle ) {
-        GUIToggleHandle(GUI,GUI->DebugWindowHandle);
+        GUIUpdateWindowStack(GUI,GUI->DebugWindowHandle);
     }
     igEnd();
 }
@@ -583,7 +586,7 @@ void GUIDrawVideoSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
     }
     igEnd();
     if( !GUI->VideoSettingsWindowHandle ) {
-        GUIToggleHandle(GUI,GUI->VideoSettingsWindowHandle);
+        GUIUpdateWindowStack(GUI,GUI->VideoSettingsWindowHandle);
     }
 }
 
@@ -676,7 +679,7 @@ void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager,VideoSyste
     }
     igEnd();
     if( !GUI->LevelSelectWindowHandle ) {
-        GUIToggleHandle(GUI,GUI->LevelSelectWindowHandle);
+        GUIUpdateWindowStack(GUI,GUI->LevelSelectWindowHandle);
     }
 }
 
