@@ -40,7 +40,7 @@ NOTE that the font only contains a limited set of characters and we need to
 map them from ASCII to the one available in the set.
 */
 
-static const uint8_t ASCII_To_MOH_Table[128] = {
+static const Byte ASCII_To_MOH_Table[128] = {
     0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
     0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,
     0 ,  43 ,  46 ,  0 ,  0 ,  0 ,  0 ,  24 ,  0 ,  0 ,  0 ,  0 ,  0 , '-', '.',  0 ,
@@ -189,14 +189,17 @@ void FontDrawChar(Font_t *Font,mat4 ProjectionMatrix,char c,float x,float y,Colo
     glBindVertexArray(0);
 }
 
-void FontDrawString(Font_t *Font,const VRAM_t *VRAM,mat4 ProjectionMatrix,const char *String,float x,float y,Color4f_t Color)
+void FontDrawString(Font_t *Font,const VRAM_t *VRAM,const char *String,float x,float y,Color4f_t Color)
 {
 
     float Spacing = 10.f;
     float currentX;
+    mat4 ProjectionMatrix;
     
     currentX = x;
     
+    glm_mat4_identity(ProjectionMatrix);
+    glm_ortho(0,VidConfigWidth->IValue,VidConfigHeight->IValue,0,-1,1,ProjectionMatrix);
     glBindTexture(GL_TEXTURE_2D, VRAM->Page.TextureId);
     while( *String ) {
         if( *String == ' ' ) {

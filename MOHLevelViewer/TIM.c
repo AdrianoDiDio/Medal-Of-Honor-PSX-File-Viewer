@@ -547,11 +547,11 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
             DPrintf("Found image with 8 BPP without CLUT!\n");
             break;
         case BPP_16:
-            DPrintf("Found image with 16 BPP and CLUT!\n");
+            DPrintf("Found image with 16 BPP!\n");
             ImageSizeOffset = 1;
             break;
         case BPP_24:
-            DPrintf("Found image with 24 BPP and CLUT!\n");
+            DPrintf("Found image with 24 BPP!\n");
             ImageSizeOffset = 0.5f; //Or 2/3?
             break;
         default:

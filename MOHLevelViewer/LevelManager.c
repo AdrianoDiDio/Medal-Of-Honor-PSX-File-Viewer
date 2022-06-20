@@ -453,7 +453,18 @@ void LevelManagerCleanUp(LevelManager_t *LevelManager)
     }
     free(LevelManager);
 }
-
+void LevelManagerDrawString(const LevelManager_t *LevelManager,const char *String,float x,float y,Color4f_t Color)
+{
+    if( !LevelManager ) {
+        DPrintf("LevelManagerDrawString:Called without a valid level manager.\n");
+        return;
+    }
+    if( !LevelManagerIsLevelLoaded(LevelManager) ) {
+        DPrintf("LevelManagerDrawString:Called without loading the level\n");
+        return;
+    }
+    FontDrawString(LevelManager->CurrentLevel->Font,LevelManager->CurrentLevel->VRAM,String,x,y,Color);
+}
 void LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,SoundSystem_t *SoundSystem,int SoundValue)
 {
     LevelSetMusicTrackSettings(LevelManager->CurrentLevel,SoundSystem,LevelManager->GameEngine,SoundValue);
@@ -620,7 +631,7 @@ void LevelManagerOnExportDirCancelled(GUIFileDialog_t *FileDialog,GUI_t *GUI)
 /*
  * Initialize the game from the config string.
  * Returns 0 if the config value is not valid 1 otherwise.
- * Note that the config is cleared if was not valid.
+ * Note that the config key is cleared if it was not valid.
  */
 int LevelManagerLoadFromConfig(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem)
 {

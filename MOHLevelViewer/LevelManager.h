@@ -65,6 +65,7 @@ typedef struct LevelManagerDialogData_s {
 LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem);
 int             LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
                                       int MissionNumber,int LevelNumber);
+void            LevelManagerDrawString(const LevelManager_t *LevelManager,const char *String,float x,float y,Color4f_t Color);
 void            LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,SoundSystem_t *SoundSystem,int SoundValue);
 int             LevelManagerIsLevelLoaded(const LevelManager_t *LevelManager);
 int             LevelManagerGetGameEngine(LevelManager_t *LevelManager);

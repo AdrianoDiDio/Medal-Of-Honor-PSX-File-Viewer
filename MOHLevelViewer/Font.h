@@ -38,6 +38,6 @@ typedef struct Font_s {
 } Font_t;
 
 Font_t *FontInit(const VRAM_t *VRAM);
-void FontDrawString(Font_t *Font,const VRAM_t *VRAM,mat4 ProjectionMatrix,const char *String,float x,float y,Color4f_t Color);
+void FontDrawString(Font_t *Font,const VRAM_t *VRAM,const char *String,float x,float y,Color4f_t Color);
 void FontFree(Font_t *Font);
 #endif //__FONT_H_
