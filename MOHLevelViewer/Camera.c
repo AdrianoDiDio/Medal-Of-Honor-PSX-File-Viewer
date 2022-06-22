@@ -63,17 +63,9 @@ void CameraOnAngleUpdate(Camera_t *Camera)
     }
     CameraUpdateVectors(Camera);
 }
-void CameraLostFocus(Camera_t *Camera)
-{
-    Camera->HasFocus = 0;
-}
+
 void CameraOnMouseEvent(Camera_t *Camera,int Dx,int Dy)
 {
-    if( !Camera->HasFocus ) {
-        Dx = 0;
-        Dy = 0;
-        Camera->HasFocus = 1;
-    }
     Camera->Rotation[PITCH] += Dy  * CameraMouseSensitivity->FValue * 0.2;
     Camera->Rotation[YAW]   += Dx  * CameraMouseSensitivity->FValue * 0.2;
     CameraOnAngleUpdate(Camera);
@@ -193,7 +185,6 @@ Camera_t *CameraInit()
         return NULL;
     }
     
-    Camera->HasFocus = 0;
     glm_vec3_zero(Camera->Position);
     glm_vec3_zero(Camera->Rotation);
 

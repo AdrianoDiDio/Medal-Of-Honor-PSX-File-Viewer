@@ -460,7 +460,7 @@ void LevelManagerDrawString(const LevelManager_t *LevelManager,const char *Strin
         return;
     }
     if( !LevelManagerIsLevelLoaded(LevelManager) ) {
-        DPrintf("LevelManagerDrawString:Called without loading the level\n");
+        DPrintf("LevelManagerDrawString:Called without a valid level\n");
         return;
     }
     FontDrawString(LevelManager->CurrentLevel->Font,LevelManager->CurrentLevel->VRAM,String,x,y,Color);

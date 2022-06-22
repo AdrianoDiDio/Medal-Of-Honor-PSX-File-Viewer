@@ -57,7 +57,11 @@ void VideoSystemGrabMouse(bool Grab)
 {
     SDL_SetRelativeMouseMode(Grab);
 }
-SDL_DisplayMode *SDLGetCurrentDisplayModeV2(VideoSystem_t *VideoSystem)
+/*
+ * Retrieves the selected video mode from the SDL mode list using the CurrentVideoMode field inside the VideoSystem_t struct 
+ * that was set manually or by the VideoSystemSetFullScreenVideoMode function.
+ */
+SDL_DisplayMode *SDLGetCurrentDisplayMode(VideoSystem_t *VideoSystem)
 {
     static SDL_DisplayMode Result;
     VideoMode_t *CurrentMode;
@@ -81,6 +85,7 @@ SDL_DisplayMode *SDLGetCurrentDisplayModeV2(VideoSystem_t *VideoSystem)
  we need to pick an exact match in the SDL video mode list.
  If PreferredModeIndex is equals to -1 then it will use the config values otherwise the one
  from the selected video mode in the mode array.
+ This function will set the CurrentVideoMode field in the VideoSystem_t struct.
  */
 void VideoSystemSetFullScreenVideoMode(VideoSystem_t *VideoSystem,int PreferredModeIndex)
 {
@@ -128,29 +133,29 @@ void VideoSystemSetFullScreenVideoMode(VideoSystem_t *VideoSystem,int PreferredM
     }
     DPrintf("VideoSystemSetFullScreenVideoMode:Users obtained %ix%i RefreshRate:%i\n",VideoSystem->VideoModeList[BestMode].Width,
             VideoSystem->VideoModeList[BestMode].Height,VideoSystem->VideoModeList[BestMode].RefreshRate);
-    ConfigSetNumber("VideoWidth",VideoSystem->VideoModeList[BestMode].Width);
-    ConfigSetNumber("VideoHeight",VideoSystem->VideoModeList[BestMode].Height);
-    ConfigSetNumber("VideoRefreshRate",VideoSystem->VideoModeList[BestMode].RefreshRate);
     VideoSystem->CurrentVideoMode = BestMode;
 
 }
 
 void VideoSystemSetVideoSettings(VideoSystem_t *VideoSystem,int PreferredModeIndex)
 {
+    SDL_DisplayMode *SelectedMode;
     if( SDL_GetWindowFlags(VideoSystem->Window) & SDL_WINDOW_FULLSCREEN ) {
         //Was fullscreen reset it...
         SDL_SetWindowFullscreen(VideoSystem->Window,0);
     }
     SDL_SetWindowSize(VideoSystem->Window,VidConfigWidth->IValue,VidConfigHeight->IValue);
-    DPrintf("Going fullscreen:%i\n",VidConfigFullScreen->IValue);
     if( VidConfigFullScreen->IValue ) {
         VideoSystemSetFullScreenVideoMode(VideoSystem,PreferredModeIndex);
-        if( SDL_SetWindowDisplayMode(VideoSystem->Window,SDLGetCurrentDisplayModeV2(VideoSystem) ) < 0 ) {
+        SelectedMode = SDLGetCurrentDisplayMode(VideoSystem);
+        if( SDL_SetWindowDisplayMode(VideoSystem->Window, SelectedMode) < 0 ) {
             ConfigSetNumber("VideoFullScreen",0);
-            VideoSystemSetVideoSettings(VideoSystem,PreferredModeIndex);
             return;
         }
         SDL_SetWindowFullscreen(VideoSystem->Window,SDL_WINDOW_FULLSCREEN);
+        ConfigSetNumber("VideoWidth",SelectedMode->w);
+        ConfigSetNumber("VideoHeight",SelectedMode->h);
+        ConfigSetNumber("VideoRefreshRate",SelectedMode->refresh_rate);
     }
     //Update the value and save changes on the file.
     ConfigSetNumber("VideoFullScreen",VidConfigFullScreen->IValue);

@@ -116,7 +116,7 @@ char *StringCopy(const char *From)
     return Dest;
 }
 
-char *StringToUpper(char *In)
+char *StringToUpper(const char *In)
 {
     char *Result;
     int i;
@@ -160,7 +160,7 @@ char *GetBaseName(const char *Path)
     return strdup(Out);
 }
 
-void CreateDirIfNotExists(char *DirName) {
+void CreateDirIfNotExists(const char *DirName) {
     struct stat FileStat;
 
     if (stat(DirName, &FileStat) == -1) {
@@ -321,17 +321,14 @@ void EngineCheckEvents(Engine_t *Engine)
             Quit(Engine);
         }
         
-        if( GUIProcessEvent(Engine->GUI,&Event) ) {
-            //NOTE(Adriano):GUI is now open...tell the camera to zero-out the mouse delta immediately after we close the GUI.
-            CameraLostFocus(Engine->Camera);
-        } else {
+        if( !GUIProcessEvent(Engine->GUI,&Event) ) {
             if( Event.type == SDL_MOUSEMOTION ) {
                 CameraOnMouseEvent(Engine->Camera,Event.motion.xrel,Event.motion.yrel);
             }
         }
     }
     //NOTE(Adriano):If the GUI is closed and we pumped all the events then
-    //check if any key is down and update the camera.
+    //              check if any key is down and update the camera.
     if( !GUIIsActive(Engine->GUI) ) {
         CameraCheckKeyEvents(Engine->Camera,Engine->KeyState,Engine->TimeInfo->Delta);
     }

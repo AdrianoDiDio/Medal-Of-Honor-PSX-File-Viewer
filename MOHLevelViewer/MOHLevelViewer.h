@@ -68,7 +68,7 @@ int         GetFileLength(FILE *Fp);
 char        *ReadTextFile(const char *File,int Length);
 int         GetCurrentFilePosition(FILE *Fp);
 void        SkipFileSection(int SectionSize,FILE *InFile);
-void        CreateDirIfNotExists(char *DirName);
+void        CreateDirIfNotExists(const char *DirName);
 char        *SwitchExt(const char *In, const char *Ext);
 char        *GetBaseName(const char *Path);
 Engine_t    *EngineInit(int argc,char **argv);
