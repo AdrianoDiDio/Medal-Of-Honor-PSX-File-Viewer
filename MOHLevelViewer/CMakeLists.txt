@@ -99,6 +99,7 @@ endif()
 
 add_compile_definitions("IMGUI_IMPL_OPENGL_LOADER_GLEW")
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE -DCIMGUI_USE_OPENGL3 -DCIMGUI_USE_SDL)
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
     $<$<CONFIG:Debug>:_DEBUG>
