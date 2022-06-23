@@ -152,7 +152,6 @@ void ConfigLoadSettings()
                 do {
                     Temp++;
                 } while( *Temp && !(Temp[0] == '*' && Temp[1] == '/') );
-//                 assert(*Temp);
                 if( !*Temp ) {
                     break;
                 }

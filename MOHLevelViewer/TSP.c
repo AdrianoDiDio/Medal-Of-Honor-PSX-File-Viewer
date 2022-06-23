@@ -1447,23 +1447,18 @@ void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM,mat4 MVPMatrix)
     } else {
         glDepthMask(0);
         glEnable(GL_BLEND);
-        glBlendColor(0.25f, 0.25f, 0.25f, 0.5f);
         for( TransparentFaceIterator = TSP->TransparentFaceList; TransparentFaceIterator; TransparentFaceIterator = TransparentFaceIterator->Next) {
             switch( TransparentFaceIterator->BlendingMode ) {
-                case 0:
-                case 1:
+                case TSP_BLENDING_MODE_HALF_BACKGROUND_PLUS_HALF_FOREGROUND:
+                case TSP_BLENDING_MODE_BACKGROUND_PLUS_FOREGROUND:
+                case TSP_BLENDING_MODE_BACKGROUND_PLUS_QUARTER_FOREGROUND:
                     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-                    glBlendFunc(GL_ONE, GL_SRC_ALPHA);
                     break;
-                case 2:
+                case TSP_BLENDING_MODE_BACKGROUND_MINUS_FOREGROUND:
                     glBlendEquationSeparate(GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
-                    glBlendFunc(GL_ONE, GL_SRC_ALPHA);
-                    break;
-                case 3:
-                    glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-                    glBlendFunc(GL_CONSTANT_COLOR, GL_SRC_ALPHA);
                     break;
             }
+            glBlendFunc(GL_ONE, GL_SRC_ALPHA);
             glDrawArrays(GL_TRIANGLES, TransparentFaceIterator->VAOBufferOffset, 3);
         }
     }
@@ -1472,7 +1467,6 @@ void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM,mat4 MVPMatrix)
     glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D,0);
     glDisable(GL_BLEND);
-    glBlendColor(1.f, 1.f, 1.f, 1.f);
     glUseProgram(0);
     if( LevelEnableWireFrameMode->IValue ) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
