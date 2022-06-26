@@ -710,7 +710,7 @@ void LevelManagerSpawnCamera(const LevelManager_t *LevelManager,Camera_t *Camera
     if( !LevelManagerIsLevelLoaded(LevelManager) ) {
         return;
     }
-    LevelGetPlayerSpawn(LevelManager->CurrentLevel,0,Position,&Rotation);
+    LevelGetPlayerSpawn(LevelManager->CurrentLevel,0,Position,Rotation);
     CameraSetPosition(Camera,Position);
     CameraSetRotation(Camera,Rotation);
 }

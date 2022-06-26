@@ -1011,7 +1011,7 @@ void BSDCreateMoonVAO(BSD_t *BSD,VRAM_t *VRAM)
     
     VertexData = malloc(DataSize);
     VertexPointer = 0;
-    MoonPosition[0] = (BSD->SkyData.MoonZ * 32) / 200;
+    MoonPosition[0] = (BSD->SkyData.MoonZ * 32.f) / 200.f;
     MoonPosition[1] = BSD->SkyData.MoonY;
     MoonPosition[2] = BSD->SkyData.MoonZ;
     glm_vec3_rotate(MoonPosition, DEGTORAD(180.f), GLM_XUP);
@@ -1378,7 +1378,7 @@ void BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM)
 
 
 
-void BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 *Rotation)
+void BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 Rotation)
 {
     vec3 LocalRotation;
 
@@ -1402,7 +1402,7 @@ void BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 *Rotation)
         glm_vec3_rotate(Position, DEGTORAD(180.f), GLM_XUP);
         if( Rotation ) {
             BSDPositionToGLMVec3(BSD->NodeData.Node[i].Rotation,LocalRotation);
-            glm_vec3_scale(LocalRotation,360.f/4096.f,*Rotation);
+            glm_vec3_scale(LocalRotation,360.f/4096.f,Rotation);
         }
         break;
     }

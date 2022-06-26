@@ -384,7 +384,7 @@ FILE            *BSDEarlyInit(BSD_t **BSD,const char *MissionPath,int MissionNum
 int             BSDLoad(BSD_t *BSD,int GameEngine,int Multiplayer,FILE *BSDFile);
 const char      *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId);
 const char      *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
-void            BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 *Rotation);
+void            BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 Rotation);
 void            BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM);
 void            BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void            BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);

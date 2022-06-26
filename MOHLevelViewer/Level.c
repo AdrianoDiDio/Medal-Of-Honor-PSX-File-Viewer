@@ -131,7 +131,7 @@ void LevelDraw(Level_t *Level,Camera_t *Camera,mat4 ProjectionMatrix)
     TSPDrawList(Level->TSPList,Level->VRAM,Camera,ProjectionMatrix);
 }
 
-void LevelGetPlayerSpawn(Level_t *Level,int SpawnIndex,vec3 Position,vec3 *Rotation)
+void LevelGetPlayerSpawn(Level_t *Level,int SpawnIndex,vec3 Position,vec3 Rotation)
 {
     BSDGetPlayerSpawn(Level->BSD,SpawnIndex,Position,Rotation);
 }
