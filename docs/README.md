@@ -609,16 +609,16 @@ elements and has a fixed size of 80 bytes.
 | int  | 4 bytes  | Number of elements at Offset2 |
 | int  | 4 bytes  | Unknown Offset3 |
 | int  | 4 bytes  | Number of elements at Offset3 |
-| int  | 4 bytes  | Unknown Offset4 |
-| int  | 4 bytes  | Number of elements at Offset4 |
-| int  | 4 bytes  | Unknown Offset5 |
-| int  | 4 bytes  | Number of elements at Offset5 |
-| int  | 4 bytes  | Unknown Offset6 |
-| int  | 4 bytes  | Number of elements at Offset6 |
-| int  | 4 bytes  | Unknown Offset7 |
-| int  | 4 bytes  | Number of elements at Offset7 |
-| int  | 4 bytes  | Unknown Offset8 |
-| int  | 4 bytes  | Number of elements at Offset8 |
+| int  | 4 bytes  | Bone Hierarchy Data Offset |
+| int  | 4 bytes  | Number of bones inside the hierarchy |
+| int  | 4 bytes  | Face Table Offset |
+| int  | 4 bytes  | Number of Face Tables |
+| int  | 4 bytes  | Face Data Offset |
+| int  | 4 bytes  | Number Of Faces |
+| int  | 4 bytes  | Vertex Entry Table Offset |
+| int  | 4 bytes  | Number of Vertex Tables available |
+| int  | 4 bytes  | Vertex Data Offset |
+| int  | 4 bytes  | Number Of Vertex Data Available |
 | int  | 4 bytes  | Unknown Offset9 |
 | int  | 4 bytes  | Number of elements at Offset9 |
 
@@ -806,6 +806,107 @@ Vertex Data contains the information about the indices used to create the triang
 
 ####### Vertex 2
 > (VertexData & 0xFF00000) >> 20
+
+###### Animation Data
+Animation data is stored inside each RenderObject using several offsets
+that points to various location inside the BSD file.  
+The first offset used is the Vertex Table Offset which is added to the
+position ("Vertex Table Offset") that it is stored inside the
+[Entry Table](#entry-table-block) to obtain the vertices used to render
+the model.  
+Then we have the hierarchical data that defines the bone structure used to
+animate the model.
+
+##### Vertex Table
+This table is used to load the vertices of models that uses animation
+data and it contains only two fields:  
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| int  | 4 bytes  | Offset to the vertex data |
+| int  | 4 bytes | Number of vertices |
+
+If the offset is not -1 then the data can be found by adding the value
+"Vertex Data Offset" stored inside the [Entry Table](#entry-table-block).
+
+##### Vertex Data
+Each vertex is a simple Vector3 containing three cordinates and a
+pad value.    
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| short  | 2 bytes  | x |
+| short  | 2 bytes  | y |
+| short  | 2 bytes  | z |
+| short  | 2 bytes  | Pad |
+
+##### Hierarchy Data
+Each Animated model has an hierarchy data containing information about the
+transformation the must be applied to each vertex in order to animate it.
+The main offset is stored inside the [Entry Table](#entry-table-block) and
+each model defines a relative offset that must be added to it in order to
+obtain the final offset.  
+Each bone has the following data:  
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| unsigned short  | 2 bytes  | Vertex Table Index |
+| short  | 2 bytes  | x |
+| short  | 2 bytes  | y |
+| short  | 2 bytes  | z |
+| short  | 2 bytes  | Unknown |
+| short  | 2 bytes  | Pad |
+| int  | 4 bytes  | Offset to Child1 |
+| int  | 4 bytes  | Offset to Child2 |
+
+##### Face Table
+This table is used to load the faces of models that uses animation
+data and it contains only two fields:  
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| int  | 4 bytes  | Offset to the face data |
+| int  | 4 bytes | Number of faces |
+
+If the offset is not -1 then the data can be found by adding the value
+"Face Data Offset" stored inside the [Entry Table](#entry-table-block).
+
+##### Face Data
+Each face has a fixed size of 28 bytes and contains several fields.    
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Unknown |
+| Byte  | 1 byte  | Vertex Table Entry 1 |
+| Byte  | 1 byte  | Vertex Index 1 |
+| Byte  | 1 byte  | Vertex Table Entry 2 |
+| Byte  | 1 byte  | Vertex Index 2 |
+| Byte  | 1 byte  | Vertex Table Entry 3 |
+| Byte  | 1 byte  | Vertex Index 3 |
+
+The vertices are referenced using two indices:one references the vertex
+table and the other one points to the actual vertex data.  
 
 ##### Node Table
 This section of the BSD files contains the list of all the nodes along with
