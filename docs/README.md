@@ -708,7 +708,7 @@ By trial and error the following RenderObject Types were found:
 | 0 | All the objects that can be carried such as Combat Helmet,Grenades etc... |
 | 5122 | Enemies |
 | 6000 | All the object that can be picked up such as Field Surgeon Kit, Medical Pack,Canteen and also Barrels,Boxes etc... |
-| 6001 | AirPlane as seen at the start of Mission 1 Level 1 |
+| 6001 | Airplane as seen at the start of Mission 1 Level 1 |
 | 6002 | MG42 |
 | 6006 | Doors |
 | 5125 | Unknown|
@@ -880,34 +880,20 @@ Each face has a fixed size of 28 bytes and contains several fields.
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Unknown |
-| Byte  | 1 byte  | Vertex Table Entry 1 |
-| Byte  | 1 byte  | Vertex Index 1 |
-| Byte  | 1 byte  | Vertex Table Entry 2 |
-| Byte  | 1 byte  | Vertex Index 2 |
-| Byte  | 1 byte  | Vertex Table Entry 3 |
-| Byte  | 1 byte  | Vertex Index 3 |
+[Color](#Color)| 4 bytes | RGB Color of Vertex 0 |
+[Color](#Color)| 4 bytes | RGB Color of Vertex 1 |
+[Color](#Color)| 4 bytes | RGB Color of Vertex 2 |
+| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 1 |
+| short  | 2 bytes  | CLUT Info |
+| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 2 |
+| short  | 2 bytes  | Texture Info |
+| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 3 |
+| byte  | 1 byte  | Vertex Table Entry 1 |
+| byte  | 1 byte  | Vertex Index 1 |
+| byte  | 1 byte  | Vertex Table Entry 2 |
+| byte  | 1 byte  | Vertex Index 2 |
+| byte  | 1 byte  | Vertex Table Entry 3 |
+| byte  | 1 byte  | Vertex Index 3 |
 
 The vertices are referenced using two indices:one references the vertex
 table and the other one points to the actual vertex data.  
