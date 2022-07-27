@@ -446,11 +446,11 @@ Medal Of Honor uses a structure that contains several fields in order to update 
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| [UV](#uv-coordinatesuv) | 2 bytes  | UV0 |
+| [UV](#uv-coordinates) | 2 bytes  | UV0 |
 | short | 2 bytes  | CBA (Clut Data)  |
-| [UV](#uv-coordinatesuv) | 2 bytes  | UV1 |
+| [UV](#uv-coordinates) | 2 bytes  | UV1 |
 | short | 2 bytes  | TSB (Texture Data) |
-| [UV](#uv-coordinatesuv) | 2 bytes  | UV2 |  
+| [UV](#uv-coordinates) | 2 bytes  | UV2 |  
 
 Medal Of Honor:Underground stores this information as a list of short that
 references the [Texture Data](#texture-info) that will be applied
@@ -742,11 +742,11 @@ using the following face structure:
 
 | Type | Size | Description |
 | ---- | ---- | ----------- |
-| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 0 |
+| [UV](#uv-coordinates)  | 2 bytes  | UV Coordinates of Vertex 0 |
 | short  | 2 bytes  | [TSB](#TSB) Info |
-| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 1 |
+| [UV](#uv-coordinates)  | 2 bytes  | UV Coordinates of Vertex 1 |
 | short  | 2 bytes  | Texture Info |
-| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 2 |
+| [UV](#uv-coordinates)  | 2 bytes  | UV Coordinates of Vertex 2 |
 | unsigned int  | 4 bytes  | Vertex Data |
 
 
@@ -759,10 +759,10 @@ following format:
 | unsigned int | 4 bytes | Vertex 0 and Vertex 1 |
 | unsigned short | 2 bytes | Vertex 2 |
 | short  | 2 bytes  | [TSB](#TSB) Info |
-| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 0 |
-| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 1 |
+| [UV](#uv-coordinates)  | 2 bytes  | UV Coordinates of Vertex 0 |
+| [UV](#uv-coordinates)  | 2 bytes  | UV Coordinates of Vertex 1 |
 | short | 2 bytes | TexInfo (Texture page and Color Mode) |
-| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 2 |
+| [UV](#uv-coordinates)  | 2 bytes  | UV Coordinates of Vertex 2 |
 
 The algorithm for loading it is similar to what it is used on the TSP
 version 3 but using a different structure for the face data.  
@@ -883,11 +883,11 @@ Each face has a fixed size of 28 bytes and contains several fields.
 [Color](#Color)| 4 bytes | RGB Color of Vertex 0 |
 [Color](#Color)| 4 bytes | RGB Color of Vertex 1 |
 [Color](#Color)| 4 bytes | RGB Color of Vertex 2 |
-| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 1 |
+| [UV](#uv-coordinates)  | 2 bytes  | UV Coordinates of Vertex 1 |
 | short  | 2 bytes  | CLUT Info |
-| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 2 |
+| [UV](#uv-coordinates)  | 2 bytes  | UV Coordinates of Vertex 2 |
 | short  | 2 bytes  | Texture Info |
-| [UV](#uv-coordinatesuv)  | 2 bytes  | UV Coordinates of Vertex 3 |
+| [UV](#uv-coordinates)  | 2 bytes  | UV Coordinates of Vertex 3 |
 | byte  | 1 byte  | Vertex Table Entry 1 |
 | byte  | 1 byte  | Vertex Index 1 |
 | byte  | 1 byte  | Vertex Table Entry 2 |
