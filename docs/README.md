@@ -607,11 +607,11 @@ elements and has a fixed size of 80 bytes.
 | ---- | ---- | ----------- |
 | int  | 4 bytes  | Node offset |
 | int  | 4 bytes  | Unknown Offset0 |
-| int  | 4 bytes  | Unknown Offset1 |
-| int  | 4 bytes  | Number of elements at Offset1 |
-| int  | 4 bytes  | Unknown Offset2 |
+| int  | 4 bytes  | Animation Table Offset |
+| int  | 4 bytes  | Number of elements in animation table |
+| int  | 4 bytes  | Animation Data Offset |
 | int  | 4 bytes  | Number of elements at Offset2 |
-| int  | 4 bytes  | Unknown Offset3 |
+| int  | 4 bytes  | Animation Quaternion Offset |
 | int  | 4 bytes  | Number of elements at Offset3 |
 | int  | 4 bytes  | Bone Hierarchy Data Offset |
 | int  | 4 bytes  | Number of bones inside the hierarchy |
@@ -819,7 +819,86 @@ position ("Vertex Table Offset") that it is stored inside the
 [Entry Table](#entry-table-block) to obtain the vertices used to render
 the model.  
 Then we have the hierarchical data that defines the bone structure used to
-animate the model.
+animate the model.  
+Using the offset stored inside RendrObject field "AnimationData" we can
+start loading the frames required to animate the model.  
+In this location we have the number of available animation stored as a
+short and a pad value which should be constant and equals to "52685".  
+All the offsets that are loaded from this location must be added to the
+offset "Animation Table Offset" found in the entry table.  
+###### Animation Entry
+Each entry loaded from the previous offset has the following fields:  
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| byte | 1 byte | Number of Animation Frames |
+| byte | 1 bytes | Number of bones/vertices table affected by animation |
+| short  | 2 bytes  | Pad (Always 52480) |
+| int | 4 bytes | Offset to the actual animation data |
+
+###### Animation Data
+
+The position of the data is given by the sum of the Offset inside the
+Animation Entry field plus the Animation Data Offset plus the index times
+the size of each animation frame (20 bytes).
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| short | 2 bytes | Unknown |
+| short | 2 bytes | Unknown |
+| int  | 4 bytes  | Encoded Translation Vector |
+| short | 2 bytes | Unknown |
+| short | 2 bytes | Unknown |
+| byte | 1 byte | Unknown |
+| byte | 1 byte | Unknown |
+| byte | 1 byte | Animation Type |
+| byte | 1 byte | Number of Quaternions |
+| int | 4 bytes | Offset to a list of Quaternions |
+
+The translation vector can be decoded as following:  
+```
+Vector.x = (EncodedVector << 0x16) >> 0x16;
+Vector.y = (EncodedVector << 0xB) >> 0x15;
+Vector.z = (EncodedVector << 0x1) >> 0x16;
+```
+
+If the offset is != -1 then we can find a list of quaternions at the
+offset given by the sum of the current offset plus the
+"Animation Quaternion Offset" found in the entry table.  
+
+Each quaternion is decoded by first reading all the encoded quaternions in
+a list which has a size equals to "Number Of Quaternions" times two and
+then decoding it by iterating it as shown in this sample code:  
+First load the encoded quaternion as a list:  
+```
+for( i = 0; i < NumAnimationQuaternions * 2; i += 2 ) {
+  Read EncodedQuaternionList[i];
+  Read EncodedQuaternionList[i+1]
+}
+```
+then decode it:  
+```
+V0 = EncodedQuaternionList[q * 3];
+V1 = EncodedQuaternionList[(q * 3)+1];
+V2 = EncodedQuaternionList[(q * 3)+2];
+x = ( (V0 << 0x10) >> 20) * 2;
+w = (V0 >> 20) * 2;
+y = (V1 << 20) >> 19;
+z = ( ( ( (V1 >> 12) << 28 ) >> 20) | ( (V0 >> 12) & 0xF0) | (V0 & 0xF) ) * 2;
+DecodedQuaternionList[q*2].x = x;
+DecodedQuaternionList[q*2].y = y;
+DecodedQuaternionList[q*2].z = z;
+DecodedQuaternionList[q*2].w = w;
+x = (V1  >> 20) * 2;
+y = ( (V2 << 4) >> 20 ) * 2;
+w = ( (V2 << 0x10) >> 20) * 2;
+z = ( (V2 >> 28) << 8 | (V2 & 0xF ) << 4 | ( (V2 >> 16) & 0xF ) ) * 2;
+DecodedQuaternionList[(q*2) + 1].x = x;
+DecodedQuaternionList[(q*2) + 1].y = y;
+DecodedQuaternionList[(q*2) + 1].z = z;
+DecodedQuaternionList[(q*2) + 1].w = w;
+```
+
 
 ##### Vertex Table
 This table is used to load the vertices of models that uses animation
@@ -862,6 +941,13 @@ Each bone has the following data:
 | short  | 2 bytes  | Pad |
 | int  | 4 bytes  | Offset to Child1 |
 | int  | 4 bytes  | Offset to Child2 |
+
+x,y,z are the position of the bone in the bone space.  
+This means that in order to use them we need to multiply each bone position
+with the corresponding rotation matrix obtained from the current
+animation's quaternion.  
+Each time the animation changes the transform must be applied to all the
+vertices inside the vertex table.  
 
 ##### Face Table
 This table is used to load the faces of models that uses animation
