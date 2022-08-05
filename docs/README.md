@@ -5,7 +5,7 @@ Table of contents
 =================
 
   - [Introduction](#introduction)
-  - [Programs](#programs)
+  * [Programs](#programs)
     + [MOHLevelViewer](#mohlevelviewer)
       - [Build](#build)
       - [Usage](#usage)
@@ -53,6 +53,8 @@ Table of contents
           + [Color Mode](#color-mode)
           + [Texture Page](#texture-page)
           + [Vertex Data](#vertex-data)
+          + [Animations](#animations)
+          + [Animation Entry](#animation-entry)
           + [Animation Data](#animation-data)
         * [Vertex Table](#vertex-table)
         * [Vertex Data](#vertex-data-1)
@@ -811,7 +813,7 @@ Vertex Data contains the information about the indices used to create the triang
 ####### Vertex 2
 > (VertexData & 0xFF00000) >> 20
 
-###### Animation Data
+###### Animations
 Animation data is stored inside each RenderObject using several offsets
 that points to various location inside the BSD file.  
 The first offset used is the Vertex Table Offset which is added to the
