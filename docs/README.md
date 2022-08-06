@@ -4,7 +4,7 @@ Medal Of Honor PSX File Viewer
 Table of contents
 =================
 
-  - [Introduction](#introduction)
+  * [Introduction](#introduction)
   * [Programs](#programs)
     + [MOHLevelViewer](#mohlevelviewer)
       - [Build](#build)
