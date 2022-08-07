@@ -23,6 +23,11 @@
 
 #define MAX_FPS 120
 
+typedef enum
+{
+    MOH_GAME_STANDARD,
+    MOH_GAME_UNDERGROUND
+} MOHGame_t;
 
 typedef struct ComTimeInfo_s {
     int	  FPS;

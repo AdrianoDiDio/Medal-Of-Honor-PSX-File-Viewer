@@ -612,9 +612,9 @@ elements and has a fixed size of 80 bytes.
 | int  | 4 bytes  | Animation Table Offset |
 | int  | 4 bytes  | Number of elements in animation table |
 | int  | 4 bytes  | Animation Data Offset |
-| int  | 4 bytes  | Number of elements at Offset2 |
+| int  | 4 bytes  | Number of Animation Data |
 | int  | 4 bytes  | Animation Quaternion Offset |
-| int  | 4 bytes  | Number of elements at Offset3 |
+| int  | 4 bytes  | Number of Quaternions |
 | int  | 4 bytes  | Bone Hierarchy Data Offset |
 | int  | 4 bytes  | Number of bones inside the hierarchy |
 | int  | 4 bytes  | Face Table Offset |

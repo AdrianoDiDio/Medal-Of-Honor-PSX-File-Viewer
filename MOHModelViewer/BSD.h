@@ -22,8 +22,48 @@
 
 #include "Common.h"
 
-typedef struct BSD_s {
+#define BSD_ANIMATED_LIGHTS_TABLE_SIZE 40
+#define MOH_RENDER_OBJECT_SIZE 256
+#define MOH_UNDERGROUND_RENDER_OBJECT_SIZE 276
+
+#define BSD_ANIMATED_LIGHTS_FILE_POSITION 0xD8
+#define BSD_RENDER_OBJECT_STARTING_OFFSET 0x5A4
+#define BSD_ENTRY_TABLE_FILE_POSITION 0x53C
+
+typedef struct BSDEntryTable_s {
+    int NodeTableOffset;
+    int UnknownDataOffset;
     
+    int AnimationTableOffset;
+    int NumAnimationTableEntries;
+    
+    int AnimationDataOffset;
+    int NumAnimationData;
+    
+    int AnimationQuaternionDataOffset;
+    int NumAnimationQuaternionData;
+        
+    int AnimationHierarchyDataOffset;
+    int NumAnimationHierarchyData;
+        
+    int AnimationFaceTableOffset;
+    int NumAnimationFaceTableEntries;
+    
+    int AnimationFaceDataOffset;
+    int NumAnimationFaces;
+        
+    int AnimationVertexTableOffset;
+    int NumAnimationVertexTableEntries;
+
+    int AnimationVertexDataOffset;
+    int NumAnimationVertices;
+    
+    int Off8;
+    int Num8;
+    
+} BSDEntryTable_t;
+typedef struct BSD_s {
+    BSDEntryTable_t EntryTable;
 } BSD_t;
 
 BSD_t   *BSDLoad(const char *FName);

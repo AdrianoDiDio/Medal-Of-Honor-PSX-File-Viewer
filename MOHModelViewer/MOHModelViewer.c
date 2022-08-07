@@ -19,6 +19,7 @@
 ===========================================================================
 */ 
 #include "MOHModelViewer.h"
+#include "BSD.h"
 
 Color4f_t    c_Black = {   0,    0,   0,   1.f};
 Color4f_t    c_Red    = {   1.f,  0,   0,   1.f};
@@ -631,5 +632,9 @@ void DPrintf(const char *Fmt, ...)
 #define TEST_ENGINE 0
 int main(int argc,char **argv)
 {
+    BSD_t *BSD;
+    DPrintf("Processing %s\n",argv[1]);
+    BSD = BSDLoad(argv[1]);
+    BSDFree(BSD);
     return 0;
 }
