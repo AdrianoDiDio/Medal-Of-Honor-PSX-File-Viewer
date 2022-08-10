@@ -621,12 +621,12 @@ elements and has a fixed size of 80 bytes.
 | int  | 4 bytes  | Number of Face Tables |
 | int  | 4 bytes  | Face Data Offset |
 | int  | 4 bytes  | Number Of Faces |
-| int  | 4 bytes  | Vertex Entry Table Offset |
-| int  | 4 bytes  | Number of Vertex Tables available |
+| int  | 4 bytes  | Vertex Table Index Offset |
+| int  | 4 bytes  | Number of Vertex Tables indices available |
+| int  | 4 bytes  | Vertex Table Offset |
+| int  | 4 bytes  | Number Of entries inside the vertex table|
 | int  | 4 bytes  | Vertex Data Offset |
-| int  | 4 bytes  | Number Of Vertex Data Available |
-| int  | 4 bytes  | Unknown Offset9 |
-| int  | 4 bytes  | Number of elements at Offset9 |
+| int  | 4 bytes  | Number of vertices |
 
 ##### Sky Box Definitions
 This block is found at position 1420 ( excluding the header) or 3468
@@ -691,7 +691,9 @@ NULL or contains an offset to the data stored inside the BSD file.
 | char  | 8 bytes  | Unknown Data |
 | int  | 4 bytes  | Unknown Data Offset |
 | int  | 4 bytes  | Color Offset (Indices are the same as the one used for vertices) |
-| char  | 52 bytes  | Unknown Data |
+| char  | 32 bytes  | Unknown Data |
+| int | 4 bytes  | Id of another RenderObject that contains the data used by this one |
+| char  | 16 bytes  | Unknown Data |
 | int  | 4 bytes  | Type |
 
 Medal Of Honor:Underground adds different new fields to the RenderObject
@@ -816,10 +818,10 @@ Vertex Data contains the information about the indices used to create the triang
 ###### Animations
 Animation data is stored inside each RenderObject using several offsets
 that points to various location inside the BSD file.  
-The first offset used is the Vertex Table Offset which is added to the
+The first offset used is the Vertex Table Index Offset which is added to the
 position ("Vertex Table Offset") that it is stored inside the
-[Entry Table](#entry-table-block) to obtain the vertices used to render
-the model.  
+[Entry Table](#entry-table-block) to obtain the table from which to load the  
+vertices used to render the model.  
 Then we have the hierarchical data that defines the bone structure used to
 animate the model.  
 Using the offset stored inside RendrObject field "AnimationData" we can
@@ -976,15 +978,15 @@ Each face has a fixed size of 28 bytes and contains several fields.
 | [UV](#uv-coordinates)  | 2 bytes  | UV Coordinates of Vertex 2 |
 | short  | 2 bytes  | Texture Info |
 | [UV](#uv-coordinates)  | 2 bytes  | UV Coordinates of Vertex 3 |
-| byte  | 1 byte  | Vertex Table Entry 1 |
-| byte  | 1 byte  | Vertex Index 1 |
-| byte  | 1 byte  | Vertex Table Entry 2 |
-| byte  | 1 byte  | Vertex Index 2 |
-| byte  | 1 byte  | Vertex Table Entry 3 |
-| byte  | 1 byte  | Vertex Index 3 |
+| byte  | 1 byte  | Vertex Table Data 1 |
+| byte  | 1 byte  | Vertex Table Index 1 |
+| byte  | 1 byte  | Vertex Table Data 2 |
+| byte  | 1 byte  | Vertex Table Index 2 |
+| byte  | 1 byte  | Vertex Table Data 3 |
+| byte  | 1 byte  | Vertex Table Index 3 |
 
-The vertices are referenced using two indices:one references the vertex
-table and the other one points to the actual vertex data.  
+The vertices are referenced using two indices:one (Vertex Table Index %n) references the vertex
+table and the other one (Vertex Table Data %n) points to the actual vertex data inside the table.  
 
 ##### Node Table
 This section of the BSD files contains the list of all the nodes along with

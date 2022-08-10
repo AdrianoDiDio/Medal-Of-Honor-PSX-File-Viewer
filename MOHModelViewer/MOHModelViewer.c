@@ -632,9 +632,9 @@ void DPrintf(const char *Fmt, ...)
 #define TEST_ENGINE 0
 int main(int argc,char **argv)
 {
-    BSD_t *BSD;
+    BSDRenderObject_t *RenderObjectList;
     DPrintf("Processing %s\n",argv[1]);
-    BSD = BSDLoad(argv[1]);
-    BSDFree(BSD);
+    RenderObjectList = BSDLoadAllAnimatedRenderObjects(argv[1]);
+    BSDFreeRenderObjectList(RenderObjectList);
     return 0;
 }
