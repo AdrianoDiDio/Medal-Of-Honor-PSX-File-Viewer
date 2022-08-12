@@ -26,10 +26,9 @@
 #define BSD_ANIMATED_LIGHTS_TABLE_SIZE 40
 #define MOH_RENDER_OBJECT_SIZE 256
 #define MOH_UNDERGROUND_RENDER_OBJECT_SIZE 276
-
+#define BSD_ANIMATION_FRAME_DATA_SIZE 20
 #define BSD_ANIMATED_LIGHTS_FILE_POSITION 0xD8
 #define BSD_RENDER_OBJECT_STARTING_OFFSET 0x5A4
-#define BSD_VERTEX_TABLE_INDEX_OFFSET 0x574
 #define BSD_ENTRY_TABLE_FILE_POSITION 0x53C
 
 typedef struct BSDVertex_s {
@@ -38,6 +37,13 @@ typedef struct BSDVertex_s {
     short z;
     short Pad;
 } BSDVertex_t;
+
+typedef struct BSDQuaternion_s {
+    short x;
+    short y;
+    short z;
+    short w;
+} BSDQuaternion_t;
 
 typedef struct BSDColor_s {
     Byte r;
@@ -75,6 +81,54 @@ typedef struct BSDAnimatedModelFace_s {
     Byte VertexTableIndex2;
 } BSDAnimatedModelFace_t;
 
+typedef struct BSDHierarchyBone_s
+{
+    unsigned short VertexTableIndex;
+    BSDVertex_t Position;
+    short Pad;
+    struct BSDHierarchyBone_s *Child1;
+    struct BSDHierarchyBone_s *Child2;
+} BSDHierarchyBone_t;
+
+typedef struct BSDAnimationTableEntry_s
+{
+//     unsigned int Value;
+//     unsigned short Value;
+    Byte NumFrames;
+    Byte NumAffectedVertex;
+    unsigned short Pad;
+    int Offset;
+} BSDAnimationTableEntry_t;
+
+typedef struct BSDAnimationFrame_s
+{
+    short           U0;
+    short           U4;
+    int             EncodedVector;
+    BSDVertex_t     Vector;
+    short           U1;
+    short           U2;
+    Byte            U3;
+    Byte            U5;
+    Byte            Type;
+    Byte            NumQuaternions;
+    
+    int             *EncodedQuaternionList;
+    BSDQuaternion_t *QuaternionList;
+    
+//     short V2;
+//     short V3;
+} BSDAnimationFrame_t;
+
+typedef struct BSDAnimation_s
+{
+    BSDAnimationFrame_t *Frame;
+//     BSDAnimationEncodedVector_t *VectorList;
+    int NumFrames;
+//     int NumVector;
+} BSDAnimation_t;
+
+
 typedef struct BSDRenderObjectElement_s {
     unsigned int    Id;
     int             UnknownOffset0;
@@ -82,14 +136,14 @@ typedef struct BSDRenderObjectElement_s {
     char            U0[32];
     int             FaceOffset;
     char            U[8];
-    int             FaceTableOffset; // => References 0x564 BSDFile/EntryTable.
+    int             FaceTableOffset;
     int             UnknownOffset4;
     char            Pad[68];
-    int             VertexTableIndexOffset; // => References 0x574 BSDFile/EntryTable.
+    int             VertexTableIndexOffset;
     int             VertOffset;
     unsigned short  NumVertex;
     char            RemainingU[14];
-    int             RootBoneOffset; // => References 0x55C BSDFile/EntryTable.
+    int             RootBoneOffset;
     int             Unknown;
     int             ScaleX;
     int             ScaleY;
@@ -141,10 +195,12 @@ typedef struct BSDEntryTable_s {
 } BSDEntryTable_t;
 
 typedef struct BSDRenderObject_s {
-    BSDVertexTable_t        *VertexTable;
-    int                     NumVertexTables;
-    BSDAnimatedModelFace_t  *FaceList;
-    
+    BSDVertexTable_t            *VertexTable;
+    int                         NumVertexTables;
+    BSDAnimatedModelFace_t      *FaceList;
+    BSDHierarchyBone_t          *HierarchyData;
+    BSDAnimation_t              *AnimationList;
+    int                         NumAnimations;
     struct BSDRenderObject_s *Next;
 } BSDRenderObject_t;
 

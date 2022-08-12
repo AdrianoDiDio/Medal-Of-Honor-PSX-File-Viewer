@@ -21,9 +21,19 @@
 #include "BSD.h"
 #include "MOHModelViewer.h" 
 
+void BSDFreeHierarchyBone(BSDHierarchyBone_t *Bone)
+{
+    if( !Bone ) {
+        return;
+    }
+    BSDFreeHierarchyBone(Bone->Child2);
+    BSDFreeHierarchyBone(Bone->Child1);
+    free(Bone);
+}
 void BSDFreeRenderObject(BSDRenderObject_t *RenderObject)
 {
     int i;
+    int j;
     if( !RenderObject ) {
         return;
     }
@@ -38,7 +48,23 @@ void BSDFreeRenderObject(BSDRenderObject_t *RenderObject)
     if( RenderObject->FaceList ) {
         free(RenderObject->FaceList);
     }
-        
+    if( RenderObject->HierarchyData ) {
+        BSDFreeHierarchyBone(RenderObject->HierarchyData);
+    }
+    if( RenderObject->AnimationList ) {
+        for( i = 0; i < RenderObject->NumAnimations; i++ ) {
+            for( j = 0; j < RenderObject->AnimationList[i].NumFrames; j++ ) {
+                if( RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList ) {
+                    free(RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList);
+                }
+                if( RenderObject->AnimationList[i].Frame[j].QuaternionList ) {
+                    free(RenderObject->AnimationList[i].Frame[j].QuaternionList);
+                }
+            }
+            free(RenderObject->AnimationList[i].Frame);
+        }
+        free(RenderObject->AnimationList);
+    }
     free(RenderObject);
 }
 
@@ -86,6 +112,11 @@ int BSDGetRenderObjectSize(BSD_t *BSD,FILE *BSDFile)
     int AnimatedLightColorSectionSize;
     int i;
     
+    if( !BSD || !BSDFile ) {
+        bool InvalidFile = (BSDFile == NULL ? true : false);
+        printf("BSDGetRenderObjectSize: Invalid %s\n",InvalidFile ? "file" : "BSD struct");
+        return 0;
+    }
     fseek(BSDFile,BSD_ANIMATED_LIGHTS_FILE_POSITION + BSD_HEADER_SIZE, SEEK_SET);
     fread(&NumAnimatedLights,sizeof(NumAnimatedLights),1,BSDFile);
     AnimatedLightColorSectionSize = 0;
@@ -144,11 +175,11 @@ int BSDReadEntryTableChunk(BSD_t *BSD,FILE *BSDFile)
             BSD->EntryTable.AnimationVertexDataOffset + BSD_HEADER_SIZE,BSD->EntryTable.NumAnimationVertex);
     return 1;
 }
-BSDRenderObjectElement_t *BSDGetRenderObject(BSD_t *BSD,int RenderObjectID)
+BSDRenderObjectElement_t *BSDGetRenderObjectById(const BSD_t *BSD,int RenderObjectId)
 {
     int i;
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        if( BSD->RenderObjectTable.RenderObject[i].Id == RenderObjectID ) {
+        if( BSD->RenderObjectTable.RenderObject[i].Id == RenderObjectId ) {
             return &BSD->RenderObjectTable.RenderObject[i];
         }
     }
@@ -171,7 +202,7 @@ void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile)
         if( BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId == -1 ) {
             continue;
         }
-        ReferencedRenderObject = BSDGetRenderObject(BSD,BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
+        ReferencedRenderObject = BSDGetRenderObjectById(BSD,BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
         CurrentRenderObject = &BSD->RenderObjectTable.RenderObject[i];
         if( !ReferencedRenderObject ) {
             DPrintf("BSDPatchRenderObjects:RenderObject Id %i not found\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
@@ -232,16 +263,15 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
         DPrintf("Reading RenderObject %i at %i\n",i,GetCurrentFilePosition(BSDFile));
         fread(&BSD->RenderObjectTable.RenderObject[i],sizeof(BSD->RenderObjectTable.RenderObject[i]),1,BSDFile);
         DPrintf("RenderObject Id:%u\n",BSD->RenderObjectTable.RenderObject[i].Id);
-        if( BSD->RenderObjectTable.RenderObject[i].Type == 1 ) {
-            DPrintf("RenderObject Type:%i\n",BSD->RenderObjectTable.RenderObject[i].Type);
-        } else {
-            DPrintf("RenderObject Type:%i\n",BSD->RenderObjectTable.RenderObject[i].Type);
-        }
+        DPrintf("RenderObject Type:%i\n",BSD->RenderObjectTable.RenderObject[i].Type);
+        
         if( BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId != -1 ) {
             DPrintf("RenderObject References RenderObject Id:%u\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
         } else {
             DPrintf("RenderObject No Reference set...\n");
         }
+        DPrintf("RenderObject Element Animation Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].AnimationDataOffset,
+                BSD->RenderObjectTable.RenderObject[i].AnimationDataOffset + BSD_HEADER_SIZE);
         DPrintf("RenderObject Element Vertex Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].VertOffset,
                 BSD->RenderObjectTable.RenderObject[i].VertOffset + BSD_HEADER_SIZE);
         DPrintf("RenderObject Element NumVertex: %i\n",BSD->RenderObjectTable.RenderObject[i].NumVertex);
@@ -365,6 +395,245 @@ int BSDLoadAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset
     }
     return 1;
 }
+
+BSDHierarchyBone_t *BSDRecursiveLoadHierarchyData(int BoneDataStartingPosition,int BoneOffset,FILE *BSDFile)
+{
+    BSDHierarchyBone_t *Bone;
+    int Child1Offset;
+    int Child2Offset;
+    
+    if( !BSDFile ) {
+        DPrintf("BSDRecursiveLoadHierarchyData:Invalid Bone Table file\n");
+        return NULL;
+    }
+
+    
+    Bone = malloc(sizeof(BSDHierarchyBone_t));
+    Bone->Child1 = NULL;
+    Bone->Child2 = NULL;
+    
+    if( !Bone ) {
+        DPrintf("BSDRecursiveLoadHierarchyData:Failed to allocate bone data\n");
+        return NULL;
+    }
+
+    fseek(BSDFile,BoneDataStartingPosition + BoneOffset + BSD_HEADER_SIZE,SEEK_SET);
+    fread(&Bone->VertexTableIndex,sizeof(Bone->VertexTableIndex),1,BSDFile);
+    fread(&Bone->Position,sizeof(Bone->Position),1,BSDFile);
+    fread(&Bone->Pad,sizeof(Bone->Pad),1,BSDFile);
+    fread(&Child1Offset,sizeof(Child1Offset),1,BSDFile);
+    fread(&Child2Offset,sizeof(Child2Offset),1,BSDFile);
+    
+    DPrintf("Bone:VertexTableIndex:%i\n",Bone->VertexTableIndex);
+    DPrintf("Bone:Position:%i;%i;%i\n",Bone->Position.x,Bone->Position.y,Bone->Position.z);
+
+    assert(  Bone->Pad == -12851 );
+
+    if( Child2Offset != -1 ) {
+        Bone->Child2 = BSDRecursiveLoadHierarchyData(BoneDataStartingPosition,Child2Offset,BSDFile);
+    }
+    if( Child1Offset != -1 ) {
+        Bone->Child1 = BSDRecursiveLoadHierarchyData(BoneDataStartingPosition,Child1Offset,BSDFile);
+    }
+    return Bone;
+}
+
+int BSDLoadAnimationHierarchyData(BSDRenderObject_t *RenderObject,int RootBoneOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
+{
+    if( !RenderObject || !BSDFile ) {
+        bool InvalidFile = (BSDFile == NULL ? true : false);
+        printf("BSDLoadAnimationHierarchyData: Invalid %s\n",InvalidFile ? "file" : "RenderObject struct");
+        return 0;
+    }
+    if( RootBoneOffset == -1 ) {
+        DPrintf("BSDLoadAnimationHierarchyData:Invalid Face Table Index Offset\n");
+        return 0;
+    }
+    
+    RenderObject->HierarchyData = BSDRecursiveLoadHierarchyData(EntryTable.AnimationHierarchyDataOffset,RootBoneOffset,BSDFile);
+    
+    if( !RenderObject->HierarchyData ) {
+        DPrintf("BSDLoadAnimationHierarchyData:Couldn't load hierarchy data\n");
+        return 0;
+    }
+    return 1;
+}
+int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
+{
+    short NumAnimationOffset;
+    unsigned short Pad;
+    int PreviousPosition;
+    BSDAnimationTableEntry_t *AnimationTableEntry;
+    int *AnimationOffsetTable;
+    int VertexTableOffset;
+    int QuaternionListOffset;
+    int i;
+    int j;
+    int w;
+    int q;
+    BSDQuaternion_t TempQuaternion;
+    int Base;
+    int Vector;
+    int Vector1;
+    int NextVector1;
+    int NumDecodedQuaternions;
+    
+    if( !RenderObject || !BSDFile ) {
+        bool InvalidFile = (BSDFile == NULL ? true : false);
+        printf("BSDLoadAnimationData: Invalid %s\n",InvalidFile ? "file" : "RenderObject struct");
+        return 0;
+    }
+    if( AnimationDataOffset == -1 ) {
+        DPrintf("BSDLoadAnimationData:Invalid Vertex Table Index Offset\n");
+        return 0;
+    }
+    fseek(BSDFile,AnimationDataOffset + BSD_HEADER_SIZE,SEEK_SET);
+    fread(&NumAnimationOffset,sizeof(NumAnimationOffset),1,BSDFile);
+    fread(&Pad,sizeof(Pad),1,BSDFile);
+    assert(Pad == 52685);
+    
+    AnimationOffsetTable = malloc(NumAnimationOffset * sizeof(int) );
+    RenderObject->NumAnimations = 0;
+    for( i = 0; i < NumAnimationOffset; i++ ) {
+        fread(&AnimationOffsetTable[i],sizeof(AnimationOffsetTable[i]),1,BSDFile);
+        if( AnimationOffsetTable[i] == -1 ) {
+            continue;
+        }
+        RenderObject->NumAnimations++;
+    }
+
+    AnimationTableEntry = malloc(RenderObject->NumAnimations * sizeof(BSDAnimationTableEntry_t) );
+    for( i = 0; i < RenderObject->NumAnimations; i++ ) {
+        DPrintf("BSDLoadAnimationData:Animation Offset %i for entry %i\n",AnimationOffsetTable[i],i);
+        if( AnimationOffsetTable[i] == -1 ) {
+            continue;
+        }
+        DPrintf("BSDLoadAnimationData:Going to %i plus %i\n",EntryTable.AnimationTableOffset,AnimationOffsetTable[i]);
+        fseek(BSDFile,EntryTable.AnimationTableOffset + AnimationOffsetTable[i] + BSD_HEADER_SIZE,SEEK_SET);
+        fread(&AnimationTableEntry[i],sizeof(AnimationTableEntry[i]),1,BSDFile);
+        DPrintf("BSDLoadAnimationData:AnimationEntry %i has pad %i\n",i,AnimationTableEntry[i].Pad);
+        DPrintf("BSDLoadAnimationData:Loading %i vertices Size %i\n",AnimationTableEntry[i].NumAffectedVertex,
+                AnimationTableEntry[i].NumAffectedVertex * 8);
+        DPrintf("BSDLoadAnimationData: NumFrames %u NumAffectedVertex:%u || Offset %i\n",AnimationTableEntry[i].NumFrames,
+                AnimationTableEntry[i].NumAffectedVertex,AnimationTableEntry[i].Offset);
+        assert(AnimationTableEntry[i].Pad == 52480);
+    }
+    RenderObject->AnimationList = malloc(RenderObject->NumAnimations * sizeof(BSDAnimation_t));
+    for( i = 0; i < RenderObject->NumAnimations; i++ ) {
+        RenderObject->AnimationList[i].Frame = NULL;
+        if( AnimationOffsetTable[i] == -1 ) {
+            continue;
+        }
+        DPrintf(" -- ANIMATION ENTRY %i -- \n",i);
+        DPrintf("Loading %i animations for entry %i\n",AnimationTableEntry[i].NumFrames,i);
+        
+        RenderObject->AnimationList[i].Frame = malloc(AnimationTableEntry[i].NumFrames * sizeof(BSDAnimationFrame_t));
+        RenderObject->AnimationList[i].NumFrames = AnimationTableEntry[i].NumFrames;
+        for( j = 0; j < AnimationTableEntry[i].NumFrames; j++ ) {
+                        DPrintf(" -- ANIMATION %i/%i -- \n",j,AnimationTableEntry[i].NumFrames);
+            // 20 is the sizeof an animation
+            fseek(BSDFile,EntryTable.AnimationDataOffset + AnimationTableEntry[i].Offset + BSD_HEADER_SIZE 
+                + j * BSD_ANIMATION_FRAME_DATA_SIZE,SEEK_SET);
+            DPrintf("Reading animation definition at %li each entry is %li bytes\n",ftell(BSDFile),sizeof(BSDAnimationFrame_t));
+
+            fread(&RenderObject->AnimationList[i].Frame[j].U0,sizeof(RenderObject->AnimationList[i].Frame[j].U0),1,BSDFile);
+            fread(&RenderObject->AnimationList[i].Frame[j].U4,sizeof(RenderObject->AnimationList[i].Frame[j].U4),1,BSDFile);
+            fread(&RenderObject->AnimationList[i].Frame[j].EncodedVector,
+                  sizeof(RenderObject->AnimationList[i].Frame[j].EncodedVector),1,BSDFile);
+            fread(&RenderObject->AnimationList[i].Frame[j].U1,sizeof(RenderObject->AnimationList[i].Frame[j].U1),1,BSDFile);
+            fread(&RenderObject->AnimationList[i].Frame[j].U2,sizeof(RenderObject->AnimationList[i].Frame[j].U2),1,BSDFile);
+            fread(&RenderObject->AnimationList[i].Frame[j].U3,sizeof(RenderObject->AnimationList[i].Frame[j].U3),1,BSDFile);
+            fread(&RenderObject->AnimationList[i].Frame[j].U5,sizeof(RenderObject->AnimationList[i].Frame[j].U5),1,BSDFile);
+            fread(&RenderObject->AnimationList[i].Frame[j].Type,
+                  sizeof(RenderObject->AnimationList[i].Frame[j].Type),1,BSDFile);
+            fread(&RenderObject->AnimationList[i].Frame[j].NumQuaternions,
+                  sizeof(RenderObject->AnimationList[i].Frame[j].NumQuaternions),1,BSDFile);
+            fread(&QuaternionListOffset,sizeof(QuaternionListOffset),1,BSDFile);
+
+            RenderObject->AnimationList[i].Frame[j].Vector.x = (RenderObject->AnimationList[i].Frame[j].EncodedVector << 0x16) >> 0x16;
+            RenderObject->AnimationList[i].Frame[j].Vector.y = (RenderObject->AnimationList[i].Frame[j].EncodedVector << 0xb)  >> 0x15;
+            RenderObject->AnimationList[i].Frame[j].Vector.z = (RenderObject->AnimationList[i].Frame[j].EncodedVector << 0x1)  >> 0x16;
+            DPrintf("Entry %i => U0|U1|U2: %i;%i;%i QuaternionListOffset:%i\n",i,RenderObject->AnimationList[i].Frame[j].U0,
+                    RenderObject->AnimationList[i].Frame[j].U1,
+                    RenderObject->AnimationList[i].Frame[j].U2,QuaternionListOffset);
+            DPrintf("U3: %i\n",RenderObject->AnimationList[i].Frame[j].U3);
+            DPrintf("U4 is %i\n",RenderObject->AnimationList[i].Frame[j].U4);
+            DPrintf("U5 is %i\n",RenderObject->AnimationList[i].Frame[j].U5);
+            DPrintf("Animation Type is %i -- Number of quaternions is %i\n",RenderObject->AnimationList[i].Frame[j].Type,
+                RenderObject->AnimationList[i].Frame[j].NumQuaternions
+            );
+            DPrintf("Encoded Vector is %i\n",RenderObject->AnimationList[i].Frame[j].EncodedVector);
+            DPrintf("We are at %i  AnimOffset:%i LocalOffset:%i Index %i times 20 (%i)\n",ftell(BSDFile),
+                EntryTable.AnimationDataOffset,AnimationTableEntry[i].Offset,j,j*20
+            );
+            assert(ftell(BSDFile) - (EntryTable.AnimationDataOffset + AnimationTableEntry[i].Offset + BSD_HEADER_SIZE 
+                + j * BSD_ANIMATION_FRAME_DATA_SIZE) == BSD_ANIMATION_FRAME_DATA_SIZE );
+            RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList = NULL;
+            RenderObject->AnimationList[i].Frame[j].QuaternionList = NULL;
+            if( QuaternionListOffset != -1 ) {
+                fseek(BSDFile,EntryTable.AnimationQuaternionDataOffset + QuaternionListOffset + BSD_HEADER_SIZE,SEEK_SET);
+                DPrintf("Reading Vector definition at %li\n",ftell(BSDFile));
+                RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList = malloc( 
+                    RenderObject->AnimationList[i].Frame[j].NumQuaternions * sizeof(int) * 2);
+                for( w = 0; w < RenderObject->AnimationList[i].Frame[j].NumQuaternions * 2; w+=2 ) {
+                    DPrintf("Reading anim %i-%i \n",w,w+1);
+                    fread(&RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[w],
+                          sizeof(RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[w]),1,BSDFile);
+                    fread(&RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[w+1],
+                          sizeof(RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[w+1]),1,BSDFile);
+                }
+                DPrintf("Done...\n");
+                RenderObject->AnimationList[i].Frame[j].QuaternionList = malloc( 
+                    RenderObject->AnimationList[i].Frame[j].NumQuaternions * sizeof(BSDQuaternion_t));
+
+                NumDecodedQuaternions = 0;
+                for( q = 0; q < RenderObject->AnimationList[i].Frame[j].NumQuaternions / 2; q++ ) {
+                    Base = q * 3;
+//                     DPrintf("Generating with base %i V0:%i V1:%i V2:%i\n",q,Base,Base+1,Base+2);
+                    Vector = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base];
+                    Vector1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base+1];
+                    NextVector1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base+2];
+                    TempQuaternion.x = ( (Vector << 0x10) >> 20) * 2;
+                    TempQuaternion.y = (Vector1 << 20) >> 19;
+                    TempQuaternion.z = ( ( ( (Vector1 >> 12) << 28 ) >> 20) | ( (Vector >> 12) & 0xF0) | (Vector & 0xF) ) * 2;
+                    TempQuaternion.w = (Vector >> 20) * 2;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].x = TempQuaternion.x;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].y = TempQuaternion.y;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].z = TempQuaternion.z;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].w = TempQuaternion.w;
+
+                    DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
+                    TempQuaternion.x = (Vector1  >> 20) * 2;
+                    TempQuaternion.y = ( (NextVector1 << 4) >> 20 ) * 2;
+                    TempQuaternion.w = ( (NextVector1 << 0x10) >> 20) * 2;
+                    TempQuaternion.z = ( (NextVector1 >> 28) << 8 | (NextVector1 & 0xF ) << 4 | ( (Vector1 >> 16) & 0xF ) ) * 2;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].x = TempQuaternion.x;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].y = TempQuaternion.y;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].z = TempQuaternion.z;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].w = TempQuaternion.w;
+                    DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
+                    NumDecodedQuaternions += 2;
+                }
+                if( NumDecodedQuaternions == (RenderObject->AnimationList[i].Frame[j].NumQuaternions - 1) ) {
+                    Vector = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[0];
+                    Vector1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[1];
+                    TempQuaternion.x = ( (Vector << 0x10) >> 20) * 2;
+                    TempQuaternion.y = (Vector1 << 20) >> 19;
+                    TempQuaternion.z = ( ( ( (Vector1 >> 12) << 28 ) >> 20) | ( (Vector >> 12) & 0xF0) | (Vector & 0xF) ) * 2;
+                    TempQuaternion.w = (Vector >> 20) * 2;
+                    NumDecodedQuaternions++;
+                }
+                DPrintf("Decoded %i out of %i\n",NumDecodedQuaternions,RenderObject->AnimationList[i].Frame[j].NumQuaternions);
+                assert(NumDecodedQuaternions == RenderObject->AnimationList[i].Frame[j].NumQuaternions);
+            } else {
+                DPrintf("QuaternionListOffset is not valid...\n");
+            }
+        }
+    }
+    free(AnimationOffsetTable);
+    free(AnimationTableEntry);
+    return 1;
+}
 BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t BSDEntryTable,FILE *BSDFile)
 {
     BSDRenderObject_t *RenderObject;
@@ -375,19 +644,29 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
         goto Failure;
     }
     RenderObject = malloc(sizeof(BSDRenderObject_t));
-    RenderObject->VertexTable = NULL;
-    RenderObject->FaceList = NULL;
     if( !RenderObject ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to allocate memory for RenderObject\n");
         goto Failure;
     }
+    RenderObject->VertexTable = NULL;
+    RenderObject->FaceList = NULL;
+    RenderObject->HierarchyData = NULL;
+    RenderObject->AnimationList = NULL;
     if( !BSDLoadAnimationVertexData(RenderObject,RenderObjectElement.VertexTableIndexOffset,BSDEntryTable,BSDFile) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load vertex data\n");
         goto Failure;
     }
     if( !BSDLoadAnimationFaceData(RenderObject,RenderObjectElement.FaceTableOffset,BSDEntryTable,BSDFile) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load face data\n");
-        goto Failure;  
+        goto Failure;
+    }
+    if( !BSDLoadAnimationHierarchyData(RenderObject,RenderObjectElement.RootBoneOffset,BSDEntryTable,BSDFile) ) {
+        DPrintf("BSDLoadAnimatedRenderObject:Failed to load hierarchy data\n");
+        goto Failure;
+    }
+    if( !BSDLoadAnimationData(RenderObject,RenderObjectElement.AnimationDataOffset,BSDEntryTable,BSDFile) ) {
+        DPrintf("BSDLoadAnimatedRenderObject:Failed to load animation data\n");
+        goto Failure;
     }
     return RenderObject;
 Failure:
@@ -422,9 +701,6 @@ BSD_t *BSDLoad(FILE *BSDFile)
     return BSD;
 Failure:
     BSDFree(BSD);
-    if( BSDFile ) {
-        fclose(BSDFile);
-    }
     return NULL;
 }
 
@@ -439,10 +715,11 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
     BSDFile = fopen(FName,"rb");
     if( BSDFile == NULL ) {
         DPrintf("Failed opening BSD File %s.\n",FName);
-        goto Failure;
+        return NULL;
     }
     BSD = BSDLoad(BSDFile);
     if( !BSD ) {
+        fclose(BSDFile);
         return NULL;
     }
     RenderObjectList = NULL;
@@ -463,10 +740,6 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
     }
     
     BSDFree(BSD);
+    fclose(BSDFile);
     return RenderObjectList;
-Failure:
-    if( BSDFile ) {
-        fclose(BSDFile);
-    }
-    return NULL;
 }
