@@ -266,12 +266,6 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
         fread(&BSD->RenderObjectTable.RenderObject[i],sizeof(BSD->RenderObjectTable.RenderObject[i]),1,BSDFile);
         if( GameEngine == MOH_GAME_UNDERGROUND ) {
             SkipFileSection(20,BSDFile);
-//             if( BSD->RenderObjectTable.RenderObject[i].FaceTableOffset == -1 ) {
-//                 fread(&BSD->RenderObjectTable.RenderObject[i].FaceTableOffset,sizeof(int),1,BSDFile);
-//                 SkipFileSection(8,BSDFile);
-//             } else {
-//                 SkipFileSection(12,BSDFile);
-//             }
         }
         DPrintf("RenderObject Id:%u\n",BSD->RenderObjectTable.RenderObject[i].Id);
         DPrintf("RenderObject Type:%i\n",BSD->RenderObjectTable.RenderObject[i].Type);
@@ -395,9 +389,9 @@ void BSDPrintAnimatedModelFace(BSDAnimatedModelFace_t Face)
     DPrintf("RGB0:(%i;%i;%i)\n",Face.RGB0.r,Face.RGB0.g,Face.RGB0.b);
     DPrintf("RGB1:(%i;%i;%i)\n",Face.RGB1.r,Face.RGB1.g,Face.RGB1.b);
     DPrintf("RGB2:(%i;%i;%i)\n",Face.RGB2.r,Face.RGB2.g,Face.RGB2.b);
-    DPrintf("Table Index 0 %i Data %i.\n",Face.VertexTableIndex0,Face.VertexTableDataIndex0);
-    DPrintf("Table Index 1 %i Data %i.\n",Face.VertexTableIndex1,Face.VertexTableDataIndex1);
-    DPrintf("Table Index 2 %i Data %i.\n",Face.VertexTableIndex2,Face.VertexTableDataIndex2);
+    DPrintf("Table Index0 %i Data %i.\n",Face.VertexTableIndex0,Face.VertexTableDataIndex0);
+    DPrintf("Table Index1 %i Data %i.\n",Face.VertexTableIndex1,Face.VertexTableDataIndex1);
+    DPrintf("Table Index2 %i Data %i.\n",Face.VertexTableIndex2,Face.VertexTableDataIndex2);
 }
 /*
  * NOTE(Adriano):
@@ -452,34 +446,26 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
 
         DPrintf(" -- FACE %i --\n",CurrentFaceIndex);
         BSDPrintAnimatedModelFace(RenderObject->FaceList[CurrentFaceIndex]);
-        TempFace.VertexTableIndex0 = RenderObject->FaceList[CurrentFaceIndex].VertexTableIndex0;
-        TempFace.VertexTableDataIndex0 = RenderObject->FaceList[CurrentFaceIndex].VertexTableDataIndex0;
-        TempFace.VertexTableIndex1 = RenderObject->FaceList[CurrentFaceIndex].VertexTableIndex1;
-        TempFace.VertexTableDataIndex1 = RenderObject->FaceList[CurrentFaceIndex].VertexTableDataIndex1;
-        TempFace.VertexTableIndex2 = RenderObject->FaceList[CurrentFaceIndex].VertexTableIndex2;
-        TempFace.VertexTableDataIndex2 = RenderObject->FaceList[CurrentFaceIndex].VertexTableDataIndex2;
-
         CurrentFaceIndex++;
         while( 1 ) {
-//             DPrintf("BSDLoadAnimationFaceData:Reading additional face %i at %li\n",CurrentFaceIndex,ftell(BSDFile) - 2048);
             fread(&Marker,sizeof(Marker),1,BSDFile);
-//             DPrintf("BSDLoadAnimationFaceData:Found Marker %u (Vertex %i) Texture:%u Mask %i\n",Marker,Marker & 0x1FFF,Marker >> 16,0x1FFF);
             if( ( Marker & 0x1FFF ) == 0x1FFF || Marker == 0x1fff1fff ) {
                 DPrintf("BSDLoadAnimationFaceData:Aborting since a marker was found\n");
                 break;
             }
             fread(&AdditionalData,sizeof(AdditionalData),1,BSDFile);
-//             RenderObject->FaceV2[CurrentFaceIndex].TexInfo = TempFace.TexInfo;
                     
             if( (Marker & 0x8000) != 0 ) {
-                TempFace.VertexTableIndex0 = RenderObject->FaceList[CurrentFaceIndex].VertexTableIndex2;
-                TempFace.VertexTableDataIndex0 = RenderObject->FaceList[CurrentFaceIndex].VertexTableDataIndex2;                
+                DPrintf("0x80 Branch Swap 0 and 2\n");
+                TempFace.VertexTableIndex0 = TempFace.VertexTableIndex2;
+                TempFace.VertexTableDataIndex0 = TempFace.VertexTableDataIndex2;                
                 TempFace.UV0 = TempFace.UV2;
             } else {
-                TempFace.VertexTableIndex0 = RenderObject->FaceList[CurrentFaceIndex].VertexTableIndex1;
-                TempFace.VertexTableDataIndex0 = RenderObject->FaceList[CurrentFaceIndex].VertexTableDataIndex1;
-                TempFace.VertexTableIndex1 = RenderObject->FaceList[CurrentFaceIndex].VertexTableIndex2;
-                TempFace.VertexTableDataIndex1 = RenderObject->FaceList[CurrentFaceIndex].VertexTableDataIndex2;
+                DPrintf("!= 0x80 branch swap 0 and 1\n");
+                TempFace.VertexTableIndex0 = TempFace.VertexTableIndex1;
+                TempFace.VertexTableDataIndex0 = TempFace.VertexTableDataIndex1;
+                TempFace.VertexTableIndex1 = TempFace.VertexTableIndex2;
+                TempFace.VertexTableDataIndex1 = TempFace.VertexTableDataIndex2;
                 TempFace.UV0 = TempFace.UV1;
                 TempFace.UV1 = TempFace.UV2;
             }
@@ -490,20 +476,15 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
             
             BSDCopyAnimatedModelFace(TempFace,&RenderObject->FaceList[CurrentFaceIndex]);
             BSDPrintAnimatedModelFace(RenderObject->FaceList[CurrentFaceIndex]);
-
-//             DPrintf("BSDLoadAnimationFaceData:Vert0:%i Vert1:%i Vert2:%i Additional Face %i\n",TempFace.Vert0,TempFace.Vert1,
-//                     TempFace.Vert2,RenderObject->FaceV2[CurrentFaceIndex].V2 >> 16);
             CurrentFaceIndex++;
         }
-        DPrintf("BSDLoadAnimationFaceData:Aborted marker was %i\n",Marker);
-        DPrintf("BSDLoadAnimationFaceData:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,NumFaces);
         if( Marker == 0x1fff1fff ) {
             DPrintf("BSDLoadAnimationFaceData:Sentinel Face found Done reading faces for renderobject\n");
             DPrintf("BSDLoadAnimationFaceData:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,NumFaces);
-            assert(CurrentFaceIndex == NumFaces);
             break;
         }
     }
+    assert(CurrentFaceIndex == NumFaces);
     return 1;
 }
 int BSDLoadAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset,int RenderObjectIndex,
@@ -813,7 +794,7 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load face data\n");
         goto Failure;
     }
-    exit(0);
+
     if( !BSDLoadAnimationHierarchyData(RenderObject,RenderObjectElement.RootBoneOffset,BSDEntryTable,BSDFile) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load hierarchy data\n");
         goto Failure;
