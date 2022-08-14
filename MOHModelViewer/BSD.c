@@ -411,7 +411,7 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
     short NumFaces;
     int CurrentFaceIndex;
     unsigned int Marker;
-    unsigned int AdditionalData;
+    BSDColor_t ColorData;
     BSDAnimatedModelFace_t TempFace;
 
     if( !RenderObject || !BSDFile ) {
@@ -453,33 +453,36 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
                 DPrintf("BSDLoadAnimationFaceData:Aborting since a marker was found\n");
                 break;
             }
-            fread(&AdditionalData,sizeof(AdditionalData),1,BSDFile);
+            fread(&ColorData,sizeof(ColorData),1,BSDFile);
                     
             if( (Marker & 0x8000) != 0 ) {
-                DPrintf("0x80 Branch Swap 0 and 2\n");
                 TempFace.VertexTableIndex0 = TempFace.VertexTableIndex2;
                 TempFace.VertexTableDataIndex0 = TempFace.VertexTableDataIndex2;                
                 TempFace.UV0 = TempFace.UV2;
+                TempFace.RGB0 = TempFace.RGB2;
+
             } else {
-                DPrintf("!= 0x80 branch swap 0 and 1\n");
                 TempFace.VertexTableIndex0 = TempFace.VertexTableIndex1;
                 TempFace.VertexTableDataIndex0 = TempFace.VertexTableDataIndex1;
                 TempFace.VertexTableIndex1 = TempFace.VertexTableIndex2;
                 TempFace.VertexTableDataIndex1 = TempFace.VertexTableDataIndex2;
                 TempFace.UV0 = TempFace.UV1;
                 TempFace.UV1 = TempFace.UV2;
+                TempFace.RGB0 = TempFace.RGB1;
+                TempFace.RGB1 = TempFace.RGB2;
             }
             TempFace.VertexTableIndex2 = (Marker & 0x1FFF) >> 8;
             TempFace.VertexTableDataIndex2 = (Marker & 0x1FFF) & 0xFF;
             TempFace.UV2.u = (Marker >> 0x10) & 0xff;
             TempFace.UV2.v = (Marker >> 0x10) >> 8;
+            TempFace.RGB2 = ColorData;
             
             BSDCopyAnimatedModelFace(TempFace,&RenderObject->FaceList[CurrentFaceIndex]);
             BSDPrintAnimatedModelFace(RenderObject->FaceList[CurrentFaceIndex]);
             CurrentFaceIndex++;
         }
         if( Marker == 0x1fff1fff ) {
-            DPrintf("BSDLoadAnimationFaceData:Sentinel Face found Done reading faces for renderobject\n");
+            DPrintf("BSDLoadAnimationFaceData:Sentinel Face found Done reading faces for RenderObject\n");
             DPrintf("BSDLoadAnimationFaceData:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,NumFaces);
             break;
         }
@@ -526,7 +529,6 @@ int BSDLoadAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset
         fread(&RenderObject->FaceList[i],sizeof(BSDAnimatedModelFace_t),1,BSDFile);
         DPrintf(" -- FACE %i --\n",i);
         BSDPrintAnimatedModelFace(RenderObject->FaceList[i]);
-
     }
     return 1;
 }

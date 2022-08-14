@@ -963,7 +963,39 @@ data and it contains only two fields:
 | int  | 4 bytes | Number of faces |
 
 If the offset is not -1 then the data can be found by adding the value
-"Face Data Offset" stored inside the [Entry Table](#entry-table-block).
+"Face Data Offset" stored inside the [Entry Table](#entry-table-block)  
+If the offset is -1 and the BSD file is from the MOH:Underground game
+then the face data is stored in a different way.  
+The offset can be found inside the RenderObject at position 264 and the number of  
+faces that we need to load is stored at position 262.  
+The offset must be added to the one stored inside the BSD file at position 0x5A4 in order to  
+obtain the final one.  
+The data is stored in a similar way to the one used in the TSP or BSD file
+for non-animated objects.  
+In order to decode it we need to read the first face (which has a size of
+28 bytes) and then we encounter an array of integers.  
+These integers contains several values required to build a new face using
+the data obtained from the first face that was read before.  
+There can be three different values that can be read:0x1FF,0x1FFF1FFF or a
+number.  
+If it is a number then it contains a Vertex Table Index,Vertex Table Data
+and a new UV coordinate stored as 4 bytes and we need to read the next 4
+bytes in order to obtain the color data.     
+If, instead, is equal to 0x1FFF then we need to read a new face structure
+(of 28 bytes) and read the next int until one of the two markers is
+found.    
+Likewise if the integer is equal to 0x1fff1fff then this is the last face
+that we needed to read.   
+Note that if the first integer has the left-most bit set then we need to
+swap Vertex0 and Vertex2 (and the corresponding texture coordinates UV0
+and UV2 as well as the RGB color),otherwise we need to set V0 equals to V1
+and  V1 equals to V2 (this means UV0 = UV1,UV1 = UV2,RGB0 = RGB1 and RGB1
+= RGB2).  
+Finally we update Vertex2,UV2 and RGB2 with the new value taken from the
+two integers.  
+At the end of all the iterations we should find that the number of loaded
+faces is equals to the one declared in the RenderObject.    
+
 
 ##### Face Data
 Each face has a fixed size of 28 bytes and contains several fields.    
