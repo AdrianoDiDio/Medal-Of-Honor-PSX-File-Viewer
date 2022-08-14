@@ -140,7 +140,7 @@ typedef struct BSDRenderObjectElement_s {
     int             UnknownOffset4;
     char            Pad[68];
     int             VertexTableIndexOffset;
-    int             VertOffset;
+    int             VertexOffset;
     unsigned short  NumVertex;
     char            RemainingU[14];
     int             RootBoneOffset;

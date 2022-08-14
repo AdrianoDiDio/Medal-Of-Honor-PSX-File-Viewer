@@ -21,13 +21,13 @@
 #include "BSD.h"
 #include "MOHModelViewer.h" 
 
-void BSDFreeHierarchyBone(BSDHierarchyBone_t *Bone)
+void BSDRecusivelyFreeHierarchyBone(BSDHierarchyBone_t *Bone)
 {
     if( !Bone ) {
         return;
     }
-    BSDFreeHierarchyBone(Bone->Child2);
-    BSDFreeHierarchyBone(Bone->Child1);
+    BSDRecusivelyFreeHierarchyBone(Bone->Child2);
+    BSDRecusivelyFreeHierarchyBone(Bone->Child1);
     free(Bone);
 }
 void BSDFreeRenderObject(BSDRenderObject_t *RenderObject)
@@ -49,7 +49,7 @@ void BSDFreeRenderObject(BSDRenderObject_t *RenderObject)
         free(RenderObject->FaceList);
     }
     if( RenderObject->HierarchyData ) {
-        BSDFreeHierarchyBone(RenderObject->HierarchyData);
+        BSDRecusivelyFreeHierarchyBone(RenderObject->HierarchyData);
     }
     if( RenderObject->AnimationList ) {
         for( i = 0; i < RenderObject->NumAnimations; i++ ) {
@@ -96,7 +96,7 @@ void BSDFree(BSD_t *BSD)
   276 if the game is MOH:Underground.
   In order to gain this information we need to find the start and end position of the RenderObject's data.
   RenderObjects usually starts at 1444 (3492 with the header) with an integer that tells how many RenderObject we have to load.
-  Since MOH:Underground uses a slightly different offset we check if the value is not valid (either 0 or too big) and move the position
+  Since MOH:Underground uses a slightly different offset we need to check if the value is not valid (either 0 or too big) and move the position
   to 1360 (3508 with the header).
   This could be enough to determine what version we are running but just to be on the safe side we also calculate the ending position by using
   the node table entry and color table to determine the end address of the RenderObject list.
@@ -151,6 +151,7 @@ int BSDReadEntryTableChunk(BSD_t *BSD,FILE *BSDFile)
     }
 
     fseek(BSDFile,BSD_ENTRY_TABLE_FILE_POSITION + BSD_HEADER_SIZE,SEEK_SET);
+    DPrintf("Reading table at %li\n",ftell(BSDFile));
     assert(sizeof(BSD->EntryTable) == 80);
     fread(&BSD->EntryTable,sizeof(BSD->EntryTable),1,BSDFile);
     DPrintf("Node table is at %i (%i)\n",BSD->EntryTable.NodeTableOffset,BSD->EntryTable.NodeTableOffset + BSD_HEADER_SIZE);
@@ -185,6 +186,7 @@ BSDRenderObjectElement_t *BSDGetRenderObjectById(const BSD_t *BSD,int RenderObje
     }
     return NULL;
 }
+
 /*
  Some RenderObjects uses the 'ReferencedRenderObjectId' field to reference a RenderObject that contains common
  informations shared by multiple RenderObjects.
@@ -215,7 +217,7 @@ void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile)
         CurrentRenderObject->FaceTableOffset = ReferencedRenderObject->FaceTableOffset;
         CurrentRenderObject->UnknownOffset4 = ReferencedRenderObject->UnknownOffset4;
         CurrentRenderObject->VertexTableIndexOffset = ReferencedRenderObject->VertexTableIndexOffset;
-        CurrentRenderObject->VertOffset = ReferencedRenderObject->VertOffset;
+        CurrentRenderObject->VertexOffset = ReferencedRenderObject->VertexOffset;
         CurrentRenderObject->NumVertex = ReferencedRenderObject->NumVertex;
         CurrentRenderObject->RootBoneOffset = ReferencedRenderObject->RootBoneOffset;
         CurrentRenderObject->ColorOffset = ReferencedRenderObject->ColorOffset;
@@ -226,7 +228,7 @@ void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile)
 }
 int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
 {
-    int RenderObjectPositionOffset;
+    int MOHUndegroundFaceDataOffset;
     int FirstRenderObjectPosition;
     int i;
     
@@ -236,12 +238,12 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
         return 0;
     }
     
-    RenderObjectPositionOffset = 0;
-
+    fseek(BSDFile,BSD_RENDER_OBJECT_STARTING_OFFSET + BSD_HEADER_SIZE,SEEK_SET);
     if( GameEngine == MOH_GAME_UNDERGROUND) {
-        RenderObjectPositionOffset += 16;
+        fread(&MOHUndegroundFaceDataOffset,sizeof(MOHUndegroundFaceDataOffset),1,BSDFile);
+        DPrintf("BSDReadRenderObjectChunk:Got MOH:Underground Face Offset:%i\n",MOHUndegroundFaceDataOffset);
+        fseek(BSDFile,12,SEEK_CUR);
     }
-    fseek(BSDFile,BSD_RENDER_OBJECT_STARTING_OFFSET + RenderObjectPositionOffset + BSD_HEADER_SIZE,SEEK_SET);
     fread(&BSD->RenderObjectTable.NumRenderObject,sizeof(BSD->RenderObjectTable.NumRenderObject),1,BSDFile);
     FirstRenderObjectPosition = GetCurrentFilePosition(BSDFile);
     
@@ -262,6 +264,15 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
         }
         DPrintf("Reading RenderObject %i at %i\n",i,GetCurrentFilePosition(BSDFile));
         fread(&BSD->RenderObjectTable.RenderObject[i],sizeof(BSD->RenderObjectTable.RenderObject[i]),1,BSDFile);
+        if( GameEngine == MOH_GAME_UNDERGROUND ) {
+            SkipFileSection(20,BSDFile);
+//             if( BSD->RenderObjectTable.RenderObject[i].FaceTableOffset == -1 ) {
+//                 fread(&BSD->RenderObjectTable.RenderObject[i].FaceTableOffset,sizeof(int),1,BSDFile);
+//                 SkipFileSection(8,BSDFile);
+//             } else {
+//                 SkipFileSection(12,BSDFile);
+//             }
+        }
         DPrintf("RenderObject Id:%u\n",BSD->RenderObjectTable.RenderObject[i].Id);
         DPrintf("RenderObject Type:%i\n",BSD->RenderObjectTable.RenderObject[i].Type);
         
@@ -272,8 +283,8 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
         }
         DPrintf("RenderObject Element Animation Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].AnimationDataOffset,
                 BSD->RenderObjectTable.RenderObject[i].AnimationDataOffset + BSD_HEADER_SIZE);
-        DPrintf("RenderObject Element Vertex Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].VertOffset,
-                BSD->RenderObjectTable.RenderObject[i].VertOffset + BSD_HEADER_SIZE);
+        DPrintf("RenderObject Element Vertex Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].VertexOffset,
+                BSD->RenderObjectTable.RenderObject[i].VertexOffset + BSD_HEADER_SIZE);
         DPrintf("RenderObject Element NumVertex: %i\n",BSD->RenderObjectTable.RenderObject[i].NumVertex);
         //These offsets are relative to the EntryTable.
         DPrintf("RenderObject FaceTableOffset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].FaceTableOffset,
@@ -288,9 +299,7 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
                 BSD->RenderObjectTable.RenderObject[i].ScaleX / 4,
                 BSD->RenderObjectTable.RenderObject[i].ScaleY / 4,
                 BSD->RenderObjectTable.RenderObject[i].ScaleZ / 4);
-        if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            SkipFileSection(20,BSDFile);
-        }
+ 
     }
     BSDPatchRenderObjects(BSD,BSDFile);
     return 1;
@@ -343,7 +352,162 @@ int BSDLoadAnimationVertexData(BSDRenderObject_t *RenderObject,int VertexTableIn
     }
     return 1;
 }
-int BSDLoadAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
+void BSDCopyAnimatedModelFace(BSDAnimatedModelFace_t Src,BSDAnimatedModelFace_t *Dest)
+{
+    if( !Dest ) {
+        DPrintf("BSDCopyAnimatedModelFace:Invalid Destination\n");
+        return;
+    }
+    Dest->RGB0 = Src.RGB0;
+    Dest->RGB1 = Src.RGB1;
+    Dest->RGB2 = Src.RGB2;
+    Dest->UV0 = Src.UV0;
+    Dest->UV1 = Src.UV1;
+    Dest->UV2 = Src.UV2;
+    Dest->CLUT = Src.CLUT;
+    Dest->TexInfo = Src.TexInfo;
+    Dest->VertexTableIndex0 = Src.VertexTableIndex0;
+    Dest->VertexTableDataIndex0 = Src.VertexTableDataIndex0;
+    Dest->VertexTableIndex1 = Src.VertexTableIndex1;
+    Dest->VertexTableDataIndex1 = Src.VertexTableDataIndex1;
+    Dest->VertexTableIndex2 = Src.VertexTableIndex2;
+    Dest->VertexTableDataIndex2 = Src.VertexTableDataIndex2;
+}
+void BSDPrintAnimatedModelFace(BSDAnimatedModelFace_t Face)
+{
+    int ColorMode;
+    int VRAMPage;
+    int ABRRate;
+    int CLUTPosX;
+    int CLUTPosY;
+    
+    ColorMode = (Face.TexInfo >> 7) & 0x3;
+    VRAMPage = Face.TexInfo & 0x1F;
+    ABRRate = (Face.TexInfo & 0x60) >> 5;
+    CLUTPosX = (Face.CLUT << 4) & 0x3F0;
+    CLUTPosY = (Face.CLUT >> 6) & 0x1ff;
+    DPrintf("Tex info %i | Color mode %i | Texture Page %i | ABR Rate %i\n",Face.TexInfo,
+            ColorMode,VRAMPage,ABRRate);
+    DPrintf("CLUT:%i X:%i Y:%i\n",Face.CLUT,CLUTPosX,CLUTPosY);
+    DPrintf("UV0:(%i;%i)\n",Face.UV0.u,Face.UV0.v);
+    DPrintf("UV1:(%i;%i)\n",Face.UV1.u,Face.UV1.v);
+    DPrintf("UV2:(%i;%i)\n",Face.UV2.u,Face.UV2.v);
+    DPrintf("RGB0:(%i;%i;%i)\n",Face.RGB0.r,Face.RGB0.g,Face.RGB0.b);
+    DPrintf("RGB1:(%i;%i;%i)\n",Face.RGB1.r,Face.RGB1.g,Face.RGB1.b);
+    DPrintf("RGB2:(%i;%i;%i)\n",Face.RGB2.r,Face.RGB2.g,Face.RGB2.b);
+    DPrintf("Table Index 0 %i Data %i.\n",Face.VertexTableIndex0,Face.VertexTableDataIndex0);
+    DPrintf("Table Index 1 %i Data %i.\n",Face.VertexTableIndex1,Face.VertexTableDataIndex1);
+    DPrintf("Table Index 2 %i Data %i.\n",Face.VertexTableIndex2,Face.VertexTableDataIndex2);
+}
+/*
+ * NOTE(Adriano):
+ * MOH:Underground stores face data in a different way than the one used by Medal Of Honor.
+ * In order to obtain the offset we need to first read the Global Face Offset which is stored at position
+ * 0x5A4 and the total number of faces is stored at 0x5A8 (both offset are stored without counting the header size 2048).
+ * Then we need to load the data from the RenderObject stored at position 0x106 (as a short) and 0x108 that are needed to load all the
+ * required faces.
+ * Data at 0x106 contains the number of faces that we need to load while the offset at 0x108 contains the local offset that must
+ * be added to the global one in order to obtain the final face data position inside the BSD file.
+ */
+int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset,int RenderObjectIndex,
+                                           BSDEntryTable_t EntryTable,FILE *BSDFile)
+{
+    int GlobalFaceOffset;
+    int LocalFaceOffset;
+    short NumFaces;
+    int CurrentFaceIndex;
+    unsigned int Marker;
+    unsigned int AdditionalData;
+    BSDAnimatedModelFace_t TempFace;
+
+    if( !RenderObject || !BSDFile ) {
+        bool InvalidFile = (BSDFile == NULL ? true : false);
+        printf("BSDLoadMOHUndergroundAnimationFaceData: Invalid %s\n",InvalidFile ? "file" : "RenderObject struct");
+        return 0;
+    }
+    fseek(BSDFile,BSD_RENDER_OBJECT_STARTING_OFFSET + BSD_HEADER_SIZE,SEEK_SET);
+    fread(&GlobalFaceOffset,sizeof(GlobalFaceOffset),1,BSDFile);
+    fseek(BSDFile,16 + (RenderObjectIndex * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) + 262,SEEK_CUR);
+    fread(&NumFaces,sizeof(NumFaces),1,BSDFile);
+    fread(&LocalFaceOffset,sizeof(LocalFaceOffset),1,BSDFile);
+    if( !NumFaces ) {
+        DPrintf("BSDLoadMOHUndergroundAnimationFaceData:Invalid number of faces.\n");
+        return 0;
+    }
+    //NOTE(Adriano):Now we can load the faces at the offset specified by the RenderObject.
+    fseek(BSDFile,GlobalFaceOffset + LocalFaceOffset + BSD_HEADER_SIZE,SEEK_SET);
+    DPrintf("BSDLoadMOHUndergroundAnimationFaceData:Reading %i faces at offset %li (%li)\n",NumFaces,ftell(BSDFile),ftell(BSDFile) - 2048);
+    
+    RenderObject->FaceList = malloc(NumFaces * sizeof(BSDAnimatedModelFace_t));
+    if( !RenderObject->FaceList ) {
+        DPrintf("BSDLoadAnimationFaceData:Failed to allocate memory for face list.\n");
+        return 0;
+    }
+    CurrentFaceIndex = 0;
+    while( CurrentFaceIndex < NumFaces ) {
+        fread(&TempFace,sizeof(BSDAnimatedModelFace_t),1,BSDFile);
+    
+        BSDCopyAnimatedModelFace(TempFace,&RenderObject->FaceList[CurrentFaceIndex]);
+        
+
+        DPrintf(" -- FACE %i --\n",CurrentFaceIndex);
+        BSDPrintAnimatedModelFace(RenderObject->FaceList[CurrentFaceIndex]);
+        TempFace.VertexTableIndex0 = RenderObject->FaceList[CurrentFaceIndex].VertexTableIndex0;
+        TempFace.VertexTableDataIndex0 = RenderObject->FaceList[CurrentFaceIndex].VertexTableDataIndex0;
+        TempFace.VertexTableIndex1 = RenderObject->FaceList[CurrentFaceIndex].VertexTableIndex1;
+        TempFace.VertexTableDataIndex1 = RenderObject->FaceList[CurrentFaceIndex].VertexTableDataIndex1;
+        TempFace.VertexTableIndex2 = RenderObject->FaceList[CurrentFaceIndex].VertexTableIndex2;
+        TempFace.VertexTableDataIndex2 = RenderObject->FaceList[CurrentFaceIndex].VertexTableDataIndex2;
+
+        CurrentFaceIndex++;
+        while( 1 ) {
+//             DPrintf("BSDLoadAnimationFaceData:Reading additional face %i at %li\n",CurrentFaceIndex,ftell(BSDFile) - 2048);
+            fread(&Marker,sizeof(Marker),1,BSDFile);
+//             DPrintf("BSDLoadAnimationFaceData:Found Marker %u (Vertex %i) Texture:%u Mask %i\n",Marker,Marker & 0x1FFF,Marker >> 16,0x1FFF);
+            if( ( Marker & 0x1FFF ) == 0x1FFF || Marker == 0x1fff1fff ) {
+                DPrintf("BSDLoadAnimationFaceData:Aborting since a marker was found\n");
+                break;
+            }
+            fread(&AdditionalData,sizeof(AdditionalData),1,BSDFile);
+//             RenderObject->FaceV2[CurrentFaceIndex].TexInfo = TempFace.TexInfo;
+                    
+            if( (Marker & 0x8000) != 0 ) {
+                TempFace.VertexTableIndex0 = RenderObject->FaceList[CurrentFaceIndex].VertexTableIndex2;
+                TempFace.VertexTableDataIndex0 = RenderObject->FaceList[CurrentFaceIndex].VertexTableDataIndex2;                
+                TempFace.UV0 = TempFace.UV2;
+            } else {
+                TempFace.VertexTableIndex0 = RenderObject->FaceList[CurrentFaceIndex].VertexTableIndex1;
+                TempFace.VertexTableDataIndex0 = RenderObject->FaceList[CurrentFaceIndex].VertexTableDataIndex1;
+                TempFace.VertexTableIndex1 = RenderObject->FaceList[CurrentFaceIndex].VertexTableIndex2;
+                TempFace.VertexTableDataIndex1 = RenderObject->FaceList[CurrentFaceIndex].VertexTableDataIndex2;
+                TempFace.UV0 = TempFace.UV1;
+                TempFace.UV1 = TempFace.UV2;
+            }
+            TempFace.VertexTableIndex2 = (Marker & 0x1FFF) >> 8;
+            TempFace.VertexTableDataIndex2 = (Marker & 0x1FFF) & 0xFF;
+            TempFace.UV2.u = (Marker >> 0x10) & 0xff;
+            TempFace.UV2.v = (Marker >> 0x10) >> 8;
+            
+            BSDCopyAnimatedModelFace(TempFace,&RenderObject->FaceList[CurrentFaceIndex]);
+            BSDPrintAnimatedModelFace(RenderObject->FaceList[CurrentFaceIndex]);
+
+//             DPrintf("BSDLoadAnimationFaceData:Vert0:%i Vert1:%i Vert2:%i Additional Face %i\n",TempFace.Vert0,TempFace.Vert1,
+//                     TempFace.Vert2,RenderObject->FaceV2[CurrentFaceIndex].V2 >> 16);
+            CurrentFaceIndex++;
+        }
+        DPrintf("BSDLoadAnimationFaceData:Aborted marker was %i\n",Marker);
+        DPrintf("BSDLoadAnimationFaceData:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,NumFaces);
+        if( Marker == 0x1fff1fff ) {
+            DPrintf("BSDLoadAnimationFaceData:Sentinel Face found Done reading faces for renderobject\n");
+            DPrintf("BSDLoadAnimationFaceData:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,NumFaces);
+            assert(CurrentFaceIndex == NumFaces);
+            break;
+        }
+    }
+    return 1;
+}
+int BSDLoadAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset,int RenderObjectIndex,
+                             BSDEntryTable_t EntryTable,FILE *BSDFile,int GameVersion)
 {
     int GlobalFaceTableOffset;
     int GlobalFaceDataOffset;
@@ -357,8 +521,13 @@ int BSDLoadAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset
         return 0;
     }
     if( FaceTableOffset == -1 ) {
-        DPrintf("BSDLoadAnimationFaceData:Invalid Face Table Index Offset\n");
-        return 0;
+        if( GameVersion == MOH_GAME_UNDERGROUND ) {
+            DPrintf("BSDLoadAnimationFaceData:Game is MOH:Underground...attempting to use a different face loader.\n");
+            return BSDLoadMOHUndergroundAnimationFaceData(RenderObject,FaceTableOffset,RenderObjectIndex,EntryTable,BSDFile);
+        } else {
+            DPrintf("BSDLoadAnimationFaceData:Invalid Face Table Index Offset\n");
+            return 0;
+        }
     }
     GlobalFaceTableOffset = EntryTable.AnimationFaceTableOffset + FaceTableOffset + BSD_HEADER_SIZE;
     fseek(BSDFile,GlobalFaceTableOffset,SEEK_SET);
@@ -374,36 +543,21 @@ int BSDLoadAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset
     }
     for( i = 0; i < NumFaces; i++ ) {
         fread(&RenderObject->FaceList[i],sizeof(BSDAnimatedModelFace_t),1,BSDFile);
-        int ColorMode = (RenderObject->FaceList[i].TexInfo >> 7) & 0x3;
-        int VRAMPage = RenderObject->FaceList[i].TexInfo & 0x1F;
-        int ABRRate = (RenderObject->FaceList[i].TexInfo & 0x60) >> 5;
-        int CLUTPosX = (RenderObject->FaceList[i].CLUT << 4) & 0x3F0;
-        int CLUTPosY = (RenderObject->FaceList[i].CLUT >> 6) & 0x1ff;
         DPrintf(" -- FACE %i --\n",i);
-        DPrintf("Tex info %i | Color mode %i | Texture Page %i | ABR Rate %i\n",RenderObject->FaceList[i].TexInfo,
-                ColorMode,VRAMPage,ABRRate);
-        DPrintf("CLUT:%i X:%i Y:%i\n",RenderObject->FaceList[i].CLUT,CLUTPosX,CLUTPosY);
-        DPrintf("UV0:(%i;%i)\n",RenderObject->FaceList[i].UV0.u,RenderObject->FaceList[i].UV0.v);
-        DPrintf("UV1:(%i;%i)\n",RenderObject->FaceList[i].UV1.u,RenderObject->FaceList[i].UV1.v);
-        DPrintf("UV2:(%i;%i)\n",RenderObject->FaceList[i].UV2.u,RenderObject->FaceList[i].UV2.v);
-        DPrintf("RGB0:(%i;%i;%i)\n",RenderObject->FaceList[i].RGB0.r,RenderObject->FaceList[i].RGB0.g,RenderObject->FaceList[i].RGB0.b);
-        DPrintf("RGB1:(%i;%i;%i)\n",RenderObject->FaceList[i].RGB1.r,RenderObject->FaceList[i].RGB1.g,RenderObject->FaceList[i].RGB1.b);
-        DPrintf("RGB2:(%i;%i;%i)\n",RenderObject->FaceList[i].RGB2.r,RenderObject->FaceList[i].RGB2.g,RenderObject->FaceList[i].RGB2.b);
-        DPrintf("Table Index 0 %i Data %i.\n",RenderObject->FaceList[i].VertexTableIndex0,RenderObject->FaceList[i].VertexTableDataIndex0);
-        DPrintf("Table Index 1 %i Data %i.\n",RenderObject->FaceList[i].VertexTableIndex1,RenderObject->FaceList[i].VertexTableDataIndex1);
-        DPrintf("Table Index 2 %i Data %i.\n",RenderObject->FaceList[i].VertexTableIndex2,RenderObject->FaceList[i].VertexTableDataIndex2);
+        BSDPrintAnimatedModelFace(RenderObject->FaceList[i]);
+
     }
     return 1;
 }
 
-BSDHierarchyBone_t *BSDRecursiveLoadHierarchyData(int BoneDataStartingPosition,int BoneOffset,FILE *BSDFile)
+BSDHierarchyBone_t *BSDRecursivelyLoadHierarchyData(int BoneDataStartingPosition,int BoneOffset,FILE *BSDFile)
 {
     BSDHierarchyBone_t *Bone;
     int Child1Offset;
     int Child2Offset;
     
     if( !BSDFile ) {
-        DPrintf("BSDRecursiveLoadHierarchyData:Invalid Bone Table file\n");
+        DPrintf("BSDRecursivelyLoadHierarchyData:Invalid Bone Table file\n");
         return NULL;
     }
 
@@ -413,7 +567,7 @@ BSDHierarchyBone_t *BSDRecursiveLoadHierarchyData(int BoneDataStartingPosition,i
     Bone->Child2 = NULL;
     
     if( !Bone ) {
-        DPrintf("BSDRecursiveLoadHierarchyData:Failed to allocate bone data\n");
+        DPrintf("BSDRecursivelyLoadHierarchyData:Failed to allocate bone data\n");
         return NULL;
     }
 
@@ -430,10 +584,10 @@ BSDHierarchyBone_t *BSDRecursiveLoadHierarchyData(int BoneDataStartingPosition,i
     assert(  Bone->Pad == -12851 );
 
     if( Child2Offset != -1 ) {
-        Bone->Child2 = BSDRecursiveLoadHierarchyData(BoneDataStartingPosition,Child2Offset,BSDFile);
+        Bone->Child2 = BSDRecursivelyLoadHierarchyData(BoneDataStartingPosition,Child2Offset,BSDFile);
     }
     if( Child1Offset != -1 ) {
-        Bone->Child1 = BSDRecursiveLoadHierarchyData(BoneDataStartingPosition,Child1Offset,BSDFile);
+        Bone->Child1 = BSDRecursivelyLoadHierarchyData(BoneDataStartingPosition,Child1Offset,BSDFile);
     }
     return Bone;
 }
@@ -450,7 +604,7 @@ int BSDLoadAnimationHierarchyData(BSDRenderObject_t *RenderObject,int RootBoneOf
         return 0;
     }
     
-    RenderObject->HierarchyData = BSDRecursiveLoadHierarchyData(EntryTable.AnimationHierarchyDataOffset,RootBoneOffset,BSDFile);
+    RenderObject->HierarchyData = BSDRecursivelyLoadHierarchyData(EntryTable.AnimationHierarchyDataOffset,RootBoneOffset,BSDFile);
     
     if( !RenderObject->HierarchyData ) {
         DPrintf("BSDLoadAnimationHierarchyData:Couldn't load hierarchy data\n");
@@ -462,10 +616,8 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
 {
     short NumAnimationOffset;
     unsigned short Pad;
-    int PreviousPosition;
     BSDAnimationTableEntry_t *AnimationTableEntry;
     int *AnimationOffsetTable;
-    int VertexTableOffset;
     int QuaternionListOffset;
     int i;
     int j;
@@ -473,9 +625,10 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
     int q;
     BSDQuaternion_t TempQuaternion;
     int Base;
-    int Vector;
-    int Vector1;
-    int NextVector1;
+    int QuatPart0;
+    int QuatPart1;
+    int QuatPart2;
+    int NumEncodedQuaternions;
     int NumDecodedQuaternions;
     
     if( !RenderObject || !BSDFile ) {
@@ -563,7 +716,7 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
                 RenderObject->AnimationList[i].Frame[j].NumQuaternions
             );
             DPrintf("Encoded Vector is %i\n",RenderObject->AnimationList[i].Frame[j].EncodedVector);
-            DPrintf("We are at %i  AnimOffset:%i LocalOffset:%i Index %i times 20 (%i)\n",ftell(BSDFile),
+            DPrintf("We are at %li  AnimOffset:%i LocalOffset:%i Index %i times 20 (%i)\n",ftell(BSDFile),
                 EntryTable.AnimationDataOffset,AnimationTableEntry[i].Offset,j,j*20
             );
             assert(ftell(BSDFile) - (EntryTable.AnimationDataOffset + AnimationTableEntry[i].Offset + BSD_HEADER_SIZE 
@@ -573,40 +726,37 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
             if( QuaternionListOffset != -1 ) {
                 fseek(BSDFile,EntryTable.AnimationQuaternionDataOffset + QuaternionListOffset + BSD_HEADER_SIZE,SEEK_SET);
                 DPrintf("Reading Vector definition at %li\n",ftell(BSDFile));
-                RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList = malloc( 
-                    RenderObject->AnimationList[i].Frame[j].NumQuaternions * sizeof(int) * 2);
-                for( w = 0; w < RenderObject->AnimationList[i].Frame[j].NumQuaternions * 2; w+=2 ) {
-                    DPrintf("Reading anim %i-%i \n",w,w+1);
+                NumEncodedQuaternions = (RenderObject->AnimationList[i].Frame[j].NumQuaternions / 2) * 3;
+                RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList = malloc( NumEncodedQuaternions * sizeof(int));
+                for( w = 0; w < NumEncodedQuaternions; w++ ) {
                     fread(&RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[w],
                           sizeof(RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[w]),1,BSDFile);
-                    fread(&RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[w+1],
-                          sizeof(RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[w+1]),1,BSDFile);
                 }
-                DPrintf("Done...\n");
+                DPrintf("Done...loaded a list of %i encoded quaternions\n",RenderObject->AnimationList[i].Frame[j].NumQuaternions * 2);
                 RenderObject->AnimationList[i].Frame[j].QuaternionList = malloc( 
                     RenderObject->AnimationList[i].Frame[j].NumQuaternions * sizeof(BSDQuaternion_t));
 
                 NumDecodedQuaternions = 0;
                 for( q = 0; q < RenderObject->AnimationList[i].Frame[j].NumQuaternions / 2; q++ ) {
                     Base = q * 3;
-//                     DPrintf("Generating with base %i V0:%i V1:%i V2:%i\n",q,Base,Base+1,Base+2);
-                    Vector = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base];
-                    Vector1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base+1];
-                    NextVector1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base+2];
-                    TempQuaternion.x = ( (Vector << 0x10) >> 20) * 2;
-                    TempQuaternion.y = (Vector1 << 20) >> 19;
-                    TempQuaternion.z = ( ( ( (Vector1 >> 12) << 28 ) >> 20) | ( (Vector >> 12) & 0xF0) | (Vector & 0xF) ) * 2;
-                    TempQuaternion.w = (Vector >> 20) * 2;
+                    DPrintf("Generating with base %i V0:%i V1:%i V2:%i\n",q,Base,Base+1,Base+2);
+                    QuatPart0 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base];
+                    QuatPart1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base+1];
+                    QuatPart2 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base+2];
+                    TempQuaternion.x = ( (QuatPart0 << 0x10) >> 20) * 2;
+                    TempQuaternion.y = (QuatPart1 << 0x14) >> 0x13;
+                    TempQuaternion.z = ( ( ( (QuatPart1 >> 0xC) << 0x1C ) >> 0x14) | ( (QuatPart0 >> 0xC) & 0xF0) | (QuatPart0 & 0xF) ) * 2;
+                    TempQuaternion.w = (QuatPart0 >> 0x14) * 2;
                     RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].x = TempQuaternion.x;
                     RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].y = TempQuaternion.y;
                     RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].z = TempQuaternion.z;
                     RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].w = TempQuaternion.w;
 
                     DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
-                    TempQuaternion.x = (Vector1  >> 20) * 2;
-                    TempQuaternion.y = ( (NextVector1 << 4) >> 20 ) * 2;
-                    TempQuaternion.w = ( (NextVector1 << 0x10) >> 20) * 2;
-                    TempQuaternion.z = ( (NextVector1 >> 28) << 8 | (NextVector1 & 0xF ) << 4 | ( (Vector1 >> 16) & 0xF ) ) * 2;
+                    TempQuaternion.x = (QuatPart1  >> 0x14) * 2;
+                    TempQuaternion.y = ( (QuatPart2 << 0x4) >> 0x14 ) * 2;
+                    TempQuaternion.w = ( (QuatPart2 << 0x10) >> 0x14) * 2;
+                    TempQuaternion.z = ( (QuatPart2 >> 0x1C) << 0x8 | (QuatPart2 & 0xF ) << 0x4 | ( (QuatPart1 >> 0x10) & 0xF ) ) * 2;
                     RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].x = TempQuaternion.x;
                     RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].y = TempQuaternion.y;
                     RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].z = TempQuaternion.z;
@@ -615,12 +765,12 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
                     NumDecodedQuaternions += 2;
                 }
                 if( NumDecodedQuaternions == (RenderObject->AnimationList[i].Frame[j].NumQuaternions - 1) ) {
-                    Vector = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[0];
-                    Vector1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[1];
-                    TempQuaternion.x = ( (Vector << 0x10) >> 20) * 2;
-                    TempQuaternion.y = (Vector1 << 20) >> 19;
-                    TempQuaternion.z = ( ( ( (Vector1 >> 12) << 28 ) >> 20) | ( (Vector >> 12) & 0xF0) | (Vector & 0xF) ) * 2;
-                    TempQuaternion.w = (Vector >> 20) * 2;
+                    QuatPart0 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[0];
+                    QuatPart1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[1];
+                    TempQuaternion.x = ( (QuatPart0 << 0x10) >> 0x14) * 2;
+                    TempQuaternion.y = (QuatPart1 << 0x14) >> 0x13;
+                    TempQuaternion.z = ( ( ( (QuatPart1 >> 0xC) << 0x1C ) >> 0x14) | ( (QuatPart0 >> 0xC) & 0xF0) | (QuatPart0 & 0xF) ) * 2;
+                    TempQuaternion.w = (QuatPart0 >> 0x14) * 2;
                     NumDecodedQuaternions++;
                 }
                 DPrintf("Decoded %i out of %i\n",NumDecodedQuaternions,RenderObject->AnimationList[i].Frame[j].NumQuaternions);
@@ -634,7 +784,9 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
     free(AnimationTableEntry);
     return 1;
 }
-BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t BSDEntryTable,FILE *BSDFile)
+BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t BSDEntryTable,FILE *BSDFile,
+                                               int RenderObjectIndex,int GameVersion
+)
 {
     BSDRenderObject_t *RenderObject;
     
@@ -656,10 +808,12 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load vertex data\n");
         goto Failure;
     }
-    if( !BSDLoadAnimationFaceData(RenderObject,RenderObjectElement.FaceTableOffset,BSDEntryTable,BSDFile) ) {
+
+    if( !BSDLoadAnimationFaceData(RenderObject,RenderObjectElement.FaceTableOffset,RenderObjectIndex,BSDEntryTable,BSDFile,GameVersion) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load face data\n");
         goto Failure;
     }
+    exit(0);
     if( !BSDLoadAnimationHierarchyData(RenderObject,RenderObjectElement.RootBoneOffset,BSDEntryTable,BSDFile) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load hierarchy data\n");
         goto Failure;
@@ -673,10 +827,10 @@ Failure:
     BSDFreeRenderObject(RenderObject);
     return NULL;
 }
-BSD_t *BSDLoad(FILE *BSDFile)
+BSD_t *BSDLoad(FILE *BSDFile,int *GameVersion)
 {
     BSD_t *BSD;
-    int BSDVersion;
+    int LocalGameVersion;
     int RenderObjectSize;
     
     BSD = NULL;
@@ -689,14 +843,17 @@ BSD_t *BSDLoad(FILE *BSDFile)
     RenderObjectSize = BSDGetRenderObjectSize(BSD,BSDFile);
     assert( RenderObjectSize == MOH_RENDER_OBJECT_SIZE || RenderObjectSize == MOH_UNDERGROUND_RENDER_OBJECT_SIZE );
     if( RenderObjectSize == MOH_RENDER_OBJECT_SIZE ) {
-        BSDVersion = MOH_GAME_STANDARD;
+        LocalGameVersion = MOH_GAME_STANDARD;
     } else {
-        BSDVersion = MOH_GAME_UNDERGROUND;
+        LocalGameVersion = MOH_GAME_UNDERGROUND;
     }
-    DPrintf("Running BSD from %s since size is %i\n",BSDVersion == MOH_GAME_STANDARD ? 
+    DPrintf("Running BSD from %s since size is %i\n",LocalGameVersion == MOH_GAME_STANDARD ? 
         "Medal Of Honor" : "Medal Of Honor:Underground",RenderObjectSize);
-    if( !BSDReadRenderObjectChunk(BSD,BSDVersion,BSDFile) ) {
+    if( !BSDReadRenderObjectChunk(BSD,LocalGameVersion,BSDFile) ) {
         goto Failure;
+    }
+    if( GameVersion ) {
+        *GameVersion = LocalGameVersion;
     }
     return BSD;
 Failure:
@@ -708,6 +865,7 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
 {
     FILE *BSDFile;
     BSD_t *BSD;
+    int GameVersion;
     BSDRenderObject_t *RenderObjectList;
     BSDRenderObject_t *RenderObject;
     int i;
@@ -717,7 +875,7 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
         DPrintf("Failed opening BSD File %s.\n",FName);
         return NULL;
     }
-    BSD = BSDLoad(BSDFile);
+    BSD = BSDLoad(BSDFile,&GameVersion);
     if( !BSD ) {
         fclose(BSDFile);
         return NULL;
@@ -730,7 +888,7 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
         }
         DPrintf("BSDLoadAllAnimatedRenderObjects:Loading Animated RenderObject %u\n",BSD->RenderObjectTable.RenderObject[i].Id);
         RenderObject = BSDLoadAnimatedRenderObject(BSD->RenderObjectTable.RenderObject[i],BSD->EntryTable,
-                                                   BSDFile);
+                                                   BSDFile,i,GameVersion);
         if( !RenderObject ) {
             DPrintf("BSDLoadAllAnimatedRenderObjects:Failed to load animated RenderObject.\n");
             continue;
