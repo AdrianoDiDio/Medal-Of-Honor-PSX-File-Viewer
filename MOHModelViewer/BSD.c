@@ -48,8 +48,8 @@ void BSDFreeRenderObject(BSDRenderObject_t *RenderObject)
     if( RenderObject->FaceList ) {
         free(RenderObject->FaceList);
     }
-    if( RenderObject->HierarchyData ) {
-        BSDRecusivelyFreeHierarchyBone(RenderObject->HierarchyData);
+    if( RenderObject->HierarchyDataRoot ) {
+        BSDRecusivelyFreeHierarchyBone(RenderObject->HierarchyDataRoot);
     }
     if( RenderObject->AnimationList ) {
         for( i = 0; i < RenderObject->NumAnimations; i++ ) {
@@ -88,6 +88,85 @@ void BSDFree(BSD_t *BSD)
     free(BSD);
 }
 
+void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAnimation_t *AnimationList,BSDVertexTable_t *VertexTable,
+                                     mat4 Rotation,vec3 Translation,int AnimationIndex)
+{
+    BSDQuaternion_t Quaternion;
+    mat4 RotationMatrix;
+    vec3 TransformedBonePosition;
+    vec3 TransformedVertexPosition;
+    vec3 VertexTranslation;
+    vec3 Temp;
+    int i;
+    
+    if( !Bone ) {
+        DPrintf("ApplyBoneTransform:NULL Bone.\n");
+        return;
+    }
+    
+    
+    glm_mat4_identity(RotationMatrix);
+    
+    Quaternion.x = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].x / 4096.f;
+    Quaternion.y = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].y / 4096.f;
+    Quaternion.z = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].z / 4096.f;
+    Quaternion.w = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].w / 4096.f;
+
+    RotationMatrix[0][0] = 2 * (Square(Quaternion.w) + Square(Quaternion.x)) - 1;
+    RotationMatrix[0][1] = 2 * (Quaternion.x*Quaternion.y - Quaternion.w*Quaternion.z);
+    RotationMatrix[0][2] = 2 * (Quaternion.x*Quaternion.z + Quaternion.w*Quaternion.y);
+    
+    RotationMatrix[1][0] = 2 * (Quaternion.x*Quaternion.y + Quaternion.w*Quaternion.z);
+    RotationMatrix[1][1] = 2 * (Square(Quaternion.w) + Square(Quaternion.y)) - 1;
+    RotationMatrix[1][2] = 2 * (Quaternion.y*Quaternion.z - Quaternion.w*Quaternion.x);
+    
+    RotationMatrix[2][0] = 2 * (Quaternion.x*Quaternion.z - Quaternion.w*Quaternion.y);
+    RotationMatrix[2][1] = 2 * (Quaternion.y*Quaternion.z + Quaternion.w*Quaternion.x);
+    RotationMatrix[2][2] = 2 * (Square(Quaternion.w) + Square(Quaternion.z)) - 1;
+
+    Temp[0] = Bone->Position.x;
+    Temp[1] = Bone->Position.y;
+    Temp[2] = Bone->Position.z;
+
+    glm_mat4_mulv3(Rotation,Temp,1.f,TransformedBonePosition);
+
+    glm_vec3_add(TransformedBonePosition,Translation,VertexTranslation);
+    
+    if( VertexTable[Bone->VertexTableIndex].Offset != -1 && VertexTable[Bone->VertexTableIndex].NumVertex != 0 ) {
+        for( i = 0; i < VertexTable[Bone->VertexTableIndex].NumVertex; i++ ) {
+            Temp[0] = VertexTable[Bone->VertexTableIndex].VertexList[i].x;
+            Temp[1] = VertexTable[Bone->VertexTableIndex].VertexList[i].y;
+            Temp[2] = VertexTable[Bone->VertexTableIndex].VertexList[i].z;
+            glm_mat4_mulv3(RotationMatrix,Temp,1.f,TransformedVertexPosition);
+            VertexTable[Bone->VertexTableIndex].VertexList[i].x = TransformedVertexPosition[0] + VertexTranslation[0];
+            VertexTable[Bone->VertexTableIndex].VertexList[i].y = TransformedVertexPosition[1] + VertexTranslation[1];
+            VertexTable[Bone->VertexTableIndex].VertexList[i].z = TransformedVertexPosition[2] + VertexTranslation[2];
+        }
+    }
+
+    if( Bone->Child2 ) {
+        BSDRecursivelyApplyHierachyData(Bone->Child2,AnimationList,VertexTable,Rotation,Translation,AnimationIndex);
+    }
+    if( Bone->Child1 ) {
+        BSDRecursivelyApplyHierachyData(Bone->Child1,AnimationList,VertexTable,RotationMatrix,VertexTranslation,AnimationIndex);
+    }
+}
+void BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex)
+{
+    vec3 Translation;
+    mat4 Rotation;
+    Translation[0] = 0;
+    Translation[1] = 0;
+    Translation[2] = 0;
+    glm_mat4_identity(Rotation);
+
+    if( AnimationIndex < 0 || AnimationIndex > RenderObject->NumAnimations ) {
+        DPrintf("BSDRenderObjectSetAnimationPose:Failed to set pose using index %i...Index is out of bounds\n",AnimationIndex);
+        return;
+    }
+    BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,RenderObject->AnimationList,
+                                    RenderObject->VertexTable,Rotation,Translation,AnimationIndex);
+}
 /*
   NOTE(Adriano):
   Since this tool is used to load BSD files without specifying any information about the game and since we
@@ -188,11 +267,12 @@ BSDRenderObjectElement_t *BSDGetRenderObjectById(const BSD_t *BSD,int RenderObje
 }
 
 /*
- Some RenderObjects uses the 'ReferencedRenderObjectId' field to reference a RenderObject that contains common
- informations shared by multiple RenderObjects.
- In order to correctly parse these entry we need to copy the field from the 'ReferencedRenderObjectId' to the RenderObject that
- requested it.
- NOTE(Adriano):Make sure to update the data when new fields are added.
+ * NOTE(Adriano):
+ * Some RenderObjects uses the 'ReferencedRenderObjectId' field to reference a RenderObject that contains common
+ * informations shared by multiple RenderObjects.
+ * In order to correctly parse these entry we need to copy the field from the 'ReferencedRenderObjectId' to the RenderObject that
+ * requested it.
+ * NOTE(Adriano):Make sure to update the data when new fields are added.
  */
 void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile)
 {
@@ -587,9 +667,9 @@ int BSDLoadAnimationHierarchyData(BSDRenderObject_t *RenderObject,int RootBoneOf
         return 0;
     }
     
-    RenderObject->HierarchyData = BSDRecursivelyLoadHierarchyData(EntryTable.AnimationHierarchyDataOffset,RootBoneOffset,BSDFile);
+    RenderObject->HierarchyDataRoot = BSDRecursivelyLoadHierarchyData(EntryTable.AnimationHierarchyDataOffset,RootBoneOffset,BSDFile);
     
-    if( !RenderObject->HierarchyData ) {
+    if( !RenderObject->HierarchyDataRoot ) {
         DPrintf("BSDLoadAnimationHierarchyData:Couldn't load hierarchy data\n");
         return 0;
     }
@@ -783,9 +863,10 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
         DPrintf("BSDLoadAnimatedRenderObject:Failed to allocate memory for RenderObject\n");
         goto Failure;
     }
+    RenderObject->Id = RenderObjectElement.Id;
     RenderObject->VertexTable = NULL;
     RenderObject->FaceList = NULL;
-    RenderObject->HierarchyData = NULL;
+    RenderObject->HierarchyDataRoot = NULL;
     RenderObject->AnimationList = NULL;
     if( !BSDLoadAnimationVertexData(RenderObject,RenderObjectElement.VertexTableIndexOffset,BSDEntryTable,BSDFile) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load vertex data\n");

@@ -195,10 +195,11 @@ typedef struct BSDEntryTable_s {
 } BSDEntryTable_t;
 
 typedef struct BSDRenderObject_s {
+    unsigned int                Id;
     BSDVertexTable_t            *VertexTable;
     int                         NumVertexTables;
     BSDAnimatedModelFace_t      *FaceList;
-    BSDHierarchyBone_t          *HierarchyData;
+    BSDHierarchyBone_t          *HierarchyDataRoot;
     BSDAnimation_t              *AnimationList;
     int                         NumAnimations;
     struct BSDRenderObject_s *Next;
@@ -210,6 +211,9 @@ typedef struct BSD_s {
 } BSD_t;
 
 BSDRenderObject_t   *BSDLoadAllAnimatedRenderObjects(const char *FName);
+void                BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAnimation_t *AnimationList,
+                                                    BSDVertexTable_t *VertexTable,mat4 Rotation,vec3 Translation,int AnimationIndex);
+void                BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex);
 void                BSDFree(BSD_t *BSD);
 void                BSDFreeRenderObjectList(BSDRenderObject_t *RenderObjectList);
 

@@ -966,7 +966,7 @@ If the offset is not -1 then the data can be found by adding the value
 "Face Data Offset" stored inside the [Entry Table](#entry-table-block)  
 If the offset is -1 and the BSD file is from the MOH:Underground game
 then the face data is stored in a different way.  
-The offset can be found inside the RenderObject at position 264 and the number of  
+The offset can be found inside the RenderObject at position 264 and the number of
 faces that we need to load is stored at position 262.  
 The offset must be added to the one stored inside the BSD file at position 0x5A4 in order to  
 obtain the final one.  

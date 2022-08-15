@@ -79,6 +79,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES RELEASE_POSTFIX -Release)
 # add_library(cimgui STATIC ${IMGUI_SOURCE_FILES})
 # target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${CMAKE_SOURCE_DIR}/IMGUIConfig.h\"")
 # target_link_libraries(cimgui SDL2)
+add_subdirectory(Libs/cglm EXCLUDE_FROM_ALL)
 
 target_compile_options(${PROJECT_NAME} PRIVATE "-fdiagnostics-color=always")
 if(WIN32)
@@ -110,7 +111,7 @@ target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:-O3>")
 # include_directories(Libs/cimgui/)
 # include_directories(Libs/ImGuiFileDialog/)
 # target_link_libraries(${PROJECT_NAME} SDL2 glew_s png ${OPENGL_LIBRARIES} m cimgui samplerate)
-
+target_link_libraries(${PROJECT_NAME} cglm_headers)
 add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Fonts/ $<TARGET_FILE_DIR:${PROJECT_NAME}>/Fonts/

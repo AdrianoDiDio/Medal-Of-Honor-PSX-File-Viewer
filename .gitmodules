@@ -22,3 +22,6 @@
 [submodule "MOHLevelViewer/Libs/libsamplerate"]
 	path = MOHLevelViewer/Libs/libsamplerate
 	url = https://github.com/libsndfile/libsamplerate
+[submodule "MOHModelViewer/Libs/cglm"]
+	path = MOHModelViewer/Libs/cglm
+	url = https://github.com/recp/cglm

@@ -633,8 +633,13 @@ void DPrintf(const char *Fmt, ...)
 int main(int argc,char **argv)
 {
     BSDRenderObject_t *RenderObjectList;
+    BSDRenderObject_t *Iterator;
     DPrintf("Processing %s\n",argv[1]);
     RenderObjectList = BSDLoadAllAnimatedRenderObjects(argv[1]);
+    for( Iterator = RenderObjectList; Iterator; Iterator = Iterator->Next ) {
+        DPrintf("Setting pose 0 for RenderObject %i\n",Iterator->Id);
+        BSDRenderObjectSetAnimationPose(Iterator,0);
+    }
     BSDFreeRenderObjectList(RenderObjectList);
     return 0;
 }
