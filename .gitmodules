@@ -25,3 +25,6 @@
 [submodule "MOHModelViewer/Libs/cglm"]
 	path = MOHModelViewer/Libs/cglm
 	url = https://github.com/recp/cglm
+[submodule "MOHLevelViewer/Libs/cglm"]
+	path = MOHLevelViewer/Libs/cglm
+	url = https://github.com/recp/cglm

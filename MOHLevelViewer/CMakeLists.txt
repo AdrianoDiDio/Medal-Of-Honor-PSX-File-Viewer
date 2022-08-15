@@ -48,6 +48,8 @@ pvs_studio_add_target(TARGET MOHLevelViewer.Analyze ALL
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 set_target_properties(${PROJECT_NAME} PROPERTIES RELEASE_POSTFIX -Release)
 
+add_subdirectory(Libs/cglm EXCLUDE_FROM_ALL)
+
 add_subdirectory(Libs/libsamplerate)
 include_directories(Libs/libsamplerate/include/)
 
@@ -111,7 +113,7 @@ include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(Libs/cimgui/generator/output/)
 include_directories(Libs/cimgui/)
 include_directories(Libs/ImGuiFileDialog/)
-target_link_libraries(${PROJECT_NAME} SDL2 glew_s png ${OPENGL_LIBRARIES} m cimgui samplerate)
+target_link_libraries(${PROJECT_NAME} SDL2 glew_s png ${OPENGL_LIBRARIES} m cimgui samplerate cglm_headers)
 
 add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD
