@@ -33,11 +33,9 @@
 #include <assert.h>
 #include <errno.h>
 
-// #include <png.h>
-// #include "samplerate.h"
-// #include <SDL.h>
-// #include <GL/glew.h>
-// 
+#include <png.h>
+#include <SDL.h>
+#include <GL/glew.h>
 #include <cglm/cglm.h>
 // 
 // #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS

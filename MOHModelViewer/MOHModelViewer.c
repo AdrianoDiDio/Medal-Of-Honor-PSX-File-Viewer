@@ -264,14 +264,14 @@ void SkipFileSection(int SectionSize,FILE *InFile)
     assert((ftell(InFile) - CurrentSection) == SectionSize);
 }
 
-// char *SysGetConfigPath()
-// {
-//     return SDL_GetPrefPath(NULL,"MOHLevelViewer");
-// }
-// int SysMilliseconds()
-// {
-//     return SDL_GetTicks64();
-// }
+char *SysGetConfigPath()
+{
+    return SDL_GetPrefPath(NULL,"MOHLevelViewer");
+}
+int SysMilliseconds()
+{
+    return SDL_GetTicks64();
+}
 
 void DPrintf(const char *Fmt, ...)
 {
@@ -637,7 +637,7 @@ int main(int argc,char **argv)
     DPrintf("Processing %s\n",argv[1]);
     RenderObjectList = BSDLoadAllAnimatedRenderObjects(argv[1]);
     for( Iterator = RenderObjectList; Iterator; Iterator = Iterator->Next ) {
-        DPrintf("Setting pose 0 for RenderObject %i\n",Iterator->Id);
+        DPrintf("Setting pose 0 for RenderObject %u\n",Iterator->Id);
         BSDRenderObjectSetAnimationPose(Iterator,0);
     }
     BSDFreeRenderObjectList(RenderObjectList);

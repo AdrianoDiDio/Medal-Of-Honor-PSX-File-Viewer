@@ -28,3 +28,15 @@
 [submodule "MOHLevelViewer/Libs/cglm"]
 	path = MOHLevelViewer/Libs/cglm
 	url = https://github.com/recp/cglm
+[submodule "MOHModelViewer/Libs/SDL"]
+	path = MOHModelViewer/Libs/SDL
+	url = https://github.com/libsdl-org/SDL
+[submodule "MOHModelViewer/Libs/zlib"]
+	path = MOHModelViewer/Libs/zlib
+	url = https://github.com/madler/zlib
+[submodule "MOHModelViewer/Libs/libpng"]
+	path = MOHModelViewer/Libs/libpng
+	url = https://github.com/glennrp/libpng.git
+[submodule "MOHModelViewer/Libs/glew-cmake"]
+	path = MOHModelViewer/Libs/glew-cmake
+	url = https://github.com/Perlmint/glew-cmake.git

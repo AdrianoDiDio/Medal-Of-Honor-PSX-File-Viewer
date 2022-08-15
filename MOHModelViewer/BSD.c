@@ -91,7 +91,7 @@ void BSDFree(BSD_t *BSD)
 void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAnimation_t *AnimationList,BSDVertexTable_t *VertexTable,
                                      mat4 Rotation,vec3 Translation,int AnimationIndex)
 {
-    BSDQuaternion_t Quaternion;
+    versor Quaternion;
     mat4 RotationMatrix;
     vec3 TransformedBonePosition;
     vec3 TransformedVertexPosition;
@@ -100,30 +100,27 @@ void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAni
     int i;
     
     if( !Bone ) {
-        DPrintf("ApplyBoneTransform:NULL Bone.\n");
+        DPrintf("BSDRecursivelyApplyHierachyData:NULL Bone.\n");
         return;
     }
     
-    
+    if( !AnimationList ) {
+        DPrintf("BSDRecursivelyApplyHierachyData:Invalid Animation List.\n");
+        return;
+    }
+    if( !VertexTable ) {
+        DPrintf("BSDRecursivelyApplyHierachyData:Invalid Vertex Table.\n");
+        return;
+    }
     glm_mat4_identity(RotationMatrix);
     
-    Quaternion.x = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].x / 4096.f;
-    Quaternion.y = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].y / 4096.f;
-    Quaternion.z = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].z / 4096.f;
-    Quaternion.w = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].w / 4096.f;
-
-    RotationMatrix[0][0] = 2 * (Square(Quaternion.w) + Square(Quaternion.x)) - 1;
-    RotationMatrix[0][1] = 2 * (Quaternion.x*Quaternion.y - Quaternion.w*Quaternion.z);
-    RotationMatrix[0][2] = 2 * (Quaternion.x*Quaternion.z + Quaternion.w*Quaternion.y);
+    Quaternion[0] = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].x / 4096.f;
+    Quaternion[1] = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].y / 4096.f;
+    Quaternion[2] = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].z / 4096.f;
+    Quaternion[3] = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].w / 4096.f;
     
-    RotationMatrix[1][0] = 2 * (Quaternion.x*Quaternion.y + Quaternion.w*Quaternion.z);
-    RotationMatrix[1][1] = 2 * (Square(Quaternion.w) + Square(Quaternion.y)) - 1;
-    RotationMatrix[1][2] = 2 * (Quaternion.y*Quaternion.z - Quaternion.w*Quaternion.x);
+    glm_quat_mat4t(Quaternion,RotationMatrix);
     
-    RotationMatrix[2][0] = 2 * (Quaternion.x*Quaternion.z - Quaternion.w*Quaternion.y);
-    RotationMatrix[2][1] = 2 * (Quaternion.y*Quaternion.z + Quaternion.w*Quaternion.x);
-    RotationMatrix[2][2] = 2 * (Square(Quaternion.w) + Square(Quaternion.z)) - 1;
-
     Temp[0] = Bone->Position.x;
     Temp[1] = Bone->Position.y;
     Temp[2] = Bone->Position.z;
@@ -265,7 +262,16 @@ BSDRenderObjectElement_t *BSDGetRenderObjectById(const BSD_t *BSD,int RenderObje
     }
     return NULL;
 }
-
+int BSDGetRenderObjectIndexById(const BSD_t *BSD,int RenderObjectId)
+{
+    int i;
+    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
+        if( BSD->RenderObjectTable.RenderObject[i].Id == RenderObjectId ) {
+            return i;
+        }
+    }
+    return -1;
+}
 /*
  * NOTE(Adriano):
  * Some RenderObjects uses the 'ReferencedRenderObjectId' field to reference a RenderObject that contains common
@@ -933,6 +939,7 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
     BSDRenderObject_t *RenderObjectList;
     BSDRenderObject_t *RenderObject;
     int i;
+    int RenderObjectIndex;
     
     BSDFile = fopen(FName,"rb");
     if( BSDFile == NULL ) {
@@ -950,9 +957,22 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
         if( BSD->RenderObjectTable.RenderObject[i].AnimationDataOffset == -1 ) {
             continue;
         }
+        /*
+         * NOTE(Adriano):
+         * RenderObjectIndex is only used by BSDLoadAnimatedRenderObject only when the game is
+         * MOH:Underground and the FaceTableOffset is equals to -1.
+         * We need to use the referenced RenderObject index if it is set otherwise the offset may
+         * not be valid.
+         */
+        if( BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId != -1 ) {
+            RenderObjectIndex = BSDGetRenderObjectIndexById(BSD,BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
+        } else {
+            RenderObjectIndex = i;
+        }
+        assert(RenderObjectIndex != -1);
         DPrintf("BSDLoadAllAnimatedRenderObjects:Loading Animated RenderObject %u\n",BSD->RenderObjectTable.RenderObject[i].Id);
         RenderObject = BSDLoadAnimatedRenderObject(BSD->RenderObjectTable.RenderObject[i],BSD->EntryTable,
-                                                   BSDFile,i,GameVersion);
+                                                   BSDFile,RenderObjectIndex,GameVersion);
         if( !RenderObject ) {
             DPrintf("BSDLoadAllAnimatedRenderObjects:Failed to load animated RenderObject.\n");
             continue;

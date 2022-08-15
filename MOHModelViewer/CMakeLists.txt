@@ -14,7 +14,7 @@ SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 SET(CMAKE_INSTALL_RPATH "$\{ORIGIN\}")
 
-set(SOURCE_FILES BSD.c MOHModelViewer.c
+set(SOURCE_FILES Config.c Video.c ShaderManager.c VAO.c TIM.c VRAM.c BSD.c MOHModelViewer.c
 )
                  
 # set(IMGUI_SOURCE_FILES Libs/cimgui/cimgui.cpp
@@ -46,39 +46,38 @@ pvs_studio_add_target(TARGET MOHModelViewer.Analyze ALL
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 set_target_properties(${PROJECT_NAME} PROPERTIES RELEASE_POSTFIX -Release)
 
-# add_subdirectory(Libs/libsamplerate)
-# include_directories(Libs/libsamplerate/include/)
-# 
+ 
 # include_directories(Libs/cimgui/imgui)
-# set(SDL2_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
-# set(SDL2_DISABLE_UNINSTALL ON CACHE BOOL "" FORCE)
-# add_subdirectory(Libs/SDL)
-# include_directories(Libs/SDL/include)
-# 
-# set(GLEW_CUSTOM_OUTPUT_DIRS ON CACHE BOOL "" FORCE)
-# 
-# add_subdirectory(Libs/glew-cmake/build/cmake)
-# 
-# add_subdirectory(Libs/zlib ${CMAKE_CURRENT_BINARY_DIR}/Libs/zlib)
-# 
-# set(ZLIB_ROOT Libs/zlib)
-# 
-# set(ZLIB_LIBRARY zlib)
-# set(PNG_BUILD_ZLIB OFF CACHE BOOL "" FORCE)
-# set(PNG_SHARED ON CACHE BOOL "" FORCE)
-# set(PNG_STATIC OFF CACHE BOOL "" FORCE)
-# set(PNG_EXECUTABLES OFF CACHE BOOL "" FORCE)
-# set(PNG_TESTS OFF CACHE BOOL "" FORCE) 
-# set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
-# 
-# add_subdirectory(Libs/libpng)
-# 
-# set(OpenGL_GL_PREFERENCE LEGACY)
-# find_package(OpenGL REQUIRED)
-# 
+set(SDL2_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
+set(SDL2_DISABLE_UNINSTALL ON CACHE BOOL "" FORCE)
+add_subdirectory(Libs/SDL)
+include_directories(Libs/SDL/include)
+
+set(GLEW_CUSTOM_OUTPUT_DIRS ON CACHE BOOL "" FORCE)
+
+add_subdirectory(Libs/glew-cmake/build/cmake)
+
+add_subdirectory(Libs/zlib ${CMAKE_CURRENT_BINARY_DIR}/Libs/zlib)
+
+set(ZLIB_ROOT Libs/zlib)
+
+set(ZLIB_LIBRARY zlib)
+set(PNG_BUILD_ZLIB OFF CACHE BOOL "" FORCE)
+set(PNG_SHARED ON CACHE BOOL "" FORCE)
+set(PNG_STATIC OFF CACHE BOOL "" FORCE)
+set(PNG_EXECUTABLES OFF CACHE BOOL "" FORCE)
+set(PNG_TESTS OFF CACHE BOOL "" FORCE) 
+set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
+
+add_subdirectory(Libs/libpng)
+
+set(OpenGL_GL_PREFERENCE LEGACY)
+find_package(OpenGL REQUIRED)
+ 
 # add_library(cimgui STATIC ${IMGUI_SOURCE_FILES})
 # target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${CMAKE_SOURCE_DIR}/IMGUIConfig.h\"")
 # target_link_libraries(cimgui SDL2)
+
 add_subdirectory(Libs/cglm EXCLUDE_FROM_ALL)
 
 target_compile_options(${PROJECT_NAME} PRIVATE "-fdiagnostics-color=always")
@@ -106,12 +105,12 @@ target_compile_definitions(${PROJECT_NAME}
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:-g>")
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:-O3>")
 
-# include_directories(${OPENGL_INCLUDE_DIRS})
+include_directories(${OPENGL_INCLUDE_DIRS})
 # include_directories(Libs/cimgui/generator/output/)
 # include_directories(Libs/cimgui/)
 # include_directories(Libs/ImGuiFileDialog/)
-# target_link_libraries(${PROJECT_NAME} SDL2 glew_s png ${OPENGL_LIBRARIES} m cimgui samplerate)
-target_link_libraries(${PROJECT_NAME} cglm_headers)
+target_link_libraries(${PROJECT_NAME} SDL2 glew_s png ${OPENGL_LIBRARIES} m cglm_headers)
+
 add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Fonts/ $<TARGET_FILE_DIR:${PROJECT_NAME}>/Fonts/
