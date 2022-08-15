@@ -21,6 +21,8 @@
 #define __BSD_H_
 
 #include "Common.h"
+#include "VAO.h"
+#include "VRAM.h"
 
 #define BSD_HEADER_SIZE 2048
 #define BSD_ANIMATED_LIGHTS_TABLE_SIZE 40
@@ -199,9 +201,12 @@ typedef struct BSDRenderObject_s {
     BSDVertexTable_t            *VertexTable;
     int                         NumVertexTables;
     BSDAnimatedModelFace_t      *FaceList;
+    int                         NumFaces;
     BSDHierarchyBone_t          *HierarchyDataRoot;
     BSDAnimation_t              *AnimationList;
     int                         NumAnimations;
+    
+    VAO_t                       *VAO;
     struct BSDRenderObject_s *Next;
 } BSDRenderObject_t;
 
@@ -214,6 +219,7 @@ BSDRenderObject_t   *BSDLoadAllAnimatedRenderObjects(const char *FName);
 void                BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAnimation_t *AnimationList,
                                                     BSDVertexTable_t *VertexTable,mat4 Rotation,vec3 Translation,int AnimationIndex);
 void                BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex);
+void                BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject);
 void                BSDFree(BSD_t *BSD);
 void                BSDFreeRenderObjectList(BSDRenderObject_t *RenderObjectList);
 

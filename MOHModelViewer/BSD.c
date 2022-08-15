@@ -65,6 +65,7 @@ void BSDFreeRenderObject(BSDRenderObject_t *RenderObject)
         }
         free(RenderObject->AnimationList);
     }
+    VAOFree(RenderObject->VAO);
     free(RenderObject);
 }
 
@@ -87,7 +88,92 @@ void BSDFree(BSD_t *BSD)
     }
     free(BSD);
 }
-
+void BSDFillFaceVertexBuffer(int *Buffer,int *BufferSize,BSDVertex_t Vertex,BSDUv_t UV,BSDColor_t Color,int CLUTX,int CLUTY,int ColorMode)
+{
+    if( !Buffer ) {
+        DPrintf("BSDFillFaceVertexBuffer:Invalid Buffer\n");
+        return;
+    }
+    if( !BufferSize ) {
+        DPrintf("BSDFillFaceVertexBuffer:Invalid BufferSize\n");
+        return;
+    }
+    Buffer[*BufferSize] =   Vertex.x;
+    Buffer[*BufferSize+1] = Vertex.y;
+    Buffer[*BufferSize+2] = Vertex.z;
+    Buffer[*BufferSize+3] = UV.u;
+    Buffer[*BufferSize+4] = UV.v;
+    Buffer[*BufferSize+5] = Color.r;
+    Buffer[*BufferSize+6] = Color.g;
+    Buffer[*BufferSize+7] = Color.b;
+    Buffer[*BufferSize+8] = CLUTX;
+    Buffer[*BufferSize+9] = CLUTY;
+    Buffer[*BufferSize+10] = ColorMode;
+    *BufferSize += 11;
+}
+void BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject)
+{
+    BSDAnimatedModelFace_t *CurrentFace;
+    int VertexOffset;
+    int TextureOffset;
+    int ColorOffset;
+    int CLUTOffset;
+    int ColorModeOffset;
+    int Stride;
+    int *VertexData;
+    int VertexSize;
+    int VertexPointer;
+    int ColorMode;
+    int CLUTPage;
+    int CLUTPosX;
+    int CLUTPosY;
+    int CLUTDestX;
+    int CLUTDestY;
+    int i;
+    
+    if( !RenderObject ) {
+        DPrintf("BSDRenderObjectGenerateVAO:Invalid RenderObject\n");
+        return;
+    }
+    //        XYZ UV RGB CLUT ColorMode
+    Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
+                
+    VertexOffset = 0;
+    TextureOffset = 3;
+    ColorOffset = 5;
+    CLUTOffset = 8;
+    ColorModeOffset = 10;
+    
+    VertexSize = Stride * 3 * RenderObject->NumFaces;
+    VertexData = malloc(VertexSize);
+    VertexPointer = 0;
+    DPrintf("BSDRenderObjectGenerateVAO:Generating for %i faces\n",RenderObject->NumFaces);
+    for( i = 0; i < RenderObject->NumFaces; i++ ) {
+        CurrentFace = &RenderObject->FaceList[i];
+        ColorMode = (CurrentFace->TexInfo >> 7) & 0x3;
+        CLUTPosX = (CurrentFace->CLUT << 4) & 0x3F0;
+        CLUTPosY = (CurrentFace->CLUT >> 6) & 0x1ff;
+        CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
+        CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
+        CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
+        CLUTDestX += VRAMGetTexturePageX(CLUTPage);
+        BSDFillFaceVertexBuffer(VertexData,&VertexPointer,
+                                RenderObject->VertexTable[CurrentFace->VertexTableIndex0].VertexList[CurrentFace->VertexTableDataIndex0&0x7F],
+                                CurrentFace->UV0,CurrentFace->RGB0,CLUTDestX,CLUTDestY,ColorMode
+                               );
+        BSDFillFaceVertexBuffer(VertexData,&VertexPointer,
+                                RenderObject->VertexTable[CurrentFace->VertexTableIndex1].VertexList[CurrentFace->VertexTableDataIndex1&0x7F],
+                                CurrentFace->UV1,CurrentFace->RGB1,CLUTDestX,CLUTDestY,ColorMode
+                               );
+        BSDFillFaceVertexBuffer(VertexData,&VertexPointer,
+                                RenderObject->VertexTable[CurrentFace->VertexTableIndex2].VertexList[CurrentFace->VertexTableDataIndex2&0x7F],
+                                CurrentFace->UV2,CurrentFace->RGB2,CLUTDestX,CLUTDestY,ColorMode
+                               );
+    }
+    RenderObject->VAO = VAOInitXYZUVRGBCLUTColorModeInteger(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,
+                                        ColorOffset,CLUTOffset,ColorModeOffset,RenderObject->NumFaces * 3);
+    free(VertexData);
+}
 void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAnimation_t *AnimationList,BSDVertexTable_t *VertexTable,
                                      mat4 Rotation,vec3 Translation,int AnimationIndex)
 {
@@ -416,6 +502,7 @@ int BSDLoadAnimationVertexData(BSDRenderObject_t *RenderObject,int VertexTableIn
     for( i = 0; i < RenderObject->NumVertexTables; i++ ) {
         fread(&RenderObject->VertexTable[i].Offset,sizeof(RenderObject->VertexTable[i].Offset),1,BSDFile);
         fread(&RenderObject->VertexTable[i].NumVertex,sizeof(RenderObject->VertexTable[i].NumVertex),1,BSDFile);
+        DPrintf("Table Index %i has %i vertices\n",i,RenderObject->VertexTable[i].NumVertex);
         RenderObject->VertexTable[i].VertexList = NULL;
     }
     
@@ -519,6 +606,7 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
     DPrintf("BSDLoadMOHUndergroundAnimationFaceData:Reading %i faces at offset %li (%li)\n",NumFaces,ftell(BSDFile),ftell(BSDFile) - 2048);
     
     RenderObject->FaceList = malloc(NumFaces * sizeof(BSDAnimatedModelFace_t));
+    RenderObject->NumFaces = NumFaces;
     if( !RenderObject->FaceList ) {
         DPrintf("BSDLoadAnimationFaceData:Failed to allocate memory for face list.\n");
         return 0;
@@ -534,6 +622,7 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
         BSDPrintAnimatedModelFace(RenderObject->FaceList[CurrentFaceIndex]);
         CurrentFaceIndex++;
         while( 1 ) {
+            DPrintf("Reading it at %li\n",ftell(BSDFile) - 2048);
             fread(&Marker,sizeof(Marker),1,BSDFile);
             if( ( Marker & 0x1FFF ) == 0x1FFF || Marker == 0x1fff1fff ) {
                 DPrintf("BSDLoadAnimationFaceData:Aborting since a marker was found\n");
@@ -557,12 +646,11 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
                 TempFace.RGB0 = TempFace.RGB1;
                 TempFace.RGB1 = TempFace.RGB2;
             }
-            TempFace.VertexTableIndex2 = (Marker & 0x1FFF) >> 8;
-            TempFace.VertexTableDataIndex2 = (Marker & 0x1FFF) & 0xFF;
+            TempFace.VertexTableDataIndex2 = (Marker & 0x1FFF) >> 8;
+            TempFace.VertexTableIndex2 = (Marker & 0x1FFF) & 0x1F;
             TempFace.UV2.u = (Marker >> 0x10) & 0xff;
             TempFace.UV2.v = (Marker >> 0x10) >> 8;
             TempFace.RGB2 = ColorData;
-            
             BSDCopyAnimatedModelFace(TempFace,&RenderObject->FaceList[CurrentFaceIndex]);
             BSDPrintAnimatedModelFace(RenderObject->FaceList[CurrentFaceIndex]);
             CurrentFaceIndex++;
@@ -607,6 +695,7 @@ int BSDLoadAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset
     fseek(BSDFile,GlobalFaceDataOffset,SEEK_SET);
     assert(sizeof(BSDAnimatedModelFace_t) == 28);
     RenderObject->FaceList = malloc(NumFaces * sizeof(BSDAnimatedModelFace_t));
+    RenderObject->NumFaces = NumFaces;
     if( !RenderObject->FaceList ) {
         DPrintf("BSDLoadAnimationFaceData:Failed to allocate memory for face list.\n");
         return 0;
@@ -874,6 +963,8 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
     RenderObject->FaceList = NULL;
     RenderObject->HierarchyDataRoot = NULL;
     RenderObject->AnimationList = NULL;
+    RenderObject->VAO = NULL;
+    
     if( !BSDLoadAnimationVertexData(RenderObject,RenderObjectElement.VertexTableIndexOffset,BSDEntryTable,BSDFile) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load vertex data\n");
         goto Failure;
@@ -966,6 +1057,14 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
          */
         if( BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId != -1 ) {
             RenderObjectIndex = BSDGetRenderObjectIndexById(BSD,BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
+            //NOTE(Adriano):Some RenderObjects are bundled in other files and referenced by Id.
+            //This could happens for example when loading the SET1 BSD that is looking for another RenderObject containted inside
+            //the level file.
+            //For the moment this is bypassed and could cause the RenderObject to not be loaded due to missing offsets...
+            //TODO(Adriano):Double-Check if it is working by using MOH:Underground SET1.BSD.
+            if( RenderObjectIndex == -1 ) {
+                RenderObjectIndex = i;
+            }
         } else {
             RenderObjectIndex = i;
         }

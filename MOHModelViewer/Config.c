@@ -308,38 +308,6 @@ void ConfigRegisterDefaultSettings()
     ConfigRegister("VideoFullScreen","0",NULL);
     ConfigRegister("VideoVSync","-1","Enable or disable vsync.\nPossible values are:-1 enable adaptive VSync (where supported),\n"
                     "0 Disables it and 1 enables standard VSync.");
-    
-    ConfigRegister("CameraSpeed","30.f",NULL);
-    ConfigRegister("CameraMouseSensitivity","1.f",NULL);
-
-    ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to "
-                                    "being set to empty.");
-    ConfigRegister("GUIFont","Fonts/DroidSans.ttf","Sets the file to be used as the GUI font,if not valid the application will use the default one");
-    ConfigRegister("GUIFontSize","14.f",NULL);
-    ConfigRegister("GUIShowFPS","1",NULL);
-
-    ConfigRegister("LevelEnableWireFrameMode","0","Draw the level surfaces as lines");
-    ConfigRegister("LevelDrawCollisionData","0","Draw the level collision data");
-    ConfigRegister("LevelDrawBSPTree","0","When enabled draws the BSP tree for the current level.Red box represents a splitter while \n"
-                                        "a yellow one a leaf (containing actual level data).");
-    ConfigRegister("LevelDrawSurfaces","1","Draw the level surfaces");
-    ConfigRegister("LevelDrawBSDNodesAsPoints","1","When enabled draws all the BSD nodes as points.");
-    ConfigRegister("LevelDrawBSDNodesCollisionVolumes","0","When enabled draws all the BSD nodes collision volumes.");
-    ConfigRegister("LevelDrawBSDRenderObjectsAsPoints","1","When enabled draws all the BSD RenderObjects as Points");
-    ConfigRegister("LevelDrawBSDRenderObjects","1","When enabled draws all the supported render objects");
-    ConfigRegister("LevelDrawBSDShowcase","0","When enabled draws all the loaded RenderObjects near the player spawn.");
-    ConfigRegister("LevelEnableFrustumCulling","1","When enabled helps to skip non visibile nodes from the BSP tree improving the rendering speed");
-    ConfigRegister("LevelEnableAmbientLight","1","When enabled the texture color is interpolated with the surface color to simulate lights on \n"
-                                                    "surfaces");
-    ConfigRegister("LevelEnableSemiTransparency","1","When enabled draw transparent surfaces as non-opaque");
-    ConfigRegister("LevelEnableAnimatedLights","1","When enabled some surfaces will interpolate their color to simulate an animated surface.\n"
-                                       "NOTE that this will only work if \"LevelEnableAmbientLight\" is enabled");
-    ConfigRegister("LevelEnableAnimatedSurfaces","1","When enabled this will make some surfaces change their texture when the camera gets near.\n"
-                                       "For example when hovering the camera near an explosive charge an overlay will pulse near the charge.");
-    
-    ConfigRegister("LevelEnableMusicTrack","1","When enabled sound will be played in background.\n"
-                                       "There are 3 possible values:0 Disabled,1 Enable Music And Ambient sounds,2 Enable ambient sounds only.");
-    ConfigRegister("SoundVolume","128","Sets the sound volume, the value must be in range 0-128, values outside that range will be clamped.");
 }
 void ConfigDumpSettings()
 {

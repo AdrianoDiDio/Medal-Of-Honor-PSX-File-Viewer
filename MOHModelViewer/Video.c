@@ -222,7 +222,7 @@ int VideoSystemOpenWindow(VideoSystem_t *VideoSystem)
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    VideoSystem->Window = SDL_CreateWindow("MOH Level Viewer",SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    VideoSystem->Window = SDL_CreateWindow("MOH Model Viewer",SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                      VidConfigWidth->IValue, VidConfigHeight->IValue, 
                      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     
@@ -279,6 +279,6 @@ VideoSystem_t *VideoSystemInit()
         return NULL;
     }
     SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
-    VideoSystemGrabMouse(1);
+//     VideoSystemGrabMouse(1);
     return VideoSystem;
 }

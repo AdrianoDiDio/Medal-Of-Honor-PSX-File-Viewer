@@ -20,6 +20,9 @@
 #define __MOHMODELVIEWER_H_ 
 
 #include "Common.h"
+#include "Config.h"
+#include "Video.h"
+#include "BSD.h"
 
 #define MAX_FPS 120
 
@@ -44,7 +47,7 @@ typedef struct ComTimeInfo_s {
 
 typedef struct Engine_s {
    ComTimeInfo_t    *TimeInfo;
-//    VideoSystem_t    *VideoSystem;
+   VideoSystem_t    *VideoSystem;
 //    SoundSystem_t    *SoundSystem;
 //    Camera_t         *Camera;
 //    LevelManager_t   *LevelManager;
