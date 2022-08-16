@@ -199,13 +199,14 @@ typedef struct BSDEntryTable_s {
 typedef struct BSDRenderObject_s {
     unsigned int                Id;
     BSDVertexTable_t            *VertexTable;
+    BSDVertexTable_t            *CurrentVertexTable;
     int                         NumVertexTables;
     BSDAnimatedModelFace_t      *FaceList;
     int                         NumFaces;
     BSDHierarchyBone_t          *HierarchyDataRoot;
     BSDAnimation_t              *AnimationList;
     int                         NumAnimations;
-    
+    int                         CurrentAnimationIndex;
     VAO_t                       *VAO;
     struct BSDRenderObject_s *Next;
 } BSDRenderObject_t;

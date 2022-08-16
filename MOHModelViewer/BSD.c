@@ -20,6 +20,7 @@
 */
 #include "BSD.h"
 #include "MOHModelViewer.h" 
+#include "ShaderManager.h"
 
 void BSDRecusivelyFreeHierarchyBone(BSDHierarchyBone_t *Bone)
 {
@@ -42,8 +43,12 @@ void BSDFreeRenderObject(BSDRenderObject_t *RenderObject)
             if( RenderObject->VertexTable[i].VertexList ) {
                 free(RenderObject->VertexTable[i].VertexList);
             }
+            if( RenderObject->CurrentVertexTable[i].VertexList ) {
+                free(RenderObject->CurrentVertexTable[i].VertexList);
+            }
         }
         free(RenderObject->VertexTable);
+        free(RenderObject->CurrentVertexTable);
     }
     if( RenderObject->FaceList ) {
         free(RenderObject->FaceList);
@@ -234,21 +239,95 @@ void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAni
         BSDRecursivelyApplyHierachyData(Bone->Child1,AnimationList,VertexTable,RotationMatrix,VertexTranslation,AnimationIndex);
     }
 }
+void BSDRenderObjectResetVertexTable(BSDRenderObject_t *RenderObject)
+{
+    int i;
+    int j;
+    
+    if( !RenderObject ) {
+        DPrintf("BSDRenderObjectResetVertexTable:Invalid RenderObject\n");
+        return;
+    }
+    for( i = 0; i < RenderObject->NumVertexTables; i++ ) {
+        RenderObject->CurrentVertexTable[i].Offset = RenderObject->VertexTable[i].Offset;
+        RenderObject->CurrentVertexTable[i].NumVertex = RenderObject->VertexTable[i].NumVertex;
+        for( j = 0; j < RenderObject->VertexTable[i].NumVertex; j++ ) {
+            RenderObject->CurrentVertexTable[i].VertexList[j] = RenderObject->VertexTable[i].VertexList[j];
+        }
+    }
+
+}
 void BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex)
 {
     vec3 Translation;
     mat4 Rotation;
-    Translation[0] = 0;
-    Translation[1] = 0;
-    Translation[2] = 0;
-    glm_mat4_identity(Rotation);
 
     if( AnimationIndex < 0 || AnimationIndex > RenderObject->NumAnimations ) {
         DPrintf("BSDRenderObjectSetAnimationPose:Failed to set pose using index %i...Index is out of bounds\n",AnimationIndex);
         return;
     }
+    if( AnimationIndex == RenderObject->CurrentAnimationIndex ) {
+        DPrintf("BSDRenderObjectSetAnimationPose:Pose is already set\n");
+        return;
+    }
+    Translation[0] = 0;
+    Translation[1] = 0;
+    Translation[2] = 0;
+    glm_mat4_identity(Rotation);
+    RenderObject->CurrentAnimationIndex = AnimationIndex;
+    BSDRenderObjectResetVertexTable(RenderObject);
     BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,RenderObject->AnimationList,
-                                    RenderObject->VertexTable,Rotation,Translation,AnimationIndex);
+                                    RenderObject->CurrentVertexTable,Rotation,Translation,AnimationIndex);
+}
+
+void BSDRenderObjectDraw(const BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,mat4 ProjectionMatrix)
+{
+    int EnableLightingId;
+    int PaletteTextureId;
+    int TextureIndexId;
+    int MVPMatrixId;
+    mat4 MVPMatrix;
+    mat4 ViewMatrix;
+    Shader_t *Shader;
+    
+    if( !RenderObject ) {
+        return;
+    }
+    glm_mat4_identity(ViewMatrix);
+    glm_mat4_mul(ProjectionMatrix,ViewMatrix,MVPMatrix);
+    //Emulate PSX Coordinate system...
+    glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+    
+    Shader = ShaderCache("BSDRenderObjectShader","Shaders/BSDRenderObjectVertexShader.glsl",
+                         "Shaders/BSDRenderObjectFragmentShader.glsl");
+    if( !Shader ) {
+        return;
+    }
+    glUseProgram(Shader->ProgramId);
+
+    MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+    glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+    EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
+    PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
+    TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+    glUniform1i(TextureIndexId, 0);
+    glUniform1i(PaletteTextureId,  1);
+    glUniform1i(EnableLightingId, 1);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
+
+    glDisable(GL_BLEND);
+    glBindVertexArray(RenderObject->VAO->VAOId[0]);
+    glDrawArrays(GL_TRIANGLES, 0, RenderObject->VAO->Count);
+    glBindVertexArray(0);
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D,0);
+    glDisable(GL_BLEND);
+    glBlendColor(1.f, 1.f, 1.f, 1.f);
+    glUseProgram(0);
 }
 /*
   NOTE(Adriano):
@@ -495,7 +574,13 @@ int BSDLoadAnimationVertexData(BSDRenderObject_t *RenderObject,int VertexTableIn
     fseek(BSDFile,VertexTableOffset,SEEK_SET);
     
     RenderObject->VertexTable = malloc(RenderObject->NumVertexTables * sizeof(BSDVertexTable_t));
+
     if( !RenderObject->VertexTable ) {
+        DPrintf("BSDLoadAnimationVertexData:Failed to allocate memory for VertexTable.\n");
+        return 0;
+    }
+    RenderObject->CurrentVertexTable = malloc(RenderObject->NumVertexTables * sizeof(BSDVertexTable_t));
+    if( !RenderObject->CurrentVertexTable ) {
         DPrintf("BSDLoadAnimationVertexData:Failed to allocate memory for VertexTable.\n");
         return 0;
     }
@@ -504,6 +589,10 @@ int BSDLoadAnimationVertexData(BSDRenderObject_t *RenderObject,int VertexTableIn
         fread(&RenderObject->VertexTable[i].NumVertex,sizeof(RenderObject->VertexTable[i].NumVertex),1,BSDFile);
         DPrintf("Table Index %i has %i vertices\n",i,RenderObject->VertexTable[i].NumVertex);
         RenderObject->VertexTable[i].VertexList = NULL;
+        
+        RenderObject->CurrentVertexTable[i].Offset = RenderObject->VertexTable[i].Offset;
+        RenderObject->CurrentVertexTable[i].NumVertex = RenderObject->VertexTable[i].NumVertex;
+        RenderObject->CurrentVertexTable[i].VertexList = NULL;
     }
     
     fseek(BSDFile,EntryTable.AnimationVertexDataOffset + BSD_HEADER_SIZE,SEEK_SET);
@@ -513,8 +602,10 @@ int BSDLoadAnimationVertexData(BSDRenderObject_t *RenderObject,int VertexTableIn
         }
         fseek(BSDFile,EntryTable.AnimationVertexDataOffset + RenderObject->VertexTable[i].Offset + BSD_HEADER_SIZE,SEEK_SET);
         RenderObject->VertexTable[i].VertexList = malloc(RenderObject->VertexTable[i].NumVertex * sizeof(BSDVertex_t));
+        RenderObject->CurrentVertexTable[i].VertexList = malloc(RenderObject->VertexTable[i].NumVertex * sizeof(BSDVertex_t));
         for( j = 0; j < RenderObject->VertexTable[i].NumVertex; j++ ) {
             fread(&RenderObject->VertexTable[i].VertexList[j],sizeof(BSDVertex_t),1,BSDFile);
+            RenderObject->CurrentVertexTable[i].VertexList[j] = RenderObject->VertexTable[i].VertexList[j];
         }
     }
     return 1;
@@ -960,11 +1051,12 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
     }
     RenderObject->Id = RenderObjectElement.Id;
     RenderObject->VertexTable = NULL;
+    RenderObject->CurrentVertexTable = NULL;
     RenderObject->FaceList = NULL;
     RenderObject->HierarchyDataRoot = NULL;
     RenderObject->AnimationList = NULL;
     RenderObject->VAO = NULL;
-    
+    RenderObject->CurrentAnimationIndex = -1;
     if( !BSDLoadAnimationVertexData(RenderObject,RenderObjectElement.VertexTableIndexOffset,BSDEntryTable,BSDFile) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load vertex data\n");
         goto Failure;
