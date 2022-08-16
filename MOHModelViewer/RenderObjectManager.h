@@ -24,15 +24,16 @@
 #include "BSD.h"
 #include "VRAM.h"
 #include "TIM.h"
+#include "Camera.h"
 
 //NOTE(Adriano):A single BSD file that gets loaded together with his corresponding TAF goes
-//              here...this allows for multiple BSD files to be loaded without overlapping.
+//              here...this allows for multiple BSD files to be loaded without overlapping VRAMs.
 typedef struct BSDRenderObjectPack_s {
     VRAM_t                          *VRAM;
     TIMImage_t                      *ImageList;
     BSDRenderObject_t               *RenderObjectList;
     
-    struct BSDRenderObjectPack_s  *Next;
+    struct BSDRenderObjectPack_s    *Next;
 } BSDRenderObjectPack_t;
 
 typedef struct RenderObjectManager_s {
@@ -40,5 +41,7 @@ typedef struct RenderObjectManager_s {
 } RenderObjectManager_t;
 
 RenderObjectManager_t   *RenderObjectManagerInit();
+void                    RenderObjectManagerDrawAll(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera);
+void                    RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager);
 int                     RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,const char *File);
 #endif//__RENDER_OBJECT_MANAGER_H_

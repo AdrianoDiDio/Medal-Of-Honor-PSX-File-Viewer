@@ -22,7 +22,9 @@
 #include "Common.h"
 #include "Config.h"
 #include "Video.h"
+#include "Camera.h"
 #include "BSD.h"
+#include "RenderObjectManager.h"
 
 #define MAX_FPS 120
 
@@ -46,10 +48,11 @@ typedef struct ComTimeInfo_s {
 } ComTimeInfo_t;
 
 typedef struct Engine_s {
-   ComTimeInfo_t    *TimeInfo;
-   VideoSystem_t    *VideoSystem;
+   ComTimeInfo_t            *TimeInfo;
+   VideoSystem_t            *VideoSystem;
+   RenderObjectManager_t    *RenderObjectManager;
 //    SoundSystem_t    *SoundSystem;
-//    Camera_t         *Camera;
+   Camera_t                 *Camera;
 //    LevelManager_t   *LevelManager;
 //    GUI_t            *GUI;
    const Byte       *KeyState;

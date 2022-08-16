@@ -21,17 +21,114 @@
 #include "RenderObjectManager.h"
 #include "MOHModelViewer.h"
 
+void RenderObjectManagerFreeBSDRenderObjectPack(BSDRenderObjectPack_t *BSDRenderObjectPack)
+{
+    if( !BSDRenderObjectPack ) {
+        return;
+    }
+    if( BSDRenderObjectPack->ImageList ) {
+        TIMImageListFree(BSDRenderObjectPack->ImageList);
+    }
+    if( BSDRenderObjectPack->VRAM ) {
+        VRAMFree(BSDRenderObjectPack->VRAM);
+    }
+    BSDFreeRenderObjectList(BSDRenderObjectPack->RenderObjectList);
+    free(BSDRenderObjectPack);
+}
+void RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager)
+{
+    BSDRenderObjectPack_t *Temp;
+    if( !RenderObjectManager ) {
+        return;
+    }
+    while(RenderObjectManager->BSDList) {
+        Temp = RenderObjectManager->BSDList;
+        RenderObjectManager->BSDList = RenderObjectManager->BSDList->Next;
+        RenderObjectManagerFreeBSDRenderObjectPack(Temp);
+    }
+    free(RenderObjectManager);
+}
+void RenderObjectManagerDrawPack(RenderObjectManager_t *RenderObjectManager,BSDRenderObjectPack_t *RenderObjectPack,Camera_t *Camera,
+                                 mat4 ProjectionMatrix)
+{
+    if( !RenderObjectManager ) {
+        return;
+    }
+    if( !RenderObjectPack ) {
+        return;
+    }
+    BSDDrawRenderObjectList(RenderObjectPack->RenderObjectList,RenderObjectPack->VRAM,Camera,ProjectionMatrix);
+}
+void RenderObjectManagerDrawAll(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera)
+{
+    BSDRenderObjectPack_t *Iterator;
+    mat4 ProjectionMatrix;
+    
+    if( !RenderObjectManager ) {
+        return;
+    }
+    
+    glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);     
+    for( Iterator = RenderObjectManager->BSDList; Iterator; Iterator = Iterator->Next ) {
+       RenderObjectManagerDrawPack(RenderObjectManager,Iterator,Camera,ProjectionMatrix); 
+    }
+}
 int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,const char *File)
 {
-   if( !RenderObjectManager ) {
-       DPrintf("RenderObjectManagerLoadBSD:Invalid RenderObjectManager\n");
-       return 0;
-   }
-   if( !File ) {
-       DPrintf("RenderObjectManagerLoadBSD:Invalid file name\n");
-       return 0;
-   }
-   return 1;
+    BSDRenderObjectPack_t *BSDPack;
+    BSDRenderObject_t *Iterator;
+    char *TAFFile;
+    
+    if( !RenderObjectManager ) {
+        DPrintf("RenderObjectManagerLoadBSD:Invalid RenderObjectManager\n");
+        return 0;
+    }
+    if( !File ) {
+        DPrintf("RenderObjectManagerLoadBSD:Invalid file name\n");
+        return 0;
+    }
+    
+    DPrintf("RenderObjectManagerLoadBSD:Attempting to load %s\n",File);
+    BSDPack = malloc(sizeof(BSDRenderObjectPack_t));
+    BSDPack->ImageList = NULL;
+    BSDPack->VRAM = NULL;
+    BSDPack->RenderObjectList = NULL;
+    TAFFile = NULL;
+    
+    if( !BSDPack ) {
+        DPrintf("RenderObjectManagerLoadBSD:Failed to allocate memory for BSD pack\n");
+        goto Failure;
+    }
+    TAFFile = SwitchExt(File,".TAF");
+    BSDPack->ImageList = TIMGetAllImages(TAFFile);
+    if( !BSDPack->ImageList ) {
+        DPrintf("RenderObjectManagerLoadBSD:Failed to load images from TAF file %s\n",TAFFile);
+        goto Failure;
+    }
+    BSDPack->RenderObjectList = BSDLoadAllAnimatedRenderObjects(File);
+    if( !BSDPack->RenderObjectList ) {
+        DPrintf("RenderObjectManagerLoadBSD:Failed to load render objects from file\n");
+        goto Failure;
+    }
+    BSDPack->VRAM = VRAMInit(BSDPack->ImageList);
+    if( !BSDPack->VRAM ) {
+        DPrintf("RenderObjectManagerLoadBSD:Failed to initialize VRAM\n");
+        goto Failure;
+    }
+    for( Iterator = BSDPack->RenderObjectList; Iterator; Iterator = Iterator->Next ) {
+        BSDRenderObjectSetAnimationPose(Iterator,0);
+        BSDRenderObjectGenerateVAO(Iterator);
+    }
+    BSDPack->Next = RenderObjectManager->BSDList;
+    RenderObjectManager->BSDList = BSDPack;
+    free(TAFFile);
+    return 1;
+Failure:
+    RenderObjectManagerFreeBSDRenderObjectPack(BSDPack);
+    if( TAFFile ) {
+        free(TAFFile);
+    }
+    return 0;
 }
 RenderObjectManager_t *RenderObjectManagerInit()
 {

@@ -308,6 +308,8 @@ void ConfigRegisterDefaultSettings()
     ConfigRegister("VideoFullScreen","0",NULL);
     ConfigRegister("VideoVSync","-1","Enable or disable vsync.\nPossible values are:-1 enable adaptive VSync (where supported),\n"
                     "0 Disables it and 1 enables standard VSync.");
+    ConfigRegister("CameraSpeed","30.f",NULL);
+    ConfigRegister("CameraMouseSensitivity","1.f",NULL);
 }
 void ConfigDumpSettings()
 {

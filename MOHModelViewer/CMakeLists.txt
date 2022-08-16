@@ -14,7 +14,7 @@ SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 SET(CMAKE_INSTALL_RPATH "$\{ORIGIN\}")
 
-set(SOURCE_FILES Config.c Video.c ShaderManager.c VAO.c TIM.c VRAM.c BSD.c RenderObjectManager.c MOHModelViewer.c
+set(SOURCE_FILES Config.c Video.c ShaderManager.c VAO.c Camera.c TIM.c VRAM.c BSD.c RenderObjectManager.c MOHModelViewer.c
 )
                  
 # set(IMGUI_SOURCE_FILES Libs/cimgui/cimgui.cpp

@@ -307,7 +307,11 @@ void EngineCheckEvents(Engine_t *Engine)
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit(Engine);
         }
+        if( Event.type == SDL_MOUSEMOTION ) {
+            CameraOnMouseEvent(Engine->Camera,Event.motion.xrel,Event.motion.yrel);
+        }
     }
+    CameraCheckKeyEvents(Engine->Camera,Engine->KeyState,Engine->TimeInfo->Delta);
 }
 
 void ComUpdateDelta(ComTimeInfo_t *TimeInfo)
@@ -471,6 +475,12 @@ void EngineShutDown(Engine_t *Engine)
     if( Engine->VideoSystem ) {
         VideoSystemShutdown(Engine->VideoSystem);
     }
+    if( Engine->RenderObjectManager ) {
+        RenderObjectManagerCleanUp(Engine->RenderObjectManager);
+    }
+    if( Engine->Camera ) {
+        CameraCleanUp(Engine->Camera);
+    }
     EngineQuitSDL();
     free(Engine);
 }
@@ -483,6 +493,8 @@ void EngineDraw(Engine_t *Engine)
     }
     glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    RenderObjectManagerDrawAll(Engine->RenderObjectManager,Engine->Camera);
 }
 void EngineFrame(Engine_t *Engine)
 {
@@ -492,6 +504,7 @@ void EngineFrame(Engine_t *Engine)
     }
     ComUpdateDelta(Engine->TimeInfo);
     EngineCheckEvents(Engine);
+    CameraBeginFrame(Engine->Camera);
     EngineDraw(Engine);
     VideoSystemSwapBuffers(Engine->VideoSystem);
 }
@@ -516,7 +529,8 @@ Engine_t *EngineInit(int argc,char **argv)
     
     Engine->TimeInfo = NULL;
     Engine->VideoSystem = NULL;
-    
+    Engine->Camera = NULL;
+    Engine->RenderObjectManager = NULL;
     ConfigInit();
 
     if( !EngineInitSDL() ) {
@@ -531,6 +545,12 @@ Engine_t *EngineInit(int argc,char **argv)
         goto Failure;
     }
     
+    Engine->Camera = CameraInit();
+    
+    if( !Engine->Camera ) {
+        printf("EngineInit:Failed to Initialize Camera System\n");
+        goto Failure;
+    }
     
     Engine->KeyState = SDL_GetKeyboardState(NULL);
         
@@ -545,6 +565,15 @@ Engine_t *EngineInit(int argc,char **argv)
     GLSetDefaultState();
     ShaderManagerInit();
     
+    Engine->RenderObjectManager = RenderObjectManagerInit();
+    
+    if( !Engine->RenderObjectManager ) {
+        printf("EngineInit:Failed to initialize RenderObjectManager\n");
+        goto Failure;
+    }
+    if( argc > 1 ) {
+        RenderObjectManagerLoadBSD(Engine->RenderObjectManager,argv[1]);
+    }
     return Engine;
 
 Failure:
@@ -558,14 +587,14 @@ int main(int argc,char **argv)
     
     srand(time(NULL));
     
-    BSDRenderObject_t *RenderObjectList;
-    BSDRenderObject_t *Iterator;
-    DPrintf("Processing %s\n",argv[1]);
-    RenderObjectList = BSDLoadAllAnimatedRenderObjects(argv[1]);
-    for( Iterator = RenderObjectList; Iterator; Iterator = Iterator->Next ) {
-        DPrintf("Setting pose 0 for RenderObject %u\n",Iterator->Id);
-        BSDRenderObjectSetAnimationPose(Iterator,0);
-    }
+//     BSDRenderObject_t *RenderObjectList;
+//     BSDRenderObject_t *Iterator;
+//     DPrintf("Processing %s\n",argv[1]);
+//     RenderObjectList = BSDLoadAllAnimatedRenderObjects(argv[1]);
+//     for( Iterator = RenderObjectList; Iterator; Iterator = Iterator->Next ) {
+//         DPrintf("Setting pose 0 for RenderObject %u\n",Iterator->Id);
+//         BSDRenderObjectSetAnimationPose(Iterator,0);
+//     }
     
     Engine = EngineInit(argc,argv);
     
@@ -574,11 +603,11 @@ int main(int argc,char **argv)
         EngineShutDown(Engine);
         return -1;
     }
-    BSDRenderObjectGenerateVAO(RenderObjectList);
+//     BSDRenderObjectGenerateVAO(RenderObjectList);
 
     while( 1 ) {
         EngineFrame(Engine);
     }
-    BSDFreeRenderObjectList(RenderObjectList);
+//     BSDFreeRenderObjectList(RenderObjectList);
     return 0;
 }

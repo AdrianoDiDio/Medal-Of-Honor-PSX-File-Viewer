@@ -216,7 +216,10 @@ typedef struct BSD_s {
     BSDRenderObjectBlock_t  RenderObjectTable;
 } BSD_t;
 
+typedef struct Camera_s Camera_t;
+
 BSDRenderObject_t   *BSDLoadAllAnimatedRenderObjects(const char *FName);
+void                BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void                BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAnimation_t *AnimationList,
                                                     BSDVertexTable_t *VertexTable,mat4 Rotation,vec3 Translation,int AnimationIndex);
 void                BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex);

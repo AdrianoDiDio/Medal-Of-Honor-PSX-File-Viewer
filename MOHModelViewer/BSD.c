@@ -93,7 +93,7 @@ void BSDFree(BSD_t *BSD)
     }
     free(BSD);
 }
-void BSDFillFaceVertexBuffer(int *Buffer,int *BufferSize,BSDVertex_t Vertex,BSDUv_t UV,BSDColor_t Color,int CLUTX,int CLUTY,int ColorMode)
+void BSDFillFaceVertexBuffer(int *Buffer,int *BufferSize,BSDVertex_t Vertex,int U0,int V0,BSDColor_t Color,int CLUTX,int CLUTY,int ColorMode)
 {
     if( !Buffer ) {
         DPrintf("BSDFillFaceVertexBuffer:Invalid Buffer\n");
@@ -106,8 +106,8 @@ void BSDFillFaceVertexBuffer(int *Buffer,int *BufferSize,BSDVertex_t Vertex,BSDU
     Buffer[*BufferSize] =   Vertex.x;
     Buffer[*BufferSize+1] = Vertex.y;
     Buffer[*BufferSize+2] = Vertex.z;
-    Buffer[*BufferSize+3] = UV.u;
-    Buffer[*BufferSize+4] = UV.v;
+    Buffer[*BufferSize+3] = U0;
+    Buffer[*BufferSize+4] = V0;
     Buffer[*BufferSize+5] = Color.r;
     Buffer[*BufferSize+6] = Color.g;
     Buffer[*BufferSize+7] = Color.b;
@@ -128,12 +128,19 @@ void BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject)
     int *VertexData;
     int VertexSize;
     int VertexPointer;
+    int VRAMPage;
     int ColorMode;
     int CLUTPage;
     int CLUTPosX;
     int CLUTPosY;
     int CLUTDestX;
     int CLUTDestY;
+    int U0;
+    int V0;
+    int U1;
+    int V1;
+    int U2;
+    int V2;
     int i;
     
     if( !RenderObject ) {
@@ -155,6 +162,7 @@ void BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject)
     DPrintf("BSDRenderObjectGenerateVAO:Generating for %i faces\n",RenderObject->NumFaces);
     for( i = 0; i < RenderObject->NumFaces; i++ ) {
         CurrentFace = &RenderObject->FaceList[i];
+        VRAMPage = CurrentFace->TexInfo & 0x1F;
         ColorMode = (CurrentFace->TexInfo >> 7) & 0x3;
         CLUTPosX = (CurrentFace->CLUT << 4) & 0x3F0;
         CLUTPosY = (CurrentFace->CLUT >> 6) & 0x1ff;
@@ -162,17 +170,25 @@ void BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject)
         CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
         CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
         CLUTDestX += VRAMGetTexturePageX(CLUTPage);
+        
+        U0 = CurrentFace->UV0.u + VRAMGetTexturePageX(VRAMPage);
+        V0 = CurrentFace->UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+        U1 = CurrentFace->UV1.u + VRAMGetTexturePageX(VRAMPage);
+        V1 = CurrentFace->UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+        U2 = CurrentFace->UV2.u + VRAMGetTexturePageX(VRAMPage);
+        V2 = CurrentFace->UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+                
         BSDFillFaceVertexBuffer(VertexData,&VertexPointer,
-                                RenderObject->VertexTable[CurrentFace->VertexTableIndex0].VertexList[CurrentFace->VertexTableDataIndex0&0x7F],
-                                CurrentFace->UV0,CurrentFace->RGB0,CLUTDestX,CLUTDestY,ColorMode
+                                RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0].VertexList[CurrentFace->VertexTableDataIndex0],
+                                U0,V0,CurrentFace->RGB0,CLUTDestX,CLUTDestY,ColorMode
                                );
         BSDFillFaceVertexBuffer(VertexData,&VertexPointer,
-                                RenderObject->VertexTable[CurrentFace->VertexTableIndex1].VertexList[CurrentFace->VertexTableDataIndex1&0x7F],
-                                CurrentFace->UV1,CurrentFace->RGB1,CLUTDestX,CLUTDestY,ColorMode
+                                RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1].VertexList[CurrentFace->VertexTableDataIndex1],
+                                U1,V1,CurrentFace->RGB1,CLUTDestX,CLUTDestY,ColorMode
                                );
         BSDFillFaceVertexBuffer(VertexData,&VertexPointer,
-                                RenderObject->VertexTable[CurrentFace->VertexTableIndex2].VertexList[CurrentFace->VertexTableDataIndex2&0x7F],
-                                CurrentFace->UV2,CurrentFace->RGB2,CLUTDestX,CLUTDestY,ColorMode
+                                RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2].VertexList[CurrentFace->VertexTableDataIndex2],
+                                U2,V2,CurrentFace->RGB2,CLUTDestX,CLUTDestY,ColorMode
                                );
     }
     RenderObject->VAO = VAOInitXYZUVRGBCLUTColorModeInteger(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,
@@ -280,29 +296,28 @@ void BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animati
                                     RenderObject->CurrentVertexTable,Rotation,Translation,AnimationIndex);
 }
 
-void BSDRenderObjectDraw(const BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,mat4 ProjectionMatrix)
+void BSDDrawRenderObject(const BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 MVPMatrix)
 {
     int EnableLightingId;
     int PaletteTextureId;
     int TextureIndexId;
     int MVPMatrixId;
-    mat4 MVPMatrix;
-    mat4 ViewMatrix;
     Shader_t *Shader;
     
     if( !RenderObject ) {
         return;
     }
-    glm_mat4_identity(ViewMatrix);
-    glm_mat4_mul(ProjectionMatrix,ViewMatrix,MVPMatrix);
-    //Emulate PSX Coordinate system...
-    glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+    
+//     glm_mat4_mul(ProjectionMatrix,Camera->ViewMatrix,MVPMatrix);
+//     //Emulate PSX Coordinate system...
+//     glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
     
     Shader = ShaderCache("BSDRenderObjectShader","Shaders/BSDRenderObjectVertexShader.glsl",
                          "Shaders/BSDRenderObjectFragmentShader.glsl");
     if( !Shader ) {
         return;
     }
+    
     glUseProgram(Shader->ProgramId);
 
     MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
@@ -328,6 +343,35 @@ void BSDRenderObjectDraw(const BSDRenderObject_t *RenderObject,const VRAM_t *VRA
     glDisable(GL_BLEND);
     glBlendColor(1.f, 1.f, 1.f, 1.f);
     glUseProgram(0);
+}
+
+void BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
+{
+    BSDRenderObject_t *Iterator;
+    mat4 ModelMatrix;
+    mat4 ModelViewMatrix;
+    vec3 temp;
+    mat4 MVPMatrix;
+    int i;
+    if( !RenderObjectList ) {
+        return;
+    }
+    glm_mat4_identity(ModelMatrix);
+    glm_mat4_identity(ModelViewMatrix);
+    i = 0;
+    for( Iterator = RenderObjectList; Iterator; Iterator = Iterator->Next ) {
+        temp[0] = -(i * 200.f);
+        temp[1] = 0;
+        temp[2] = 0;
+        glm_translate(ModelMatrix,temp);
+        glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
+        glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
+                
+        //Emulate PSX Coordinate system...
+        glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+        BSDDrawRenderObject(Iterator,VRAM,Camera,MVPMatrix);
+        i++;
+    }
 }
 /*
   NOTE(Adriano):
