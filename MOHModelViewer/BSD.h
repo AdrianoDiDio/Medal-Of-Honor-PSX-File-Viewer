@@ -41,10 +41,10 @@ typedef struct BSDVertex_s {
 } BSDVertex_t;
 
 typedef struct BSDQuaternion_s {
-    int x;
-    int y;
-    int z;
-    int w;
+    short x;
+    short y;
+    short z;
+    short w;
 } BSDQuaternion_t;
 
 typedef struct BSDColor_s {

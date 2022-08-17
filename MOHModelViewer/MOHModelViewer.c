@@ -299,6 +299,7 @@ void SysShowCursor()
 void EngineCheckEvents(Engine_t *Engine)
 {
     SDL_Event Event;
+    BSDRenderObject_t *Iterator;
     while( SDL_PollEvent(&Event) ) {
         if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
             ConfigSetNumber("VideoWidth",Event.window.data1);
@@ -308,10 +309,10 @@ void EngineCheckEvents(Engine_t *Engine)
             Quit(Engine);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_m ) {
-            int NextPose = (Engine->RenderObjectManager->BSDList->RenderObjectList->CurrentAnimationIndex + 1);
-            BSDRenderObjectSetAnimationPose(Engine->RenderObjectManager->BSDList->RenderObjectList,
-                 NextPose % Engine->RenderObjectManager->BSDList->RenderObjectList->NumAnimations
-            );
+            for( Iterator = Engine->RenderObjectManager->BSDList->RenderObjectList; Iterator; Iterator = Iterator->Next ) {
+                int NextPose = (Iterator->CurrentAnimationIndex + 1);
+                BSDRenderObjectSetAnimationPose(Iterator,NextPose % Iterator->NumAnimations);
+            }
         }
         if( Event.type == SDL_MOUSEMOTION ) {
             CameraOnMouseEvent(Engine->Camera,Event.motion.xrel,Event.motion.yrel);

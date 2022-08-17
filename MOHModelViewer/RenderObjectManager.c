@@ -90,15 +90,17 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,const 
     
     DPrintf("RenderObjectManagerLoadBSD:Attempting to load %s\n",File);
     BSDPack = malloc(sizeof(BSDRenderObjectPack_t));
-    BSDPack->ImageList = NULL;
-    BSDPack->VRAM = NULL;
-    BSDPack->RenderObjectList = NULL;
-    TAFFile = NULL;
     
     if( !BSDPack ) {
         DPrintf("RenderObjectManagerLoadBSD:Failed to allocate memory for BSD pack\n");
         goto Failure;
     }
+    
+    BSDPack->ImageList = NULL;
+    BSDPack->VRAM = NULL;
+    BSDPack->RenderObjectList = NULL;
+    TAFFile = NULL;
+
     TAFFile = SwitchExt(File,".TAF");
     BSDPack->ImageList = TIMGetAllImages(TAFFile);
     if( !BSDPack->ImageList ) {
@@ -139,6 +141,10 @@ RenderObjectManager_t *RenderObjectManagerInit()
     RenderObjectManager_t *RenderObjectManager;
     
     RenderObjectManager = malloc(sizeof(RenderObjectManager_t));
+    if( !RenderObjectManager ) {
+        DPrintf("RenderObjectManagerInit:Couldn't allocate memory for RenderObjectManager\n");
+        return NULL;
+    }
     RenderObjectManager->BSDList = NULL;
     return RenderObjectManager;
 }
