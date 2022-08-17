@@ -307,6 +307,12 @@ void EngineCheckEvents(Engine_t *Engine)
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit(Engine);
         }
+        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_m ) {
+            int NextPose = (Engine->RenderObjectManager->BSDList->RenderObjectList->CurrentAnimationIndex + 1);
+            BSDRenderObjectSetAnimationPose(Engine->RenderObjectManager->BSDList->RenderObjectList,
+                 NextPose % Engine->RenderObjectManager->BSDList->RenderObjectList->NumAnimations
+            );
+        }
         if( Event.type == SDL_MOUSEMOTION ) {
             CameraOnMouseEvent(Engine->Camera,Event.motion.xrel,Event.motion.yrel);
         }

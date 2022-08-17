@@ -159,41 +159,91 @@ void BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject)
     VertexSize = Stride * 3 * RenderObject->NumFaces;
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
-    DPrintf("BSDRenderObjectGenerateVAO:Generating for %i faces\n",RenderObject->NumFaces);
+    DPrintf("BSDRenderObjectGenerateVAO:Generating for %i faces Id:%u\n",RenderObject->NumFaces,RenderObject->Id);
     for( i = 0; i < RenderObject->NumFaces; i++ ) {
         CurrentFace = &RenderObject->FaceList[i];
         VRAMPage = CurrentFace->TexInfo & 0x1F;
-        ColorMode = (CurrentFace->TexInfo >> 7) & 0x3;
+        ColorMode = (CurrentFace->TexInfo & 0xC0) >> 7;
         CLUTPosX = (CurrentFace->CLUT << 4) & 0x3F0;
         CLUTPosY = (CurrentFace->CLUT >> 6) & 0x1ff;
         CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
         CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
         CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
         CLUTDestX += VRAMGetTexturePageX(CLUTPage);
-        
+ 
         U0 = CurrentFace->UV0.u + VRAMGetTexturePageX(VRAMPage);
         V0 = CurrentFace->UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
         U1 = CurrentFace->UV1.u + VRAMGetTexturePageX(VRAMPage);
         V1 = CurrentFace->UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
         U2 = CurrentFace->UV2.u + VRAMGetTexturePageX(VRAMPage);
         V2 = CurrentFace->UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
-                
+
+        
         BSDFillFaceVertexBuffer(VertexData,&VertexPointer,
-                                RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0].VertexList[CurrentFace->VertexTableDataIndex0],
+                                RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0],
                                 U0,V0,CurrentFace->RGB0,CLUTDestX,CLUTDestY,ColorMode
                                );
         BSDFillFaceVertexBuffer(VertexData,&VertexPointer,
-                                RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1].VertexList[CurrentFace->VertexTableDataIndex1],
+                                RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1],
                                 U1,V1,CurrentFace->RGB1,CLUTDestX,CLUTDestY,ColorMode
                                );
         BSDFillFaceVertexBuffer(VertexData,&VertexPointer,
-                                RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2].VertexList[CurrentFace->VertexTableDataIndex2],
+                                RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2],
                                 U2,V2,CurrentFace->RGB2,CLUTDestX,CLUTDestY,ColorMode
                                );
     }
     RenderObject->VAO = VAOInitXYZUVRGBCLUTColorModeInteger(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,
                                         ColorOffset,CLUTOffset,ColorModeOffset,RenderObject->NumFaces * 3);
     free(VertexData);
+}
+void BSDRenderObjectUpdateVAO(BSDRenderObject_t *RenderObject)
+{
+    BSDAnimatedModelFace_t *CurrentFace;
+    int Stride;
+    int BaseOffset;
+    int VertexData[3];
+    int i;
+    
+    if( !RenderObject ) {
+        DPrintf("BSDRenderObjectUpdateVAO:Invalid RenderObject\n");
+        return;
+    }
+    if( !RenderObject->VAO ) {
+        DPrintf("BSDRenderObjectUpdateVAO:Invalid VAO\n");
+        return;
+    }
+    
+    Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
+    glBindBuffer(GL_ARRAY_BUFFER, RenderObject->VAO->VBOId[0]);
+    
+    for( i = 0; i < RenderObject->NumFaces; i++ ) {
+        BaseOffset = (i * Stride * 3);
+        CurrentFace = &RenderObject->FaceList[i];
+        VertexData[0] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0].x;
+        VertexData[1] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0].y;
+        VertexData[2] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0].z;
+        //The offset in which we write the color is based on the current VAO Offset to which
+        //we add the stride times i which moves the pointer to one of the three vertices (each vertex takes Stride amount of bytes)
+        //and finally we add 5 times sizeof(int) in order to grab the starting definition of the color data inside the vertex array.
+        glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 0), 3 * sizeof(int), &VertexData);
+        
+        VertexData[0] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1].x;
+        VertexData[1] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1].y;
+        VertexData[2] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1].z;
+        //The offset in which we write the color is based on the current VAO Offset to which
+        //we add the stride times i which moves the pointer to one of the three vertices (each vertex takes Stride amount of bytes)
+        //and finally we add 5 times sizeof(int) in order to grab the starting definition of the color data inside the vertex array.
+        glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1), 3 * sizeof(int), &VertexData);
+        
+        VertexData[0] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2].x;
+        VertexData[1] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2].y;
+        VertexData[2] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2].z;
+        //The offset in which we write the color is based on the current VAO Offset to which
+        //we add the stride times i which moves the pointer to one of the three vertices (each vertex takes Stride amount of bytes)
+        //and finally we add 5 times sizeof(int) in order to grab the starting definition of the color data inside the vertex array.
+        glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2), 3 * sizeof(int), &VertexData);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAnimation_t *AnimationList,BSDVertexTable_t *VertexTable,
                                      mat4 Rotation,vec3 Translation,int AnimationIndex)
@@ -294,6 +344,11 @@ void BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animati
     BSDRenderObjectResetVertexTable(RenderObject);
     BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,RenderObject->AnimationList,
                                     RenderObject->CurrentVertexTable,Rotation,Translation,AnimationIndex);
+    if( !RenderObject->VAO ) {
+        BSDRenderObjectGenerateVAO(RenderObject);
+    } else {
+        BSDRenderObjectUpdateVAO(RenderObject);
+    }
 }
 
 void BSDDrawRenderObject(const BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 MVPMatrix)
@@ -319,7 +374,6 @@ void BSDDrawRenderObject(const BSDRenderObject_t *RenderObject,const VRAM_t *VRA
     }
     
     glUseProgram(Shader->ProgramId);
-
     MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
     glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
     EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
@@ -356,17 +410,18 @@ void BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *V
     if( !RenderObjectList ) {
         return;
     }
-    glm_mat4_identity(ModelMatrix);
-    glm_mat4_identity(ModelViewMatrix);
+
     i = 0;
     for( Iterator = RenderObjectList; Iterator; Iterator = Iterator->Next ) {
-        temp[0] = -(i * 200.f);
+        temp[0] = -(i * 100.f);
         temp[1] = 0;
         temp[2] = 0;
+        glm_mat4_identity(ModelMatrix);
+        glm_mat4_identity(ModelViewMatrix);
         glm_translate(ModelMatrix,temp);
+        glm_scale(ModelMatrix,Iterator->Scale);
         glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
         glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
-                
         //Emulate PSX Coordinate system...
         glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
         BSDDrawRenderObject(Iterator,VRAM,Camera,MVPMatrix);
@@ -461,7 +516,7 @@ int BSDReadEntryTableChunk(BSD_t *BSD,FILE *BSDFile)
             BSD->EntryTable.AnimationVertexDataOffset + BSD_HEADER_SIZE,BSD->EntryTable.NumAnimationVertex);
     return 1;
 }
-BSDRenderObjectElement_t *BSDGetRenderObjectById(const BSD_t *BSD,int RenderObjectId)
+BSDRenderObjectElement_t *BSDGetRenderObjectById(const BSD_t *BSD,unsigned int RenderObjectId)
 {
     int i;
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
@@ -471,11 +526,13 @@ BSDRenderObjectElement_t *BSDGetRenderObjectById(const BSD_t *BSD,int RenderObje
     }
     return NULL;
 }
-int BSDGetRenderObjectIndexById(const BSD_t *BSD,int RenderObjectId)
+int BSDGetRenderObjectIndexById(const BSD_t *BSD,unsigned int RenderObjectId)
 {
     int i;
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
+        DPrintf("BSDGetRenderObjectIndexById:Looking for %u current %u\n",BSD->RenderObjectTable.RenderObject[i].Id,RenderObjectId);
         if( BSD->RenderObjectTable.RenderObject[i].Id == RenderObjectId ) {
+            DPrintf("Found it return %i!!!\n",i);
             return i;
         }
     }
@@ -489,7 +546,7 @@ int BSDGetRenderObjectIndexById(const BSD_t *BSD,int RenderObjectId)
  * requested it.
  * NOTE(Adriano):Make sure to update the data when new fields are added.
  */
-void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile)
+void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile,int GameEngine)
 {
     BSDRenderObjectElement_t *CurrentRenderObject;
     BSDRenderObjectElement_t *ReferencedRenderObject;
@@ -505,17 +562,38 @@ void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile)
             DPrintf("BSDPatchRenderObjects:RenderObject Id %i not found\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
             continue;
         }
-        DPrintf("BSDPatchRenderObjects:Patching up RenderObject Id %i using Id %i\n",BSD->RenderObjectTable.RenderObject[i].Id,
+        DPrintf("BSDPatchRenderObjects:Patching up RenderObject Id %u using Id %u\n",BSD->RenderObjectTable.RenderObject[i].Id,
             BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId
         );
-        CurrentRenderObject->FaceOffset = ReferencedRenderObject->FaceOffset;
-        CurrentRenderObject->FaceTableOffset = ReferencedRenderObject->FaceTableOffset;
-        CurrentRenderObject->UnknownOffset4 = ReferencedRenderObject->UnknownOffset4;
-        CurrentRenderObject->VertexTableIndexOffset = ReferencedRenderObject->VertexTableIndexOffset;
-        CurrentRenderObject->VertexOffset = ReferencedRenderObject->VertexOffset;
-        CurrentRenderObject->NumVertex = ReferencedRenderObject->NumVertex;
-        CurrentRenderObject->RootBoneOffset = ReferencedRenderObject->RootBoneOffset;
-        CurrentRenderObject->ColorOffset = ReferencedRenderObject->ColorOffset;
+        if(CurrentRenderObject->AnimationDataOffset == -1 ) {
+            CurrentRenderObject->AnimationDataOffset = ReferencedRenderObject->AnimationDataOffset;
+        }
+        if(CurrentRenderObject->FaceOffset == -1 ) {
+            CurrentRenderObject->FaceOffset = ReferencedRenderObject->FaceOffset;
+        }
+        if(CurrentRenderObject->FaceTableOffset == -1 ) {
+            CurrentRenderObject->FaceTableOffset = ReferencedRenderObject->FaceTableOffset;
+        }
+        if(CurrentRenderObject->VertexTableIndexOffset == -1 ) {
+            CurrentRenderObject->VertexTableIndexOffset = ReferencedRenderObject->VertexTableIndexOffset;
+        }
+        if(CurrentRenderObject->UnknownOffset4 == -1 ) {
+            CurrentRenderObject->UnknownOffset4 = ReferencedRenderObject->UnknownOffset4;
+        }
+        if(CurrentRenderObject->VertexOffset == -1 ) {
+            CurrentRenderObject->VertexOffset = ReferencedRenderObject->VertexOffset;
+            CurrentRenderObject->NumVertex = ReferencedRenderObject->NumVertex;
+        }
+        if(CurrentRenderObject->HierarchyDataRootOffset == -1 ) {
+            CurrentRenderObject->HierarchyDataRootOffset = ReferencedRenderObject->HierarchyDataRootOffset;
+        }
+        if(CurrentRenderObject->ColorOffset == -1 ) {
+            CurrentRenderObject->ColorOffset = ReferencedRenderObject->ColorOffset;
+        }
+        if(CurrentRenderObject->AnimationDataOffset == -1 ) {
+            CurrentRenderObject->AnimationDataOffset = ReferencedRenderObject->AnimationDataOffset;
+        }
+        
         if( CurrentRenderObject->Type == -1 ) {
             CurrentRenderObject->Type = ReferencedRenderObject->Type;
         }
@@ -580,8 +658,8 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
                 BSD->RenderObjectTable.RenderObject[i].FaceTableOffset + BSD_HEADER_SIZE);
         DPrintf("RenderObject VertexTableIndexOffset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].VertexTableIndexOffset,
                 BSD->RenderObjectTable.RenderObject[i].VertexTableIndexOffset + BSD_HEADER_SIZE);
-        DPrintf("RenderObject Root Bone Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].RootBoneOffset,
-                BSD->RenderObjectTable.RenderObject[i].RootBoneOffset + BSD_HEADER_SIZE);
+        DPrintf("RenderObject Hierarchy Data Root Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].HierarchyDataRootOffset,
+                BSD->RenderObjectTable.RenderObject[i].HierarchyDataRootOffset + BSD_HEADER_SIZE);
         DPrintf("RenderObject FaceOffset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].FaceOffset,
                 BSD->RenderObjectTable.RenderObject[i].FaceOffset + BSD_HEADER_SIZE);
         DPrintf("RenderObject Scale: %i;%i;%i (4096 is 1 meaning no scale)\n",
@@ -590,7 +668,7 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
                 BSD->RenderObjectTable.RenderObject[i].ScaleZ / 4);
  
     }
-    BSDPatchRenderObjects(BSD,BSDFile);
+    BSDPatchRenderObjects(BSD,BSDFile,GameEngine);
     return 1;
 }
 
@@ -697,9 +775,9 @@ void BSDPrintAnimatedModelFace(BSDAnimatedModelFace_t Face)
     DPrintf("RGB0:(%i;%i;%i)\n",Face.RGB0.r,Face.RGB0.g,Face.RGB0.b);
     DPrintf("RGB1:(%i;%i;%i)\n",Face.RGB1.r,Face.RGB1.g,Face.RGB1.b);
     DPrintf("RGB2:(%i;%i;%i)\n",Face.RGB2.r,Face.RGB2.g,Face.RGB2.b);
-    DPrintf("Table Index0 %i Data %i.\n",Face.VertexTableIndex0,Face.VertexTableDataIndex0);
-    DPrintf("Table Index1 %i Data %i.\n",Face.VertexTableIndex1,Face.VertexTableDataIndex1);
-    DPrintf("Table Index2 %i Data %i.\n",Face.VertexTableIndex2,Face.VertexTableDataIndex2);
+    DPrintf("Table Index0 %i Data %i Special Bit:%i.\n",Face.VertexTableIndex0&0x1F,Face.VertexTableDataIndex0,Face.VertexTableIndex0&0x20);
+    DPrintf("Table Index1 %i Data %i.\n",Face.VertexTableIndex1&0x1F,Face.VertexTableDataIndex1);
+    DPrintf("Table Index2 %i Data %i.\n",Face.VertexTableIndex2&0x1F,Face.VertexTableDataIndex2);
 }
 /*
  * NOTE(Adriano):
@@ -712,13 +790,16 @@ void BSDPrintAnimatedModelFace(BSDAnimatedModelFace_t Face)
  * be added to the global one in order to obtain the final face data position inside the BSD file.
  */
 int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset,int RenderObjectIndex,
-                                           BSDEntryTable_t EntryTable,FILE *BSDFile)
+                                           int ReferencedRenderObjectIndex,BSDEntryTable_t EntryTable,FILE *BSDFile)
 {
     int GlobalFaceOffset;
     int LocalFaceOffset;
     short NumFaces;
+    int ReferencedLocalFaceOffset;
+    short ReferencedNumFaces;
     int CurrentFaceIndex;
-    unsigned int Marker;
+    short Marker1;
+    short Marker2;
     BSDColor_t ColorData;
     BSDAnimatedModelFace_t TempFace;
 
@@ -732,6 +813,18 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
     fseek(BSDFile,16 + (RenderObjectIndex * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) + 262,SEEK_CUR);
     fread(&NumFaces,sizeof(NumFaces),1,BSDFile);
     fread(&LocalFaceOffset,sizeof(LocalFaceOffset),1,BSDFile);
+    if( ReferencedRenderObjectIndex != -1 ) {
+        fseek(BSDFile,16 + (ReferencedRenderObjectIndex * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) + 262,SEEK_CUR);
+        fread(&ReferencedNumFaces,sizeof(NumFaces),1,BSDFile);
+        fread(&ReferencedLocalFaceOffset,sizeof(LocalFaceOffset),1,BSDFile);
+        if( !NumFaces ) {
+            NumFaces = ReferencedNumFaces;
+        }
+        if( LocalFaceOffset == -1 ) {
+            LocalFaceOffset = ReferencedLocalFaceOffset;
+        }
+    }
+
     if( !NumFaces ) {
         DPrintf("BSDLoadMOHUndergroundAnimationFaceData:Invalid number of faces.\n");
         return 0;
@@ -748,29 +841,30 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
     }
     CurrentFaceIndex = 0;
     while( CurrentFaceIndex < NumFaces ) {
+        DPrintf("Reading it at %li\n",ftell(BSDFile) - 2048);
         fread(&TempFace,sizeof(BSDAnimatedModelFace_t),1,BSDFile);
     
         BSDCopyAnimatedModelFace(TempFace,&RenderObject->FaceList[CurrentFaceIndex]);
         
-
         DPrintf(" -- FACE %i --\n",CurrentFaceIndex);
         BSDPrintAnimatedModelFace(RenderObject->FaceList[CurrentFaceIndex]);
         CurrentFaceIndex++;
         while( 1 ) {
-            DPrintf("Reading it at %li\n",ftell(BSDFile) - 2048);
-            fread(&Marker,sizeof(Marker),1,BSDFile);
-            if( ( Marker & 0x1FFF ) == 0x1FFF || Marker == 0x1fff1fff ) {
+//             DPrintf("Reading it at %li\n",ftell(BSDFile) - 2048);
+            fread(&Marker1,sizeof(Marker1),1,BSDFile);
+            fread(&Marker2,sizeof(Marker2),1,BSDFile);
+
+            if( Marker1 == 0x1FFF || (Marker1 == 0x1fff && Marker2 == 0x1fff ) ) {
                 DPrintf("BSDLoadAnimationFaceData:Aborting since a marker was found\n");
                 break;
             }
             fread(&ColorData,sizeof(ColorData),1,BSDFile);
                     
-            if( (Marker & 0x8000) != 0 ) {
+            if( (Marker1 & 0x80) != 0 ) {
                 TempFace.VertexTableIndex0 = TempFace.VertexTableIndex2;
                 TempFace.VertexTableDataIndex0 = TempFace.VertexTableDataIndex2;                
                 TempFace.UV0 = TempFace.UV2;
                 TempFace.RGB0 = TempFace.RGB2;
-
             } else {
                 TempFace.VertexTableIndex0 = TempFace.VertexTableIndex1;
                 TempFace.VertexTableDataIndex0 = TempFace.VertexTableDataIndex1;
@@ -781,16 +875,17 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
                 TempFace.RGB0 = TempFace.RGB1;
                 TempFace.RGB1 = TempFace.RGB2;
             }
-            TempFace.VertexTableDataIndex2 = (Marker & 0x1FFF) >> 8;
-            TempFace.VertexTableIndex2 = (Marker & 0x1FFF) & 0x1F;
-            TempFace.UV2.u = (Marker >> 0x10) & 0xff;
-            TempFace.UV2.v = (Marker >> 0x10) >> 8;
+            TempFace.VertexTableDataIndex2 = Marker1 >> 8;
+            TempFace.VertexTableIndex2 = Marker1 & 0x1F;
+            TempFace.UV2.u = Marker2 & 0xff;
+            TempFace.UV2.v = Marker2 >> 8;
             TempFace.RGB2 = ColorData;
             BSDCopyAnimatedModelFace(TempFace,&RenderObject->FaceList[CurrentFaceIndex]);
+            DPrintf(" -- FACE %i --\n",CurrentFaceIndex);
             BSDPrintAnimatedModelFace(RenderObject->FaceList[CurrentFaceIndex]);
             CurrentFaceIndex++;
         }
-        if( Marker == 0x1fff1fff ) {
+        if( (Marker1 == 0x1fff && Marker2 == 0x1fff ) ) {
             DPrintf("BSDLoadAnimationFaceData:Sentinel Face found Done reading faces for RenderObject\n");
             DPrintf("BSDLoadAnimationFaceData:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,NumFaces);
             break;
@@ -799,7 +894,7 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
     assert(CurrentFaceIndex == NumFaces);
     return 1;
 }
-int BSDLoadAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset,int RenderObjectIndex,
+int BSDLoadAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset,int RenderObjectIndex,int ReferencedRenderObjectIndex,
                              BSDEntryTable_t EntryTable,FILE *BSDFile,int GameVersion)
 {
     int GlobalFaceTableOffset;
@@ -816,7 +911,8 @@ int BSDLoadAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset
     if( FaceTableOffset == -1 ) {
         if( GameVersion == MOH_GAME_UNDERGROUND ) {
             DPrintf("BSDLoadAnimationFaceData:Game is MOH:Underground...attempting to use a different face loader.\n");
-            return BSDLoadMOHUndergroundAnimationFaceData(RenderObject,FaceTableOffset,RenderObjectIndex,EntryTable,BSDFile);
+            return BSDLoadMOHUndergroundAnimationFaceData(RenderObject,FaceTableOffset,RenderObjectIndex,ReferencedRenderObjectIndex,
+                                                          EntryTable,BSDFile);
         } else {
             DPrintf("BSDLoadAnimationFaceData:Invalid Face Table Index Offset\n");
             return 0;
@@ -885,19 +981,19 @@ BSDHierarchyBone_t *BSDRecursivelyLoadHierarchyData(int BoneDataStartingPosition
     return Bone;
 }
 
-int BSDLoadAnimationHierarchyData(BSDRenderObject_t *RenderObject,int RootBoneOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
+int BSDLoadAnimationHierarchyData(BSDRenderObject_t *RenderObject,int HierarchyDataRootOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
 {
     if( !RenderObject || !BSDFile ) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         printf("BSDLoadAnimationHierarchyData: Invalid %s\n",InvalidFile ? "file" : "RenderObject struct");
         return 0;
     }
-    if( RootBoneOffset == -1 ) {
+    if( HierarchyDataRootOffset == -1 ) {
         DPrintf("BSDLoadAnimationHierarchyData:Invalid Face Table Index Offset\n");
         return 0;
     }
     
-    RenderObject->HierarchyDataRoot = BSDRecursivelyLoadHierarchyData(EntryTable.AnimationHierarchyDataOffset,RootBoneOffset,BSDFile);
+    RenderObject->HierarchyDataRoot = BSDRecursivelyLoadHierarchyData(EntryTable.AnimationHierarchyDataOffset,HierarchyDataRootOffset,BSDFile);
     
     if( !RenderObject->HierarchyDataRoot ) {
         DPrintf("BSDLoadAnimationHierarchyData:Couldn't load hierarchy data\n");
@@ -1032,7 +1128,7 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
                 NumDecodedQuaternions = 0;
                 for( q = 0; q < RenderObject->AnimationList[i].Frame[j].NumQuaternions / 2; q++ ) {
                     Base = q * 3;
-                    DPrintf("Generating with base %i V0:%i V1:%i V2:%i\n",q,Base,Base+1,Base+2);
+//                     DPrintf("Generating with base %i V0:%i V1:%i V2:%i\n",q,Base,Base+1,Base+2);
                     QuatPart0 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base];
                     QuatPart1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base+1];
                     QuatPart2 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base+2];
@@ -1045,7 +1141,7 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
                     RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].z = TempQuaternion.z;
                     RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].w = TempQuaternion.w;
 
-                    DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
+//                     DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
                     TempQuaternion.x = (QuatPart1  >> 0x14) * 2;
                     TempQuaternion.y = ( (QuatPart2 << 0x4) >> 0x14 ) * 2;
                     TempQuaternion.w = ( (QuatPart2 << 0x10) >> 0x14) * 2;
@@ -1054,7 +1150,7 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
                     RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].y = TempQuaternion.y;
                     RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].z = TempQuaternion.z;
                     RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].w = TempQuaternion.w;
-                    DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
+//                     DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
                     NumDecodedQuaternions += 2;
                 }
                 if( NumDecodedQuaternions == (RenderObject->AnimationList[i].Frame[j].NumQuaternions - 1) ) {
@@ -1078,7 +1174,7 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
     return 1;
 }
 BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t BSDEntryTable,FILE *BSDFile,
-                                               int RenderObjectIndex,int GameVersion
+                                               int RenderObjectIndex,int ReferencedRenderObjectIndex,int GameVersion
 )
 {
     BSDRenderObject_t *RenderObject;
@@ -1101,17 +1197,22 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
     RenderObject->AnimationList = NULL;
     RenderObject->VAO = NULL;
     RenderObject->CurrentAnimationIndex = -1;
+    RenderObject->Scale[0] = (float) (RenderObjectElement.ScaleX  / 16 ) / 4096.f;
+    RenderObject->Scale[1] = (float) (RenderObjectElement.ScaleY  / 16 ) / 4096.f;
+    RenderObject->Scale[2] = (float) (RenderObjectElement.ScaleZ  / 16 ) / 4096.f;
+    
     if( !BSDLoadAnimationVertexData(RenderObject,RenderObjectElement.VertexTableIndexOffset,BSDEntryTable,BSDFile) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load vertex data\n");
         goto Failure;
     }
 
-    if( !BSDLoadAnimationFaceData(RenderObject,RenderObjectElement.FaceTableOffset,RenderObjectIndex,BSDEntryTable,BSDFile,GameVersion) ) {
+    if( !BSDLoadAnimationFaceData(RenderObject,RenderObjectElement.FaceTableOffset,RenderObjectIndex,ReferencedRenderObjectIndex,
+        BSDEntryTable,BSDFile,GameVersion) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load face data\n");
         goto Failure;
     }
 
-    if( !BSDLoadAnimationHierarchyData(RenderObject,RenderObjectElement.RootBoneOffset,BSDEntryTable,BSDFile) ) {
+    if( !BSDLoadAnimationHierarchyData(RenderObject,RenderObjectElement.HierarchyDataRootOffset,BSDEntryTable,BSDFile) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load hierarchy data\n");
         goto Failure;
     }
@@ -1166,7 +1267,7 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
     BSDRenderObject_t *RenderObjectList;
     BSDRenderObject_t *RenderObject;
     int i;
-    int RenderObjectIndex;
+    int ReferencedRenderObjectIndex;
     
     BSDFile = fopen(FName,"rb");
     if( BSDFile == NULL ) {
@@ -1191,23 +1292,24 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
          * We need to use the referenced RenderObject index if it is set otherwise the offset may
          * not be valid.
          */
+        ReferencedRenderObjectIndex = -1;
         if( BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId != -1 ) {
-            RenderObjectIndex = BSDGetRenderObjectIndexById(BSD,BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
+            ReferencedRenderObjectIndex = BSDGetRenderObjectIndexById(BSD,BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
             //NOTE(Adriano):Some RenderObjects are bundled in other files and referenced by Id.
             //This could happens for example when loading the SET1 BSD that is looking for another RenderObject containted inside
             //the level file.
             //For the moment this is bypassed and could cause the RenderObject to not be loaded due to missing offsets...
             //TODO(Adriano):Double-Check if it is working by using MOH:Underground SET1.BSD.
-            if( RenderObjectIndex == -1 ) {
-                RenderObjectIndex = i;
-            }
-        } else {
+//             if( RenderObjectIndex == -1 ) {
+//                 RenderObjectIndex = i;
+//             }
+        }/* else {
             RenderObjectIndex = i;
-        }
-        assert(RenderObjectIndex != -1);
+        }*/
+//         assert(RenderObjectIndex != -1);
         DPrintf("BSDLoadAllAnimatedRenderObjects:Loading Animated RenderObject %u\n",BSD->RenderObjectTable.RenderObject[i].Id);
         RenderObject = BSDLoadAnimatedRenderObject(BSD->RenderObjectTable.RenderObject[i],BSD->EntryTable,
-                                                   BSDFile,RenderObjectIndex,GameVersion);
+                                                   BSDFile,i,ReferencedRenderObjectIndex,GameVersion);
         if( !RenderObject ) {
             DPrintf("BSDLoadAllAnimatedRenderObjects:Failed to load animated RenderObject.\n");
             continue;
@@ -1215,7 +1317,6 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
         RenderObject->Next = RenderObjectList;
         RenderObjectList = RenderObject;
     }
-    
     BSDFree(BSD);
     fclose(BSDFile);
     return RenderObjectList;

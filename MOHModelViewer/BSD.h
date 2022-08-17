@@ -41,10 +41,10 @@ typedef struct BSDVertex_s {
 } BSDVertex_t;
 
 typedef struct BSDQuaternion_s {
-    short x;
-    short y;
-    short z;
-    short w;
+    int x;
+    int y;
+    int z;
+    int w;
 } BSDQuaternion_t;
 
 typedef struct BSDColor_s {
@@ -145,7 +145,7 @@ typedef struct BSDRenderObjectElement_s {
     int             VertexOffset;
     unsigned short  NumVertex;
     char            RemainingU[14];
-    int             RootBoneOffset;
+    int             HierarchyDataRootOffset;
     int             Unknown;
     int             ScaleX;
     int             ScaleY;
@@ -207,7 +207,9 @@ typedef struct BSDRenderObject_s {
     BSDAnimation_t              *AnimationList;
     int                         NumAnimations;
     int                         CurrentAnimationIndex;
+    vec3                        Scale;
     VAO_t                       *VAO;
+
     struct BSDRenderObject_s *Next;
 } BSDRenderObject_t;
 

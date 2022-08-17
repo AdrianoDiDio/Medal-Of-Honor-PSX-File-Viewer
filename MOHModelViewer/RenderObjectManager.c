@@ -102,8 +102,13 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,const 
     TAFFile = SwitchExt(File,".TAF");
     BSDPack->ImageList = TIMGetAllImages(TAFFile);
     if( !BSDPack->ImageList ) {
-        DPrintf("RenderObjectManagerLoadBSD:Failed to load images from TAF file %s\n",TAFFile);
-        goto Failure;
+        free(TAFFile);
+        TAFFile = SwitchExt(File,"0.TAF");
+        BSDPack->ImageList = TIMGetAllImages(TAFFile);
+        if( !BSDPack->ImageList ) {
+            DPrintf("RenderObjectManagerLoadBSD:Failed to load images from TAF file %s\n",TAFFile);
+            goto Failure;
+        }
     }
     BSDPack->RenderObjectList = BSDLoadAllAnimatedRenderObjects(File);
     if( !BSDPack->RenderObjectList ) {
@@ -117,7 +122,6 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,const 
     }
     for( Iterator = BSDPack->RenderObjectList; Iterator; Iterator = Iterator->Next ) {
         BSDRenderObjectSetAnimationPose(Iterator,0);
-        BSDRenderObjectGenerateVAO(Iterator);
     }
     BSDPack->Next = RenderObjectManager->BSDList;
     RenderObjectManager->BSDList = BSDPack;
