@@ -315,10 +315,10 @@ void EngineCheckEvents(Engine_t *Engine)
             }
         }
         if( Event.type == SDL_MOUSEMOTION ) {
-            CameraOnMouseEvent(Engine->Camera,Event.motion.xrel,Event.motion.yrel);
+//             CameraOnMouseEvent(Engine->Camera,Event.motion.xrel,Event.motion.yrel);
         }
+        GUIProcessEvent(Engine->GUI,&Event);
     }
-    CameraCheckKeyEvents(Engine->Camera,Engine->KeyState,Engine->TimeInfo->Delta);
 }
 
 void ComUpdateDelta(ComTimeInfo_t *TimeInfo)
@@ -485,6 +485,9 @@ void EngineShutDown(Engine_t *Engine)
     if( Engine->RenderObjectManager ) {
         RenderObjectManagerCleanUp(Engine->RenderObjectManager);
     }
+    if( Engine->GUI ) {
+        GUIFree(Engine->GUI);
+    }
     if( Engine->Camera ) {
         CameraCleanUp(Engine->Camera);
     }
@@ -502,6 +505,10 @@ void EngineDraw(Engine_t *Engine)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     RenderObjectManagerDrawAll(Engine->RenderObjectManager,Engine->Camera);
+    
+    glDisable (GL_DEPTH_TEST);
+    GUIDraw(Engine->GUI,Engine->RenderObjectManager,Engine->Camera,Engine->VideoSystem,Engine->TimeInfo,Engine->KeyState);
+    glEnable(GL_DEPTH_TEST);
 }
 void EngineFrame(Engine_t *Engine)
 {
@@ -536,6 +543,7 @@ Engine_t *EngineInit(int argc,char **argv)
     
     Engine->TimeInfo = NULL;
     Engine->VideoSystem = NULL;
+    Engine->GUI = NULL;
     Engine->Camera = NULL;
     Engine->RenderObjectManager = NULL;
     ConfigInit();
@@ -549,6 +557,13 @@ Engine_t *EngineInit(int argc,char **argv)
     
     if( !Engine->VideoSystem ) {
         printf("EngineInit:Failed to Initialize Video system...\n");
+        goto Failure;
+    }
+    
+    Engine->GUI = GUIInit(Engine->VideoSystem);
+    
+    if( !Engine->GUI ) {
+        printf("EngineInit:Failed to initialize GUI system\n");
         goto Failure;
     }
     

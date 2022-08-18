@@ -279,6 +279,6 @@ VideoSystem_t *VideoSystemInit()
         return NULL;
     }
     SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
-    VideoSystemGrabMouse(1);
+//     VideoSystemGrabMouse(1);
     return VideoSystem;
 }

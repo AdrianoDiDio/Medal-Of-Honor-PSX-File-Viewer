@@ -46,6 +46,9 @@ void RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager)
         RenderObjectManager->BSDList = RenderObjectManager->BSDList->Next;
         RenderObjectManagerFreeBSDRenderObjectPack(Temp);
     }
+    glDeleteFramebuffers(1,&RenderObjectManager->FBO);
+    glDeleteRenderbuffers(1,&RenderObjectManager->RBO);
+    glDeleteTextures(1,&RenderObjectManager->FBOTexture);
     free(RenderObjectManager);
 }
 void RenderObjectManagerDrawPack(RenderObjectManager_t *RenderObjectManager,BSDRenderObjectPack_t *RenderObjectPack,Camera_t *Camera,
@@ -67,11 +70,15 @@ void RenderObjectManagerDrawAll(RenderObjectManager_t *RenderObjectManager,Camer
     if( !RenderObjectManager ) {
         return;
     }
-    
+    glBindFramebuffer(GL_FRAMEBUFFER, RenderObjectManager->FBO);
+    glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);     
     for( Iterator = RenderObjectManager->BSDList; Iterator; Iterator = Iterator->Next ) {
        RenderObjectManagerDrawPack(RenderObjectManager,Iterator,Camera,ProjectionMatrix); 
     }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,const char *File)
 {
@@ -136,6 +143,34 @@ Failure:
     }
     return 0;
 }
+int RenderObjectManagerCreateFBO(RenderObjectManager_t *RenderObjectManager)
+{
+    glGenFramebuffers(1, &RenderObjectManager->FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, RenderObjectManager->FBO);
+    
+    glGenTextures(1, &RenderObjectManager->FBOTexture);
+    glBindTexture(GL_TEXTURE_2D, RenderObjectManager->FBOTexture);
+  
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, VidConfigWidth->IValue, VidConfigHeight->IValue, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D,0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, RenderObjectManager->FBOTexture, 0);
+    
+    glGenRenderbuffers(1, &RenderObjectManager->RBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, RenderObjectManager->RBO); 
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, VidConfigWidth->IValue, VidConfigHeight->IValue);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RenderObjectManager->RBO);
+    
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        DPrintf("RenderObjectManagerCreateFBO:Error when creating RenderObjectManager FBO\n");
+        return 0;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    return 1;
+}
 RenderObjectManager_t *RenderObjectManagerInit()
 {
     RenderObjectManager_t *RenderObjectManager;
@@ -146,5 +181,11 @@ RenderObjectManager_t *RenderObjectManagerInit()
         return NULL;
     }
     RenderObjectManager->BSDList = NULL;
+    
+    if( !RenderObjectManagerCreateFBO(RenderObjectManager) ) {
+        DPrintf("RenderObjectManagerInit:Couldn't create FBO\n");
+        free(RenderObjectManager);
+        return NULL;
+    }
     return RenderObjectManager;
 }

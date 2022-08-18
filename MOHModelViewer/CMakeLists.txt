@@ -14,19 +14,19 @@ SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 SET(CMAKE_INSTALL_RPATH "$\{ORIGIN\}")
 
-set(SOURCE_FILES Config.c Video.c ShaderManager.c VAO.c Camera.c TIM.c VRAM.c BSD.c RenderObjectManager.c MOHModelViewer.c
+set(SOURCE_FILES Config.c Video.c ShaderManager.c VAO.c Camera.c GUI.c TIM.c VRAM.c BSD.c RenderObjectManager.c MOHModelViewer.c
 )
                  
-# set(IMGUI_SOURCE_FILES Libs/cimgui/cimgui.cpp
-#                        Libs/cimgui/imgui/imgui.cpp 
-#                        Libs/cimgui/imgui/imgui_draw.cpp 
-#                        Libs/cimgui/imgui/imgui_demo.cpp 
-#                        Libs/cimgui/imgui/imgui_widgets.cpp
-#                        Libs/cimgui/imgui/imgui_tables.cpp
-#                        Libs/cimgui/imgui/backends/imgui_impl_opengl3.cpp
-#                        Libs/cimgui/imgui/backends/imgui_impl_sdl.cpp
-#                        Libs/ImGuiFileDialog/ImGuiFileDialog.cpp
-# )
+set(IMGUI_SOURCE_FILES Libs/cimgui/cimgui.cpp
+                       Libs/cimgui/imgui/imgui.cpp 
+                       Libs/cimgui/imgui/imgui_draw.cpp 
+                       Libs/cimgui/imgui/imgui_demo.cpp 
+                       Libs/cimgui/imgui/imgui_widgets.cpp
+                       Libs/cimgui/imgui/imgui_tables.cpp
+                       Libs/cimgui/imgui/backends/imgui_impl_opengl3.cpp
+                       Libs/cimgui/imgui/backends/imgui_impl_sdl.cpp
+                       Libs/ImGuiFileDialog/ImGuiFileDialog.cpp
+)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
 
 FetchContent_Declare(
@@ -47,7 +47,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 set_target_properties(${PROJECT_NAME} PROPERTIES RELEASE_POSTFIX -Release)
 
  
-# include_directories(Libs/cimgui/imgui)
+include_directories(Libs/cimgui/imgui)
 set(SDL2_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
 set(SDL2_DISABLE_UNINSTALL ON CACHE BOOL "" FORCE)
 add_subdirectory(Libs/SDL)
@@ -74,9 +74,9 @@ add_subdirectory(Libs/libpng)
 set(OpenGL_GL_PREFERENCE LEGACY)
 find_package(OpenGL REQUIRED)
  
-# add_library(cimgui STATIC ${IMGUI_SOURCE_FILES})
-# target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${CMAKE_SOURCE_DIR}/IMGUIConfig.h\"")
-# target_link_libraries(cimgui SDL2)
+add_library(cimgui STATIC ${IMGUI_SOURCE_FILES})
+target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${CMAKE_SOURCE_DIR}/IMGUIConfig.h\"")
+target_link_libraries(cimgui SDL2)
 
 add_subdirectory(Libs/cglm EXCLUDE_FROM_ALL)
 
@@ -91,13 +91,13 @@ if(WIN32)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:-Wall;-fsanitize=address>")
   target_link_options(${PROJECT_NAME} PRIVATE  "$<$<CONFIG:DEBUG>:-fsanitize=address>")
-#   target_link_libraries(cimgui dl)
-#   add_definitions("-DIMGUI_IMPL_API=extern \"C\" ")
+  target_link_libraries(cimgui dl)
+  add_definitions("-DIMGUI_IMPL_API=extern \"C\" ")
 endif()
 
-# add_compile_definitions("IMGUI_IMPL_OPENGL_LOADER_GLEW")
+add_compile_definitions("IMGUI_IMPL_OPENGL_LOADER_GLEW")
 
-# target_compile_definitions(${PROJECT_NAME} PRIVATE -DCIMGUI_USE_OPENGL3 -DCIMGUI_USE_SDL)
+target_compile_definitions(${PROJECT_NAME} PRIVATE -DCIMGUI_USE_OPENGL3 -DCIMGUI_USE_SDL)
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
     $<$<CONFIG:Debug>:_DEBUG>
@@ -106,10 +106,11 @@ target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:-g>")
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:-O3>")
 
 include_directories(${OPENGL_INCLUDE_DIRS})
-# include_directories(Libs/cimgui/generator/output/)
-# include_directories(Libs/cimgui/)
-# include_directories(Libs/ImGuiFileDialog/)
-target_link_libraries(${PROJECT_NAME} SDL2 glew_s png ${OPENGL_LIBRARIES} m cglm_headers)
+include_directories(Libs/cimgui/generator/output/)
+include_directories(Libs/cimgui/)
+include_directories(Libs/ImGuiFileDialog/)
+
+target_link_libraries(${PROJECT_NAME} SDL2 glew_s png ${OPENGL_LIBRARIES} m cimgui cglm_headers)
 
 add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD

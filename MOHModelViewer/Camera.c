@@ -143,6 +143,18 @@ void CameraCheckKeyEvents(Camera_t *Camera,const Byte *KeyState,float Delta)
     if( KeyState[SDL_SCANCODE_Z] ) {
         CameraUpdate(Camera,CAMERA_DIRECTION_DOWNWARD,Delta);
     }
+    if( KeyState[SDL_SCANCODE_UP] ) {
+        CameraUpdate(Camera,CAMERA_LOOK_UP,Delta);
+    }
+    if( KeyState[SDL_SCANCODE_DOWN] ) {
+        CameraUpdate(Camera,CAMERA_LOOK_DOWN,Delta);
+    }
+    if( KeyState[SDL_SCANCODE_LEFT] ) {
+        CameraUpdate(Camera,CAMERA_LOOK_LEFT,Delta);
+    }
+    if( KeyState[SDL_SCANCODE_RIGHT] ) {
+        CameraUpdate(Camera,CAMERA_LOOK_RIGHT,Delta);
+    }
 }
 void CameraUpdateViewMatrix(Camera_t *Camera)
 {

@@ -37,7 +37,11 @@ typedef struct BSDRenderObjectPack_s {
 } BSDRenderObjectPack_t;
 
 typedef struct RenderObjectManager_s {
-    BSDRenderObjectPack_t *BSDList;
+    BSDRenderObjectPack_t   *BSDList;
+    
+    unsigned int            FBO;
+    unsigned int            FBOTexture;
+    unsigned int            RBO;
 } RenderObjectManager_t;
 
 RenderObjectManager_t   *RenderObjectManagerInit();
