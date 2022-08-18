@@ -40,3 +40,9 @@
 [submodule "MOHModelViewer/Libs/glew-cmake"]
 	path = MOHModelViewer/Libs/glew-cmake
 	url = https://github.com/Perlmint/glew-cmake.git
+[submodule "MOHModelViewer/Libs/cimgui"]
+	path = MOHModelViewer/Libs/cimgui
+	url = https://github.com/cimgui/cimgui
+[submodule "MOHModelViewer/Libs/ImGuiFileDialog"]
+	path = MOHModelViewer/Libs/ImGuiFileDialog
+	url = https://github.com/aiekick/ImGuiFileDialog.git

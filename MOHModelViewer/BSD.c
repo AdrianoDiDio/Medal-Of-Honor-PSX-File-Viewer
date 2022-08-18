@@ -532,9 +532,7 @@ int BSDGetRenderObjectIndexById(const BSD_t *BSD,unsigned int RenderObjectId)
 {
     int i;
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        DPrintf("BSDGetRenderObjectIndexById:Looking for %u current %u\n",BSD->RenderObjectTable.RenderObject[i].Id,RenderObjectId);
         if( BSD->RenderObjectTable.RenderObject[i].Id == RenderObjectId ) {
-            DPrintf("Found it return %i!!!\n",i);
             return i;
         }
     }
