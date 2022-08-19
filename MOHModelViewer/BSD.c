@@ -421,6 +421,18 @@ void BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *V
         glm_mat4_identity(ModelMatrix);
         glm_mat4_identity(ModelViewMatrix);
         glm_translate(ModelMatrix,temp);
+        temp[0] = 0;
+        temp[1] = 1;
+        temp[2] = 0;
+        glm_rotate(ModelMatrix,glm_rad(Iterator->Rotation[1]), temp);
+        temp[0] = 1;
+        temp[1] = 0;
+        temp[2] = 0;
+        glm_rotate(ModelMatrix,glm_rad(Iterator->Rotation[0]), temp);
+        temp[0] = 0;
+        temp[1] = 0;
+        temp[2] = 1;
+        glm_rotate(ModelMatrix,glm_rad(Iterator->Rotation[2]), temp);
         glm_scale(ModelMatrix,Iterator->Scale);
         glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
         glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
@@ -1207,7 +1219,9 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
     RenderObject->Scale[0] = (float) (RenderObjectElement.ScaleX  / 16 ) / 4096.f;
     RenderObject->Scale[1] = (float) (RenderObjectElement.ScaleY  / 16 ) / 4096.f;
     RenderObject->Scale[2] = (float) (RenderObjectElement.ScaleZ  / 16 ) / 4096.f;
-    
+    RenderObject->Rotation[0] = 0;
+    RenderObject->Rotation[1] = 0;
+    RenderObject->Rotation[2] = 0;
     if( !BSDLoadAnimationVertexData(RenderObject,RenderObjectElement.VertexTableIndexOffset,BSDEntryTable,BSDFile) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load vertex data\n");
         goto Failure;

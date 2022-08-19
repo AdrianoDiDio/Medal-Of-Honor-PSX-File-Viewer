@@ -194,124 +194,7 @@ bool GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...)
     }
     return IsChecked;
 }
-void GUIDrawDebugWindow(GUI_t *GUI,Camera_t *Camera,VideoSystem_t *VideoSystem)
-{
-    SDL_version LinkedVersion;
-    SDL_version CompiledVersion;
-    
-    if( !GUI->DebugWindowHandle ) {
-        return;
-    }
 
-    if( igBegin("Debug Settings",&GUI->DebugWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
-        if( igCollapsingHeader_TreeNodeFlags("Debug Statistics",0) ) {
-            igText("NumActiveWindows:%i",GUI->NumActiveWindows);
-            igSeparator();
-            igText("OpenGL Version: %s",glGetString(GL_VERSION));
-            SDL_GetVersion(&LinkedVersion);
-            SDL_VERSION(&CompiledVersion);
-            igText("SDL Compiled Version: %u.%u.%u",CompiledVersion.major,CompiledVersion.minor,CompiledVersion.patch);
-            igText("SDL Linked Version: %u.%u.%u",LinkedVersion.major,LinkedVersion.minor,LinkedVersion.patch);
-            igSeparator();
-            igText("Display Informations");
-            igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);
-            igText("Refresh Rate:%i",VidConfigRefreshRate->IValue);
-            igSeparator();
-            igText("Camera Info");
-            igText("Position:%f;%f;%f",Camera->Position[0],Camera->Position[1],Camera->Position[2]);
-            igText("Rotation:%f;%f;%f",Camera->Rotation[PITCH],Camera->Rotation[YAW],Camera->Rotation[ROLL]);
-        }
-    }
-    
-    if( !GUI->DebugWindowHandle ) {
-        GUIUpdateWindowStack(GUI,GUI->DebugWindowHandle);
-    }
-    igEnd();
-}
-
-void GUIDrawHelpOverlay()
-{
-//     int WindowFlags;
-//     ImGuiViewport *Viewport;
-//     ImVec2 WorkPosition;
-//     ImVec2 WindowPosition;
-//     ImVec2 WindowPivot;
-//     
-//     WindowFlags = /*ImGuiWindowFlags_NoDecoration |*/ ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | 
-//                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | 
-//                     ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
-//     Viewport = igGetMainViewport();
-//     WorkPosition = Viewport->WorkPos;
-//     WindowPosition.x = (WorkPosition.x + 10.f);
-//     WindowPosition.y = (WorkPosition.y + 10.f);
-//     WindowPivot.x = 0.f;
-//     WindowPivot.y = 0.f;
-//     igSetNextWindowPos(WindowPosition, ImGuiCond_Once, WindowPivot);
-// 
-//     if( igBegin("Help", NULL, WindowFlags) ) {
-//     }
-//     igEnd();
-}
-
-void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
-{
-    ImGuiViewport *Viewport;
-    ImVec2 WorkPosition;
-    ImVec2 WorkSize;
-    ImVec2 WindowPosition;
-    ImVec2 WindowPivot;
-    int WindowFlags;
-    
-    WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | 
-                    ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | 
-                    ImGuiWindowFlags_NoMove;
-    Viewport = igGetMainViewport();
-    WorkPosition = Viewport->WorkPos;
-    WorkSize = Viewport->WorkSize;
-    WindowPosition.x = (WorkPosition.x + WorkSize.x - 10.f);
-    WindowPosition.y = (WorkPosition.y + 10.f);
-    WindowPivot.x = 1.f;
-    WindowPivot.y = 0.f;
-
-    
-    if( GUIShowFPS->IValue ) {
-        igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
-        if( igBegin("FPS", NULL, WindowFlags) ) {
-            igText(TimeInfo->FPSString);
-        }
-        igEnd(); 
-    }
-}
-void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera,ComTimeInfo_t *TimeInfo,const Byte *KeyState)
-{
-    ImVec2 Position;
-    ImVec4 TintColor;
-    ImVec4 BorderColor;
-    ImVec2 Min;
-    ImVec2 Max;
-        
-    Position.x = (float) VidConfigWidth->IValue;
-    Position.y = (float) VidConfigHeight->IValue;
-    Min.x = 0;
-    Min.y = 1;
-    Max.x = 1;
-    Max.y = 0;
-    BorderColor.x = 0;
-    BorderColor.y = 0;
-    BorderColor.z = 0;
-    BorderColor.w = 0;
-    TintColor.x = 1;
-    TintColor.y = 1;
-    TintColor.z = 1;
-    TintColor.w = 1;
-    
-    igBegin("Scene Window", NULL, 0);
-    if( igIsWindowFocused(0) ) {
-        CameraCheckKeyEvents(Camera,KeyState,TimeInfo->Delta);
-    }
-    igImage((void*)(long int) RenderObjectManager->FBOTexture, Position, Min,Max,TintColor,BorderColor);
-    igEnd();
-}
 void GUISetProgressBarDialogTitle(GUI_t *GUI,const char *Title)
 {
     if( GUI->ProgressBar->DialogTitle ) {
@@ -414,66 +297,6 @@ int GUIGetVSyncOptionValue()
     }
     return 0;
 }
-void GUIDrawVideoSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
-{
-    int OldValue;
-    int IsSelected;
-    int i;
-    int CurrentVSyncOption;
-
-    if( !GUI->VideoSettingsWindowHandle ) {
-        return;
-    }
-    ImVec2 ZeroSize;
-    ZeroSize.x = ZeroSize.y = 0.f;
-    int PreviewIndex = VideoSystem->CurrentVideoMode != -1 ? VideoSystem->CurrentVideoMode : 0;
-    if( igBegin("Video Settings",&GUI->VideoSettingsWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
-        CurrentVSyncOption = GUIGetVSyncOptionValue();
-        if( igBeginCombo("VSync Options",VSyncOptions[CurrentVSyncOption].DisplayValue,0) ) {
-            for (i = 0; i < NumVSyncOptions; i++) {
-                IsSelected = (CurrentVSyncOption == i);
-                if (igSelectable_Bool(VSyncOptions[i].DisplayValue, IsSelected,0,ZeroSize)) {
-                    if( CurrentVSyncOption != i ) {
-                        OldValue = VidConfigVSync->IValue;
-                        if( VideoSystemSetSwapInterval(VSyncOptions[i].Value) < 0 ) {
-                            VideoSystemSetSwapInterval(OldValue);
-                        }
-                    }
-                }
-          
-            }
-            igEndCombo();
-        }
-        igSeparator();
-        //NOTE(Adriano):Only in Fullscreen mode we can select the video mode we want.
-        if( VidConfigFullScreen->IValue ) {
-            igText("Video Mode");
-            if( igBeginCombo("##Resolution", VideoSystem->VideoModeList[PreviewIndex].Description, 0) ) {
-                for( i = 0; i < VideoSystem->NumVideoModes; i++ ) {
-                    int IsSelected = ((VideoSystem->VideoModeList[i].Width == VidConfigWidth->IValue) && 
-                        (VideoSystem->VideoModeList[i].Height == VidConfigHeight->IValue)) ? 1 : 0;
-                    if( igSelectable_Bool(VideoSystem->VideoModeList[i].Description,IsSelected,0,ZeroSize ) ) {
-                        VideoSystemSetVideoSettings(VideoSystem,i);
-                    }
-                    if( IsSelected ) {
-                        igSetItemDefaultFocus();
-                    }
-                }
-                igEndCombo();
-            }
-            igSeparator();
-        }
-        if( igCheckbox("Fullscreen Mode",(bool *) &VidConfigFullScreen->IValue) ) {
-            DPrintf("VidConfigFullScreen:%i\n",VidConfigFullScreen->IValue);
-            VideoSystemSetVideoSettings(VideoSystem,-1);
-        }
-    }
-    igEnd();
-    if( !GUI->VideoSettingsWindowHandle ) {
-        GUIUpdateWindowStack(GUI,GUI->VideoSettingsWindowHandle);
-    }
-}
-
 
 void GUISetErrorMessage(GUI_t *GUI,const char *Message)
 {
@@ -554,7 +377,223 @@ void GUIRenderFileDialogs(GUI_t *GUI)
         GUIFileDialogRender(GUI,Iterator);
     }
 }
+void GUIDrawVideoSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
+{
+    int OldValue;
+    int IsSelected;
+    int i;
+    int CurrentVSyncOption;
 
+    if( !GUI->VideoSettingsWindowHandle ) {
+        return;
+    }
+    ImVec2 ZeroSize;
+    ZeroSize.x = ZeroSize.y = 0.f;
+    int PreviewIndex = VideoSystem->CurrentVideoMode != -1 ? VideoSystem->CurrentVideoMode : 0;
+    if( igBegin("Video Settings",&GUI->VideoSettingsWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
+        CurrentVSyncOption = GUIGetVSyncOptionValue();
+        if( igBeginCombo("VSync Options",VSyncOptions[CurrentVSyncOption].DisplayValue,0) ) {
+            for (i = 0; i < NumVSyncOptions; i++) {
+                IsSelected = (CurrentVSyncOption == i);
+                if (igSelectable_Bool(VSyncOptions[i].DisplayValue, IsSelected,0,ZeroSize)) {
+                    if( CurrentVSyncOption != i ) {
+                        OldValue = VidConfigVSync->IValue;
+                        if( VideoSystemSetSwapInterval(VSyncOptions[i].Value) < 0 ) {
+                            VideoSystemSetSwapInterval(OldValue);
+                        }
+                    }
+                }
+          
+            }
+            igEndCombo();
+        }
+        igSeparator();
+        //NOTE(Adriano):Only in Fullscreen mode we can select the video mode we want.
+        if( VidConfigFullScreen->IValue ) {
+            igText("Video Mode");
+            if( igBeginCombo("##Resolution", VideoSystem->VideoModeList[PreviewIndex].Description, 0) ) {
+                for( i = 0; i < VideoSystem->NumVideoModes; i++ ) {
+                    int IsSelected = ((VideoSystem->VideoModeList[i].Width == VidConfigWidth->IValue) && 
+                        (VideoSystem->VideoModeList[i].Height == VidConfigHeight->IValue)) ? 1 : 0;
+                    if( igSelectable_Bool(VideoSystem->VideoModeList[i].Description,IsSelected,0,ZeroSize ) ) {
+                        VideoSystemSetVideoSettings(VideoSystem,i);
+                    }
+                    if( IsSelected ) {
+                        igSetItemDefaultFocus();
+                    }
+                }
+                igEndCombo();
+            }
+            igSeparator();
+        }
+        if( igCheckbox("Fullscreen Mode",(bool *) &VidConfigFullScreen->IValue) ) {
+            DPrintf("VidConfigFullScreen:%i\n",VidConfigFullScreen->IValue);
+            VideoSystemSetVideoSettings(VideoSystem,-1);
+        }
+    }
+    igEnd();
+    if( !GUI->VideoSettingsWindowHandle ) {
+        GUIUpdateWindowStack(GUI,GUI->VideoSettingsWindowHandle);
+    }
+}
+void GUIDrawDebugWindow(GUI_t *GUI,Camera_t *Camera,VideoSystem_t *VideoSystem)
+{
+    SDL_version LinkedVersion;
+    SDL_version CompiledVersion;
+    
+    if( !GUI->DebugWindowHandle ) {
+        return;
+    }
+
+    if( igBegin("Debug Settings",&GUI->DebugWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
+        if( igCollapsingHeader_TreeNodeFlags("Debug Statistics",0) ) {
+            igText("NumActiveWindows:%i",GUI->NumActiveWindows);
+            igSeparator();
+            igText("OpenGL Version: %s",glGetString(GL_VERSION));
+            SDL_GetVersion(&LinkedVersion);
+            SDL_VERSION(&CompiledVersion);
+            igText("SDL Compiled Version: %u.%u.%u",CompiledVersion.major,CompiledVersion.minor,CompiledVersion.patch);
+            igText("SDL Linked Version: %u.%u.%u",LinkedVersion.major,LinkedVersion.minor,LinkedVersion.patch);
+            igSeparator();
+            igText("Display Informations");
+            igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);
+            igText("Refresh Rate:%i",VidConfigRefreshRate->IValue);
+            igSeparator();
+            igText("Camera Info");
+            igText("Position:%f;%f;%f",Camera->Position[0],Camera->Position[1],Camera->Position[2]);
+            igText("Rotation:%f;%f;%f",Camera->Rotation[PITCH],Camera->Rotation[YAW],Camera->Rotation[ROLL]);
+        }
+    }
+    
+    if( !GUI->DebugWindowHandle ) {
+        GUIUpdateWindowStack(GUI,GUI->DebugWindowHandle);
+    }
+    igEnd();
+}
+
+void GUIDrawHelpOverlay()
+{
+//     int WindowFlags;
+//     ImGuiViewport *Viewport;
+//     ImVec2 WorkPosition;
+//     ImVec2 WindowPosition;
+//     ImVec2 WindowPivot;
+//     
+//     WindowFlags = /*ImGuiWindowFlags_NoDecoration |*/ ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | 
+//                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | 
+//                     ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+//     Viewport = igGetMainViewport();
+//     WorkPosition = Viewport->WorkPos;
+//     WindowPosition.x = (WorkPosition.x + 10.f);
+//     WindowPosition.y = (WorkPosition.y + 10.f);
+//     WindowPivot.x = 0.f;
+//     WindowPivot.y = 0.f;
+//     igSetNextWindowPos(WindowPosition, ImGuiCond_Once, WindowPivot);
+// 
+//     if( igBegin("Help", NULL, WindowFlags) ) {
+//     }
+//     igEnd();
+}
+
+void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
+{
+    ImGuiViewport *Viewport;
+    ImVec2 WorkPosition;
+    ImVec2 WorkSize;
+    ImVec2 WindowPosition;
+    ImVec2 WindowPivot;
+    int WindowFlags;
+    
+    WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | 
+                    ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | 
+                    ImGuiWindowFlags_NoMove;
+    Viewport = igGetMainViewport();
+    WorkPosition = Viewport->WorkPos;
+    WorkSize = Viewport->WorkSize;
+    WindowPosition.x = (WorkPosition.x + WorkSize.x - 10.f);
+    WindowPosition.y = (WorkPosition.y + 10.f);
+    WindowPivot.x = 1.f;
+    WindowPivot.y = 0.f;
+
+    
+    if( GUIShowFPS->IValue ) {
+        igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
+        if( igBegin("FPS", NULL, WindowFlags) ) {
+            igText(TimeInfo->FPSString);
+        }
+        igEnd(); 
+    }
+}
+void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera,ComTimeInfo_t *TimeInfo,const Byte *KeyState)
+{
+    ImGuiIO *IO;
+    ImVec2 Size;
+    ImVec4 TintColor;
+    ImVec4 BorderColor;
+    ImVec2 UV0;
+    ImVec2 UV1;
+    ImVec2 TextPosition;
+    ImDrawList *DrawList;
+    
+    UV0.x = 0;
+    UV0.y = 1;
+    UV1.x = 1;
+    UV1.y = 0;
+    BorderColor.x = 1;
+    BorderColor.y = 1;
+    BorderColor.z = 1;
+    BorderColor.w = 1;
+    TintColor.x = 0;
+    TintColor.y = 0;
+    TintColor.z = 0;
+    TintColor.w = 1;
+
+    IO = igGetIO();
+    
+    if( !igBegin("Scene Window", NULL, 0) ) {
+        return;
+    }
+    
+    DrawList = igGetWindowDrawList();
+
+    if( igIsWindowFocused(0) ) {
+        CameraCheckKeyEvents(Camera,KeyState,TimeInfo->Delta);
+    }
+
+    igGetContentRegionAvail(&Size);
+    igGetCursorScreenPos(&TextPosition);
+    igImageButton((void*)(long int) RenderObjectManager->FBOTexture, Size, UV0,UV1,0,TintColor,BorderColor);
+    ImDrawList_AddText_Vec2(DrawList,TextPosition,0xFFFFFFFF,TimeInfo->FPSString,NULL);
+
+    if( igIsItemActive() && igIsMouseDragging(ImGuiMouseButton_Left,0) ) {
+        //TODO(Adriano):Debugging code...this will be replaced by a call to RenderObjectManager to rotate the current
+        //selected RenderObject.
+        RenderObjectManager->BSDList->RenderObjectList->Rotation[1] += IO->MouseDelta.x;
+        RenderObjectManager->BSDList->RenderObjectList->Rotation[0] -= IO->MouseDelta.y;
+        if ( RenderObjectManager->BSDList->RenderObjectList->Rotation[0] > 89.0f ) {
+            RenderObjectManager->BSDList->RenderObjectList->Rotation[0] = 89.0f;
+        }
+        if ( RenderObjectManager->BSDList->RenderObjectList->Rotation[0] < -89.0f ) {
+            RenderObjectManager->BSDList->RenderObjectList->Rotation[0] = -89.0f;
+        }
+
+        if ( RenderObjectManager->BSDList->RenderObjectList->Rotation[1] > 180.0f ) {
+            RenderObjectManager->BSDList->RenderObjectList->Rotation[1] -= 360.0f;
+        }
+
+        if ( RenderObjectManager->BSDList->RenderObjectList->Rotation[1] < -180.0f ) {
+            RenderObjectManager->BSDList->RenderObjectList->Rotation[1] += 360.0f;
+        }
+    }
+    igEnd();
+}
+void GUIDrawMainWindow(RenderObjectManager_t *RenderObjectManager)
+{
+    if( !igBegin("Main Window", NULL, 0) ) {
+        return;
+    }
+    igEnd();
+}
 void GUIDrawMenuBar()
 {
     if( !igBeginMainMenuBar() ) {
@@ -562,7 +601,7 @@ void GUIDrawMenuBar()
     }
     if (igBeginMenu("File",true)) {
         igMenuItem_Bool("Open",NULL,false,true);
-        igSeparator();
+//         igSeparator();
         igEndMenu();
     }
     igEndMainMenuBar();
@@ -599,9 +638,10 @@ void GUIDraw(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
         }
     }
     GUIDrawSceneWindow(RenderObjectManager,Camera,TimeInfo,KeyState);
+    GUIDrawMainWindow(RenderObjectManager);
     GUIDrawDebugWindow(GUI,Camera,VideoSystem);
     GUIDrawVideoSettingsWindow(GUI,VideoSystem);
-//     igShowDemoWindow(NULL);
+    igShowDemoWindow(NULL);
     GUIEndFrame();
 }
 
