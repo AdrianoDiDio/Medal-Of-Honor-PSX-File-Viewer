@@ -21,6 +21,7 @@
 #ifndef __RENDER_OBJECT_MANAGER_H_
 #define __RENDER_OBJECT_MANAGER_H_
 
+#include "GUI.h"
 #include "BSD.h"
 #include "VRAM.h"
 #include "TIM.h"
@@ -29,23 +30,40 @@
 //NOTE(Adriano):A single BSD file that gets loaded together with his corresponding TAF goes
 //              here...this allows for multiple BSD files to be loaded without overlapping VRAMs.
 typedef struct BSDRenderObjectPack_s {
+    char                            *Name;
     VRAM_t                          *VRAM;
     TIMImage_t                      *ImageList;
     BSDRenderObject_t               *RenderObjectList;
-    
+    BSDRenderObject_t               *SelectedRenderObject;
     struct BSDRenderObjectPack_s    *Next;
 } BSDRenderObjectPack_t;
 
 typedef struct RenderObjectManager_s {
     BSDRenderObjectPack_t   *BSDList;
     
+    BSDRenderObjectPack_t   *SelectedBSDPack;
+    BSDRenderObject_t       *SelectedRenderObject;
+    
+    GUIFileDialog_t         *BSDFileDialog;
     unsigned int            FBO;
     unsigned int            FBOTexture;
     unsigned int            RBO;
 } RenderObjectManager_t;
 
-RenderObjectManager_t   *RenderObjectManagerInit();
+typedef struct RenderObjectManagerDialogData_s {
+    RenderObjectManager_t           *RenderObjectManager;
+    VideoSystem_t                   *VideoSystem;
+} RenderObjectManagerDialogData_t;
+
+RenderObjectManager_t   *RenderObjectManagerInit(GUI_t *GUI);
+int                     RenderObjectManagerDeleteBSDPack(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName);
+void                    RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem);
 void                    RenderObjectManagerDrawAll(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera);
 void                    RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager);
-int                     RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,const char *File);
+int                     RenderObjectManagerLoadPack(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,
+                                                    VideoSystem_t *VideoSystem,const char *File);
+BSDRenderObjectPack_t   *RenderObjectManagerGetSelectedBSDPack(RenderObjectManager_t *RenderObjectManager);
+BSDRenderObject_t       *RenderObjectManagerGetSelectedRenderObject(RenderObjectManager_t *RenderObjectManager);
+void                    RenderObjectManagerSetSelectedRenderObject(RenderObjectManager_t *RenderObjectManager,BSDRenderObjectPack_t *SelectedBSDPack,
+                                                BSDRenderObject_t *SelectedRenderObject);
 #endif//__RENDER_OBJECT_MANAGER_H_

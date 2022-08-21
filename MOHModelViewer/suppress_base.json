@@ -22,6 +22,14 @@
             "CodeNext": 3317402508,
             "CodePrev": 2651884939,
             "ErrorCode": "V1042",
+            "FileName": "GUI.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 2651884939,
+            "ErrorCode": "V1042",
             "FileName": "TIM.c",
             "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
         },

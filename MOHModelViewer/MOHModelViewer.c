@@ -299,7 +299,7 @@ void SysShowCursor()
 void EngineCheckEvents(Engine_t *Engine)
 {
     SDL_Event Event;
-    BSDRenderObject_t *Iterator;
+    BSDRenderObject_t *CurrentRenderObject;
     while( SDL_PollEvent(&Event) ) {
         if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
             ConfigSetNumber("VideoWidth",Event.window.data1);
@@ -309,9 +309,10 @@ void EngineCheckEvents(Engine_t *Engine)
             Quit(Engine);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_m ) {
-            for( Iterator = Engine->RenderObjectManager->BSDList->RenderObjectList; Iterator; Iterator = Iterator->Next ) {
-                int NextPose = (Iterator->CurrentAnimationIndex + 1);
-                BSDRenderObjectSetAnimationPose(Iterator,NextPose % Iterator->NumAnimations);
+            CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(Engine->RenderObjectManager);
+            if( CurrentRenderObject != NULL ) {
+                int NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1);
+                BSDRenderObjectSetAnimationPose(CurrentRenderObject,NextPose % CurrentRenderObject->NumAnimations);
             }
         }
         if( Event.type == SDL_MOUSEMOTION ) {
@@ -587,14 +588,17 @@ Engine_t *EngineInit(int argc,char **argv)
     GLSetDefaultState();
     ShaderManagerInit();
     
-    Engine->RenderObjectManager = RenderObjectManagerInit();
+
+    
+    Engine->RenderObjectManager = RenderObjectManagerInit(Engine->GUI);
     
     if( !Engine->RenderObjectManager ) {
         printf("EngineInit:Failed to initialize RenderObjectManager\n");
         goto Failure;
     }
+    
     if( argc > 1 ) {
-        RenderObjectManagerLoadBSD(Engine->RenderObjectManager,argv[1]);
+        RenderObjectManagerLoadPack(Engine->RenderObjectManager,Engine->GUI,Engine->VideoSystem,argv[1]);
     }
     return Engine;
 

@@ -50,7 +50,7 @@ typedef struct GUI_s {
     
     GUIFileDialog_t *FileDialogList;
     int NumRegisteredFileDialog;
-        
+    
     char *ConfigFilePath;
     bool DebugWindowHandle;
     bool VideoSettingsWindowHandle;
@@ -58,6 +58,7 @@ typedef struct GUI_s {
     int NumActiveWindows;
     GUIProgressBar_t *ProgressBar;
     char *ErrorMessage;
+    int     ErrorDialogHandle;
     ImGuiID ErrorID;
     
 } GUI_t;
@@ -87,8 +88,8 @@ void                GUIFileDialogSetTitle(GUIFileDialog_t *FileDialog,const char
 void                GUIFileDialogSetOnElementSelectedCallback(GUIFileDialog_t *FileDialog,FileDialogSelectCallback_t OnElementSelected);
 void                GUIFileDialogSetOnDialogCancelledCallback(GUIFileDialog_t *FileDialog,FileDialogCancelCallback_t OnDialogCancelled);
 int                 GUIFileDialogIsOpen(GUIFileDialog_t *FileDialog);
-void                GUIFileDialogOpen(GUI_t *GUI,GUIFileDialog_t *FileDialog);
-void                GUIFileDialogOpenWithUserData(GUI_t *GUI,GUIFileDialog_t *FileDialog,void *UserData);
+void                GUIFileDialogOpen(GUIFileDialog_t *FileDialog);
+void                GUIFileDialogOpenWithUserData(GUIFileDialog_t *FileDialog,void *UserData);
 void                *GUIFileDialogGetUserData(GUIFileDialog_t *FileDialog);
 void                GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *FileDialog);
 int                 GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);

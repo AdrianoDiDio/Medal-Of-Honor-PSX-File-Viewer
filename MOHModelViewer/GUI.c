@@ -314,9 +314,9 @@ void GUISetErrorMessage(GUI_t *GUI,const char *Message)
     }
     
     GUI->ErrorMessage = StringCopy(Message);
-    igOpenPopup_Str("Error",0);
-    GUIPushWindow(GUI);
+//     GUIPushWindow(GUI);
 }
+
 void GUIFileDialogRender(GUI_t *GUI,GUIFileDialog_t *FileDialog)
 {
     ImVec2 MaxSize;
@@ -339,8 +339,8 @@ void GUIFileDialogRender(GUI_t *GUI,GUIFileDialog_t *FileDialog)
     WindowPosition.y = Viewport->WorkPos.y;
     WindowPivot.x = 0.f;
     WindowPivot.y = 0.f;
-    MaxSize.x = Viewport->Size.x;
-    MaxSize.y = Viewport->Size.y;
+    MaxSize.x = Viewport->WorkSize.x;
+    MaxSize.y = Viewport->WorkSize.y;
     MinSize.x = -1;
     MinSize.y = -1;
 
@@ -533,7 +533,9 @@ void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
     ImVec2 UV0;
     ImVec2 UV1;
     ImVec2 TextPosition;
+    ImVec2 WindowPadding;
     ImDrawList *DrawList;
+    BSDRenderObject_t *CurrentRenderObject;
     
     UV0.x = 0;
     UV0.y = 1;
@@ -548,59 +550,126 @@ void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
     TintColor.z = 0;
     TintColor.w = 1;
 
+    WindowPadding.x = 0;
+    WindowPadding.y = 0;
+    
+    CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(RenderObjectManager);
+
     IO = igGetIO();
     
-    if( !igBegin("Scene Window", NULL, 0) ) {
-        return;
-    }
+    //NOTE(Adriano):Disable window padding only for scene window.
+    igPushStyleVar_Vec2(ImGuiStyleVar_WindowPadding, WindowPadding);
     
-    DrawList = igGetWindowDrawList();
+    if( igBegin("Scene Window", NULL, 0) ) {
+        DrawList = igGetWindowDrawList();
 
-    if( igIsWindowFocused(0) ) {
-        CameraCheckKeyEvents(Camera,KeyState,TimeInfo->Delta);
+        if( igIsWindowFocused(0) ) {
+            CameraCheckKeyEvents(Camera,KeyState,TimeInfo->Delta);
+        }
+
+        igGetContentRegionAvail(&Size);
+        igGetCursorScreenPos(&TextPosition);
+        //NOTE(Adriano):Since we have disabled padding nudge position a bit in order to not overlap the text with
+        //the window border.
+        TextPosition.x += 2;
+        igImageButton((void*)(long int) RenderObjectManager->FBOTexture, Size, UV0,UV1,0,TintColor,BorderColor);
+        ImDrawList_AddText_Vec2(DrawList,TextPosition,0xFFFFFFFF,TimeInfo->FPSString,NULL);
+        if( igIsItemActive() && igIsMouseDragging(ImGuiMouseButton_Left,0) && CurrentRenderObject != NULL) {
+            //TODO(Adriano):Debugging code...this will be replaced by a call to RenderObjectManager to rotate the current
+            //selected RenderObject.
+            CurrentRenderObject->Rotation[1] += IO->MouseDelta.x;
+            CurrentRenderObject->Rotation[0] -= IO->MouseDelta.y;
+            if ( CurrentRenderObject->Rotation[0] > 89.0f ) {
+                CurrentRenderObject->Rotation[0] = 89.0f;
+            }
+            if ( CurrentRenderObject->Rotation[0] < -89.0f ) {
+                CurrentRenderObject->Rotation[0] = -89.0f;
+            }
+
+            if ( CurrentRenderObject->Rotation[1] > 180.0f ) {
+                CurrentRenderObject->Rotation[1] -= 360.0f;
+            }
+
+            if ( CurrentRenderObject->Rotation[1] < -180.0f ) {
+                CurrentRenderObject->Rotation[1] += 360.0f;
+            }
+        }
+        igEnd();
     }
-
-    igGetContentRegionAvail(&Size);
-    igGetCursorScreenPos(&TextPosition);
-    igImageButton((void*)(long int) RenderObjectManager->FBOTexture, Size, UV0,UV1,0,TintColor,BorderColor);
-    ImDrawList_AddText_Vec2(DrawList,TextPosition,0xFFFFFFFF,TimeInfo->FPSString,NULL);
-
-    if( igIsItemActive() && igIsMouseDragging(ImGuiMouseButton_Left,0) ) {
-        //TODO(Adriano):Debugging code...this will be replaced by a call to RenderObjectManager to rotate the current
-        //selected RenderObject.
-        RenderObjectManager->BSDList->RenderObjectList->Rotation[1] += IO->MouseDelta.x;
-        RenderObjectManager->BSDList->RenderObjectList->Rotation[0] -= IO->MouseDelta.y;
-        if ( RenderObjectManager->BSDList->RenderObjectList->Rotation[0] > 89.0f ) {
-            RenderObjectManager->BSDList->RenderObjectList->Rotation[0] = 89.0f;
-        }
-        if ( RenderObjectManager->BSDList->RenderObjectList->Rotation[0] < -89.0f ) {
-            RenderObjectManager->BSDList->RenderObjectList->Rotation[0] = -89.0f;
-        }
-
-        if ( RenderObjectManager->BSDList->RenderObjectList->Rotation[1] > 180.0f ) {
-            RenderObjectManager->BSDList->RenderObjectList->Rotation[1] -= 360.0f;
-        }
-
-        if ( RenderObjectManager->BSDList->RenderObjectList->Rotation[1] < -180.0f ) {
-            RenderObjectManager->BSDList->RenderObjectList->Rotation[1] += 360.0f;
-        }
-    }
-    igEnd();
+    igPopStyleVar(1);
 }
-void GUIDrawMainWindow(RenderObjectManager_t *RenderObjectManager)
+
+void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager)
 {
-    if( !igBegin("Main Window", NULL, 0) ) {
+    BSDRenderObjectPack_t *PackIterator;
+    BSDRenderObject_t *RenderObjectIterator;
+    BSDRenderObject_t *CurrentRenderObject;
+    int TreeNodeFlags;
+    int DisableNode;
+    char SmallBuffer[32];
+    
+    if( !igBegin("Main Window", NULL, ImGuiWindowFlags_AlwaysAutoResize) ) {
         return;
     }
+    if( igCollapsingHeader_TreeNodeFlags("Animated RenderObjects List",0) ) {
+        for(PackIterator = RenderObjectManager->BSDList; PackIterator; PackIterator = PackIterator->Next) {
+            TreeNodeFlags = ImGuiTreeNodeFlags_None;
+            if(  PackIterator == RenderObjectManagerGetSelectedBSDPack(RenderObjectManager) ) {
+                TreeNodeFlags |= ImGuiTreeNodeFlags_DefaultOpen;
+            }
+            if( igTreeNodeEx_Str(PackIterator->Name,TreeNodeFlags) ) {
+                igSameLine(0,-1);
+                if( igSmallButton("Remove") ) {
+                    if( RenderObjectManagerDeleteBSDPack(RenderObjectManager,PackIterator->Name) ) {
+                        igTreePop();
+                        break;
+                    }
+                    GUISetErrorMessage(GUI,"Failed to remove BSD pack from list");
+                }
+                for( RenderObjectIterator = PackIterator->RenderObjectList; RenderObjectIterator; 
+                    RenderObjectIterator = RenderObjectIterator->Next ) {
+                    TreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
+                    DisableNode = 0;
+                    sprintf(SmallBuffer,"%u",RenderObjectIterator->Id);
+                    if( RenderObjectIterator == RenderObjectManagerGetSelectedRenderObject(RenderObjectManager) ) {
+                        TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
+                        DisableNode = 1;
+                    }
+                    if( DisableNode ) {
+                        igBeginDisabled(1);
+                    }
+                    if( igTreeNodeEx_Str(SmallBuffer,TreeNodeFlags) ) {
+                        if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+                            RenderObjectManagerSetSelectedRenderObject(RenderObjectManager,PackIterator,RenderObjectIterator);
+                        }
+                    }
+                    if( DisableNode ) {
+                        igEndDisabled();
+                    }
+                }
+                igTreePop();
+            }
+        }
+    }
+    if( igCollapsingHeader_TreeNodeFlags("Current RenderObject Informations",0) ) {
+        CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(RenderObjectManager);
+        if( !CurrentRenderObject ) {
+            igText("No RenderObject selected.");
+        } else {
+            igText("ID:%u",CurrentRenderObject->Id);
+        }
+    }
     igEnd();
 }
-void GUIDrawMenuBar()
+void GUIDrawMenuBar(RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem)
 {
     if( !igBeginMainMenuBar() ) {
         return;
     }
     if (igBeginMenu("File",true)) {
-        igMenuItem_Bool("Open",NULL,false,true);
+        if( igMenuItem_Bool("Open",NULL,false,true) ) {
+            RenderObjectManagerOpenFileDialog(RenderObjectManager,VideoSystem);
+        }
 //         igSeparator();
         igEndMenu();
     }
@@ -613,7 +682,7 @@ void GUIDraw(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
     
     GUIBeginFrame();
     
-    GUIDrawMenuBar();
+    GUIDrawMenuBar(RenderObjectManager,VideoSystem);
     
     GUIDrawDebugOverlay(TimeInfo);
     
@@ -624,24 +693,32 @@ void GUIDraw(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
 //     }
     
     GUIRenderFileDialogs(GUI);
+    
     if( GUI->ErrorMessage ) {
+        if( !GUI->ErrorDialogHandle ) {
+            igOpenPopup_Str("Error",0);
+            GUI->ErrorDialogHandle = 1;
+        }
         ButtonSize.x = 120;
         ButtonSize.y = 0;
         GUIPrepareModalWindow();
-        if( igBeginPopupModal("Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
+        if( igBeginPopupModal("Error",(bool *) &GUI->ErrorDialogHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
             igText(GUI->ErrorMessage);
             if (igButton("OK", ButtonSize) ) {
                 GUIPopWindow(GUI);
-                igCloseCurrentPopup(); 
+                igCloseCurrentPopup();
+                GUI->ErrorDialogHandle = 0;
+                free(GUI->ErrorMessage);
+                GUI->ErrorMessage = NULL;
             }
             igEndPopup();
         }
     }
     GUIDrawSceneWindow(RenderObjectManager,Camera,TimeInfo,KeyState);
-    GUIDrawMainWindow(RenderObjectManager);
+    GUIDrawMainWindow(GUI,RenderObjectManager);
     GUIDrawDebugWindow(GUI,Camera,VideoSystem);
     GUIDrawVideoSettingsWindow(GUI,VideoSystem);
-    igShowDemoWindow(NULL);
+//     igShowDemoWindow(NULL);
     GUIEndFrame();
 }
 
@@ -663,7 +740,7 @@ void *GUIFileDialogGetUserData(GUIFileDialog_t *FileDialog)
     } 
     return IGFD_GetUserDatas(FileDialog->Window);
 }
-void GUIFileDialogOpenWithUserData(GUI_t *GUI,GUIFileDialog_t *FileDialog,void *UserData)
+void GUIFileDialogOpenWithUserData(GUIFileDialog_t *FileDialog,void *UserData)
 {
     if( !FileDialog ) {
         DPrintf("GUIFileDialogOpen:Invalid dialog data\n");
@@ -675,11 +752,11 @@ void GUIFileDialogOpenWithUserData(GUI_t *GUI,GUIFileDialog_t *FileDialog,void *
     }
     IGFD_OpenDialog2(FileDialog->Window,FileDialog->Key,FileDialog->WindowTitle,FileDialog->Filters,".",1,
                      UserData,ImGuiFileDialogFlags_DontShowHiddenFiles);
-    GUIPushWindow(GUI);
+//     GUIPushWindow(GUI);
 }
-void GUIFileDialogOpen(GUI_t *GUI,GUIFileDialog_t *FileDialog)
+void GUIFileDialogOpen(GUIFileDialog_t *FileDialog)
 {
-    GUIFileDialogOpenWithUserData(GUI,FileDialog,NULL);
+    GUIFileDialogOpenWithUserData(FileDialog,NULL);
 }
 
 void GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *FileDialog)
@@ -815,6 +892,7 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     memset(GUI,0,sizeof(GUI_t));
     GUI->ProgressBar = malloc(sizeof(GUIProgressBar_t));
     GUI->ErrorMessage = NULL;
+    GUI->ErrorDialogHandle = 0;
     
     ConfigPath = SysGetConfigPath();
     asprintf(&GUI->ConfigFilePath,"%simgui.ini",ConfigPath);
@@ -838,7 +916,7 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     GUI->ProgressBar->DialogTitle = NULL;
     GUIContextInit(GUI->ProgressBar->Context,VideoSystem,GUI->ConfigFilePath);
     GUIContextInit(GUI->DefaultContext,VideoSystem,GUI->ConfigFilePath);
-    
+        
     GUI->NumActiveWindows = 0;
 
     return GUI;

@@ -32,8 +32,23 @@ void RenderObjectManagerFreeBSDRenderObjectPack(BSDRenderObjectPack_t *BSDRender
     if( BSDRenderObjectPack->VRAM ) {
         VRAMFree(BSDRenderObjectPack->VRAM);
     }
+    if( BSDRenderObjectPack->Name ) {
+        free(BSDRenderObjectPack->Name);
+    }
     BSDFreeRenderObjectList(BSDRenderObjectPack->RenderObjectList);
     free(BSDRenderObjectPack);
+}
+
+void RenderObjectManagerFreeDialogData(GUIFileDialog_t *FileDialog)
+{
+    RenderObjectManagerDialogData_t *DialogData;
+    if( !FileDialog ) {
+        return;
+    }
+    DialogData = (RenderObjectManagerDialogData_t *) GUIFileDialogGetUserData(FileDialog);
+    if( DialogData ) {
+        free(DialogData);
+    }
 }
 void RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager)
 {
@@ -49,38 +64,104 @@ void RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager)
     glDeleteFramebuffers(1,&RenderObjectManager->FBO);
     glDeleteRenderbuffers(1,&RenderObjectManager->RBO);
     glDeleteTextures(1,&RenderObjectManager->FBOTexture);
+    
+    //If the user didn't close the dialog free the user data that we passed to it.
+    if( GUIFileDialogIsOpen(RenderObjectManager->BSDFileDialog) ) {
+        RenderObjectManagerFreeDialogData(RenderObjectManager->BSDFileDialog);
+    }
+    
     free(RenderObjectManager);
 }
-void RenderObjectManagerDrawPack(RenderObjectManager_t *RenderObjectManager,BSDRenderObjectPack_t *RenderObjectPack,Camera_t *Camera,
-                                 mat4 ProjectionMatrix)
-{
-    if( !RenderObjectManager ) {
-        return;
-    }
-    if( !RenderObjectPack ) {
-        return;
-    }
-    BSDDrawRenderObjectList(RenderObjectPack->RenderObjectList,RenderObjectPack->VRAM,Camera,ProjectionMatrix);
-}
-void RenderObjectManagerDrawAll(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera)
-{
-    BSDRenderObjectPack_t *Iterator;
-    mat4 ProjectionMatrix;
-    
-    if( !RenderObjectManager ) {
-        return;
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, RenderObjectManager->FBO);
-    glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);     
-    for( Iterator = RenderObjectManager->BSDList; Iterator; Iterator = Iterator->Next ) {
-       RenderObjectManagerDrawPack(RenderObjectManager,Iterator,Camera,ProjectionMatrix); 
+
+BSDRenderObjectPack_t *RenderObjectManagerGetSelectedBSDPack(RenderObjectManager_t *RenderObjectManager)
+{
+    if( !RenderObjectManager ) {
+        DPrintf("RenderObjectManagerGetSelectedBSDPack:Invalid RenderObjectManager\n");
+        return NULL;
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    return RenderObjectManager->SelectedBSDPack;
+
 }
-int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,const char *File)
+BSDRenderObject_t *RenderObjectManagerGetSelectedRenderObject(RenderObjectManager_t *RenderObjectManager)
+{
+    BSDRenderObjectPack_t *SelectedBSDPack;
+    if( !RenderObjectManager ) {
+        DPrintf("RenderObjectManagerGetSelectedRenderObject:Invalid RenderObjectManager\n");
+        return NULL;
+    }
+    SelectedBSDPack = RenderObjectManagerGetSelectedBSDPack(RenderObjectManager);
+    if( !SelectedBSDPack ) {
+        return NULL;
+    }
+    return SelectedBSDPack->SelectedRenderObject;
+}
+void RenderObjectManagerSetSelectedRenderObject(RenderObjectManager_t *RenderObjectManager,BSDRenderObjectPack_t *SelectedBSDPack,
+                                                BSDRenderObject_t *SelectedRenderObject)
+{
+    if( !RenderObjectManager ) {
+        DPrintf("RenderObjectManagerSetSelectedRenderObject:Invalid RenderObjectManager\n");
+        return;
+    }
+    if( !SelectedBSDPack ) {
+        return;
+    }
+    if( !SelectedRenderObject ) {
+        return;
+    }
+    RenderObjectManager->SelectedBSDPack = SelectedBSDPack;
+    RenderObjectManager->SelectedBSDPack->SelectedRenderObject = SelectedRenderObject;
+}
+void RenderObjectManagerAppendBSDPack(RenderObjectManager_t *RenderObjectManager,BSDRenderObjectPack_t *BSDPack)
+{
+    BSDRenderObjectPack_t *LastNode;
+    if( !RenderObjectManager->BSDList ) {
+        RenderObjectManager->BSDList = BSDPack;
+    } else {
+        LastNode = RenderObjectManager->BSDList;
+        while( LastNode->Next ) {
+            LastNode = LastNode->Next;
+        }
+        LastNode->Next = BSDPack;
+    }
+}
+int RenderObjectManagerDeleteBSDPackFromList(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName)
+{
+    BSDRenderObjectPack_t *Temp;
+    BSDRenderObjectPack_t *Curr;
+    BSDRenderObjectPack_t *Prev;
+    Temp = RenderObjectManager->BSDList;
+    if(  Temp != NULL && !strcmp(Temp->Name,BSDPackName) ) {
+        RenderObjectManager->BSDList = Temp->Next;
+        RenderObjectManagerFreeBSDRenderObjectPack(Temp);
+        return 1;
+    }
+    Curr = RenderObjectManager->BSDList->Next;
+    Prev = RenderObjectManager->BSDList;
+    while( Curr && Prev ) {
+        if( !strcmp(Curr->Name,BSDPackName) ) {
+            Temp = Curr;
+            Prev->Next = Curr->Next;
+            RenderObjectManagerFreeBSDRenderObjectPack(Temp);
+            return 1;
+        }
+        Prev = Curr;
+        Curr = Curr->Next;
+    }
+    return 0;
+}
+int RenderObjectManagerDeleteBSDPack(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName)
+{
+    if( RenderObjectManagerDeleteBSDPackFromList(RenderObjectManager,BSDPackName) ) {
+        RenderObjectManager->SelectedBSDPack = RenderObjectManager->BSDList;
+        if( RenderObjectManager->BSDList != NULL ) {
+            RenderObjectManager->SelectedBSDPack->SelectedRenderObject = RenderObjectManager->BSDList->RenderObjectList;
+        }
+        return 1;
+    }
+    return 0;
+}
+int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *File)
 {
     BSDRenderObjectPack_t *BSDPack;
     BSDRenderObject_t *Iterator;
@@ -94,6 +175,8 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,const 
         DPrintf("RenderObjectManagerLoadBSD:Invalid file name\n");
         return 0;
     }
+
+    GUIProgressBarReset(GUI);
     
     DPrintf("RenderObjectManagerLoadBSD:Attempting to load %s\n",File);
     BSDPack = malloc(sizeof(BSDRenderObjectPack_t));
@@ -102,11 +185,15 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,const 
         DPrintf("RenderObjectManagerLoadBSD:Failed to allocate memory for BSD pack\n");
         goto Failure;
     }
-    
+    BSDPack->Name = GetBaseName(File);
     BSDPack->ImageList = NULL;
     BSDPack->VRAM = NULL;
     BSDPack->RenderObjectList = NULL;
+    BSDPack->SelectedRenderObject = NULL;
+    BSDPack->Next = NULL;
     TAFFile = NULL;
+    
+    GUIProgressBarIncrement(GUI,VideoSystem,0,"Loading all images");
 
     TAFFile = SwitchExt(File,".TAF");
     BSDPack->ImageList = TIMGetAllImages(TAFFile);
@@ -119,21 +206,29 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,const 
             goto Failure;
         }
     }
+    GUIProgressBarIncrement(GUI,VideoSystem,20,"Loading all animated RenderObjects from BSD file");
     BSDPack->RenderObjectList = BSDLoadAllAnimatedRenderObjects(File);
     if( !BSDPack->RenderObjectList ) {
         DPrintf("RenderObjectManagerLoadBSD:Failed to load render objects from file\n");
         goto Failure;
     }
+
+    GUIProgressBarIncrement(GUI,VideoSystem,40,"Initializing VRAM");
     BSDPack->VRAM = VRAMInit(BSDPack->ImageList);
     if( !BSDPack->VRAM ) {
         DPrintf("RenderObjectManagerLoadBSD:Failed to initialize VRAM\n");
         goto Failure;
     }
+    GUIProgressBarIncrement(GUI,VideoSystem,90,"Setting default pose");
     for( Iterator = BSDPack->RenderObjectList; Iterator; Iterator = Iterator->Next ) {
         BSDRenderObjectSetAnimationPose(Iterator,0);
     }
-    BSDPack->Next = RenderObjectManager->BSDList;
-    RenderObjectManager->BSDList = BSDPack;
+    GUIProgressBarIncrement(GUI,VideoSystem,100,"Done");
+    RenderObjectManagerAppendBSDPack(RenderObjectManager,BSDPack);
+    if( !RenderObjectManager->SelectedBSDPack ) {
+        RenderObjectManager->SelectedBSDPack = BSDPack;
+        RenderObjectManager->SelectedBSDPack->SelectedRenderObject = BSDPack->RenderObjectList;
+    }
     free(TAFFile);
     return 1;
 Failure:
@@ -143,6 +238,100 @@ Failure:
     }
     return 0;
 }
+
+int RenderObjectManagerLoadPack(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *File)
+{
+    char *BaseName;
+    char *Title;
+    int Result;
+    
+    BaseName = GetBaseName(File);
+    asprintf(&Title,"Loading %s",BaseName);
+    GUIProgressBarBegin(GUI,Title);
+    GUIProgressBarBegin(GUI,Title);
+    Result = RenderObjectManagerLoadBSD(RenderObjectManager,GUI,VideoSystem,File);
+    GUIProgressBarEnd(GUI,VideoSystem);
+    if( !Result ) {
+                GUISetErrorMessage(GUI,"Selected file doesn't seems to contain any animated RenderObject...\n"
+        "Please select a new file.");
+
+    }
+    free(Title);
+    free(BaseName);
+    return Result;
+}
+void RenderObjectManagerOnBSDFileDialogSelect(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Directory,const char *File,void *UserData)
+{
+    RenderObjectManagerDialogData_t *Data;
+    int Result;
+    Data = (RenderObjectManagerDialogData_t *) UserData;
+
+    Result = RenderObjectManagerLoadPack(Data->RenderObjectManager,GUI,Data->VideoSystem,File);
+    if( !Result ) {
+        GUISetErrorMessage(GUI,"Selected file doesn't seems to contain any animated RenderObject...\n"
+        "Please select a new file.");
+    }
+    RenderObjectManagerFreeDialogData(FileDialog);
+    GUIFileDialogClose(GUI,FileDialog);
+}
+
+void RenderObjectManagerOnBSDFileDialogCancel(GUIFileDialog_t *FileDialog,GUI_t *GUI)
+{
+    RenderObjectManagerFreeDialogData(FileDialog);
+    GUIFileDialogClose(GUI,FileDialog);
+}
+
+void RenderObjectManagerDrawPack(BSDRenderObjectPack_t *RenderObjectPack,Camera_t *Camera,
+                                 mat4 ProjectionMatrix)
+{
+    if( !RenderObjectPack ) {
+        return;
+    }
+    if( !RenderObjectPack->SelectedRenderObject ) {
+        return;
+    }
+    BSDDrawRenderObject(RenderObjectPack->SelectedRenderObject,RenderObjectPack->VRAM,Camera,ProjectionMatrix);
+}
+void RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem)
+{
+    RenderObjectManagerDialogData_t *DialogData;
+    if( !RenderObjectManager ) {
+        return;
+    }
+
+    DialogData = malloc(sizeof(RenderObjectManagerDialogData_t));
+    if( !DialogData ) {
+        DPrintf("RenderObjectManagerOpenFileDialog:Couldn't allocate data for the extra data\n");
+        return;
+    }
+    DialogData->RenderObjectManager = RenderObjectManager;
+    DialogData->VideoSystem = VideoSystem;
+
+    GUIFileDialogOpenWithUserData(RenderObjectManager->BSDFileDialog,DialogData);
+}
+void RenderObjectManagerDrawAll(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera)
+{
+//     BSDRenderObjectPack_t *Iterator;
+    mat4 ProjectionMatrix;
+    
+    if( !RenderObjectManager ) {
+        return;
+    }
+
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, RenderObjectManager->FBO);
+    glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if( RenderObjectManager->SelectedBSDPack ) {
+        glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);
+        RenderObjectManagerDrawPack(RenderObjectManager->SelectedBSDPack,Camera,ProjectionMatrix);
+    }
+//     for( Iterator = RenderObjectManager->BSDList; Iterator; Iterator = Iterator->Next ) {
+//        RenderObjectManagerDrawPack(RenderObjectManager,Iterator,Camera,ProjectionMatrix); 
+//     }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 int RenderObjectManagerCreateFBO(RenderObjectManager_t *RenderObjectManager)
 {
     glGenFramebuffers(1, &RenderObjectManager->FBO);
@@ -171,21 +360,30 @@ int RenderObjectManagerCreateFBO(RenderObjectManager_t *RenderObjectManager)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     return 1;
 }
-RenderObjectManager_t *RenderObjectManagerInit()
+RenderObjectManager_t *RenderObjectManagerInit(GUI_t *GUI)
 {
     RenderObjectManager_t *RenderObjectManager;
     
+    if( !GUI ) {
+        DPrintf("RenderObjectManagerInit:Invalid GUI\n");
+        return NULL;
+    }
     RenderObjectManager = malloc(sizeof(RenderObjectManager_t));
     if( !RenderObjectManager ) {
         DPrintf("RenderObjectManagerInit:Couldn't allocate memory for RenderObjectManager\n");
         return NULL;
     }
     RenderObjectManager->BSDList = NULL;
+    RenderObjectManager->SelectedBSDPack = NULL;
     
     if( !RenderObjectManagerCreateFBO(RenderObjectManager) ) {
         DPrintf("RenderObjectManagerInit:Couldn't create FBO\n");
         free(RenderObjectManager);
         return NULL;
     }
+    RenderObjectManager->BSDFileDialog = GUIFileDialogRegister(GUI,"Open BSD File",
+                                                               "BSD files(*.BSD){.BSD}",
+                                                               RenderObjectManagerOnBSDFileDialogSelect,
+                                                               RenderObjectManagerOnBSDFileDialogCancel);
     return RenderObjectManager;
 }

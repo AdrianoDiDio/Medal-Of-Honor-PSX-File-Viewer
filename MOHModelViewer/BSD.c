@@ -310,8 +310,7 @@ void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAni
 void BSDRenderObjectResetVertexTable(BSDRenderObject_t *RenderObject)
 {
     int i;
-    int j;
-    
+
     if( !RenderObject ) {
         DPrintf("BSDRenderObjectResetVertexTable:Invalid RenderObject\n");
         return;
@@ -319,9 +318,8 @@ void BSDRenderObjectResetVertexTable(BSDRenderObject_t *RenderObject)
     for( i = 0; i < RenderObject->NumVertexTables; i++ ) {
         RenderObject->CurrentVertexTable[i].Offset = RenderObject->VertexTable[i].Offset;
         RenderObject->CurrentVertexTable[i].NumVertex = RenderObject->VertexTable[i].NumVertex;
-        for( j = 0; j < RenderObject->VertexTable[i].NumVertex; j++ ) {
-            RenderObject->CurrentVertexTable[i].VertexList[j] = RenderObject->VertexTable[i].VertexList[j];
-        }
+        memcpy(RenderObject->CurrentVertexTable[i].VertexList,
+               RenderObject->VertexTable[i].VertexList,sizeof(BSDVertex_t) * RenderObject->VertexTable[i].NumVertex);
     }
 
 }
@@ -353,27 +351,52 @@ void BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animati
     }
 }
 
-void BSDDrawRenderObject(const BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 MVPMatrix)
+void BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
 {
     int EnableLightingId;
     int PaletteTextureId;
     int TextureIndexId;
     int MVPMatrixId;
+    vec3 Temp;
+    mat4 ModelMatrix;
+    mat4 ModelViewMatrix;
+    mat4 MVPMatrix;
     Shader_t *Shader;
     
     if( !RenderObject ) {
         return;
     }
     
-//     glm_mat4_mul(ProjectionMatrix,Camera->ViewMatrix,MVPMatrix);
-//     //Emulate PSX Coordinate system...
-//     glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
     
     Shader = ShaderCache("BSDRenderObjectShader","Shaders/BSDRenderObjectVertexShader.glsl",
                          "Shaders/BSDRenderObjectFragmentShader.glsl");
     if( !Shader ) {
         return;
     }
+    
+    glm_mat4_identity(ModelMatrix);
+    glm_mat4_identity(ModelViewMatrix);
+    Temp[0] = 0;
+    Temp[1] = 0;
+    Temp[2] = 0;
+    glm_translate(ModelMatrix,Temp);
+    Temp[0] = 0;
+    Temp[1] = 1;
+    Temp[2] = 0;
+    glm_rotate(ModelMatrix,glm_rad(RenderObject->Rotation[1]), Temp);
+    Temp[0] = 1;
+    Temp[1] = 0;
+    Temp[2] = 0;
+    glm_rotate(ModelMatrix,glm_rad(RenderObject->Rotation[0]), Temp);
+    Temp[0] = 0;
+    Temp[1] = 0;
+    Temp[2] = 1;
+    glm_rotate(ModelMatrix,glm_rad(RenderObject->Rotation[2]), Temp);
+    glm_scale(ModelMatrix,RenderObject->Scale);
+    glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
+    glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
+    //Emulate PSX Coordinate system...
+    glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
     
     glUseProgram(Shader->ProgramId);
     MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
@@ -404,10 +427,6 @@ void BSDDrawRenderObject(const BSDRenderObject_t *RenderObject,const VRAM_t *VRA
 void BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
 {
     BSDRenderObject_t *Iterator;
-    mat4 ModelMatrix;
-    mat4 ModelViewMatrix;
-    vec3 temp;
-    mat4 MVPMatrix;
     int i;
     if( !RenderObjectList ) {
         return;
@@ -415,30 +434,7 @@ void BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *V
 
     i = 0;
     for( Iterator = RenderObjectList; Iterator; Iterator = Iterator->Next ) {
-        temp[0] = -(i * 100.f);
-        temp[1] = 0;
-        temp[2] = 0;
-        glm_mat4_identity(ModelMatrix);
-        glm_mat4_identity(ModelViewMatrix);
-        glm_translate(ModelMatrix,temp);
-        temp[0] = 0;
-        temp[1] = 1;
-        temp[2] = 0;
-        glm_rotate(ModelMatrix,glm_rad(Iterator->Rotation[1]), temp);
-        temp[0] = 1;
-        temp[1] = 0;
-        temp[2] = 0;
-        glm_rotate(ModelMatrix,glm_rad(Iterator->Rotation[0]), temp);
-        temp[0] = 0;
-        temp[1] = 0;
-        temp[2] = 1;
-        glm_rotate(ModelMatrix,glm_rad(Iterator->Rotation[2]), temp);
-        glm_scale(ModelMatrix,Iterator->Scale);
-        glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
-        glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
-        //Emulate PSX Coordinate system...
-        glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
-        BSDDrawRenderObject(Iterator,VRAM,Camera,MVPMatrix);
+        BSDDrawRenderObject(Iterator,VRAM,Camera,ProjectionMatrix);
         i++;
     }
 }
@@ -550,6 +546,19 @@ int BSDGetRenderObjectIndexById(const BSD_t *BSD,unsigned int RenderObjectId)
     }
     return -1;
 }
+void BSDAppendRenderObjectToList(BSDRenderObject_t **List,BSDRenderObject_t *Node)
+{
+    BSDRenderObject_t *LastNode;
+    if( !*List ) {
+        *List = Node;
+    } else {
+        LastNode = *List;
+        while( LastNode->Next ) {
+            LastNode = LastNode->Next;
+        }
+        LastNode->Next = Node;
+    }
+}
 /*
  * NOTE(Adriano):
  * Some RenderObjects uses the 'ReferencedRenderObjectId' field to reference a RenderObject that contains common
@@ -605,7 +614,12 @@ void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile,int GameEngine)
         if(CurrentRenderObject->AnimationDataOffset == -1 ) {
             CurrentRenderObject->AnimationDataOffset = ReferencedRenderObject->AnimationDataOffset;
         }
-        
+        if( CurrentRenderObject->ScaleX == 0 && CurrentRenderObject->ScaleY == 0 && CurrentRenderObject->ScaleZ == 0 ) {
+            CurrentRenderObject->ScaleX = ReferencedRenderObject->ScaleX;
+            CurrentRenderObject->ScaleY = ReferencedRenderObject->ScaleY;
+            CurrentRenderObject->ScaleZ = ReferencedRenderObject->ScaleZ;
+
+        }
         if( CurrentRenderObject->Type == -1 ) {
             CurrentRenderObject->Type = ReferencedRenderObject->Type;
         }
@@ -1216,9 +1230,12 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
     RenderObject->AnimationList = NULL;
     RenderObject->VAO = NULL;
     RenderObject->CurrentAnimationIndex = -1;
+    RenderObject->Next = NULL;
+
     RenderObject->Scale[0] = (float) (RenderObjectElement.ScaleX  / 16 ) / 4096.f;
     RenderObject->Scale[1] = (float) (RenderObjectElement.ScaleY  / 16 ) / 4096.f;
     RenderObject->Scale[2] = (float) (RenderObjectElement.ScaleZ  / 16 ) / 4096.f;
+
     RenderObject->Rotation[0] = 0;
     RenderObject->Rotation[1] = 0;
     RenderObject->Rotation[2] = 0;
@@ -1328,8 +1345,7 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
             DPrintf("BSDLoadAllAnimatedRenderObjects:Failed to load animated RenderObject.\n");
             continue;
         }
-        RenderObject->Next = RenderObjectList;
-        RenderObjectList = RenderObject;
+        BSDAppendRenderObjectToList(&RenderObjectList,RenderObject);
     }
     BSDFree(BSD);
     fclose(BSDFile);
