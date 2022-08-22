@@ -1223,6 +1223,8 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
         goto Failure;
     }
     RenderObject->Id = RenderObjectElement.Id;
+    RenderObject->ReferencedRenderObjectId = RenderObjectElement.ReferencedRenderObjectId;
+    RenderObject->Type = RenderObjectElement.Type;
     RenderObject->VertexTable = NULL;
     RenderObject->CurrentVertexTable = NULL;
     RenderObject->FaceList = NULL;
@@ -1297,11 +1299,11 @@ Failure:
     return NULL;
 }
 
-BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
+BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName,int *GameVersion)
 {
     FILE *BSDFile;
     BSD_t *BSD;
-    int GameVersion;
+    int LocalGameVersion;
     BSDRenderObject_t *RenderObjectList;
     BSDRenderObject_t *RenderObject;
     int i;
@@ -1312,7 +1314,7 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
         DPrintf("Failed opening BSD File %s.\n",FName);
         return NULL;
     }
-    BSD = BSDLoad(BSDFile,&GameVersion);
+    BSD = BSDLoad(BSDFile,&LocalGameVersion);
     if( !BSD ) {
         fclose(BSDFile);
         return NULL;
@@ -1340,12 +1342,15 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName)
         }
         DPrintf("BSDLoadAllAnimatedRenderObjects:Loading Animated RenderObject %u\n",BSD->RenderObjectTable.RenderObject[i].Id);
         RenderObject = BSDLoadAnimatedRenderObject(BSD->RenderObjectTable.RenderObject[i],BSD->EntryTable,
-                                                   BSDFile,i,ReferencedRenderObjectIndex,GameVersion);
+                                                   BSDFile,i,ReferencedRenderObjectIndex,LocalGameVersion);
         if( !RenderObject ) {
             DPrintf("BSDLoadAllAnimatedRenderObjects:Failed to load animated RenderObject.\n");
             continue;
         }
         BSDAppendRenderObjectToList(&RenderObjectList,RenderObject);
+    }
+    if( GameVersion ) {
+        *GameVersion = LocalGameVersion;
     }
     BSDFree(BSD);
     fclose(BSDFile);

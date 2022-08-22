@@ -198,6 +198,8 @@ typedef struct BSDEntryTable_s {
 
 typedef struct BSDRenderObject_s {
     unsigned int                Id;
+    unsigned int                ReferencedRenderObjectId;
+    int                         Type;
     BSDVertexTable_t            *VertexTable;
     BSDVertexTable_t            *CurrentVertexTable;
     int                         NumVertexTables;
@@ -221,7 +223,7 @@ typedef struct BSD_s {
 
 typedef struct Camera_s Camera_t;
 
-BSDRenderObject_t   *BSDLoadAllAnimatedRenderObjects(const char *FName);
+BSDRenderObject_t   *BSDLoadAllAnimatedRenderObjects(const char *FName,int *GameVersion);
 void                BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void                BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void                BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAnimation_t *AnimationList,

@@ -198,8 +198,9 @@ Camera_t *CameraInit()
     }
     
     glm_vec3_zero(Camera->Position);
+    Camera->Position[2] = -150.f;
     glm_vec3_zero(Camera->Rotation);
-
+    Camera->Rotation[1] = 180.f;
     glm_vec3_zero(Camera->Right);
     glm_vec3_zero(Camera->Forward);
 

@@ -27,10 +27,20 @@
 #include "TIM.h"
 #include "Camera.h"
 
+typedef enum {
+    RENDER_OBJECT_MANAGER_BSD_NO_ERRORS = 1,
+    RENDER_OBJECT_MANAGER_BSD_ERROR_GENERIC = 0,
+    RENDER_OBJECT_MANAGER_BSD_ERROR_INVALID_TAF_FILE = -1,
+    RENDER_OBJECT_MANAGER_BSD_ERROR_NO_ANIMATED_RENDEROBJECTS = -2,
+    RENDER_OBJECT_MANAGER_BSD_ERROR_ALREADY_LOADED = -3,
+    RENDER_OBJECT_MANAGER_BSD_ERROR_VRAM_INITIALIZATION = -4 
+} RenderObjectManagerBSDErrorCode;
+
 //NOTE(Adriano):A single BSD file that gets loaded together with his corresponding TAF goes
 //              here...this allows for multiple BSD files to be loaded without overlapping VRAMs.
 typedef struct BSDRenderObjectPack_s {
     char                            *Name;
+    int                             GameVersion;
     VRAM_t                          *VRAM;
     TIMImage_t                      *ImageList;
     BSDRenderObject_t               *RenderObjectList;
@@ -56,7 +66,7 @@ typedef struct RenderObjectManagerDialogData_s {
 } RenderObjectManagerDialogData_t;
 
 RenderObjectManager_t   *RenderObjectManagerInit(GUI_t *GUI);
-int                     RenderObjectManagerDeleteBSDPack(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName);
+int                     RenderObjectManagerDeleteBSDPack(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName,int GameVersion);
 void                    RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem);
 void                    RenderObjectManagerDrawAll(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera);
 void                    RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager);

@@ -508,7 +508,7 @@ void EngineDraw(Engine_t *Engine)
     RenderObjectManagerDrawAll(Engine->RenderObjectManager,Engine->Camera);
     
     glDisable (GL_DEPTH_TEST);
-    GUIDraw(Engine->GUI,Engine->RenderObjectManager,Engine->Camera,Engine->VideoSystem,Engine->TimeInfo,Engine->KeyState);
+    GUIDraw(Engine);
     glEnable(GL_DEPTH_TEST);
 }
 void EngineFrame(Engine_t *Engine)

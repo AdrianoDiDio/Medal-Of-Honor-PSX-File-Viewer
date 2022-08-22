@@ -71,6 +71,7 @@ typedef struct VSyncSettings_s {
 typedef struct Camera_s Camera_t;
 typedef struct ComTimeInfo_s ComTimeInfo_t;
 typedef struct RenderObjectManager_s RenderObjectManager_t;
+typedef struct Engine_s Engine_t;
 
 extern Config_t *GUIFont;
 extern Config_t *GUIFontSize;
@@ -98,7 +99,6 @@ void                GUIProgressBarEnd(GUI_t *GUI,VideoSystem_t *VideoSystem);
 void                GUIProgressBarReset(GUI_t *GUI);
 void                GUISetProgressBarDialogTitle(GUI_t *GUI,const char *Title);
 void                GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increment,const char *Message);
-void                GUIDraw(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Camera_t *Camera,VideoSystem_t *VideoSystem,
-                            ComTimeInfo_t *TimeInfo,const Byte *KeyState);
+void                GUIDraw(Engine_t *Engine);
 void                GUIFree(GUI_t *GUI);
 #endif//__GUI_H_

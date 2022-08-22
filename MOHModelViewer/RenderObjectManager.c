@@ -73,6 +73,24 @@ void RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager)
     free(RenderObjectManager);
 }
 
+const char *RenderObjectManagerErrorToString(int ErrorCode)
+{
+    switch( ErrorCode ) {
+        case RENDER_OBJECT_MANAGER_BSD_ERROR_GENERIC:
+            return "Generic Error";
+        case RENDER_OBJECT_MANAGER_BSD_ERROR_INVALID_TAF_FILE:
+            return "TAF file was not valid or not found";
+        case RENDER_OBJECT_MANAGER_BSD_ERROR_NO_ANIMATED_RENDEROBJECTS:
+            return "BSD file was not valid or no animated RenderObjects could be found";
+        case RENDER_OBJECT_MANAGER_BSD_ERROR_ALREADY_LOADED:
+            return "BSD File was already loaded";
+        case RENDER_OBJECT_MANAGER_BSD_ERROR_VRAM_INITIALIZATION:
+            return "Failed to initialize VRAM";
+        case RENDER_OBJECT_MANAGER_BSD_NO_ERRORS:
+        default:
+            return "No errors reported";
+    }
+}
 
 BSDRenderObjectPack_t *RenderObjectManagerGetSelectedBSDPack(RenderObjectManager_t *RenderObjectManager)
 {
@@ -112,6 +130,13 @@ void RenderObjectManagerSetSelectedRenderObject(RenderObjectManager_t *RenderObj
     RenderObjectManager->SelectedBSDPack = SelectedBSDPack;
     RenderObjectManager->SelectedBSDPack->SelectedRenderObject = SelectedRenderObject;
 }
+void RenderObjectManagerSetDefaultSelection(RenderObjectManager_t *RenderObjectManager)
+{
+    RenderObjectManager->SelectedBSDPack = RenderObjectManager->BSDList;
+    if( RenderObjectManager->BSDList != NULL ) {
+        RenderObjectManager->SelectedBSDPack->SelectedRenderObject = RenderObjectManager->BSDList->RenderObjectList;
+    }
+}
 void RenderObjectManagerAppendBSDPack(RenderObjectManager_t *RenderObjectManager,BSDRenderObjectPack_t *BSDPack)
 {
     BSDRenderObjectPack_t *LastNode;
@@ -125,57 +150,74 @@ void RenderObjectManagerAppendBSDPack(RenderObjectManager_t *RenderObjectManager
         LastNode->Next = BSDPack;
     }
 }
-int RenderObjectManagerDeleteBSDPackFromList(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName)
+int RenderObjectManagerDeleteBSDPackFromList(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName,int GameVersion)
 {
     BSDRenderObjectPack_t *Temp;
-    BSDRenderObjectPack_t *Curr;
-    BSDRenderObjectPack_t *Prev;
-    Temp = RenderObjectManager->BSDList;
-    if(  Temp != NULL && !strcmp(Temp->Name,BSDPackName) ) {
-        RenderObjectManager->BSDList = Temp->Next;
-        RenderObjectManagerFreeBSDRenderObjectPack(Temp);
-        return 1;
-    }
-    Curr = RenderObjectManager->BSDList->Next;
-    Prev = RenderObjectManager->BSDList;
-    while( Curr && Prev ) {
-        if( !strcmp(Curr->Name,BSDPackName) ) {
-            Temp = Curr;
-            Prev->Next = Curr->Next;
+    BSDRenderObjectPack_t *Current;
+    BSDRenderObjectPack_t *Previous;
+    
+    Current = RenderObjectManager->BSDList;
+    Previous = NULL;
+    while( Current ) {
+        if( !strcmp(Current->Name,BSDPackName) && Current->GameVersion == GameVersion) {
+            Temp = Current;
+            if( !Previous ) {
+                RenderObjectManager->BSDList = Current->Next;
+            } else {
+                Previous->Next = Current->Next;
+            }
+            //NOTE(Adriano):If we are trying to free the selected one,make it invalid and reassign it later.
+            if( Temp == RenderObjectManager->SelectedBSDPack ) {
+                RenderObjectManager->SelectedBSDPack = NULL;
+            }
             RenderObjectManagerFreeBSDRenderObjectPack(Temp);
             return 1;
         }
-        Prev = Curr;
-        Curr = Curr->Next;
+        Previous = Current;
+        Current = Current->Next;
     }
     return 0;
 }
-int RenderObjectManagerDeleteBSDPack(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName)
+int RenderObjectManagerDeleteBSDPack(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName,int GameVersion)
 {
-    if( RenderObjectManagerDeleteBSDPackFromList(RenderObjectManager,BSDPackName) ) {
-        RenderObjectManager->SelectedBSDPack = RenderObjectManager->BSDList;
-        if( RenderObjectManager->BSDList != NULL ) {
-            RenderObjectManager->SelectedBSDPack->SelectedRenderObject = RenderObjectManager->BSDList->RenderObjectList;
+    if( RenderObjectManagerDeleteBSDPackFromList(RenderObjectManager,BSDPackName,GameVersion) ) {
+        //NOTE(Adriano):If the selected BSD pack belonged to the deleted one...then it now should be invalid....
+        if( !RenderObjectManager->SelectedBSDPack ) {
+            RenderObjectManagerSetDefaultSelection(RenderObjectManager);
         }
         return 1;
     }
     return 0;
 }
+BSDRenderObjectPack_t *RenderObjectManagerGetBSDPack(RenderObjectManager_t *RenderObjectManager,const char *Name,int GameVersion)
+{
+    BSDRenderObjectPack_t *Iterator;
+    for( Iterator = RenderObjectManager->BSDList; Iterator; Iterator = Iterator->Next ) {
+        if( !strcmp(Iterator->Name,Name) && Iterator->GameVersion == GameVersion) {
+            return Iterator;
+        }
+    }
+    return NULL;
+}
+
 int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *File)
 {
     BSDRenderObjectPack_t *BSDPack;
     BSDRenderObject_t *Iterator;
     char *TAFFile;
+    int ErrorCode;
+    
+    ErrorCode = RENDER_OBJECT_MANAGER_BSD_NO_ERRORS;
     
     if( !RenderObjectManager ) {
         DPrintf("RenderObjectManagerLoadBSD:Invalid RenderObjectManager\n");
-        return 0;
+        return RENDER_OBJECT_MANAGER_BSD_ERROR_GENERIC;
     }
     if( !File ) {
         DPrintf("RenderObjectManagerLoadBSD:Invalid file name\n");
-        return 0;
+        return RENDER_OBJECT_MANAGER_BSD_ERROR_GENERIC;
     }
-
+    
     GUIProgressBarReset(GUI);
     
     DPrintf("RenderObjectManagerLoadBSD:Attempting to load %s\n",File);
@@ -194,7 +236,6 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
     TAFFile = NULL;
     
     GUIProgressBarIncrement(GUI,VideoSystem,0,"Loading all images");
-
     TAFFile = SwitchExt(File,".TAF");
     BSDPack->ImageList = TIMGetAllImages(TAFFile);
     if( !BSDPack->ImageList ) {
@@ -203,20 +244,27 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
         BSDPack->ImageList = TIMGetAllImages(TAFFile);
         if( !BSDPack->ImageList ) {
             DPrintf("RenderObjectManagerLoadBSD:Failed to load images from TAF file %s\n",TAFFile);
+            ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_INVALID_TAF_FILE;
             goto Failure;
         }
     }
     GUIProgressBarIncrement(GUI,VideoSystem,20,"Loading all animated RenderObjects from BSD file");
-    BSDPack->RenderObjectList = BSDLoadAllAnimatedRenderObjects(File);
+    BSDPack->RenderObjectList = BSDLoadAllAnimatedRenderObjects(File,&BSDPack->GameVersion);
     if( !BSDPack->RenderObjectList ) {
         DPrintf("RenderObjectManagerLoadBSD:Failed to load render objects from file\n");
+        ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_NO_ANIMATED_RENDEROBJECTS;
         goto Failure;
     }
-
+    if( RenderObjectManagerGetBSDPack(RenderObjectManager,BSDPack->Name,BSDPack->GameVersion) != NULL ) {
+        DPrintf("RenderObjectManagerLoadBSD:Duplicated found in list!\n");
+        ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_ALREADY_LOADED;
+        goto Failure;
+    }
     GUIProgressBarIncrement(GUI,VideoSystem,40,"Initializing VRAM");
     BSDPack->VRAM = VRAMInit(BSDPack->ImageList);
     if( !BSDPack->VRAM ) {
         DPrintf("RenderObjectManagerLoadBSD:Failed to initialize VRAM\n");
+        ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_VRAM_INITIALIZATION;
         goto Failure;
     }
     GUIProgressBarIncrement(GUI,VideoSystem,90,"Setting default pose");
@@ -226,17 +274,16 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
     GUIProgressBarIncrement(GUI,VideoSystem,100,"Done");
     RenderObjectManagerAppendBSDPack(RenderObjectManager,BSDPack);
     if( !RenderObjectManager->SelectedBSDPack ) {
-        RenderObjectManager->SelectedBSDPack = BSDPack;
-        RenderObjectManager->SelectedBSDPack->SelectedRenderObject = BSDPack->RenderObjectList;
+        RenderObjectManagerSetSelectedRenderObject(RenderObjectManager,BSDPack,BSDPack->RenderObjectList);
     }
     free(TAFFile);
-    return 1;
+    return ErrorCode;
 Failure:
     RenderObjectManagerFreeBSDRenderObjectPack(BSDPack);
     if( TAFFile ) {
         free(TAFFile);
     }
-    return 0;
+    return ErrorCode;
 }
 
 int RenderObjectManagerLoadPack(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *File)
@@ -248,13 +295,10 @@ int RenderObjectManagerLoadPack(RenderObjectManager_t *RenderObjectManager,GUI_t
     BaseName = GetBaseName(File);
     asprintf(&Title,"Loading %s",BaseName);
     GUIProgressBarBegin(GUI,Title);
-    GUIProgressBarBegin(GUI,Title);
     Result = RenderObjectManagerLoadBSD(RenderObjectManager,GUI,VideoSystem,File);
     GUIProgressBarEnd(GUI,VideoSystem);
-    if( !Result ) {
-                GUISetErrorMessage(GUI,"Selected file doesn't seems to contain any animated RenderObject...\n"
-        "Please select a new file.");
-
+    if( Result <= 0) {
+        GUISetErrorMessage(GUI,RenderObjectManagerErrorToString(Result));
     }
     free(Title);
     free(BaseName);
@@ -263,14 +307,8 @@ int RenderObjectManagerLoadPack(RenderObjectManager_t *RenderObjectManager,GUI_t
 void RenderObjectManagerOnBSDFileDialogSelect(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Directory,const char *File,void *UserData)
 {
     RenderObjectManagerDialogData_t *Data;
-    int Result;
     Data = (RenderObjectManagerDialogData_t *) UserData;
-
-    Result = RenderObjectManagerLoadPack(Data->RenderObjectManager,GUI,Data->VideoSystem,File);
-    if( !Result ) {
-        GUISetErrorMessage(GUI,"Selected file doesn't seems to contain any animated RenderObject...\n"
-        "Please select a new file.");
-    }
+    RenderObjectManagerLoadPack(Data->RenderObjectManager,GUI,Data->VideoSystem,File);
     RenderObjectManagerFreeDialogData(FileDialog);
     GUIFileDialogClose(GUI,FileDialog);
 }

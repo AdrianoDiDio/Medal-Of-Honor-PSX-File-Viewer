@@ -236,8 +236,12 @@ void GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increme
         return;
     }
     
-    //NOTE(Adriano):Process any window event that could be generated while showing the progress bar.
-    while( SDL_PollEvent(&Event) ) {
+    SDL_PumpEvents();
+    //NOTE(Adriano):
+    //Process any window event that could be generated while showing the progress bar.
+    //We need to make sure not to process any mouse/keyboad event otherwise when the progress bar ends the
+    //queue may be empty and the GUI won't respond to events properly...
+    while( SDL_PeepEvents(&Event, 1, SDL_GETEVENT, SDL_WINDOWEVENT, SDL_WINDOWEVENT) > 0 ) {
         ImGui_ImplSDL2_ProcessEvent(&Event);
     }
     //NOTE(Adriano):Since we are checking for events these function have now an updated view of the current window size.
@@ -260,6 +264,7 @@ void GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increme
     
     Size.x = 0.f;
     Size.y = 0.f;
+    DPrintf("ScreenCenter is now:%f;%f\n",ScreenCenter.x,ScreenCenter.y);
     igSetNextWindowPos(ScreenCenter, ImGuiCond_Always, Pivot);
     GUI->ProgressBar->CurrentPercentage += Increment;
     if (igBeginPopupModal(GUI->ProgressBar->DialogTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -607,11 +612,13 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager)
     int TreeNodeFlags;
     int DisableNode;
     char SmallBuffer[32];
+    char DeleteButtonId[32];
     
     if( !igBegin("Main Window", NULL, ImGuiWindowFlags_AlwaysAutoResize) ) {
         return;
     }
-    if( igCollapsingHeader_TreeNodeFlags("Animated RenderObjects List",0) ) {
+    TreeNodeFlags = RenderObjectManager->BSDList != NULL ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_None;
+    if( igCollapsingHeader_TreeNodeFlags("Animated RenderObjects List",TreeNodeFlags) ) {
         for(PackIterator = RenderObjectManager->BSDList; PackIterator; PackIterator = PackIterator->Next) {
             TreeNodeFlags = ImGuiTreeNodeFlags_None;
             if(  PackIterator == RenderObjectManagerGetSelectedBSDPack(RenderObjectManager) ) {
@@ -619,8 +626,15 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager)
             }
             if( igTreeNodeEx_Str(PackIterator->Name,TreeNodeFlags) ) {
                 igSameLine(0,-1);
-                if( igSmallButton("Remove") ) {
-                    if( RenderObjectManagerDeleteBSDPack(RenderObjectManager,PackIterator->Name) ) {
+                igText(PackIterator->GameVersion == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
+                igSameLine(0,-1);
+                //NOTE(Adriano):We do not allow for duplicated BSD however since we support both MOH and MOH:Underground then
+                //this could be confusing since the ID would for example be 2_1 for both versions when loading Mission 2 Level 1.
+                //In order to solve this we just append the GameVersion in order to obtain the final Id which will be
+                //in this example 2_1.BSD0 or 2_1.BSD1 thus solving any potential conflict.
+                sprintf(DeleteButtonId,"Remove##%i",PackIterator->GameVersion);
+                if( igSmallButton(DeleteButtonId) ) {
+                    if( RenderObjectManagerDeleteBSDPack(RenderObjectManager,PackIterator->Name,PackIterator->GameVersion) ) {
                         igTreePop();
                         break;
                     }
@@ -657,34 +671,66 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager)
             igText("No RenderObject selected.");
         } else {
             igText("ID:%u",CurrentRenderObject->Id);
+            igText("References RenderObject Id:%u",CurrentRenderObject->ReferencedRenderObjectId);
+            igText("Type:%i",CurrentRenderObject->Type);
+            igText("Current Animation Index:%i",CurrentRenderObject->CurrentAnimationIndex);
+            igText("NumAnimations:%i",CurrentRenderObject->NumAnimations);
+            igText("Current Rotation:%f;%f;%f",CurrentRenderObject->Rotation[0],CurrentRenderObject->Rotation[1],CurrentRenderObject->Rotation[2]);
+
         }
     }
     igEnd();
 }
-void GUIDrawMenuBar(RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem)
+void GUIDrawMenuBar(Engine_t *Engine)
 {
     if( !igBeginMainMenuBar() ) {
         return;
     }
     if (igBeginMenu("File",true)) {
         if( igMenuItem_Bool("Open",NULL,false,true) ) {
-            RenderObjectManagerOpenFileDialog(RenderObjectManager,VideoSystem);
+            RenderObjectManagerOpenFileDialog(Engine->RenderObjectManager,Engine->VideoSystem);
+        }
+        if( igMenuItem_Bool("Exit",NULL,false,true) ) {
+            Quit(Engine);
         }
 //         igSeparator();
         igEndMenu();
     }
     igEndMainMenuBar();
 }
-void GUIDraw(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Camera_t *Camera,VideoSystem_t *VideoSystem,
-             ComTimeInfo_t *TimeInfo,const Byte *KeyState)
+void GUIDrawErrorMessage(GUI_t *GUI)
 {
     ImVec2 ButtonSize;
+    if( !GUI->ErrorMessage ) {
+        return;
+    }
+    if( !GUI->ErrorDialogHandle ) {
+        igOpenPopup_Str("Error",0);
+        GUI->ErrorDialogHandle = 1;
+    }
+    ButtonSize.x = 120;
+    ButtonSize.y = 0;
+    GUIPrepareModalWindow();
+    if( igBeginPopupModal("Error",(bool *) &GUI->ErrorDialogHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
+        igText(GUI->ErrorMessage);
+        if (igButton("OK", ButtonSize) ) {
+            GUIPopWindow(GUI);
+            igCloseCurrentPopup();
+            GUI->ErrorDialogHandle = 0;
+            free(GUI->ErrorMessage);
+            GUI->ErrorMessage = NULL;
+        }
+        igEndPopup();
+    }
+}
+void GUIDraw(Engine_t *Engine)
+{
     
     GUIBeginFrame();
     
-    GUIDrawMenuBar(RenderObjectManager,VideoSystem);
+    GUIDrawMenuBar(Engine);
     
-    GUIDrawDebugOverlay(TimeInfo);
+//     GUIDrawDebugOverlay(TimeInfo);
     
 //     if( !GUI->NumActiveWindows ) {
 //         GUIDrawHelpOverlay();
@@ -692,32 +738,12 @@ void GUIDraw(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
 //         return;
 //     }
     
-    GUIRenderFileDialogs(GUI);
-    
-    if( GUI->ErrorMessage ) {
-        if( !GUI->ErrorDialogHandle ) {
-            igOpenPopup_Str("Error",0);
-            GUI->ErrorDialogHandle = 1;
-        }
-        ButtonSize.x = 120;
-        ButtonSize.y = 0;
-        GUIPrepareModalWindow();
-        if( igBeginPopupModal("Error",(bool *) &GUI->ErrorDialogHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
-            igText(GUI->ErrorMessage);
-            if (igButton("OK", ButtonSize) ) {
-                GUIPopWindow(GUI);
-                igCloseCurrentPopup();
-                GUI->ErrorDialogHandle = 0;
-                free(GUI->ErrorMessage);
-                GUI->ErrorMessage = NULL;
-            }
-            igEndPopup();
-        }
-    }
-    GUIDrawSceneWindow(RenderObjectManager,Camera,TimeInfo,KeyState);
-    GUIDrawMainWindow(GUI,RenderObjectManager);
-    GUIDrawDebugWindow(GUI,Camera,VideoSystem);
-    GUIDrawVideoSettingsWindow(GUI,VideoSystem);
+    GUIRenderFileDialogs(Engine->GUI);
+    GUIDrawErrorMessage(Engine->GUI);
+    GUIDrawSceneWindow(Engine->RenderObjectManager,Engine->Camera,Engine->TimeInfo,Engine->KeyState);
+    GUIDrawMainWindow(Engine->GUI,Engine->RenderObjectManager);
+    GUIDrawDebugWindow(Engine->GUI,Engine->Camera,Engine->VideoSystem);
+    GUIDrawVideoSettingsWindow(Engine->GUI,Engine->VideoSystem);
 //     igShowDemoWindow(NULL);
     GUIEndFrame();
 }
