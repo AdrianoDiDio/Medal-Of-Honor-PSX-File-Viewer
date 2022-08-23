@@ -264,7 +264,7 @@ void GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increme
     
     Size.x = 0.f;
     Size.y = 0.f;
-    DPrintf("ScreenCenter is now:%f;%f\n",ScreenCenter.x,ScreenCenter.y);
+
     igSetNextWindowPos(ScreenCenter, ImGuiCond_Always, Pivot);
     GUI->ProgressBar->CurrentPercentage += Increment;
     if (igBeginPopupModal(GUI->ProgressBar->DialogTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -463,10 +463,6 @@ void GUIDrawDebugWindow(GUI_t *GUI,Camera_t *Camera,VideoSystem_t *VideoSystem)
             igText("Display Informations");
             igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);
             igText("Refresh Rate:%i",VidConfigRefreshRate->IValue);
-            igSeparator();
-            igText("Camera Info");
-            igText("Position:%f;%f;%f",Camera->Position[0],Camera->Position[1],Camera->Position[2]);
-            igText("Rotation:%f;%f;%f",Camera->Rotation[PITCH],Camera->Rotation[YAW],Camera->Rotation[ROLL]);
         }
     }
     
@@ -578,26 +574,31 @@ void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
         //the window border.
         TextPosition.x += 2;
         igImageButton((void*)(long int) RenderObjectManager->FBOTexture, Size, UV0,UV1,0,TintColor,BorderColor);
+        igSetItemUsingMouseWheel();
         ImDrawList_AddText_Vec2(DrawList,TextPosition,0xFFFFFFFF,TimeInfo->FPSString,NULL);
+        if( igIsItemHovered(0) && IO->MouseWheel ) {
+            CameraZoom(Camera,-IO->MouseWheel);
+        }
         if( igIsItemActive() && igIsMouseDragging(ImGuiMouseButton_Left,0) && CurrentRenderObject != NULL) {
             //TODO(Adriano):Debugging code...this will be replaced by a call to RenderObjectManager to rotate the current
             //selected RenderObject.
-            CurrentRenderObject->Rotation[1] += IO->MouseDelta.x;
-            CurrentRenderObject->Rotation[0] -= IO->MouseDelta.y;
-            if ( CurrentRenderObject->Rotation[0] > 89.0f ) {
-                CurrentRenderObject->Rotation[0] = 89.0f;
-            }
-            if ( CurrentRenderObject->Rotation[0] < -89.0f ) {
-                CurrentRenderObject->Rotation[0] = -89.0f;
-            }
-
-            if ( CurrentRenderObject->Rotation[1] > 180.0f ) {
-                CurrentRenderObject->Rotation[1] -= 360.0f;
-            }
-
-            if ( CurrentRenderObject->Rotation[1] < -180.0f ) {
-                CurrentRenderObject->Rotation[1] += 360.0f;
-            }
+            CameraOnMouseEvent(Camera,IO->MouseDelta.x,IO->MouseDelta.y);
+//             CurrentRenderObject->Rotation[1] += IO->MouseDelta.x;
+//             CurrentRenderObject->Rotation[0] -= IO->MouseDelta.y;
+//             if ( CurrentRenderObject->Rotation[0] > 89.0f ) {
+//                 CurrentRenderObject->Rotation[0] = 89.0f;
+//             }
+//             if ( CurrentRenderObject->Rotation[0] < -89.0f ) {
+//                 CurrentRenderObject->Rotation[0] = -89.0f;
+//             }
+// 
+//             if ( CurrentRenderObject->Rotation[1] > 180.0f ) {
+//                 CurrentRenderObject->Rotation[1] -= 360.0f;
+//             }
+// 
+//             if ( CurrentRenderObject->Rotation[1] < -180.0f ) {
+//                 CurrentRenderObject->Rotation[1] += 360.0f;
+//             }
         }
         igEnd();
     }

@@ -445,7 +445,7 @@ void BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animati
 {
     vec3 Translation;
     mat4 Rotation;
-
+    int NumVertices;
     if( AnimationIndex < 0 || AnimationIndex > RenderObject->NumAnimations ) {
         DPrintf("BSDRenderObjectSetAnimationPose:Failed to set pose using index %i...Index is out of bounds\n",AnimationIndex);
         return;
@@ -454,14 +454,23 @@ void BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animati
         DPrintf("BSDRenderObjectSetAnimationPose:Pose is already set\n");
         return;
     }
-    Translation[0] = 0;
-    Translation[1] = 0;
-    Translation[2] = 0;
+    glm_vec3_zero(Translation);
     glm_mat4_identity(Rotation);
     RenderObject->CurrentAnimationIndex = AnimationIndex;
     BSDRenderObjectResetVertexTable(RenderObject);
+    glm_vec3_zero(RenderObject->Center);
     BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,RenderObject->AnimationList,
                                     RenderObject->CurrentVertexTable,Rotation,Translation,AnimationIndex);
+    NumVertices = 0;
+    for( int i = 0; i < RenderObject->NumVertexTables; i++ ) {
+        for( int j = 0; j < RenderObject->CurrentVertexTable[i].NumVertex; j++ ) {
+            RenderObject->Center[0] += RenderObject->CurrentVertexTable[i].VertexList[j].x;
+            RenderObject->Center[1] += RenderObject->CurrentVertexTable[i].VertexList[j].y;
+            RenderObject->Center[2] += RenderObject->CurrentVertexTable[i].VertexList[j].z;
+            NumVertices++;
+        }
+    }
+    glm_vec3_scale(RenderObject->Center,1.f/NumVertices,RenderObject->Center);
     if( !RenderObject->VAO ) {
         BSDRenderObjectGenerateVAO(RenderObject);
     } else {
@@ -494,14 +503,15 @@ void BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Came
     
     glm_mat4_identity(ModelMatrix);
     glm_mat4_identity(ModelViewMatrix);
-    Temp[0] = 0;
-    Temp[1] = 0;
-    Temp[2] = 0;
+    Temp[0] = -RenderObject->Center[0];
+    Temp[1] = -RenderObject->Center[1];
+    Temp[2] = -RenderObject->Center[2];
+    glm_vec3_rotate(Temp, DEGTORAD(180.f), GLM_XUP);    
     glm_translate(ModelMatrix,Temp);
     Temp[0] = 0;
     Temp[1] = 1;
     Temp[2] = 0;
-    glm_rotate(ModelMatrix,glm_rad(RenderObject->Rotation[1]), Temp);
+    glm_rotate(ModelMatrix,glm_rad(-90), Temp);
     Temp[0] = 1;
     Temp[1] = 0;
     Temp[2] = 0;
@@ -1355,10 +1365,10 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
     RenderObject->Scale[0] = (float) (RenderObjectElement.ScaleX  / 16 ) / 4096.f;
     RenderObject->Scale[1] = (float) (RenderObjectElement.ScaleY  / 16 ) / 4096.f;
     RenderObject->Scale[2] = (float) (RenderObjectElement.ScaleZ  / 16 ) / 4096.f;
+    
+    glm_vec3_zero(RenderObject->Center);
+    glm_vec3_zero(RenderObject->Rotation);
 
-    RenderObject->Rotation[0] = 0;
-    RenderObject->Rotation[1] = 0;
-    RenderObject->Rotation[2] = 0;
     if( !BSDLoadAnimationVertexData(RenderObject,RenderObjectElement.VertexTableIndexOffset,BSDEntryTable,BSDFile) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load vertex data\n");
         goto Failure;

@@ -39,14 +39,17 @@ typedef enum {
     CAMERA_DIRECTION_RIGHTWARD
 } CameraDirection_t;
 
+typedef struct PolarCoordinate_s {
+    float Radius;
+    float Theta;
+    float Phi;
+} PolarCoordinate_t;
+
 typedef struct Camera_s {
-    vec3    Position;
-    vec3    Rotation;
-    //Movements...
-    vec3	Right;
-    vec3	Forward;
-    
-    mat4    ViewMatrix;
+    PolarCoordinate_t   Position;
+    vec3                Center;
+    vec3                Eye;
+    mat4                ViewMatrix;
     
 } Camera_t;
 
@@ -56,8 +59,8 @@ extern Config_t *CameraMouseSensitivity;
 Camera_t    *CameraInit();
 void        CameraBeginFrame(Camera_t *Camera);
 void        CameraCheckKeyEvents(Camera_t *Camera,const Byte *KeyState,float Delta);
-void        CameraSetPosition(Camera_t *Camera,vec3 Position);
-void        CameraSetRotation(Camera_t *Camera,vec3 Rotation);
+void        CameraSetCenter(Camera_t *Camera,vec3 Center);
 void        CameraOnMouseEvent(Camera_t *Camera,int Dx,int Dy);
+void        CameraZoom(Camera_t *Camera,float Distance);
 void        CameraCleanUp(Camera_t *Camera);
 #endif//__CAMERA_H_
