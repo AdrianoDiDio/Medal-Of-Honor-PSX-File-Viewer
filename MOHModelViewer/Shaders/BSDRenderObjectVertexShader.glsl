@@ -22,8 +22,6 @@ void main()
     ourColor = vec3(aColor) / 255.f;
     TexCoord = vec2(aTexCoord) + vec2(0.001, 0.001);
     LightingEnabled = EnableLighting ? 1.0 : 0.0;
-//     CLUTCoord.x = CLUTX;
-//     CLUTCoord.y = CLUTY;
     CLUTCoord = vec2(aCLUTCoord) + vec2(0.001, 0.001);
     ourColorMode = aColorMode;
 }

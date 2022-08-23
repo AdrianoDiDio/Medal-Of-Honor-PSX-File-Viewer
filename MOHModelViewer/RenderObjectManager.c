@@ -69,8 +69,96 @@ void RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager)
     if( GUIFileDialogIsOpen(RenderObjectManager->BSDFileDialog) ) {
         RenderObjectManagerFreeDialogData(RenderObjectManager->BSDFileDialog);
     }
-    
+    if( GUIFileDialogIsOpen(RenderObjectManager->ExportFileDialog) ) {
+        RenderObjectManagerFreeDialogData(RenderObjectManager->ExportFileDialog);
+    }
     free(RenderObjectManager);
+}
+
+void RenderObjectManagerCloseDialog(GUI_t *GUI,GUIFileDialog_t *FileDialog)
+{
+    RenderObjectManagerFreeDialogData(FileDialog);
+    GUIFileDialogClose(GUI,FileDialog);
+
+}
+void RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
+                                               const char *Directory)
+{
+    char *EngineName;
+    char *PlyFile;
+    char *FileName;
+    char *TextureFile;
+    FILE *OutFile;
+    BSDRenderObjectPack_t *CurrentBSDPack;
+    BSDRenderObject_t *CurrentRenderObject;
+    
+    if( !RenderObjectManager ) {
+        DPrintf("RenderObjectManagerExportCurrentPoseToPly:Invalid RenderObjectManager\n");
+        return;
+    }
+    CurrentBSDPack = RenderObjectManagerGetSelectedBSDPack(RenderObjectManager);
+    if( !CurrentBSDPack ) {
+        DPrintf("RenderObjectManagerExportCurrentPoseToPly:Invalid BSD Pack\n");
+        return;
+    }
+    CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(RenderObjectManager);
+    if( !CurrentRenderObject ) {
+        DPrintf("RenderObjectManagerExportCurrentPoseToPly:Invalid RenderObject\n");
+        return;
+    }
+    asprintf(&EngineName,"%s",(CurrentBSDPack->GameVersion == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
+    asprintf(&FileName,"RenderObject-%u-%i-%s.ply",CurrentRenderObject->Id,CurrentRenderObject->CurrentAnimationIndex,EngineName);
+    asprintf(&PlyFile,"%s%c%s",Directory,PATH_SEPARATOR,FileName);
+    asprintf(&TextureFile,"%s%cvram.png",Directory,PATH_SEPARATOR);
+
+    DPrintf("RenderObjectManagerExportCurrentPoseToPly:Dumping it...%s\n",PlyFile);
+    OutFile = fopen(PlyFile,"w");
+    if( !OutFile ) {
+        DPrintf("RenderObjectManagerExportCurrentPoseToPly:Failed to open %s for writing\n",PlyFile);
+        return;
+    }
+    GUISetProgressBarDialogTitle(GUI,"Exporting Current Pose to Ply...");
+    GUIProgressBarIncrement(GUI,VideoSystem,10,"Writing BSD data.");
+    BSDRenderObjectExportPoseToPly(CurrentRenderObject,CurrentBSDPack->VRAM,CurrentRenderObject->CurrentAnimationIndex,OutFile);
+    GUIProgressBarIncrement(GUI,VideoSystem,95,"Exporting VRAM.");
+    VRAMSave(CurrentBSDPack->VRAM,TextureFile);
+    GUIProgressBarIncrement(GUI,VideoSystem,100,"Done.");
+    free(EngineName);
+    free(FileName);
+    free(PlyFile);
+    free(TextureFile);
+    fclose(OutFile);
+    return;
+}
+
+void RenderObjectManagerExportCurrentPose(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem,int OutputFormat)
+{
+    RenderObjectManagerDialogData_t *Exporter;
+    
+    if( !RenderObjectManager ) {
+        DPrintf("RenderObjectManagerExportCurrentPose:Invalid RenderObjectManager\n");
+        return;
+    }
+    if( !GUI ) {
+        DPrintf("RenderObjectManagerExportCurrentPose:Invalid GUI data\n");
+        return;
+    }
+    if( !RenderObjectManager->SelectedBSDPack ) {
+        DPrintf("RenderObjectManagerExportCurrentPose:No BSD pack selected\n");
+        return;
+    }
+    Exporter = malloc(sizeof(RenderObjectManagerDialogData_t));
+    if( !Exporter ) {
+        DPrintf("RenderObjectManagerExportCurrentPose:Couldn't allocate data for the exporter\n");
+        return;
+    }
+    Exporter->RenderObjectManager = RenderObjectManager;
+    Exporter->VideoSystem = VideoSystem;
+    Exporter->OutputFormat = OutputFormat;
+
+    GUIFileDialogSetTitle(RenderObjectManager->ExportFileDialog,"Export Current Pose");
+    GUIFileDialogOpenWithUserData(RenderObjectManager->ExportFileDialog,Exporter);
+
 }
 
 const char *RenderObjectManagerErrorToString(int ErrorCode)
@@ -304,6 +392,34 @@ int RenderObjectManagerLoadPack(RenderObjectManager_t *RenderObjectManager,GUI_t
     free(BaseName);
     return Result;
 }
+
+void RenderObjectManagerOnExportDirSelect(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Directory,const char *File,void *UserData)
+{
+    RenderObjectManagerDialogData_t *Exporter;
+    RenderObjectManager_t *RenderObjectManager;
+    Exporter = (RenderObjectManagerDialogData_t *) UserData;
+    RenderObjectManager = Exporter->RenderObjectManager;
+        
+    GUIProgressBarBegin(GUI,"Exporting...");
+
+    switch( Exporter->OutputFormat ) {
+        case RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY:
+            RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager,GUI,Exporter->VideoSystem,Directory);
+            break;
+        default:
+            DPrintf("RenderObjectManagerOnExportDirSelect:Invalid output format\n");
+            break;
+    }
+        
+    GUIProgressBarEnd(GUI,Exporter->VideoSystem);
+    GUIFileDialogClose(GUI,FileDialog);
+    free(Exporter);
+}
+
+void RenderObjectManagerOnExportDirCancel(GUIFileDialog_t *FileDialog,GUI_t *GUI)
+{
+    RenderObjectManagerCloseDialog(GUI,FileDialog);
+}
 void RenderObjectManagerOnBSDFileDialogSelect(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Directory,const char *File,void *UserData)
 {
     RenderObjectManagerDialogData_t *Data;
@@ -315,8 +431,7 @@ void RenderObjectManagerOnBSDFileDialogSelect(GUIFileDialog_t *FileDialog,GUI_t 
 
 void RenderObjectManagerOnBSDFileDialogCancel(GUIFileDialog_t *FileDialog,GUI_t *GUI)
 {
-    RenderObjectManagerFreeDialogData(FileDialog);
-    GUIFileDialogClose(GUI,FileDialog);
+    RenderObjectManagerCloseDialog(GUI,FileDialog);
 }
 
 void RenderObjectManagerDrawPack(BSDRenderObjectPack_t *RenderObjectPack,Camera_t *Camera,
@@ -423,5 +538,9 @@ RenderObjectManager_t *RenderObjectManagerInit(GUI_t *GUI)
                                                                "BSD files(*.BSD){.BSD}",
                                                                RenderObjectManagerOnBSDFileDialogSelect,
                                                                RenderObjectManagerOnBSDFileDialogCancel);
+    RenderObjectManager->ExportFileDialog = GUIFileDialogRegister(GUI,"Export Current Pose",NULL,
+                                                           RenderObjectManagerOnExportDirSelect,
+                                                           RenderObjectManagerOnExportDirCancel);
+
     return RenderObjectManager;
 }

@@ -604,7 +604,7 @@ void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
     igPopStyleVar(1);
 }
 
-void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager)
+void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem)
 {
     BSDRenderObjectPack_t *PackIterator;
     BSDRenderObject_t *RenderObjectIterator;
@@ -613,6 +613,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager)
     int DisableNode;
     char SmallBuffer[32];
     char DeleteButtonId[32];
+    ImVec2 ZeroSize;
     
     if( !igBegin("Main Window", NULL, ImGuiWindowFlags_AlwaysAutoResize) ) {
         return;
@@ -676,7 +677,13 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager)
             igText("Current Animation Index:%i",CurrentRenderObject->CurrentAnimationIndex);
             igText("NumAnimations:%i",CurrentRenderObject->NumAnimations);
             igText("Current Rotation:%f;%f;%f",CurrentRenderObject->Rotation[0],CurrentRenderObject->Rotation[1],CurrentRenderObject->Rotation[2]);
-
+            igSeparator();
+            igText("Export current pose");
+            ZeroSize.x = 0.f;
+            ZeroSize.y = 0.f;
+            if( igButton("Export to Ply",ZeroSize) ) {
+                RenderObjectManagerExportCurrentPose(RenderObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY);
+            }
         }
     }
     igEnd();
@@ -711,7 +718,7 @@ void GUIDrawErrorMessage(GUI_t *GUI)
     ButtonSize.x = 120;
     ButtonSize.y = 0;
     GUIPrepareModalWindow();
-    if( igBeginPopupModal("Error",(bool *) &GUI->ErrorDialogHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
+    if( igBeginPopupModal("Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
         igText(GUI->ErrorMessage);
         if (igButton("OK", ButtonSize) ) {
             GUIPopWindow(GUI);
@@ -741,7 +748,7 @@ void GUIDraw(Engine_t *Engine)
     GUIRenderFileDialogs(Engine->GUI);
     GUIDrawErrorMessage(Engine->GUI);
     GUIDrawSceneWindow(Engine->RenderObjectManager,Engine->Camera,Engine->TimeInfo,Engine->KeyState);
-    GUIDrawMainWindow(Engine->GUI,Engine->RenderObjectManager);
+    GUIDrawMainWindow(Engine->GUI,Engine->RenderObjectManager,Engine->VideoSystem);
     GUIDrawDebugWindow(Engine->GUI,Engine->Camera,Engine->VideoSystem);
     GUIDrawVideoSettingsWindow(Engine->GUI,Engine->VideoSystem);
 //     igShowDemoWindow(NULL);

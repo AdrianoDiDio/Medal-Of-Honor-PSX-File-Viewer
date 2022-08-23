@@ -36,6 +36,11 @@ typedef enum {
     RENDER_OBJECT_MANAGER_BSD_ERROR_VRAM_INITIALIZATION = -4 
 } RenderObjectManagerBSDErrorCode;
 
+typedef enum {
+    RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY,
+    RENDER_OBJECT_MANAGER_EXPORT_FORMAT_UNKNOWN
+} LevelManagerExportFormats_t;
+
 //NOTE(Adriano):A single BSD file that gets loaded together with his corresponding TAF goes
 //              here...this allows for multiple BSD files to be loaded without overlapping VRAMs.
 typedef struct BSDRenderObjectPack_s {
@@ -55,6 +60,8 @@ typedef struct RenderObjectManager_s {
     BSDRenderObject_t       *SelectedRenderObject;
     
     GUIFileDialog_t         *BSDFileDialog;
+    GUIFileDialog_t         *ExportFileDialog;
+    
     unsigned int            FBO;
     unsigned int            FBOTexture;
     unsigned int            RBO;
@@ -63,11 +70,14 @@ typedef struct RenderObjectManager_s {
 typedef struct RenderObjectManagerDialogData_s {
     RenderObjectManager_t           *RenderObjectManager;
     VideoSystem_t                   *VideoSystem;
+    int                             OutputFormat;
 } RenderObjectManagerDialogData_t;
 
 RenderObjectManager_t   *RenderObjectManagerInit(GUI_t *GUI);
 int                     RenderObjectManagerDeleteBSDPack(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName,int GameVersion);
 void                    RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem);
+void                    RenderObjectManagerExportCurrentPose(RenderObjectManager_t *RenderObjectManager,
+                                                             GUI_t *GUI,VideoSystem_t *VideoSystem,int OutputFormat);
 void                    RenderObjectManagerDrawAll(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera);
 void                    RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager);
 int                     RenderObjectManagerLoadPack(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,
