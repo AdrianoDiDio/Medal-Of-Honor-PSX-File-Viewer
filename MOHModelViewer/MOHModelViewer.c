@@ -315,9 +315,6 @@ void EngineCheckEvents(Engine_t *Engine)
                 BSDRenderObjectSetAnimationPose(CurrentRenderObject,NextPose % CurrentRenderObject->NumAnimations);
             }
         }
-        if( Event.type == SDL_MOUSEMOTION ) {
-//             CameraOnMouseEvent(Engine->Camera,Event.motion.xrel,Event.motion.yrel);
-        }
         GUIProcessEvent(Engine->GUI,&Event);
     }
 }
@@ -339,7 +336,7 @@ void ComUpdateDelta(ComTimeInfo_t *TimeInfo)
     // Update our FPS counter if a second has passed since
     // we last recorded
     if (TimeInfo->LastFPSTime >= 1000 ) {
-        sprintf(TimeInfo->FPSString,"FPS:%i\nMs: %.2f ms\nLast FPS Time:%f\nDelta:%f",
+        sprintf(TimeInfo->FPSString,"FPS:%i\nMs: %.3f ms\nLast FPS Time:%.3f\nDelta:%.3f",
                 TimeInfo->FPS,
                 1000.f/(float)TimeInfo->FPS,
                 TimeInfo->LastFPSTime,TimeInfo->Delta);

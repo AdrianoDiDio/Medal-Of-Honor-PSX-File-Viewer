@@ -315,6 +315,12 @@ void ConfigRegisterDefaultSettings()
     ConfigRegister("GUIFont","Fonts/DroidSans.ttf","Sets the file to be used as the GUI font,if not valid the application will use the default one");
     ConfigRegister("GUIFontSize","14.f",NULL);
     ConfigRegister("GUIShowFPS","1",NULL);
+    
+    ConfigRegister("EnableWireFrameMode","0","Draw the model surfaces as lines");
+
+    ConfigRegister("EnableAmbientLight","1","When enabled the texture color is interpolated with the surface color to simulate lights on \n"
+                                                    "surfaces");
+
 }
 void ConfigDumpSettings()
 {

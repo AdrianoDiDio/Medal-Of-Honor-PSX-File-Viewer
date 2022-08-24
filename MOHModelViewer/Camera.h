@@ -47,7 +47,6 @@ typedef struct PolarCoordinate_s {
 
 typedef struct Camera_s {
     PolarCoordinate_t   Position;
-    vec3                Center;
     vec3                Eye;
     mat4                ViewMatrix;
     
@@ -58,8 +57,7 @@ extern Config_t *CameraMouseSensitivity;
 
 Camera_t    *CameraInit();
 void        CameraBeginFrame(Camera_t *Camera);
-void        CameraCheckKeyEvents(Camera_t *Camera,const Byte *KeyState,float Delta);
-void        CameraSetCenter(Camera_t *Camera,vec3 Center);
+void        CameraReset(Camera_t *Camera);
 void        CameraOnMouseEvent(Camera_t *Camera,int Dx,int Dy);
 void        CameraZoom(Camera_t *Camera,float Distance);
 void        CameraCleanUp(Camera_t *Camera);

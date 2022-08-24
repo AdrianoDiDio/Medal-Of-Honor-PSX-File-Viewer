@@ -21,6 +21,9 @@
 #include "RenderObjectManager.h"
 #include "MOHModelViewer.h"
 
+Config_t *EnableWireFrameMode;
+Config_t *EnableAmbientLight;
+
 void RenderObjectManagerFreeBSDRenderObjectPack(BSDRenderObjectPack_t *BSDRenderObjectPack)
 {
     if( !BSDRenderObjectPack ) {
@@ -88,6 +91,7 @@ void RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager_t *RenderObje
     char *PlyFile;
     char *FileName;
     char *TextureFile;
+    char *BSDName;
     FILE *OutFile;
     BSDRenderObjectPack_t *CurrentBSDPack;
     BSDRenderObject_t *CurrentRenderObject;
@@ -109,7 +113,8 @@ void RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager_t *RenderObje
     asprintf(&EngineName,"%s",(CurrentBSDPack->GameVersion == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
     asprintf(&FileName,"RenderObject-%u-%i-%s.ply",CurrentRenderObject->Id,CurrentRenderObject->CurrentAnimationIndex,EngineName);
     asprintf(&PlyFile,"%s%c%s",Directory,PATH_SEPARATOR,FileName);
-    asprintf(&TextureFile,"%s%cvram.png",Directory,PATH_SEPARATOR);
+    BSDName = SwitchExt(CurrentBSDPack->Name,"");
+    asprintf(&TextureFile,"%s%cvram-%s.png",Directory,PATH_SEPARATOR,BSDName);
 
     DPrintf("RenderObjectManagerExportCurrentPoseToPly:Dumping it...%s\n",PlyFile);
     OutFile = fopen(PlyFile,"w");
@@ -127,6 +132,7 @@ void RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager_t *RenderObje
     free(FileName);
     free(PlyFile);
     free(TextureFile);
+    free(BSDName);
     fclose(OutFile);
     return;
 }
@@ -541,6 +547,8 @@ RenderObjectManager_t *RenderObjectManagerInit(GUI_t *GUI)
     RenderObjectManager->ExportFileDialog = GUIFileDialogRegister(GUI,"Export Current Pose",NULL,
                                                            RenderObjectManagerOnExportDirSelect,
                                                            RenderObjectManagerOnExportDirCancel);
+    EnableWireFrameMode = ConfigGet("EnableWireFrameMode");
+    EnableAmbientLight = ConfigGet("EnableAmbientLight");
 
     return RenderObjectManager;
 }

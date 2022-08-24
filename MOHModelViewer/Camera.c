@@ -35,15 +35,13 @@ void CameraCleanUp(Camera_t *Camera)
 
 void CameraOnAngleUpdate(Camera_t *Camera)
 {
-     float PolarMax;
-     
-     PolarMax = M_PI / 2.0f;
-    if (Camera->Position.Theta > PolarMax) {
-        Camera->Position.Theta = PolarMax;
+    float ThetaMax;
+    ThetaMax = M_PI / 2.0f;
+    if (Camera->Position.Theta > ThetaMax) {
+        Camera->Position.Theta = ThetaMax;
     }
-
-    if (Camera->Position.Theta < -PolarMax) {
-        Camera->Position.Theta = -PolarMax;
+    if (Camera->Position.Theta < -ThetaMax) {
+        Camera->Position.Theta = -ThetaMax;
     }
 }
 void CameraZoom(Camera_t *Camera,float Distance)
@@ -58,59 +56,15 @@ void CameraOnMouseEvent(Camera_t *Camera,int Dx,int Dy)
     CameraOnAngleUpdate(Camera);
 }
 
-void CameraUpdate(Camera_t *Camera,int Orientation, float Delta)
-{
-    float CamSpeed;
-    vec3 Forward;
-    vec3 Right;
-
-    
-    CamSpeed = CameraSpeed->FValue * Delta * 128.f;
-    
-}
-void CameraCheckKeyEvents(Camera_t *Camera,const Byte *KeyState,float Delta)
-{
-    return;
-    if( KeyState[SDL_SCANCODE_W] ) {
-        CameraUpdate(Camera,CAMERA_DIRECTION_FORWARD,Delta);
-    }
-    if( KeyState[SDL_SCANCODE_S] ) {
-        CameraUpdate(Camera,CAMERA_DIRECTION_BACKWARD,Delta);
-    }
-    if( KeyState[SDL_SCANCODE_A] ) {
-        CameraUpdate(Camera,CAMERA_DIRECTION_LEFTWARD,Delta);
-    }
-    if( KeyState[SDL_SCANCODE_D] ) {
-        CameraUpdate(Camera,CAMERA_DIRECTION_RIGHTWARD,Delta);
-    }
-    if( KeyState[SDL_SCANCODE_SPACE] ) {
-        CameraUpdate(Camera,CAMERA_DIRECTION_UPWARD,Delta);
-    }
-    if( KeyState[SDL_SCANCODE_Z] ) {
-        CameraUpdate(Camera,CAMERA_DIRECTION_DOWNWARD,Delta);
-    }
-    if( KeyState[SDL_SCANCODE_UP] ) {
-        CameraUpdate(Camera,CAMERA_LOOK_UP,Delta);
-    }
-    if( KeyState[SDL_SCANCODE_DOWN] ) {
-        CameraUpdate(Camera,CAMERA_LOOK_DOWN,Delta);
-    }
-    if( KeyState[SDL_SCANCODE_LEFT] ) {
-        CameraUpdate(Camera,CAMERA_LOOK_LEFT,Delta);
-    }
-    if( KeyState[SDL_SCANCODE_RIGHT] ) {
-        CameraUpdate(Camera,CAMERA_LOOK_RIGHT,Delta);
-    }
-}
 void CameraUpdateViewMatrix(Camera_t *Camera)
 {
     vec3 Direction;
     glm_mat4_identity(Camera->ViewMatrix);
-    Camera->Eye[0] = Camera->Center[0] + Camera->Position.Radius * cos(Camera->Position.Theta) * cos(Camera->Position.Phi);
-    Camera->Eye[1] = Camera->Center[1] + Camera->Position.Radius * sin(Camera->Position.Theta);
-    Camera->Eye[2] = Camera->Center[2] + Camera->Position.Radius * cos(Camera->Position.Theta) * sin(Camera->Position.Phi);
+    Camera->Eye[0] = Camera->Position.Radius * cos(Camera->Position.Theta) * cos(Camera->Position.Phi);
+    Camera->Eye[1] = Camera->Position.Radius * sin(Camera->Position.Theta);
+    Camera->Eye[2] = Camera->Position.Radius * cos(Camera->Position.Theta) * sin(Camera->Position.Phi);
     
-    glm_vec3_sub(Camera->Center,Camera->Eye,Direction);
+    glm_vec3_negate_to(Camera->Eye,Direction);
     glm_vec3_normalize(Direction);
     glm_vec3_add(Direction,Camera->Eye,Direction);
     glm_lookat(Camera->Eye,Direction,GLM_YUP,Camera->ViewMatrix);
@@ -121,14 +75,16 @@ void CameraBeginFrame(Camera_t *Camera)
     CameraUpdateViewMatrix(Camera);
 } 
 
-void CameraSetCenter(Camera_t *Camera,vec3 Center)
+void CameraReset(Camera_t *Camera)
 {
     if( !Camera ) {
-        DPrintf("CameraSetCenter:Invalid camera\n");
+        DPrintf("CameraReset:Invalid camera\n");
         return;
     }
-    glm_vec3_copy(Center,Camera->Center);
-    CameraUpdateViewMatrix(Camera);
+    Camera->Position.Radius = 150.f;
+    Camera->Position.Theta = 0.f;
+    Camera->Position.Phi = 0.f;
+    CameraOnAngleUpdate(Camera);
 }
 Camera_t *CameraInit()
 {
@@ -139,14 +95,7 @@ Camera_t *CameraInit()
         printf("CameraInit:Failed to allocate memory for struct\n");
         return NULL;
     }
-    
-    glm_vec3_zero(Camera->Center);
-    Camera->Position.Radius = 100.f;
-    Camera->Position.Theta = 0.f;
-    Camera->Position.Phi = 0.f;
-
-
-    CameraOnAngleUpdate(Camera);
+    CameraReset(Camera);
     CameraSpeed = ConfigGet("CameraSpeed");
     CameraMouseSensitivity = ConfigGet("CameraMouseSensitivity");
     return Camera;

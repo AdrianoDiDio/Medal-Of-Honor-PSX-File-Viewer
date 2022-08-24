@@ -73,6 +73,9 @@ typedef struct RenderObjectManagerDialogData_s {
     int                             OutputFormat;
 } RenderObjectManagerDialogData_t;
 
+extern Config_t *EnableWireFrameMode;
+extern Config_t *EnableAmbientLight;
+
 RenderObjectManager_t   *RenderObjectManagerInit(GUI_t *GUI);
 int                     RenderObjectManagerDeleteBSDPack(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName,int GameVersion);
 void                    RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem);

@@ -10,6 +10,10 @@ Table of contents
       - [Build](#build)
       - [Usage](#usage)
       - [Credits](#credits)
+    + [MOHModelViewer](#mohmodelviewer)
+      - [Build](#build)
+      - [Usage](#usage)
+      - [Credits](#credits)
     + [RSC Extractor](#rsc-extractor)
       - [Build](#build-1)
       - [Run](#run)
@@ -100,6 +104,13 @@ using MOHLevelViewer.*
 *Screenshot taken from the first Mission of Medal Of
 Honor:Underground using MOHLevelViewer.*
 
+Some sample screenshot taken from MOHModelViewer:  
+
+<img src="Images/MOHModelViewer_Jimmy_P1_MOHU.png" width="600" />
+
+*Screenshot taken from Medal Of Honor:Underground showing GI_P1.BSD Model
+using MOHModelViewer.*
+
 ## Programs
 ### MOHLevelViewer
 MOHLevelViewer is able to load and render any level from
@@ -137,6 +148,42 @@ MOHLevelViewer uses the following libraries:
 **IMGUI**: https://github.com/ocornut/imgui/  
 **IMGUI_FileDialog**:  https://github.com/aiekick/ImGuiFileDialog  
 **LibSampleRate**: https://github.com/libsndfile/libsamplerate  
+The font file shipped with the program is:  
+**DroidSans.ttf**: https://www.fontsquirrel.com/fonts/droid-sans
+### MOHModelViewer
+MOHModelViewer is able to load and render any animated model from
+the games Medal Of Honor and Medal Of Honor:Underground.  
+At the moment only static poses are supported and the models are not
+animated.    
+It is able to load any model contained in any BSD file and export any
+animation pose to a ply file  
+
+#### Build
+Before building make sure to fetch all the submodules by typing:  
+> git submodule --init --recursive  
+
+then type:  
+
+> cd MOHModelViewer && mkdir Build && cmake .. && cmake --build . --target
+MOHModelViewer
+
+to build it.  
+**NOTE: Make sure to move the shader folder in the same directory as the
+executable, otherwise the program will display only the GUI and not the
+levels.**  
+#### Usage
+> ./MOHModelViewer `<Optional Game Directory>`  
+
+**NOTE: The configuration is stored in the User preference folder (.local/
+share/MOHModelViewer on Linux and %AppData% on Windows).**  
+#### Credits
+MOHModelViewer uses the following libraries:  
+
+**SDL2**: https://www.libsdl.org/  
+**zlib**: https://github.com/madler/zlib  
+**libpng**:http://www.libpng.org/  
+**IMGUI**: https://github.com/ocornut/imgui/  
+**IMGUI_FileDialog**:  https://github.com/aiekick/ImGuiFileDialog  
 The font file shipped with the program is:  
 **DroidSans.ttf**: https://www.fontsquirrel.com/fonts/droid-sans
 

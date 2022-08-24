@@ -501,6 +501,12 @@ void BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Came
         return;
     }
     
+    if( EnableWireFrameMode->IValue ) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    } else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+    
     glm_mat4_identity(ModelMatrix);
     glm_mat4_identity(ModelViewMatrix);
     Temp[0] = -RenderObject->Center[0];
@@ -534,8 +540,7 @@ void BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Came
     TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
     glUniform1i(TextureIndexId, 0);
     glUniform1i(PaletteTextureId,  1);
-    glUniform1i(EnableLightingId, 1);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glUniform1i(EnableLightingId, EnableAmbientLight->IValue);
     glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
     glActiveTexture(GL_TEXTURE0 + 1);
@@ -550,6 +555,9 @@ void BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Came
     glDisable(GL_BLEND);
     glBlendColor(1.f, 1.f, 1.f, 1.f);
     glUseProgram(0);
+    if( EnableWireFrameMode->IValue ) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 }
 
 void BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)

@@ -30,37 +30,34 @@ typedef void (*FileDialogSelectCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GU
 typedef void (*FileDialogCancelCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI);
 
 typedef struct GUIProgressBar_s {
-    ImGuiContext *Context;
-    float CurrentPercentage;
-    int IsOpen;
-    char *DialogTitle;
+    ImGuiContext    *Context;
+    float           CurrentPercentage;
+    int             IsOpen;
+    char            *DialogTitle;
 } GUIProgressBar_t;
 
 typedef struct GUIFileDialog_s {
-    char *WindowTitle;
-    char *Key;
-    char *Filters;
-    ImGuiFileDialog *Window;
-    FileDialogSelectCallback_t OnElementSelected;
-    FileDialogCancelCallback_t OnDialogCancelled;    
-    struct GUIFileDialog_s *Next;
+    char                        *WindowTitle;
+    char                        *Key;
+    char                        *Filters;
+    ImGuiFileDialog             *Window;
+    FileDialogSelectCallback_t  OnElementSelected;
+    FileDialogCancelCallback_t  OnDialogCancelled;    
+    struct GUIFileDialog_s      *Next;
 } GUIFileDialog_t;
 typedef struct GUI_s {
-    ImGuiContext *DefaultContext;
+    ImGuiContext        *DefaultContext;
     
-    GUIFileDialog_t *FileDialogList;
-    int NumRegisteredFileDialog;
+    GUIFileDialog_t     *FileDialogList;
+    int                 NumRegisteredFileDialog;
     
-    char *ConfigFilePath;
-    bool DebugWindowHandle;
-    bool VideoSettingsWindowHandle;
-    bool LevelSelectWindowHandle;
-    int NumActiveWindows;
-    GUIProgressBar_t *ProgressBar;
-    char *ErrorMessage;
-    int     ErrorDialogHandle;
-    ImGuiID ErrorID;
-    
+    char                *ConfigFilePath;
+    bool                DebugWindowHandle;
+    bool                VideoSettingsWindowHandle;
+    int                 NumActiveWindows;
+    GUIProgressBar_t    *ProgressBar;
+    char                *ErrorMessage;
+    int                 ErrorDialogHandle;    
 } GUI_t;
 
 typedef struct VSyncSettings_s {
@@ -93,7 +90,7 @@ void                GUIFileDialogOpen(GUIFileDialog_t *FileDialog);
 void                GUIFileDialogOpenWithUserData(GUIFileDialog_t *FileDialog,void *UserData);
 void                *GUIFileDialogGetUserData(GUIFileDialog_t *FileDialog);
 void                GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *FileDialog);
-int                 GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
+void                GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
 void                GUIProgressBarBegin(GUI_t *GUI,const char *Title);
 void                GUIProgressBarEnd(GUI_t *GUI,VideoSystem_t *VideoSystem);
 void                GUIProgressBarReset(GUI_t *GUI);
