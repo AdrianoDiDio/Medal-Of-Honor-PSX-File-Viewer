@@ -170,9 +170,9 @@ MOHModelViewer
 to build it.  
 **NOTE: Make sure to move the shader folder in the same directory as the
 executable, otherwise the program will display only the GUI and not the
-levels.**  
+models.**  
 #### Usage
-> ./MOHModelViewer `<Optional Game Directory>`  
+> ./MOHModelViewer `<Optional BSD file>`  
 
 **NOTE: The configuration is stored in the User preference folder (.local/
 share/MOHModelViewer on Linux and %AppData% on Windows).**  
