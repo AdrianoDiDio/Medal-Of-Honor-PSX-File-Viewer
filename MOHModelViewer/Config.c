@@ -309,7 +309,6 @@ void ConfigRegisterDefaultSettings()
     ConfigRegister("VideoVSync","-1","Enable or disable vsync.\nPossible values are:-1 enable adaptive VSync (where supported),\n"
                     "0 Disables it and 1 enables standard VSync.");
     
-    ConfigRegister("CameraSpeed","30.f",NULL);
     ConfigRegister("CameraMouseSensitivity","1.f",NULL);
     
     ConfigRegister("GUIFont","Fonts/DroidSans.ttf","Sets the file to be used as the GUI font,if not valid the application will use the default one");

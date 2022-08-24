@@ -21,8 +21,6 @@
 #include "Camera.h" 
 #include "MOHModelViewer.h"
 
-
-Config_t *CameraSpeed;
 Config_t *CameraMouseSensitivity;
 
 void CameraCleanUp(Camera_t *Camera)
@@ -96,7 +94,6 @@ Camera_t *CameraInit()
         return NULL;
     }
     CameraReset(Camera);
-    CameraSpeed = ConfigGet("CameraSpeed");
     CameraMouseSensitivity = ConfigGet("CameraMouseSensitivity");
     return Camera;
 }

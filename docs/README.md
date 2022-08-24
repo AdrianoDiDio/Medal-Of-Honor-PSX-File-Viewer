@@ -108,7 +108,7 @@ Some sample screenshot taken from MOHModelViewer:
 
 <img src="Images/MOHModelViewer_Jimmy_P1_MOHU.png" width="600" />
 
-*Screenshot taken from Medal Of Honor:Underground showing GI_P1.BSD Model
+*Screenshot taken from Medal Of Honor:Underground showing JIMMY_P1.BSD Model
 using MOHModelViewer.*
 
 ## Programs

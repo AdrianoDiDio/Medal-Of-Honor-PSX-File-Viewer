@@ -281,7 +281,7 @@ void BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject)
     for( i = 0; i < RenderObject->NumFaces; i++ ) {
         CurrentFace = &RenderObject->FaceList[i];
         VRAMPage = CurrentFace->TexInfo & 0x1F;
-        ColorMode = (CurrentFace->TexInfo & 0xC0) >> 7;
+        ColorMode = (CurrentFace->TexInfo >> 7) & 0x3;
         CLUTPosX = (CurrentFace->CLUT << 4) & 0x3F0;
         CLUTPosY = (CurrentFace->CLUT >> 6) & 0x1ff;
         CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);

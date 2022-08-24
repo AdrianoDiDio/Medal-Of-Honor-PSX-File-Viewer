@@ -345,6 +345,9 @@ void GUIDrawVideoSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
                         }
                     }
                 }
+                if( IsSelected ) {
+                    igSetItemDefaultFocus();
+                }
           
             }
             igEndCombo();
@@ -511,7 +514,9 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
         if( igButton("Reset Camera Position",ZeroSize) ) {
             CameraReset(Camera);
         }
-
+        if( igSliderFloat("Camera Mouse Sensitivity",&CameraMouseSensitivity->FValue,1.f,20.f,"%.2f",0) ) {
+            ConfigSetNumber("CameraMouseSensitivity",CameraMouseSensitivity->FValue);
+        }
     }
     if( igCollapsingHeader_TreeNodeFlags("Settings",ImGuiTreeNodeFlags_DefaultOpen) ) {
         if( GUICheckBoxWithTooltip("WireFrame Mode",(bool *) &EnableWireFrameMode->IValue,EnableWireFrameMode->Description) ) {
@@ -592,6 +597,9 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                         if( CurrentRenderObject->CurrentAnimationIndex != i ) {
                             BSDRenderObjectSetAnimationPose(CurrentRenderObject,i);
                         }
+                    }
+                    if( IsSelected ) {
+                        igSetItemDefaultFocus();
                     }
                 }
                 igEndCombo();
