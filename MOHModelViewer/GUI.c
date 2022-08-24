@@ -464,25 +464,7 @@ void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
             CameraZoom(Camera,-IO->MouseWheel);
         }
         if( igIsItemActive() && igIsMouseDragging(ImGuiMouseButton_Left,0) && CurrentRenderObject != NULL) {
-            //TODO(Adriano):Debugging code...this will be replaced by a call to RenderObjectManager to rotate the current
-            //selected RenderObject.
             CameraOnMouseEvent(Camera,IO->MouseDelta.x,IO->MouseDelta.y);
-//             CurrentRenderObject->Rotation[1] += IO->MouseDelta.x;
-//             CurrentRenderObject->Rotation[0] -= IO->MouseDelta.y;
-//             if ( CurrentRenderObject->Rotation[0] > 89.0f ) {
-//                 CurrentRenderObject->Rotation[0] = 89.0f;
-//             }
-//             if ( CurrentRenderObject->Rotation[0] < -89.0f ) {
-//                 CurrentRenderObject->Rotation[0] = -89.0f;
-//             }
-// 
-//             if ( CurrentRenderObject->Rotation[1] > 180.0f ) {
-//                 CurrentRenderObject->Rotation[1] -= 360.0f;
-//             }
-// 
-//             if ( CurrentRenderObject->Rotation[1] < -180.0f ) {
-//                 CurrentRenderObject->Rotation[1] += 360.0f;
-//             }
         }
         igEnd();
     }
@@ -587,7 +569,6 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
             igText("Type:%i",CurrentRenderObject->Type);
             igText("Current Animation Index:%i",CurrentRenderObject->CurrentAnimationIndex);
             igText("NumAnimations:%i",CurrentRenderObject->NumAnimations);
-            igText("Current Rotation:%f;%f;%f",CurrentRenderObject->Rotation[0],CurrentRenderObject->Rotation[1],CurrentRenderObject->Rotation[2]);
             sprintf(SmallBuffer,"%i",CurrentRenderObject->CurrentAnimationIndex + 1);
             if( igBeginCombo("Animation Pose",SmallBuffer,0) ) {
                 for (i = 0; i < CurrentRenderObject->NumAnimations; i++) {

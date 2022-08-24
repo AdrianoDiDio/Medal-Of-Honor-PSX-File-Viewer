@@ -209,7 +209,6 @@ typedef struct BSDRenderObject_s {
     BSDAnimation_t              *AnimationList;
     int                         NumAnimations;
     int                         CurrentAnimationIndex;
-    vec3                        Rotation;
     vec3                        Scale;
     vec3                        Center;
     VAO_t                       *VAO;

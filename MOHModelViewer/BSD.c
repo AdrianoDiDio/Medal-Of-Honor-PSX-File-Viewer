@@ -518,14 +518,6 @@ void BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Came
     Temp[1] = 1;
     Temp[2] = 0;
     glm_rotate(ModelMatrix,glm_rad(-90), Temp);
-    Temp[0] = 1;
-    Temp[1] = 0;
-    Temp[2] = 0;
-    glm_rotate(ModelMatrix,glm_rad(RenderObject->Rotation[0]), Temp);
-    Temp[0] = 0;
-    Temp[1] = 0;
-    Temp[2] = 1;
-    glm_rotate(ModelMatrix,glm_rad(RenderObject->Rotation[2]), Temp);
     glm_scale(ModelMatrix,RenderObject->Scale);
     glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
     glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
@@ -1375,7 +1367,6 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
     RenderObject->Scale[2] = (float) (RenderObjectElement.ScaleZ  / 16 ) / 4096.f;
     
     glm_vec3_zero(RenderObject->Center);
-    glm_vec3_zero(RenderObject->Rotation);
 
     if( !BSDLoadAnimationVertexData(RenderObject,RenderObjectElement.VertexTableIndexOffset,BSDEntryTable,BSDFile) ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to load vertex data\n");
