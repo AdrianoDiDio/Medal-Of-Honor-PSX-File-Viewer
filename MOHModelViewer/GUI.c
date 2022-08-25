@@ -459,7 +459,8 @@ void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
         //the window border.
         BaseTextPosition.x += 2;
         ImDrawList_AddText_Vec2(DrawList,BaseTextPosition,0xFFFFFFFF,"Press and Hold The Left Mouse Button to Rotate the Camera\n"
-        "Scroll the Mouse Wheel to Zoom the Camera In and Out\nPress M to change the Animation Pose",NULL);
+        "Scroll the Mouse Wheel to Zoom the Camera In and Out\nPress and Hold M to play the current Animation Pose\n"
+        "Press N to change to the Next Animation Pose",NULL);
         if( igIsItemHovered(0) && IO->MouseWheel ) {
             CameraZoom(Camera,-IO->MouseWheel);
         }
@@ -476,13 +477,14 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
     BSDRenderObjectPack_t *PackIterator;
     BSDRenderObject_t *RenderObjectIterator;
     BSDRenderObject_t *CurrentRenderObject;
+    BSDAnimationFrame_t *CurrentFrame;
+    ImVec2 ZeroSize;
     int IsSelected;
     int TreeNodeFlags;
     int DisableNode;
-    char SmallBuffer[32];
+    char SmallBuffer[64];
     char DeleteButtonId[32];
     int i;
-    ImVec2 ZeroSize;
     
     if( !igBegin("Main Window", NULL, ImGuiWindowFlags_AlwaysAutoResize) ) {
         return;
@@ -564,19 +566,27 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
         if( !CurrentRenderObject ) {
             igText("No RenderObject selected.");
         } else {
+            CurrentFrame = &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
+                Frame[CurrentRenderObject->CurrentFrameIndex];
             igText("Id:%u",CurrentRenderObject->Id);
             igText("References RenderObject Id:%u",CurrentRenderObject->ReferencedRenderObjectId);
-            igText("Type:%i",CurrentRenderObject->Type);
             igText("Current Animation Index:%i",CurrentRenderObject->CurrentAnimationIndex);
+            igText("Current Frame Index:%i/%i",CurrentRenderObject->CurrentFrameIndex,
+                   CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames);
+            igText("Current Frame Interpolation Index:%i (From %i to %i)",CurrentFrame->FrameInterpolationIndex,
+                   HighNibble(CurrentFrame->FrameInterpolationIndex),
+                   LowNibble(CurrentFrame->FrameInterpolationIndex));
             igText("NumAnimations:%i",CurrentRenderObject->NumAnimations);
-            sprintf(SmallBuffer,"%i",CurrentRenderObject->CurrentAnimationIndex + 1);
+            sprintf(SmallBuffer,"Animation %i",CurrentRenderObject->CurrentAnimationIndex + 1);
             if( igBeginCombo("Animation Pose",SmallBuffer,0) ) {
                 for (i = 0; i < CurrentRenderObject->NumAnimations; i++) {
                     IsSelected = (CurrentRenderObject->CurrentAnimationIndex == i);
-                    sprintf(SmallBuffer,"%i",i + 1);
+                    sprintf(SmallBuffer,"Animation %i",i + 1);
                     if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
                         if( CurrentRenderObject->CurrentAnimationIndex != i ) {
-                            BSDRenderObjectSetAnimationPose(CurrentRenderObject,i);
+                            if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,i,0) ) {
+                                GUISetErrorMessage(GUI,"Failed to set animation pose");
+                            }
                         }
                     }
                     if( IsSelected ) {
@@ -585,6 +595,26 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                 }
                 igEndCombo();
             }
+            sprintf(SmallBuffer,"Frame %i",CurrentRenderObject->CurrentFrameIndex + 1);
+            if( igBeginCombo("Animation Frame List",SmallBuffer,0) ) {
+                for( i = 0; i < CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames; i++ ) {
+                    IsSelected = (CurrentRenderObject->CurrentFrameIndex == i);
+                    sprintf(SmallBuffer,"Frame %i",i + 1);
+                    if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
+                        if( CurrentRenderObject->CurrentFrameIndex != i ) {
+                            if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,
+                                CurrentRenderObject->CurrentFrameIndex) ) {
+                                GUISetErrorMessage(GUI,"Failed to set animation pose");
+                            }
+                        }
+                    }
+                    if( IsSelected ) {
+                        igSetItemDefaultFocus();
+                    }
+                }
+                igEndListBox();
+            }
+            
             igSeparator();
             igText("Export current pose");
             if( igButton("Export to Ply",ZeroSize) ) {

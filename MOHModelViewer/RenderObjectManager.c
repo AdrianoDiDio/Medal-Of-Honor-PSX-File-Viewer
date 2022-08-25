@@ -363,7 +363,7 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
     }
     GUIProgressBarIncrement(GUI,VideoSystem,90,"Setting default pose");
     for( Iterator = BSDPack->RenderObjectList; Iterator; Iterator = Iterator->Next ) {
-        BSDRenderObjectSetAnimationPose(Iterator,0);
+        BSDRenderObjectSetAnimationPose(Iterator,0,0);
     }
     GUIProgressBarIncrement(GUI,VideoSystem,100,"Done");
     RenderObjectManagerAppendBSDPack(RenderObjectManager,BSDPack);

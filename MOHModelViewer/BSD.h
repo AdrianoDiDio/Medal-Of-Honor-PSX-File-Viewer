@@ -112,7 +112,7 @@ typedef struct BSDAnimationFrame_s
     short           U2;
     Byte            U3;
     Byte            U5;
-    Byte            Type;
+    Byte            FrameInterpolationIndex;
     Byte            NumQuaternions;
     
     int             *EncodedQuaternionList;
@@ -209,6 +209,7 @@ typedef struct BSDRenderObject_s {
     BSDAnimation_t              *AnimationList;
     int                         NumAnimations;
     int                         CurrentAnimationIndex;
+    int                         CurrentFrameIndex;
     vec3                        Scale;
     vec3                        Center;
     VAO_t                       *VAO;
@@ -226,9 +227,9 @@ typedef struct Camera_s Camera_t;
 BSDRenderObject_t   *BSDLoadAllAnimatedRenderObjects(const char *FName,int *GameVersion);
 void                BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void                BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
-void                BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAnimation_t *AnimationList,
-                                                    BSDVertexTable_t *VertexTable,mat4 Rotation,vec3 Translation,int AnimationIndex);
-void                BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex);
+void                BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
+                                                    BSDVertexTable_t *VertexTable,mat4 Rotation,vec3 Translation,int AnimationIndex,int FrameIndex);
+int                 BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex,int FrameIndex);
 void                BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject);
 void                BSDRenderObjectExportPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,int AnimationIndex,FILE *OutFile);
 void                BSDFree(BSD_t *BSD);

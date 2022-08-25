@@ -311,8 +311,34 @@ void EngineCheckEvents(Engine_t *Engine)
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_m ) {
             CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(Engine->RenderObjectManager);
             if( CurrentRenderObject != NULL ) {
-                int NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1);
-                BSDRenderObjectSetAnimationPose(CurrentRenderObject,NextPose % CurrentRenderObject->NumAnimations);
+//                 int NextPose;
+//                 while( 1 ) {
+//                        
+//                     NextPose = CurrentRenderObject->CurrentAnimationIndex;
+//                     CurrentRenderObject->CurrentFrameIndex++;
+//                     if( CurrentRenderObject->CurrentFrameIndex >=
+//                         CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames ) {
+//                         NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1);
+//                         CurrentRenderObject->CurrentFrameIndex = 0;
+//                         break;
+//                     } else {
+//                     }
+//                     if( CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
+//                         Frame[CurrentRenderObject->CurrentFrameIndex].Type == 0 ) {
+//                             break;
+//                         }
+//                 }
+                int NextFrame = (CurrentRenderObject->CurrentFrameIndex + 1) % 
+                    CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames;
+                BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame);
+            }
+        }
+        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_n ) {
+            CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(Engine->RenderObjectManager);
+            if( CurrentRenderObject != NULL ) {
+                int NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1) % 
+                    CurrentRenderObject->NumAnimations;
+                BSDRenderObjectSetAnimationPose(CurrentRenderObject,NextPose,0);
             }
         }
         GUIProcessEvent(Engine->GUI,&Event);

@@ -902,7 +902,7 @@ the size of each animation frame (20 bytes).
 | short | 2 bytes | Unknown |
 | byte | 1 byte | Unknown |
 | byte | 1 byte | Unknown |
-| byte | 1 byte | Animation Type |
+| byte | 1 byte | Animation Frame Interpolation Index |
 | byte | 1 byte | Number of Quaternions |
 | int | 4 bytes | Offset to a list of Quaternions |
 
@@ -912,10 +912,12 @@ Vector.x = (EncodedVector << 0x16) >> 0x16;
 Vector.y = (EncodedVector << 0xB) >> 0x15;
 Vector.z = (EncodedVector << 0x1) >> 0x16;
 ```
-
-If the offset is != -1 then we can find a list of quaternions at the
-offset given by the sum of the current offset plus the
-"Animation Quaternion Offset" found in the entry table.  
+When "FrameInterpolationIndex" is equals to 0 we need to
+load the quaternion's list at the specified offset
+(which should not be -1).
+The quaternion list offset can be calculated using the
+the current offset plus the "Animation Quaternion
+Offset" found in the entry table.  
 
 Each quaternion is decoded by first reading all the encoded quaternions in
 a list which has a size equals to "Number Of Quaternions" times two and
@@ -948,6 +950,22 @@ DecodedQuaternionList[(q*2) + 1].x = x;
 DecodedQuaternionList[(q*2) + 1].y = y;
 DecodedQuaternionList[(q*2) + 1].z = z;
 DecodedQuaternionList[(q*2) + 1].w = w;
+```
+
+When the "FrameInterpolationIndex" is different than 0
+then we can calculate the quaternion list for this frame
+throught interpolation.  
+The Frame to interpolate with can be extracted from the
+"FrameInterpolationIndex" byte as follows:  
+```
+NextFrameOffset = (FrameInterpolationIndex >> 0x4 ) & 0xF
+PrevFrameOffset = (FrameInterpolationIndex & 0xF )
+```
+These two bytes give us the offset from the current
+frame to the previous and next:  
+```
+NextFrame = CurrentFrame + NextFrameOffset
+PrevFrame = CurrentFrame + PrevFrameOffset
 ```
 
 

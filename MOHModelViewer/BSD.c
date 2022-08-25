@@ -357,8 +357,8 @@ void BSDRenderObjectUpdateVAO(BSDRenderObject_t *RenderObject)
     }
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
-void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAnimation_t *AnimationList,BSDVertexTable_t *VertexTable,
-                                     mat4 Rotation,vec3 Translation,int AnimationIndex)
+void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,BSDVertexTable_t *VertexTable,
+                                     mat4 Rotation,vec3 Translation,int AnimationIndex,int FrameIndex)
 {
     versor Quaternion;
     mat4 RotationMatrix;
@@ -373,8 +373,8 @@ void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAni
         return;
     }
     
-    if( !AnimationList ) {
-        DPrintf("BSDRecursivelyApplyHierachyData:Invalid Animation List.\n");
+    if( !QuaternionList ) {
+        DPrintf("BSDRecursivelyApplyHierachyData:Invalid Quaternion List.\n");
         return;
     }
     if( !VertexTable ) {
@@ -382,19 +382,19 @@ void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAni
         return;
     }
     
-    if( !AnimationList[AnimationIndex].NumFrames ) {
-        return;
-    }
-
-    if( !AnimationList[AnimationIndex].Frame[0].QuaternionList ) {
-        return;
-    }
+//     if( !AnimationList[AnimationIndex].NumFrames ) {
+//         return;
+//     }
+// 
+//     if( !AnimationList[AnimationIndex].Frame[FrameIndex].QuaternionList ) {
+//         return;
+//     }
     glm_mat4_identity(RotationMatrix);
     
-    Quaternion[0] = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].x / 4096.f;
-    Quaternion[1] = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].y / 4096.f;
-    Quaternion[2] = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].z / 4096.f;
-    Quaternion[3] = AnimationList[AnimationIndex].Frame[0].QuaternionList[Bone->VertexTableIndex].w / 4096.f;
+    Quaternion[0] = QuaternionList[Bone->VertexTableIndex].x / 4096.f;
+    Quaternion[1] = QuaternionList[Bone->VertexTableIndex].y / 4096.f;
+    Quaternion[2] = QuaternionList[Bone->VertexTableIndex].z / 4096.f;
+    Quaternion[3] = QuaternionList[Bone->VertexTableIndex].w / 4096.f;
     
     glm_quat_mat4t(Quaternion,RotationMatrix);
     
@@ -419,10 +419,10 @@ void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDAni
     }
 
     if( Bone->Child2 ) {
-        BSDRecursivelyApplyHierachyData(Bone->Child2,AnimationList,VertexTable,Rotation,Translation,AnimationIndex);
+        BSDRecursivelyApplyHierachyData(Bone->Child2,QuaternionList,VertexTable,Rotation,Translation,AnimationIndex,FrameIndex);
     }
     if( Bone->Child1 ) {
-        BSDRecursivelyApplyHierachyData(Bone->Child1,AnimationList,VertexTable,RotationMatrix,VertexTranslation,AnimationIndex);
+        BSDRecursivelyApplyHierachyData(Bone->Child1,QuaternionList,VertexTable,RotationMatrix,VertexTranslation,AnimationIndex,FrameIndex);
     }
 }
 void BSDRenderObjectResetVertexTable(BSDRenderObject_t *RenderObject)
@@ -441,26 +441,78 @@ void BSDRenderObjectResetVertexTable(BSDRenderObject_t *RenderObject)
     }
 
 }
-void BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex)
+int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex,int FrameIndex)
 {
+    BSDQuaternion_t *QuaternionList;
     vec3 Translation;
     mat4 Rotation;
+    versor FromQuaternion;
+    versor ToQuaternion;
+    versor DestQuaternion;
     int NumVertices;
     if( AnimationIndex < 0 || AnimationIndex > RenderObject->NumAnimations ) {
         DPrintf("BSDRenderObjectSetAnimationPose:Failed to set pose using index %i...Index is out of bounds\n",AnimationIndex);
-        return;
+        return 0;
     }
-    if( AnimationIndex == RenderObject->CurrentAnimationIndex ) {
+    if( AnimationIndex == RenderObject->CurrentAnimationIndex && FrameIndex == RenderObject->CurrentFrameIndex) {
         DPrintf("BSDRenderObjectSetAnimationPose:Pose is already set\n");
-        return;
+        return 0;
+    }
+    if( !RenderObject->AnimationList[AnimationIndex].NumFrames ) {
+        DPrintf("BSDRenderObjectSetAnimationPose:Failed to set pose using index %i...animation has no frames\n",AnimationIndex);
+        return 0;
+    }
+    if( FrameIndex < 0 || FrameIndex > RenderObject->AnimationList[AnimationIndex].NumFrames ) {
+        DPrintf("BSDRenderObjectSetAnimationPose:Failed to set pose using frame %i...Frame Index is out of bounds\n",FrameIndex);
+        return 0;
+    }
+    //NOTE(Adriano):Update it anyway but don't apply the transform otherwise the model will reset to the default state since
+    //we haven't figured out on how to load animation that have a different type than 0...
+    RenderObject->CurrentAnimationIndex = AnimationIndex;
+    RenderObject->CurrentFrameIndex = FrameIndex;
+    //NOTE(Adriano):Interpolate quaternion data between the previous and the next?
+    QuaternionList = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].QuaternionList;
+    if( !QuaternionList ) {
+        int NextFrame = FrameIndex + (HighNibble(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].FrameInterpolationIndex));
+        int PrevFrame = FrameIndex - (LowNibble(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].FrameInterpolationIndex));
+        DPrintf("Current FrameIndex:%i\n",FrameIndex);
+        DPrintf("Next FrameIndex:%i\n",NextFrame);
+        DPrintf("Previous FrameIndex:%i\n",PrevFrame);
+        DPrintf("Jump:%i\n",NextFrame-PrevFrame);
+        DPrintf("NumQuaternions:%i\n",RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions);
+        QuaternionList = malloc(sizeof(BSDQuaternion_t) * RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions);
+        if( NextFrame > PrevFrame ) {
+            int Temp = NextFrame;
+            NextFrame = PrevFrame;
+            PrevFrame = Temp;
+        }
+        for( int i = 0; i < RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions; i++ ) {
+            FromQuaternion[0] = RenderObject->AnimationList[AnimationIndex].Frame[PrevFrame].QuaternionList[i].x / 4096.f;
+            FromQuaternion[1] = RenderObject->AnimationList[AnimationIndex].Frame[PrevFrame].QuaternionList[i].y / 4096.f;
+            FromQuaternion[2] = RenderObject->AnimationList[AnimationIndex].Frame[PrevFrame].QuaternionList[i].z / 4096.f;
+            FromQuaternion[3] = RenderObject->AnimationList[AnimationIndex].Frame[PrevFrame].QuaternionList[i].w / 4096.f;
+            ToQuaternion[0] = RenderObject->AnimationList[AnimationIndex].Frame[NextFrame].QuaternionList[i].x / 4096.f;
+            ToQuaternion[1] = RenderObject->AnimationList[AnimationIndex].Frame[NextFrame].QuaternionList[i].y / 4096.f;
+            ToQuaternion[2] = RenderObject->AnimationList[AnimationIndex].Frame[NextFrame].QuaternionList[i].z / 4096.f;
+            ToQuaternion[3] = RenderObject->AnimationList[AnimationIndex].Frame[NextFrame].QuaternionList[i].w / 4096.f;
+            glm_quat_nlerp(FromQuaternion,
+                ToQuaternion,
+                0.5f,
+                DestQuaternion
+            );
+            QuaternionList[i].x = DestQuaternion[0] * 4096.f;
+            QuaternionList[i].y = DestQuaternion[1] * 4096.f;
+            QuaternionList[i].z = DestQuaternion[2] * 4096.f;
+            QuaternionList[i].w = DestQuaternion[3] * 4096.f;
+
+        }
     }
     glm_vec3_zero(Translation);
     glm_mat4_identity(Rotation);
-    RenderObject->CurrentAnimationIndex = AnimationIndex;
     BSDRenderObjectResetVertexTable(RenderObject);
     glm_vec3_zero(RenderObject->Center);
-    BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,RenderObject->AnimationList,
-                                    RenderObject->CurrentVertexTable,Rotation,Translation,AnimationIndex);
+    BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,QuaternionList,
+                                    RenderObject->CurrentVertexTable,Rotation,Translation,AnimationIndex,FrameIndex);
     NumVertices = 0;
     for( int i = 0; i < RenderObject->NumVertexTables; i++ ) {
         for( int j = 0; j < RenderObject->CurrentVertexTable[i].NumVertex; j++ ) {
@@ -476,6 +528,10 @@ void BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animati
     } else {
         BSDRenderObjectUpdateVAO(RenderObject);
     }
+    if( !RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].QuaternionList ) {
+        free(QuaternionList);
+    }
+    return 1;
 }
 
 void BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
@@ -1233,7 +1289,7 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
         RenderObject->AnimationList[i].Frame = malloc(AnimationTableEntry[i].NumFrames * sizeof(BSDAnimationFrame_t));
         RenderObject->AnimationList[i].NumFrames = AnimationTableEntry[i].NumFrames;
         for( j = 0; j < AnimationTableEntry[i].NumFrames; j++ ) {
-                        DPrintf(" -- ANIMATION %i/%i -- \n",j,AnimationTableEntry[i].NumFrames);
+            DPrintf(" -- FRAME %i/%i -- \n",j,AnimationTableEntry[i].NumFrames);
             // 20 is the sizeof an animation
             fseek(BSDFile,EntryTable.AnimationDataOffset + AnimationTableEntry[i].Offset + BSD_HEADER_SIZE 
                 + j * BSD_ANIMATION_FRAME_DATA_SIZE,SEEK_SET);
@@ -1247,8 +1303,8 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
             fread(&RenderObject->AnimationList[i].Frame[j].U2,sizeof(RenderObject->AnimationList[i].Frame[j].U2),1,BSDFile);
             fread(&RenderObject->AnimationList[i].Frame[j].U3,sizeof(RenderObject->AnimationList[i].Frame[j].U3),1,BSDFile);
             fread(&RenderObject->AnimationList[i].Frame[j].U5,sizeof(RenderObject->AnimationList[i].Frame[j].U5),1,BSDFile);
-            fread(&RenderObject->AnimationList[i].Frame[j].Type,
-                  sizeof(RenderObject->AnimationList[i].Frame[j].Type),1,BSDFile);
+            fread(&RenderObject->AnimationList[i].Frame[j].FrameInterpolationIndex,
+                  sizeof(RenderObject->AnimationList[i].Frame[j].FrameInterpolationIndex),1,BSDFile);
             fread(&RenderObject->AnimationList[i].Frame[j].NumQuaternions,
                   sizeof(RenderObject->AnimationList[i].Frame[j].NumQuaternions),1,BSDFile);
             fread(&QuaternionListOffset,sizeof(QuaternionListOffset),1,BSDFile);
@@ -1262,7 +1318,8 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
             DPrintf("U3: %i\n",RenderObject->AnimationList[i].Frame[j].U3);
             DPrintf("U4 is %i\n",RenderObject->AnimationList[i].Frame[j].U4);
             DPrintf("U5 is %i\n",RenderObject->AnimationList[i].Frame[j].U5);
-            DPrintf("Animation Type is %i -- Number of quaternions is %i\n",RenderObject->AnimationList[i].Frame[j].Type,
+            DPrintf("Frame Interpolation Index is %i -- Number of quaternions is %i\n",
+                    RenderObject->AnimationList[i].Frame[j].FrameInterpolationIndex,
                 RenderObject->AnimationList[i].Frame[j].NumQuaternions
             );
             DPrintf("Encoded Vector is %i\n",RenderObject->AnimationList[i].Frame[j].EncodedVector);
@@ -1360,6 +1417,7 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
     RenderObject->AnimationList = NULL;
     RenderObject->VAO = NULL;
     RenderObject->CurrentAnimationIndex = -1;
+    RenderObject->CurrentFrameIndex = -1;
     RenderObject->Next = NULL;
 
     RenderObject->Scale[0] = (float) (RenderObjectElement.ScaleX  / 16 ) / 4096.f;
