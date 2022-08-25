@@ -459,8 +459,8 @@ void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
         //the window border.
         BaseTextPosition.x += 2;
         ImDrawList_AddText_Vec2(DrawList,BaseTextPosition,0xFFFFFFFF,"Press and Hold The Left Mouse Button to Rotate the Camera\n"
-        "Scroll the Mouse Wheel to Zoom the Camera In and Out\nPress and Hold M to play the current Animation Pose\n"
-        "Press N to change to the Next Animation Pose",NULL);
+        "Scroll the Mouse Wheel to Zoom the Camera In and Out\nPress and Hold M to change to the next animation frame using the current Pose\n"
+        "Press N to change to the next animation pose",NULL);
         if( igIsItemHovered(0) && IO->MouseWheel ) {
             CameraZoom(Camera,-IO->MouseWheel);
         }
@@ -602,8 +602,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                     sprintf(SmallBuffer,"Frame %i",i + 1);
                     if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
                         if( CurrentRenderObject->CurrentFrameIndex != i ) {
-                            if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,
-                                CurrentRenderObject->CurrentFrameIndex) ) {
+                            if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,i) ) {
                                 GUISetErrorMessage(GUI,"Failed to set animation pose");
                             }
                         }
@@ -612,9 +611,20 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                         igSetItemDefaultFocus();
                     }
                 }
-                igEndListBox();
+                igEndCombo();
             }
-            
+            igSeparator();
+            if( igButton("Play Animation",ZeroSize) ) {
+                if( !RenderObjectManagerIsAnimationPlaying(RenderObjectManager) ) {
+                    CurrentRenderObject->CurrentFrameIndex = 0;
+                    RenderObjectManagerSetAnimationPlay(RenderObjectManager,1);
+                }
+                
+            }
+            igSameLine(0,-1);
+            if( igButton("Stop Animation",ZeroSize) ) {
+                RenderObjectManagerSetAnimationPlay(RenderObjectManager,0);
+            }
             igSeparator();
             igText("Export current pose");
             if( igButton("Export to Ply",ZeroSize) ) {

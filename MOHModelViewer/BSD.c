@@ -481,11 +481,6 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
         DPrintf("Jump:%i\n",NextFrame-PrevFrame);
         DPrintf("NumQuaternions:%i\n",RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions);
         QuaternionList = malloc(sizeof(BSDQuaternion_t) * RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions);
-        if( NextFrame > PrevFrame ) {
-            int Temp = NextFrame;
-            NextFrame = PrevFrame;
-            PrevFrame = Temp;
-        }
         for( int i = 0; i < RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions; i++ ) {
             FromQuaternion[0] = RenderObject->AnimationList[AnimationIndex].Frame[PrevFrame].QuaternionList[i].x / 4096.f;
             FromQuaternion[1] = RenderObject->AnimationList[AnimationIndex].Frame[PrevFrame].QuaternionList[i].y / 4096.f;

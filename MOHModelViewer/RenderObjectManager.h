@@ -50,6 +50,7 @@ typedef struct BSDRenderObjectPack_s {
     TIMImage_t                      *ImageList;
     BSDRenderObject_t               *RenderObjectList;
     BSDRenderObject_t               *SelectedRenderObject;
+    int                             LastUpdateTime;
     struct BSDRenderObjectPack_s    *Next;
 } BSDRenderObjectPack_t;
 
@@ -61,6 +62,8 @@ typedef struct RenderObjectManager_s {
     
     GUIFileDialog_t         *BSDFileDialog;
     GUIFileDialog_t         *ExportFileDialog;
+    
+    int                     PlayAnimation;
     
     unsigned int            FBO;
     unsigned int            FBOTexture;
@@ -81,10 +84,13 @@ int                     RenderObjectManagerDeleteBSDPack(RenderObjectManager_t *
 void                    RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem);
 void                    RenderObjectManagerExportCurrentPose(RenderObjectManager_t *RenderObjectManager,
                                                              GUI_t *GUI,VideoSystem_t *VideoSystem,int OutputFormat);
-void                    RenderObjectManagerDrawAll(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera);
+void                    RenderObjectManagerUpdate(RenderObjectManager_t *RenderObjectManager);
+void                    RenderObjectManagerDraw(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera);
 void                    RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager);
 int                     RenderObjectManagerLoadPack(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,
                                                     VideoSystem_t *VideoSystem,const char *File);
+void                    RenderObjectManagerSetAnimationPlay(RenderObjectManager_t *RenderObjectManager,int Play);
+int                     RenderObjectManagerIsAnimationPlaying(RenderObjectManager_t *RenderObjectManager);
 BSDRenderObjectPack_t   *RenderObjectManagerGetSelectedBSDPack(RenderObjectManager_t *RenderObjectManager);
 BSDRenderObject_t       *RenderObjectManagerGetSelectedRenderObject(RenderObjectManager_t *RenderObjectManager);
 void                    RenderObjectManagerSetSelectedRenderObject(RenderObjectManager_t *RenderObjectManager,BSDRenderObjectPack_t *SelectedBSDPack,

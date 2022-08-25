@@ -77,7 +77,20 @@ void RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager)
     }
     free(RenderObjectManager);
 }
-
+int RenderObjectManagerIsAnimationPlaying(RenderObjectManager_t *RenderObjectManager)
+{
+    if( !RenderObjectManager ) {
+        return 0;
+    }
+    return RenderObjectManager->PlayAnimation;
+}
+void RenderObjectManagerSetAnimationPlay(RenderObjectManager_t *RenderObjectManager,int Play)
+{
+    if( !RenderObjectManager ) {
+        return;
+    }
+    RenderObjectManager->PlayAnimation = Play;
+}
 void RenderObjectManagerCloseDialog(GUI_t *GUI,GUIFileDialog_t *FileDialog)
 {
     RenderObjectManagerFreeDialogData(FileDialog);
@@ -326,6 +339,7 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
     BSDPack->VRAM = NULL;
     BSDPack->RenderObjectList = NULL;
     BSDPack->SelectedRenderObject = NULL;
+    BSDPack->LastUpdateTime = 0;
     BSDPack->Next = NULL;
     TAFFile = NULL;
     
@@ -468,9 +482,36 @@ void RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManage
 
     GUIFileDialogOpenWithUserData(RenderObjectManager->BSDFileDialog,DialogData);
 }
-void RenderObjectManagerDrawAll(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera)
+void RenderObjectManagerUpdate(RenderObjectManager_t *RenderObjectManager)
 {
-//     BSDRenderObjectPack_t *Iterator;
+    BSDRenderObject_t *CurrentRenderObject;
+    int NextFrame;
+    int Now;
+    if( !RenderObjectManager ) {
+        return;
+    }
+    if( !RenderObjectManager->PlayAnimation ) {
+        return;
+    }
+    if( !RenderObjectManager->SelectedBSDPack ) {
+        return;
+    }
+    if( !RenderObjectManager->SelectedBSDPack->SelectedRenderObject ) {
+        return;
+    }
+    Now = SysMilliseconds();
+    //NOTE(Adriano):Avoid running too fast...
+    if( (Now - RenderObjectManager->SelectedBSDPack->LastUpdateTime ) < 30 ) {
+        return;
+    }
+    CurrentRenderObject = RenderObjectManager->SelectedBSDPack->SelectedRenderObject;
+    NextFrame = (CurrentRenderObject->CurrentFrameIndex + 1) % 
+                    CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames;
+    BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame);
+    RenderObjectManager->SelectedBSDPack->LastUpdateTime = Now;
+}
+void RenderObjectManagerDraw(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera)
+{
     mat4 ProjectionMatrix;
     
     if( !RenderObjectManager ) {
@@ -485,9 +526,6 @@ void RenderObjectManagerDrawAll(RenderObjectManager_t *RenderObjectManager,Camer
         glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);
         RenderObjectManagerDrawPack(RenderObjectManager->SelectedBSDPack,Camera,ProjectionMatrix);
     }
-//     for( Iterator = RenderObjectManager->BSDList; Iterator; Iterator = Iterator->Next ) {
-//        RenderObjectManagerDrawPack(RenderObjectManager,Iterator,Camera,ProjectionMatrix); 
-//     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -549,6 +587,8 @@ RenderObjectManager_t *RenderObjectManagerInit(GUI_t *GUI)
                                                            RenderObjectManagerOnExportDirCancel);
     EnableWireFrameMode = ConfigGet("EnableWireFrameMode");
     EnableAmbientLight = ConfigGet("EnableAmbientLight");
+    
+    RenderObjectManager->PlayAnimation = 0;
 
     return RenderObjectManager;
 }

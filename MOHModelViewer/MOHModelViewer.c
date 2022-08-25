@@ -528,7 +528,7 @@ void EngineDraw(Engine_t *Engine)
     glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    RenderObjectManagerDrawAll(Engine->RenderObjectManager,Engine->Camera);
+    RenderObjectManagerDraw(Engine->RenderObjectManager,Engine->Camera);
     
     glDisable (GL_DEPTH_TEST);
     GUIDraw(Engine);
@@ -543,6 +543,7 @@ void EngineFrame(Engine_t *Engine)
     ComUpdateDelta(Engine->TimeInfo);
     EngineCheckEvents(Engine);
     CameraBeginFrame(Engine->Camera);
+    RenderObjectManagerUpdate(Engine->RenderObjectManager);
     EngineDraw(Engine);
     VideoSystemSwapBuffers(Engine->VideoSystem);
 }

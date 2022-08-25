@@ -106,9 +106,9 @@ Honor:Underground using MOHLevelViewer.*
 
 Some sample screenshot taken from MOHModelViewer:  
 
-<img src="Images/MOHModelViewer_Jimmy_P1_MOHU.png" width="600" />
+<img src="Images/MOHModelViewer_Jimmy_P1_MOHU.gif" width="600" />
 
-*Screenshot taken from Medal Of Honor:Underground showing JIMMY_P1.BSD Model
+*GIF taken from Medal Of Honor:Underground showing JIMMY_P1.BSD Model
 using MOHModelViewer.*
 
 ## Programs
