@@ -338,7 +338,9 @@ void EngineCheckEvents(Engine_t *Engine)
             if( CurrentRenderObject != NULL ) {
                 int NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1) % 
                     CurrentRenderObject->NumAnimations;
-                BSDRenderObjectSetAnimationPose(CurrentRenderObject,NextPose,0);
+                while( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,NextPose,0) ) {
+                    NextPose = (NextPose + 1 ) % CurrentRenderObject->NumAnimations;
+                }                
             }
         }
         GUIProcessEvent(Engine->GUI,&Event);

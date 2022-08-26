@@ -132,7 +132,7 @@ typedef struct BSDAnimation_s
 
 
 typedef struct BSDRenderObjectElement_s {
-    unsigned int    Id;
+    int             Id;
     int             UnknownOffset0;
     int             AnimationDataOffset;
     char            U0[32];
@@ -153,7 +153,7 @@ typedef struct BSDRenderObjectElement_s {
     char            Pad2[20];
     int             ColorOffset;
     char            LastU[32];
-    unsigned int    ReferencedRenderObjectId;
+    int             ReferencedRenderObjectId;
     char            Pad3[16];
     int             Type;
 } BSDRenderObjectElement_t;
@@ -197,8 +197,8 @@ typedef struct BSDEntryTable_s {
 } BSDEntryTable_t;
 
 typedef struct BSDRenderObject_s {
-    unsigned int                Id;
-    unsigned int                ReferencedRenderObjectId;
+    int                         Id;
+    int                         ReferencedRenderObjectId;
     int                         Type;
     BSDVertexTable_t            *VertexTable;
     BSDVertexTable_t            *CurrentVertexTable;

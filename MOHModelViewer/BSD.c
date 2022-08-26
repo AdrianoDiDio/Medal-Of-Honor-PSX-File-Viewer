@@ -475,10 +475,11 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
     if( !QuaternionList ) {
         int NextFrame = FrameIndex + (HighNibble(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].FrameInterpolationIndex));
         int PrevFrame = FrameIndex - (LowNibble(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].FrameInterpolationIndex));
+        int Jump = NextFrame-PrevFrame;
         DPrintf("Current FrameIndex:%i\n",FrameIndex);
         DPrintf("Next FrameIndex:%i\n",NextFrame);
         DPrintf("Previous FrameIndex:%i\n",PrevFrame);
-        DPrintf("Jump:%i\n",NextFrame-PrevFrame);
+        DPrintf("Jump:%i\n",Jump);
         DPrintf("NumQuaternions:%i\n",RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions);
         QuaternionList = malloc(sizeof(BSDQuaternion_t) * RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions);
         for( int i = 0; i < RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions; i++ ) {
@@ -492,7 +493,7 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
             ToQuaternion[3] = RenderObject->AnimationList[AnimationIndex].Frame[NextFrame].QuaternionList[i].w / 4096.f;
             glm_quat_nlerp(FromQuaternion,
                 ToQuaternion,
-                0.5f,
+                1.f/Jump,
                 DestQuaternion
             );
             QuaternionList[i].x = DestQuaternion[0] * 4096.f;
@@ -503,6 +504,10 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
         }
     }
     glm_vec3_zero(Translation);
+//     Translation[0] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.x / 4096;
+//     Translation[1] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.y / 4096;
+//     Translation[2] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.z / 4096;
+
     glm_mat4_identity(Rotation);
     BSDRenderObjectResetVertexTable(RenderObject);
     glm_vec3_zero(RenderObject->Center);
@@ -845,11 +850,10 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
         if( GameEngine == MOH_GAME_UNDERGROUND ) {
             SkipFileSection(20,BSDFile);
         }
-        DPrintf("RenderObject Id:%u\n",BSD->RenderObjectTable.RenderObject[i].Id);
+        DPrintf("RenderObject Id:%i\n",BSD->RenderObjectTable.RenderObject[i].Id);
         DPrintf("RenderObject Type:%i\n",BSD->RenderObjectTable.RenderObject[i].Type);
-        
         if( BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId != -1 ) {
-            DPrintf("RenderObject References RenderObject Id:%u\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
+            DPrintf("RenderObject References RenderObject Id:%i\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
         } else {
             DPrintf("RenderObject No Reference set...\n");
         }
@@ -1041,7 +1045,7 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
     RenderObject->FaceList = malloc(NumFaces * sizeof(BSDAnimatedModelFace_t));
     RenderObject->NumFaces = NumFaces;
     if( !RenderObject->FaceList ) {
-        DPrintf("BSDLoadAnimationFaceData:Failed to allocate memory for face list.\n");
+        DPrintf("BSDLoadMOHUndergroundAnimationFaceData:Failed to allocate memory for face list.\n");
         return 0;
     }
     CurrentFaceIndex = 0;
@@ -1063,7 +1067,7 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
             fread(&Marker2,sizeof(Marker2),1,BSDFile);
 
             if( Marker1 == 0x1FFF ) {
-                DPrintf("BSDLoadAnimationFaceData:Aborting since a marker was found\n");
+                DPrintf("BSDLoadMOHUndergroundAnimationFaceData:Aborting since a marker was found\n");
                 break;
             }
             fread(&ColorData,sizeof(ColorData),1,BSDFile);
@@ -1095,8 +1099,8 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
         }
         //NOTE(Adriano):Last Data is identified by the two marker being set to 0x1FFF
         if( (Marker1 == 0x1fff && Marker2 == 0x1fff ) ) {
-            DPrintf("BSDLoadAnimationFaceData:Sentinel Face found Done reading faces for RenderObject\n");
-            DPrintf("BSDLoadAnimationFaceData:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,NumFaces);
+            DPrintf("BSDLoadMOHUndergroundAnimationFaceData:Sentinel Face found Done reading faces for RenderObject\n");
+            DPrintf("BSDLoadMOHUndergroundAnimationFaceData:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,NumFaces);
             break;
         }
     }
@@ -1307,6 +1311,10 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
             RenderObject->AnimationList[i].Frame[j].Vector.x = (RenderObject->AnimationList[i].Frame[j].EncodedVector << 0x16) >> 0x16;
             RenderObject->AnimationList[i].Frame[j].Vector.y = (RenderObject->AnimationList[i].Frame[j].EncodedVector << 0xb)  >> 0x15;
             RenderObject->AnimationList[i].Frame[j].Vector.z = (RenderObject->AnimationList[i].Frame[j].EncodedVector << 0x1)  >> 0x16;
+            
+            RenderObject->AnimationList[i].Frame[j].Vector.x = (RenderObject->AnimationList[i].Frame[j].EncodedVector << 6) >> 6;
+            RenderObject->AnimationList[i].Frame[j].Vector.y = (RenderObject->AnimationList[i].Frame[j].EncodedVector << 5)  >> 5;
+            RenderObject->AnimationList[i].Frame[j].Vector.z = (RenderObject->AnimationList[i].Frame[j].EncodedVector >> 15) >> 6;
             DPrintf("Entry %i => U0|U1|U2: %i;%i;%i QuaternionListOffset:%i\n",i,RenderObject->AnimationList[i].Frame[j].U0,
                     RenderObject->AnimationList[i].Frame[j].U1,
                     RenderObject->AnimationList[i].Frame[j].U2,QuaternionListOffset);
@@ -1418,7 +1426,9 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
     RenderObject->Scale[0] = (float) (RenderObjectElement.ScaleX  / 16 ) / 4096.f;
     RenderObject->Scale[1] = (float) (RenderObjectElement.ScaleY  / 16 ) / 4096.f;
     RenderObject->Scale[2] = (float) (RenderObjectElement.ScaleZ  / 16 ) / 4096.f;
-    
+    if( RenderObject->Type == 1 ) {
+        glm_vec3_scale(RenderObject->Scale,0.5,RenderObject->Scale);
+    }
     glm_vec3_zero(RenderObject->Center);
 
     if( !BSDLoadAnimationVertexData(RenderObject,RenderObjectElement.VertexTableIndexOffset,BSDEntryTable,BSDFile) ) {

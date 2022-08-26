@@ -568,8 +568,10 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
         } else {
             CurrentFrame = &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
                 Frame[CurrentRenderObject->CurrentFrameIndex];
-            igText("Id:%u",CurrentRenderObject->Id);
-            igText("References RenderObject Id:%u",CurrentRenderObject->ReferencedRenderObjectId);
+            igText("Id:%i",CurrentRenderObject->Id);
+            igText("Type:%i",CurrentRenderObject->Type);
+            igText("Scale:%f;%f;%f",CurrentRenderObject->Scale[0],CurrentRenderObject->Scale[1],CurrentRenderObject->Scale[2]);
+            igText("References RenderObject Id:%i",CurrentRenderObject->ReferencedRenderObjectId);
             igText("Current Animation Index:%i",CurrentRenderObject->CurrentAnimationIndex);
             igText("Current Frame Index:%i/%i",CurrentRenderObject->CurrentFrameIndex,
                    CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames);
