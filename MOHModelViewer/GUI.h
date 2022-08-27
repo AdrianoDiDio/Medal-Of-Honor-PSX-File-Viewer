@@ -75,7 +75,8 @@ extern Config_t *GUIFontSize;
 extern Config_t *GUIShowFPS;
 
 GUI_t               *GUIInit(VideoSystem_t *VideoSystem);
-int                 GUIIsActive(GUI_t *GUI);
+bool                GUIIsMouseFree();
+bool                GUIIsKeyboardFree();
 void                GUIToggleDebugWindow(GUI_t *GUI);
 void                GUIToggleVideoSettingsWindow(GUI_t *GUI);
 void                GUIToggleLevelSelectWindow(GUI_t *GUI);

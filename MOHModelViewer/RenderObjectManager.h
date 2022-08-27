@@ -64,10 +64,6 @@ typedef struct RenderObjectManager_s {
     GUIFileDialog_t         *ExportFileDialog;
     
     int                     PlayAnimation;
-    
-    unsigned int            FBO;
-    unsigned int            FBOTexture;
-    unsigned int            RBO;
 } RenderObjectManager_t;
 
 typedef struct RenderObjectManagerDialogData_s {

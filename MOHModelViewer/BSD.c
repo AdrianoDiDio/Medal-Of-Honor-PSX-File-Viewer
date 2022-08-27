@@ -94,7 +94,7 @@ void BSDFree(BSD_t *BSD)
     free(BSD);
 }
 
-void BSDRenderObjectExportPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,int AnimationIndex,FILE *OutFile)
+void BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile)
 {
     char Buffer[256];
     float TextureWidth;
@@ -127,13 +127,6 @@ void BSDRenderObjectExportPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM
         return;
     }
     
-    if( AnimationIndex < 0 || AnimationIndex > RenderObject->NumAnimations ) {
-        DPrintf("BSDRenderObjectExportPoseToObj:Failed to export pose using index %i...Index is out of bounds\n",AnimationIndex);
-        return;
-    }
-    
-
-        
     TextureWidth = VRAM->Page.Width;
     TextureHeight = VRAM->Page.Height;
     

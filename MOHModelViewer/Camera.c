@@ -22,6 +22,7 @@
 #include "MOHModelViewer.h"
 
 Config_t *CameraMouseSensitivity;
+Config_t *CameraSpeed;
 
 void CameraCleanUp(Camera_t *Camera)
 {
@@ -85,7 +86,7 @@ void CameraUpdate(Camera_t *Camera,int Orientation, float Delta)
     vec3 Right;
 
     
-    CamSpeed = 1.f * Delta * 128.f;
+    CamSpeed = CameraSpeed->FValue * Delta * 128.f;
     CameraGetNormalizedDirection(Camera,Direction);
     glm_vec3_cross(GLM_YUP,Direction,Right);    
     glm_vec3_normalize(Right);
@@ -133,7 +134,7 @@ void CameraReset(Camera_t *Camera)
         return;
     }
     glm_vec3_zero(Camera->ViewPoint);
-    Camera->Position.Radius = 150.f;
+    Camera->Position.Radius = 350.f;
     Camera->Position.Theta = 0.f;
     Camera->Position.Phi = 0.f;
     CameraOnAngleUpdate(Camera);
@@ -148,6 +149,7 @@ Camera_t *CameraInit()
         return NULL;
     }
     CameraReset(Camera);
+    CameraSpeed = ConfigGet("CameraSpeed");
     CameraMouseSensitivity = ConfigGet("CameraMouseSensitivity");
     return Camera;
 }

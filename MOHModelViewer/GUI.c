@@ -85,6 +85,18 @@ void GUIFree(GUI_t *GUI)
     free(GUI);
 }
 
+bool GUIIsMouseFree()
+{
+    ImGuiIO *IO;
+    IO = igGetIO();
+    return !IO->WantCaptureMouse;
+}
+bool GUIIsKeyboardFree()
+{
+    ImGuiIO *IO;
+    IO = igGetIO();
+    return !IO->WantCaptureKeyboard;
+}
 void GUIPrepareModalWindow()
 {
     ImGuiIO *IO;
@@ -405,75 +417,34 @@ void GUIDrawDebugWindow(GUI_t *GUI,Camera_t *Camera,VideoSystem_t *VideoSystem)
     igEnd();
 }
 
-void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera,ComTimeInfo_t *TimeInfo,const Byte *KeyState)
+void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
 {
-    ImGuiIO *IO;
-    ImVec2 Size;
-    ImVec4 TintColor;
-    ImVec4 BorderColor;
-    ImVec2 UV0;
-    ImVec2 UV1;
-    ImVec2 BaseTextPosition;
-    ImVec2 WindowPadding;
-    ImVec2 DefaultWindowSize;
-    ImVec2 FPSStringSize;
-    ImVec2 FPSStringPosition;
-    ImDrawList *DrawList;
-    BSDRenderObject_t *CurrentRenderObject;
+    ImGuiViewport *Viewport;
+    ImVec2 WorkPosition;
+    ImVec2 WorkSize;
+    ImVec2 WindowPosition;
+    ImVec2 WindowPivot;
+    int WindowFlags;
     
-    UV0.x = 0;
-    UV0.y = 1;
-    UV1.x = 1;
-    UV1.y = 0;
-    BorderColor.x = 1;
-    BorderColor.y = 1;
-    BorderColor.z = 1;
-    BorderColor.w = 1;
-    TintColor.x = 0;
-    TintColor.y = 0;
-    TintColor.z = 0;
-    TintColor.w = 1;
+    WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | 
+                    ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | 
+                    ImGuiWindowFlags_NoMove;
+    Viewport = igGetMainViewport();
+    WorkPosition = Viewport->WorkPos;
+    WorkSize = Viewport->WorkSize;
+    WindowPosition.x = (WorkPosition.x + WorkSize.x - 10.f);
+    WindowPosition.y = (WorkPosition.y + 10.f);
+    WindowPivot.x = 1.f;
+    WindowPivot.y = 0.f;
 
-    WindowPadding.x = 0;
-    WindowPadding.y = 0;
     
-    CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(RenderObjectManager);
-
-    IO = igGetIO();
-    
-    //NOTE(Adriano):Disable window padding only for scene window.
-    igPushStyleVar_Vec2(ImGuiStyleVar_WindowPadding, WindowPadding);
-    DefaultWindowSize.x = 400;
-    DefaultWindowSize.y = 400;
-    igSetNextWindowSize(DefaultWindowSize,ImGuiCond_FirstUseEver);
-    if( igBegin("Scene Window", NULL, 0) ) {
-        DrawList = igGetWindowDrawList();
-        igGetContentRegionAvail(&Size);
-        igGetCursorScreenPos(&BaseTextPosition);
-        igImageButton((void*)(long int) RenderObjectManager->FBOTexture, Size, UV0,UV1,0,TintColor,BorderColor);
-        igSetItemUsingMouseWheel();
-        if( GUIShowFPS->IValue ) {
-            igCalcTextSize(&FPSStringSize,TimeInfo->FPSString,NULL,false,0.f);
-            FPSStringPosition.x = BaseTextPosition.x + (igGetWindowWidth() - FPSStringSize.x) - 4.f;
-            FPSStringPosition.y = BaseTextPosition.y;
-            ImDrawList_AddText_Vec2(DrawList,FPSStringPosition,0xFFFFFFFF,TimeInfo->FPSString,NULL);
+    if( GUIShowFPS->IValue ) {
+        igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
+        if( igBegin("FPS", NULL, WindowFlags) ) {
+            igText(TimeInfo->FPSString);
         }
-        //NOTE(Adriano):Since we have disabled padding nudge position a bit in order to not overlap the text with
-        //the window border.
-        BaseTextPosition.x += 2;
-        ImDrawList_AddText_Vec2(DrawList,BaseTextPosition,0xFFFFFFFF,"Press and Hold The Left Mouse Button to Rotate the Camera\n"
-        "Scroll the Mouse Wheel to Zoom the Camera In and Out\nPress and Hold M to change to the next animation frame using the current Pose\n"
-        "Press N to change to the next animation pose",NULL);
-        if( igIsItemHovered(0) && IO->MouseWheel ) {
-            CameraZoom(Camera,-IO->MouseWheel);
-        }
-        if( igIsItemActive() && igIsMouseDragging(ImGuiMouseButton_Left,0) && CurrentRenderObject != NULL) {
-            CameraOnMouseEvent(Camera,IO->MouseDelta.x,IO->MouseDelta.y);
-        }
-        CameraCheckKeyEvents(Camera,KeyState,TimeInfo->Delta);
-        igEnd();
+        igEnd(); 
     }
-    igPopStyleVar(1);
 }
 
 void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem,Camera_t *Camera)
@@ -497,12 +468,23 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
     ZeroSize.x = 0.f;
     ZeroSize.y = 0.f;
     
+    if( igCollapsingHeader_TreeNodeFlags("Help",ImGuiTreeNodeFlags_DefaultOpen) ) {
+        igText("Press and Hold The Left Mouse Button to Rotate the Camera");
+        igText("Scroll the Mouse Wheel to Zoom the Camera In and Out");
+        igText("Press A and S to strafe the Camera left-right,Spacebar and Z to move it up-down");
+        igText("Press and Hold M to change to the next animation frame using the current Pose");
+        igText("Press N to change to the next animation pose");
+        igText("Press Escape to exit the program");
+    }
     if( igCollapsingHeader_TreeNodeFlags("Camera",ImGuiTreeNodeFlags_DefaultOpen) ) {
         igText("Camera Spherical Position(Radius,Theta,Phi):%.3f;%.3f;%.3f",Camera->Position.Radius,Camera->Position.Theta,Camera->Position.Phi);
         igText("Camera View Point:%.3f;%.3f;%.3f",Camera->ViewPoint[0],Camera->ViewPoint[1],Camera->ViewPoint[2]);
 
         if( igButton("Reset Camera Position",ZeroSize) ) {
             CameraReset(Camera);
+        }
+        if( igSliderFloat("Camera Speed",&CameraSpeed->FValue,10.f,256.f,"%.2f",0) ) {
+            ConfigSetNumber("CameraSpeed",CameraSpeed->FValue);
         }
         if( igSliderFloat("Camera Mouse Sensitivity",&CameraMouseSensitivity->FValue,1.f,20.f,"%.2f",0) ) {
             ConfigSetNumber("CameraMouseSensitivity",CameraMouseSensitivity->FValue);
@@ -698,11 +680,10 @@ void GUIDraw(Engine_t *Engine)
 {
     
     GUIBeginFrame();
-    
+    GUIDrawDebugOverlay(Engine->TimeInfo);
     GUIDrawMenuBar(Engine);
     GUIRenderFileDialogs(Engine->GUI);
     GUIDrawErrorMessage(Engine->GUI);
-    GUIDrawSceneWindow(Engine->RenderObjectManager,Engine->Camera,Engine->TimeInfo,Engine->KeyState);
     GUIDrawMainWindow(Engine->GUI,Engine->RenderObjectManager,Engine->VideoSystem,Engine->Camera);
     GUIDrawDebugWindow(Engine->GUI,Engine->Camera,Engine->VideoSystem);
     GUIDrawVideoSettingsWindow(Engine->GUI,Engine->VideoSystem);

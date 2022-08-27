@@ -231,7 +231,7 @@ void                BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bo
                                                     BSDVertexTable_t *VertexTable,mat4 Rotation,vec3 Translation,int AnimationIndex,int FrameIndex);
 int                 BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex,int FrameIndex);
 void                BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject);
-void                BSDRenderObjectExportPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,int AnimationIndex,FILE *OutFile);
+void                BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile);
 void                BSDFree(BSD_t *BSD);
 void                BSDFreeRenderObjectList(BSDRenderObject_t *RenderObjectList);
 

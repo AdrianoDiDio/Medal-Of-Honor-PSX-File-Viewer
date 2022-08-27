@@ -300,6 +300,9 @@ void EngineCheckEvents(Engine_t *Engine)
 {
     SDL_Event Event;
     BSDRenderObject_t *CurrentRenderObject;
+    int NextFrame;
+    int NextPose;
+    
     while( SDL_PollEvent(&Event) ) {
         if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
             ConfigSetNumber("VideoWidth",Event.window.data1);
@@ -311,24 +314,7 @@ void EngineCheckEvents(Engine_t *Engine)
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_m ) {
             CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(Engine->RenderObjectManager);
             if( CurrentRenderObject != NULL ) {
-//                 int NextPose;
-//                 while( 1 ) {
-//                        
-//                     NextPose = CurrentRenderObject->CurrentAnimationIndex;
-//                     CurrentRenderObject->CurrentFrameIndex++;
-//                     if( CurrentRenderObject->CurrentFrameIndex >=
-//                         CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames ) {
-//                         NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1);
-//                         CurrentRenderObject->CurrentFrameIndex = 0;
-//                         break;
-//                     } else {
-//                     }
-//                     if( CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
-//                         Frame[CurrentRenderObject->CurrentFrameIndex].Type == 0 ) {
-//                             break;
-//                         }
-//                 }
-                int NextFrame = (CurrentRenderObject->CurrentFrameIndex + 1) % 
+                NextFrame = (CurrentRenderObject->CurrentFrameIndex + 1) % 
                     CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames;
                 BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame);
             }
@@ -336,7 +322,7 @@ void EngineCheckEvents(Engine_t *Engine)
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_n ) {
             CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(Engine->RenderObjectManager);
             if( CurrentRenderObject != NULL ) {
-                int NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1) % 
+                NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1) % 
                     CurrentRenderObject->NumAnimations;
                 while( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,NextPose,0) ) {
                     NextPose = (NextPose + 1 ) % CurrentRenderObject->NumAnimations;
@@ -344,6 +330,17 @@ void EngineCheckEvents(Engine_t *Engine)
             }
         }
         GUIProcessEvent(Engine->GUI,&Event);
+        if( GUIIsMouseFree() ) {
+            if( Event.type == SDL_MOUSEWHEEL) {
+                CameraZoom(Engine->Camera,-Event.wheel.y);
+            }
+            if( Event.type == SDL_MOUSEMOTION && Event.motion.state & SDL_BUTTON_LMASK ) {
+                CameraOnMouseEvent(Engine->Camera,Event.motion.xrel,Event.motion.yrel);
+            }
+        }
+    }
+    if( GUIIsKeyboardFree() ) {
+        CameraCheckKeyEvents(Engine->Camera,Engine->KeyState,Engine->TimeInfo->Delta);
     }
 }
 
