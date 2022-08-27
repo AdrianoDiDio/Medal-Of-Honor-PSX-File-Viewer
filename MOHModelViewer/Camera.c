@@ -53,19 +53,72 @@ void CameraOnMouseEvent(Camera_t *Camera,int Dx,int Dy)
 
     CameraOnAngleUpdate(Camera);
 }
-
-void CameraUpdateViewMatrix(Camera_t *Camera)
+void CameraUpdateEyeVector(Camera_t *Camera)
+{
+    Camera->Eye[0] = Camera->ViewPoint[0] + Camera->Position.Radius * cos(Camera->Position.Theta) * cos(Camera->Position.Phi);
+    Camera->Eye[1] = Camera->ViewPoint[1] + Camera->Position.Radius * sin(Camera->Position.Theta);
+    Camera->Eye[2] = Camera->ViewPoint[2] + Camera->Position.Radius * cos(Camera->Position.Theta) * sin(Camera->Position.Phi);
+}
+void CameraGetNormalizedDirection(Camera_t *Camera,vec3 Direction)
+{
+    glm_vec3_sub(Camera->ViewPoint,Camera->Eye,Direction);
+    glm_vec3_normalize(Direction);
+}
+void CameraGetForwardVector(Camera_t *Camera,vec3 Forward)
 {
     vec3 Direction;
+    CameraGetNormalizedDirection(Camera,Direction);
+    glm_vec3_add(Direction,Camera->Eye,Forward);
+}
+void CameraUpdateViewMatrix(Camera_t *Camera)
+{
+    vec3 Forward;
     glm_mat4_identity(Camera->ViewMatrix);
-    Camera->Eye[0] = Camera->Position.Radius * cos(Camera->Position.Theta) * cos(Camera->Position.Phi);
-    Camera->Eye[1] = Camera->Position.Radius * sin(Camera->Position.Theta);
-    Camera->Eye[2] = Camera->Position.Radius * cos(Camera->Position.Theta) * sin(Camera->Position.Phi);
+    CameraUpdateEyeVector(Camera);
+    CameraGetForwardVector(Camera,Forward);
+    glm_lookat(Camera->Eye,Forward,GLM_YUP,Camera->ViewMatrix);
+}
+void CameraUpdate(Camera_t *Camera,int Orientation, float Delta)
+{
+    float CamSpeed;
+    vec3 Direction;
+    vec3 Right;
+
     
-    glm_vec3_negate_to(Camera->Eye,Direction);
-    glm_vec3_normalize(Direction);
-    glm_vec3_add(Direction,Camera->Eye,Direction);
-    glm_lookat(Camera->Eye,Direction,GLM_YUP,Camera->ViewMatrix);
+    CamSpeed = 1.f * Delta * 128.f;
+    CameraGetNormalizedDirection(Camera,Direction);
+    glm_vec3_cross(GLM_YUP,Direction,Right);    
+    glm_vec3_normalize(Right);
+    glm_vec3_scale(Right,CamSpeed,Right);
+    switch( Orientation ) {
+        case CAMERA_DIRECTION_UPWARD:
+            Camera->ViewPoint[1] += CamSpeed;
+            break;
+        case CAMERA_DIRECTION_DOWNWARD:
+            Camera->ViewPoint[1] -= CamSpeed;
+            break;
+        case CAMERA_DIRECTION_LEFTWARD:
+            glm_vec3_add(Camera->ViewPoint,Right,Camera->ViewPoint);
+            break;
+        case CAMERA_DIRECTION_RIGHTWARD:
+            glm_vec3_sub(Camera->ViewPoint,Right,Camera->ViewPoint);
+            break;
+    }
+}
+void CameraCheckKeyEvents(Camera_t *Camera,const Byte *KeyState,float Delta)
+{
+    if( KeyState[SDL_SCANCODE_A] ) {
+        CameraUpdate(Camera,CAMERA_DIRECTION_LEFTWARD,Delta);
+    }
+    if( KeyState[SDL_SCANCODE_D] ) {
+        CameraUpdate(Camera,CAMERA_DIRECTION_RIGHTWARD,Delta);
+    }
+    if( KeyState[SDL_SCANCODE_SPACE] ) {
+        CameraUpdate(Camera,CAMERA_DIRECTION_UPWARD,Delta);
+    }
+    if( KeyState[SDL_SCANCODE_Z] ) {
+        CameraUpdate(Camera,CAMERA_DIRECTION_DOWNWARD,Delta);
+    }
 }
 void CameraBeginFrame(Camera_t *Camera)
 {
@@ -79,6 +132,7 @@ void CameraReset(Camera_t *Camera)
         DPrintf("CameraReset:Invalid camera\n");
         return;
     }
+    glm_vec3_zero(Camera->ViewPoint);
     Camera->Position.Radius = 150.f;
     Camera->Position.Theta = 0.f;
     Camera->Position.Phi = 0.f;

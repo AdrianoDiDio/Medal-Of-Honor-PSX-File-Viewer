@@ -415,6 +415,7 @@ void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
     ImVec2 UV1;
     ImVec2 BaseTextPosition;
     ImVec2 WindowPadding;
+    ImVec2 DefaultWindowSize;
     ImVec2 FPSStringSize;
     ImVec2 FPSStringPosition;
     ImDrawList *DrawList;
@@ -442,7 +443,9 @@ void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
     
     //NOTE(Adriano):Disable window padding only for scene window.
     igPushStyleVar_Vec2(ImGuiStyleVar_WindowPadding, WindowPadding);
-    
+    DefaultWindowSize.x = 400;
+    DefaultWindowSize.y = 400;
+    igSetNextWindowSize(DefaultWindowSize,ImGuiCond_FirstUseEver);
     if( igBegin("Scene Window", NULL, 0) ) {
         DrawList = igGetWindowDrawList();
         igGetContentRegionAvail(&Size);
@@ -467,6 +470,7 @@ void GUIDrawSceneWindow(RenderObjectManager_t *RenderObjectManager,Camera_t *Cam
         if( igIsItemActive() && igIsMouseDragging(ImGuiMouseButton_Left,0) && CurrentRenderObject != NULL) {
             CameraOnMouseEvent(Camera,IO->MouseDelta.x,IO->MouseDelta.y);
         }
+        CameraCheckKeyEvents(Camera,KeyState,TimeInfo->Delta);
         igEnd();
     }
     igPopStyleVar(1);
@@ -495,6 +499,8 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
     
     if( igCollapsingHeader_TreeNodeFlags("Camera",ImGuiTreeNodeFlags_DefaultOpen) ) {
         igText("Camera Spherical Position(Radius,Theta,Phi):%.3f;%.3f;%.3f",Camera->Position.Radius,Camera->Position.Theta,Camera->Position.Phi);
+        igText("Camera View Point:%.3f;%.3f;%.3f",Camera->ViewPoint[0],Camera->ViewPoint[1],Camera->ViewPoint[2]);
+
         if( igButton("Reset Camera Position",ZeroSize) ) {
             CameraReset(Camera);
         }

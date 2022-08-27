@@ -473,6 +473,7 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
     //NOTE(Adriano):Interpolate quaternion data between the previous and the next?
     QuaternionList = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].QuaternionList;
     if( !QuaternionList ) {
+        QuaternionList = malloc(sizeof(BSDQuaternion_t) * RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions);
         int NextFrame = FrameIndex + (HighNibble(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].FrameInterpolationIndex));
         int PrevFrame = FrameIndex - (LowNibble(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].FrameInterpolationIndex));
         int Jump = NextFrame-PrevFrame;
@@ -481,7 +482,6 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
         DPrintf("Previous FrameIndex:%i\n",PrevFrame);
         DPrintf("Jump:%i\n",Jump);
         DPrintf("NumQuaternions:%i\n",RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions);
-        QuaternionList = malloc(sizeof(BSDQuaternion_t) * RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions);
         for( int i = 0; i < RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions; i++ ) {
             FromQuaternion[0] = RenderObject->AnimationList[AnimationIndex].Frame[PrevFrame].QuaternionList[i].x / 4096.f;
             FromQuaternion[1] = RenderObject->AnimationList[AnimationIndex].Frame[PrevFrame].QuaternionList[i].y / 4096.f;
@@ -504,10 +504,9 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
         }
     }
     glm_vec3_zero(Translation);
-//     Translation[0] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.x / 4096;
-//     Translation[1] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.y / 4096;
-//     Translation[2] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.z / 4096;
-
+    Translation[0] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.x / 4096;
+    Translation[1] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.y / 4096;
+    Translation[2] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.z / 4096;
     glm_mat4_identity(Rotation);
     BSDRenderObjectResetVertexTable(RenderObject);
     glm_vec3_zero(RenderObject->Center);
@@ -1337,8 +1336,12 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
                 fseek(BSDFile,EntryTable.AnimationQuaternionDataOffset + QuaternionListOffset + BSD_HEADER_SIZE,SEEK_SET);
                 DPrintf("Reading Vector definition at %li\n",ftell(BSDFile));
                 NumEncodedQuaternions = (RenderObject->AnimationList[i].Frame[j].NumQuaternions / 2) * 3;
+                if( (RenderObject->AnimationList[i].Frame[j].NumQuaternions & 1 ) != 0 ) {
+                    NumEncodedQuaternions += 2;
+                }
                 RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList = malloc( NumEncodedQuaternions * sizeof(int));
                 for( w = 0; w < NumEncodedQuaternions; w++ ) {
+                    DPrintf("Reading Encoded quaternion at %li\n",ftell(BSDFile));
                     fread(&RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[w],
                           sizeof(RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[w]),1,BSDFile);
                 }
@@ -1357,30 +1360,38 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
                     TempQuaternion.y = (QuatPart1 << 0x14) >> 0x13;
                     TempQuaternion.z = ( ( ( (QuatPart1 >> 0xC) << 0x1C ) >> 0x14) | ( (QuatPart0 >> 0xC) & 0xF0) | (QuatPart0 & 0xF) ) * 2;
                     TempQuaternion.w = (QuatPart0 >> 0x14) * 2;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].x = TempQuaternion.x;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].y = TempQuaternion.y;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].z = TempQuaternion.z;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[q*2].w = TempQuaternion.w;
-
-//                     DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].x = TempQuaternion.x;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].y = TempQuaternion.y;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].z = TempQuaternion.z;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].w = TempQuaternion.w;
+                    NumDecodedQuaternions++;
+                    DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
                     TempQuaternion.x = (QuatPart1  >> 0x14) * 2;
                     TempQuaternion.y = ( (QuatPart2 << 0x4) >> 0x14 ) * 2;
                     TempQuaternion.w = ( (QuatPart2 << 0x10) >> 0x14) * 2;
                     TempQuaternion.z = ( (QuatPart2 >> 0x1C) << 0x8 | (QuatPart2 & 0xF ) << 0x4 | ( (QuatPart1 >> 0x10) & 0xF ) ) * 2;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].x = TempQuaternion.x;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].y = TempQuaternion.y;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].z = TempQuaternion.z;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[(q*2) + 1].w = TempQuaternion.w;
-//                     DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
-                    NumDecodedQuaternions += 2;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].x = TempQuaternion.x;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].y = TempQuaternion.y;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].z = TempQuaternion.z;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].w = TempQuaternion.w;
+                    DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
+                    NumDecodedQuaternions ++;
                 }
+//                 DPrintf("Decoded %i quaternions out of %i\n",NumDecodedQuaternions,RenderObject->AnimationList[i].Frame[j].NumQuaternions);
                 if( NumDecodedQuaternions == (RenderObject->AnimationList[i].Frame[j].NumQuaternions - 1) ) {
-                    QuatPart0 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[0];
-                    QuatPart1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[1];
-                    TempQuaternion.x = ( (QuatPart0 << 0x10) >> 0x14) * 2;
+                    QuatPart0 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[NumEncodedQuaternions-2];
+                    QuatPart1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[NumEncodedQuaternions-1];
+//                     DPrintf("QuatPart0:%i QuatPart1:%i\n",QuatPart0,QuatPart1);
+                    TempQuaternion.x = (QuatPart0 << 16 >> 20) *2;
                     TempQuaternion.y = (QuatPart1 << 0x14) >> 0x13;
                     TempQuaternion.z = ( ( ( (QuatPart1 >> 0xC) << 0x1C ) >> 0x14) | ( (QuatPart0 >> 0xC) & 0xF0) | (QuatPart0 & 0xF) ) * 2;
                     TempQuaternion.w = (QuatPart0 >> 0x14) * 2;
+//                     DPrintf("New quat is %i;%i;%i;%i\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].x = TempQuaternion.x;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].y = TempQuaternion.y;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].z = TempQuaternion.z;
+                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].w = TempQuaternion.w;
+
                     NumDecodedQuaternions++;
                 }
                 DPrintf("Decoded %i out of %i\n",NumDecodedQuaternions,RenderObject->AnimationList[i].Frame[j].NumQuaternions);
@@ -1426,9 +1437,7 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
     RenderObject->Scale[0] = (float) (RenderObjectElement.ScaleX  / 16 ) / 4096.f;
     RenderObject->Scale[1] = (float) (RenderObjectElement.ScaleY  / 16 ) / 4096.f;
     RenderObject->Scale[2] = (float) (RenderObjectElement.ScaleZ  / 16 ) / 4096.f;
-    if( RenderObject->Type == 1 ) {
-        glm_vec3_scale(RenderObject->Scale,0.5,RenderObject->Scale);
-    }
+
     glm_vec3_zero(RenderObject->Center);
 
     if( !BSDLoadAnimationVertexData(RenderObject,RenderObjectElement.VertexTableIndexOffset,BSDEntryTable,BSDFile) ) {
