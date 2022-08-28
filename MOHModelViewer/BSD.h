@@ -228,7 +228,7 @@ BSDRenderObject_t   *BSDLoadAllAnimatedRenderObjects(const char *FName,int *Game
 void                BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void                BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void                BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
-                                                    BSDVertexTable_t *VertexTable,mat4 Rotation,vec3 Translation,int AnimationIndex,int FrameIndex);
+                                                    BSDVertexTable_t *VertexTable,mat4 TransformMatrix,int AnimationIndex,int FrameIndex);
 int                 BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex,int FrameIndex);
 void                BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject);
 void                BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile);
