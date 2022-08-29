@@ -528,7 +528,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                     RenderObjectIterator = RenderObjectIterator->Next ) {
                     TreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
                     DisableNode = 0;
-                    sprintf(SmallBuffer,"%u",RenderObjectIterator->Id);
+                    sprintf(SmallBuffer,"%i",RenderObjectIterator->Id);
                     if( RenderObjectIterator == RenderObjectManagerGetSelectedRenderObject(RenderObjectManager) ) {
                         TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
                         DisableNode = 1;

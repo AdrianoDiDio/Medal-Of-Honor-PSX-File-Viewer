@@ -210,7 +210,7 @@ Compile:
 This command will read the content of <File.tim>, convert it to png and
 save it in the current folder.  
 If the file contains more than one TIM then it creates a folder with the
-same name as <File> (without the extension) and all the images that were
+same name as <File.tim> (without the extension) and all the images that were
 found in the file will be saved inside that folder.
 #### Credits
 TIMExtractor uses the following libraries:  

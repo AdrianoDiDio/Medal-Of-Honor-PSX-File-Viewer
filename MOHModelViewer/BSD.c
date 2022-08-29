@@ -455,11 +455,8 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
         DPrintf("BSDRenderObjectSetAnimationPose:Failed to set pose using frame %i...Frame Index is out of bounds\n",FrameIndex);
         return 0;
     }
-    //NOTE(Adriano):Update it anyway but don't apply the transform otherwise the model will reset to the default state since
-    //we haven't figured out on how to load animation that have a different type than 0...
     RenderObject->CurrentAnimationIndex = AnimationIndex;
     RenderObject->CurrentFrameIndex = FrameIndex;
-    //NOTE(Adriano):Interpolate quaternion data between the previous and the next?
     QuaternionList = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].QuaternionList;
     if( !QuaternionList ) {
         QuaternionList = malloc(sizeof(BSDQuaternion_t) * RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions);
@@ -799,7 +796,6 @@ void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile,int GameEngine)
 }
 int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
 {
-    int MOHUndegroundFaceDataOffset;
     int FirstRenderObjectPosition;
     int i;
     
@@ -811,9 +807,8 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
     
     fseek(BSDFile,BSD_RENDER_OBJECT_STARTING_OFFSET + BSD_HEADER_SIZE,SEEK_SET);
     if( GameEngine == MOH_GAME_UNDERGROUND) {
-        fread(&MOHUndegroundFaceDataOffset,sizeof(MOHUndegroundFaceDataOffset),1,BSDFile);
-        DPrintf("BSDReadRenderObjectChunk:Got MOH:Underground Face Offset:%i\n",MOHUndegroundFaceDataOffset);
-        fseek(BSDFile,12,SEEK_CUR);
+        //NOTE(Adriano):Skips the face offset...
+        fseek(BSDFile,16,SEEK_CUR);
     }
     fread(&BSD->RenderObjectTable.NumRenderObject,sizeof(BSD->RenderObjectTable.NumRenderObject),1,BSDFile);
     FirstRenderObjectPosition = GetCurrentFilePosition(BSDFile);
@@ -1345,7 +1340,7 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
                     QuatPart0 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base];
                     QuatPart1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base+1];
                     QuatPart2 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base+2];
-                    TempQuaternion.x = ( (QuatPart0 << 0x10) >> 20) * 2;
+                    TempQuaternion.x = ( (QuatPart0 << 0x10) >> 0x14) * 2;
                     TempQuaternion.y = (QuatPart1 << 0x14) >> 0x13;
                     TempQuaternion.z = ( ( ( (QuatPart1 >> 0xC) << 0x1C ) >> 0x14) | ( (QuatPart0 >> 0xC) & 0xF0) | (QuatPart0 & 0xF) ) * 2;
                     TempQuaternion.w = (QuatPart0 >> 0x14) * 2;
@@ -1371,7 +1366,7 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
                     QuatPart0 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[NumEncodedQuaternions-2];
                     QuatPart1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[NumEncodedQuaternions-1];
 //                     DPrintf("QuatPart0:%i QuatPart1:%i\n",QuatPart0,QuatPart1);
-                    TempQuaternion.x = (QuatPart0 << 16 >> 20) *2;
+                    TempQuaternion.x = ( (QuatPart0 << 0x10) >> 0x14) * 2;
                     TempQuaternion.y = (QuatPart1 << 0x14) >> 0x13;
                     TempQuaternion.z = ( ( ( (QuatPart1 >> 0xC) << 0x1C ) >> 0x14) | ( (QuatPart0 >> 0xC) & 0xF0) | (QuatPart0 & 0xF) ) * 2;
                     TempQuaternion.w = (QuatPart0 >> 0x14) * 2;
