@@ -174,7 +174,7 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
         printf("LevelInit:Fatal error...couldn't allocate memory for level struct...\n");
         goto Failure;
     }
-    GUIProgressBarReset(GUI);
+    ProgressBarReset(GUI->ProgressBar);
     
     Level->Font = NULL;
     Level->BSD = NULL;
@@ -192,7 +192,7 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
     DPrintf("LevelInit:Loading level %s Mission %i Level %i\n",Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
 
     BasePercentage = 0.f;
-    GUIProgressBarIncrement(GUI,VideoSystem,BasePercentage,"Loading all images");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,BasePercentage,"Loading all images");
     
     //Step.1 Load all the tims from taf.
     //0 is hardcoded...for the images it doesn't make any difference between 0 and 1
@@ -205,7 +205,7 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
         goto Failure;
     }
     BasePercentage += 10;
-    GUIProgressBarIncrement(GUI,VideoSystem,BasePercentage,"Early Loading BSD File");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,BasePercentage,"Early Loading BSD File");
     
     //Step.2 Partially load the BSD file in order to get the TSP info.
     BSDFile = BSDEarlyInit(&Level->BSD,Level->MissionPath,Level->MissionNumber,Level->LevelNumber);
@@ -227,7 +227,7 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
     for( i = Level->BSD->TSPInfo.StartingComparment; i <= Level->BSD->TSPInfo.NumTSP; i++ ) {
         snprintf(Buffer,sizeof(Buffer),"%s%cTSP0%c%i_%i_C%i.TSP",Level->MissionPath,PATH_SEPARATOR,PATH_SEPARATOR,
                  Level->MissionNumber,Level->LevelNumber,i);
-        GUIProgressBarIncrement(GUI,VideoSystem,Increment,Buffer);
+        ProgressBarIncrement(GUI->ProgressBar,VideoSystem,Increment,Buffer);
         TSP = TSPLoad(Buffer,i);
         if( !TSP ) {
             DPrintf("LevelInit:Failed to load TSP File %s\n",Buffer);
@@ -242,29 +242,29 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
     }
     //NOTE(Adriano):This is required due to the different BSD RenderObject ID mapping that multiplayer levels use.
     IsMultiplayer = MissionNumber == 12 ? 1 : 0;
-    GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Loading BSD");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,Increment,"Loading BSD");
     //Step.4 Resume loading the BSD after we successfully loaded the TSP.
     DPrintf("LevelInit: Detected game %s\n",LocalGameEngine == MOH_GAME_STANDARD ? "MOH" : "MOH:Underground");
     if( !BSDLoad(Level->BSD,LocalGameEngine,IsMultiplayer,BSDFile) ) {
         goto Failure;
     }
-    GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Loading VRAM");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,Increment,"Loading VRAM");
     Level->VRAM = VRAMInit(Level->ImageList);
-    GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Loading Font");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,Increment,"Loading Font");
     Level->Font = FontInit(Level->VRAM);
-    GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Generating VAOs");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,Increment,"Generating VAOs");
     TSPCreateVAOs(Level->TSPList);
     BSDCreateVAOs(Level->BSD,LocalGameEngine,Level->VRAM);
-    GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Fixing Objects Position");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,Increment,"Fixing Objects Position");
     BSDFixRenderObjectPosition(Level);
-    GUIProgressBarIncrement(GUI,VideoSystem,Increment,"Loading Music");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,Increment,"Loading Music");
     SoundSystemLoadLevelMusic(SoundSystem,Level->MissionPath,MissionNumber,LevelNumber,LocalGameEngine);
     if( LevelEnableMusicTrack->IValue ) {
         PlayAmbientMusic = (LevelEnableMusicTrack->IValue == 2) ? 1 : 0;
         SoundSystemPlayMusic(SoundSystem,PlayAmbientMusic);
     }
     DPrintf("LevelInit:Allocated level struct\n");
-    GUIProgressBarIncrement(GUI,VideoSystem,100,"Ready");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Ready");
     return Level;
 Failure:
     LevelCleanUp(Level);

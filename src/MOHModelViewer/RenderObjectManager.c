@@ -132,12 +132,12 @@ void RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager_t *RenderObje
         DPrintf("RenderObjectManagerExportCurrentPoseToPly:Failed to open %s for writing\n",PlyFile);
         return;
     }
-    GUISetProgressBarDialogTitle(GUI,"Exporting Current Pose to Ply...");
-    GUIProgressBarIncrement(GUI,VideoSystem,10,"Writing BSD data.");
+    ProgressBarSetDialogTitle(GUI->ProgressBar,"Exporting Current Pose to Ply...");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,10,"Writing BSD data.");
     BSDRenderObjectExportCurrentPoseToPly(CurrentRenderObject,CurrentBSDPack->VRAM,OutFile);
-    GUIProgressBarIncrement(GUI,VideoSystem,95,"Exporting VRAM.");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,95,"Exporting VRAM.");
     VRAMSave(CurrentBSDPack->VRAM,TextureFile);
-    GUIProgressBarIncrement(GUI,VideoSystem,100,"Done.");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Done.");
     free(EngineName);
     free(FileName);
     free(PlyFile);
@@ -322,7 +322,7 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
         return RENDER_OBJECT_MANAGER_BSD_ERROR_GENERIC;
     }
     
-    GUIProgressBarReset(GUI);
+    ProgressBarReset(GUI->ProgressBar);
     
     DPrintf("RenderObjectManagerLoadBSD:Attempting to load %s\n",File);
     BSDPack = malloc(sizeof(BSDRenderObjectPack_t));
@@ -340,7 +340,7 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
     BSDPack->Next = NULL;
     TAFFile = NULL;
     
-    GUIProgressBarIncrement(GUI,VideoSystem,0,"Loading all images");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,0,"Loading all images");
     TAFFile = SwitchExt(File,".TAF");
     BSDPack->ImageList = TIMGetAllImages(TAFFile);
     if( !BSDPack->ImageList ) {
@@ -353,7 +353,7 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
             goto Failure;
         }
     }
-    GUIProgressBarIncrement(GUI,VideoSystem,20,"Loading all RenderObjects");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20,"Loading all RenderObjects");
     BSDPack->RenderObjectList = BSDLoadAllAnimatedRenderObjects(File,&BSDPack->GameVersion);
     if( !BSDPack->RenderObjectList ) {
         DPrintf("RenderObjectManagerLoadBSD:Failed to load render objects from file\n");
@@ -365,18 +365,18 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
         ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_ALREADY_LOADED;
         goto Failure;
     }
-    GUIProgressBarIncrement(GUI,VideoSystem,40,"Initializing VRAM");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,40,"Initializing VRAM");
     BSDPack->VRAM = VRAMInit(BSDPack->ImageList);
     if( !BSDPack->VRAM ) {
         DPrintf("RenderObjectManagerLoadBSD:Failed to initialize VRAM\n");
         ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_VRAM_INITIALIZATION;
         goto Failure;
     }
-    GUIProgressBarIncrement(GUI,VideoSystem,90,"Setting default pose");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,90,"Setting default pose");
     for( Iterator = BSDPack->RenderObjectList; Iterator; Iterator = Iterator->Next ) {
         BSDRenderObjectSetAnimationPose(Iterator,0,0);
     }
-    GUIProgressBarIncrement(GUI,VideoSystem,100,"Done");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Done");
     RenderObjectManagerAppendBSDPack(RenderObjectManager,BSDPack);
     if( !RenderObjectManager->SelectedBSDPack ) {
         RenderObjectManagerSetSelectedRenderObject(RenderObjectManager,BSDPack,BSDPack->RenderObjectList);
@@ -399,9 +399,9 @@ int RenderObjectManagerLoadPack(RenderObjectManager_t *RenderObjectManager,GUI_t
     
     BaseName = GetBaseName(File);
     asprintf(&Title,"Loading %s",BaseName);
-    GUIProgressBarBegin(GUI,Title);
+    ProgressBarBegin(GUI->ProgressBar,Title);
     Result = RenderObjectManagerLoadBSD(RenderObjectManager,GUI,VideoSystem,File);
-    GUIProgressBarEnd(GUI,VideoSystem);
+    ProgressBarEnd(GUI->ProgressBar,VideoSystem);
     if( Result <= 0) {
         GUISetErrorMessage(GUI,RenderObjectManagerErrorToString(Result));
     }
@@ -417,7 +417,7 @@ void RenderObjectManagerOnExportDirSelect(GUIFileDialog_t *FileDialog,GUI_t *GUI
     Exporter = (RenderObjectManagerDialogData_t *) UserData;
     RenderObjectManager = Exporter->RenderObjectManager;
         
-    GUIProgressBarBegin(GUI,"Exporting...");
+    ProgressBarBegin(GUI->ProgressBar,"Exporting...");
 
     switch( Exporter->OutputFormat ) {
         case RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY:
@@ -428,7 +428,7 @@ void RenderObjectManagerOnExportDirSelect(GUIFileDialog_t *FileDialog,GUI_t *GUI
             break;
     }
         
-    GUIProgressBarEnd(GUI,Exporter->VideoSystem);
+    ProgressBarEnd(GUI->ProgressBar,Exporter->VideoSystem);
     GUIFileDialogClose(GUI,FileDialog);
     free(Exporter);
 }

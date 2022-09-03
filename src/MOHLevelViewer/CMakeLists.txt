@@ -15,9 +15,10 @@ SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 SET(CMAKE_INSTALL_RPATH "$\{ORIGIN\}")
 
 set(SOURCE_FILES    ../Common/Common.c ../Common/Config.c ../Common/Video.c 
-                    ../Common/ShaderManager.c ../Common/VAO.c ../Common/Sound.c 
-                    Camera.c GUI.c TSP.c ../Common/TIM.c Font.c BSD.c BSDTwoPlayers.c 
-                    ../Common/VRAM.c Level.c LevelManager.c MOHLevelViewer.c
+                    ../Common/ShaderManager.c ../Common/VAO.c ../Common/Sound.c
+                    ../Common/IMGUIUtils.c Camera.c GUI.c TSP.c ../Common/TIM.c 
+                    Font.c BSD.c BSDTwoPlayers.c ../Common/VRAM.c Level.c LevelManager.c 
+                    MOHLevelViewer.c
 )
                  
 set(IMGUI_SOURCE_FILES ../Libs/cimgui/cimgui.cpp
@@ -39,13 +40,16 @@ FetchContent_Declare(
     GIT_REPOSITORY "https://github.com/viva64/pvs-studio-cmake-module.git"
     GIT_TAG        "master" 
 )
+
+get_filename_component(PARENT_DIRECTORY ../ ABSOLUTE)
+
 FetchContent_MakeAvailable(PVS_CMakeModule)
 include("${pvs_cmakemodule_SOURCE_DIR}/PVS-Studio.cmake")
 pvs_studio_add_target(TARGET MOHLevelViewer.Analyze ALL
                       LOG FORMAT fullhtml
                       SUPPRESS_BASE suppress_base.json
                       ANALYZE ${PROJECT_NAME}
-                      ARGS -e ${CMAKE_SOURCE_DIR}/Libs/*
+                      ARGS -e ${PARENT_DIRECTORY}/Libs/*
                       MODE GA:1,2)
                     
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)

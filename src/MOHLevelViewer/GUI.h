@@ -22,6 +22,7 @@
 #include "../Common/Common.h"
 #include "../Common/Config.h"
 #include "../Common/Video.h"
+#include "../Common/IMGUIUtils.h"
 
 typedef struct GUI_s GUI_t;
 typedef struct GUIFileDialog_s GUIFileDialog_t;
@@ -29,12 +30,7 @@ typedef struct GUIFileDialog_s GUIFileDialog_t;
 typedef void (*FileDialogSelectCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Directory,const char *File,void *UserData);
 typedef void (*FileDialogCancelCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI);
 
-typedef struct GUIProgressBar_s {
-    ImGuiContext *Context;
-    float CurrentPercentage;
-    int IsOpen;
-    char *DialogTitle;
-} GUIProgressBar_t;
+
 
 typedef struct GUIFileDialog_s {
     char *WindowTitle;
@@ -56,7 +52,7 @@ typedef struct GUI_s {
     bool VideoSettingsWindowHandle;
     bool LevelSelectWindowHandle;
     int NumActiveWindows;
-    GUIProgressBar_t *ProgressBar;
+    ProgressBar_t *ProgressBar;
     char *ErrorMessage;
     ImGuiID ErrorID;
     
@@ -92,11 +88,6 @@ void            GUIFileDialogOpenWithUserData(GUI_t *GUI,GUIFileDialog_t *FileDi
 void            *GUIFileDialogGetUserData(GUIFileDialog_t *FileDialog);
 void            GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *FileDialog);
 int             GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
-void            GUIProgressBarBegin(GUI_t *GUI,const char *Title);
-void            GUIProgressBarEnd(GUI_t *GUI,VideoSystem_t *VideoSystem);
-void            GUIProgressBarReset(GUI_t *GUI);
-void            GUISetProgressBarDialogTitle(GUI_t *GUI,const char *Title);
-void            GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increment,const char *Message);
 void            GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
                         ComTimeInfo_t *TimeInfo);
 void            GUIFree(GUI_t *GUI);

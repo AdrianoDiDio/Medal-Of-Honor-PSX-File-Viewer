@@ -24,9 +24,6 @@
 #include "TSP.h"
 #include "MOHLevelViewer.h"
 
-Config_t *GUIFont;
-Config_t *GUIFontSize;
-Config_t *GUIShowFPS;
 
 const char* LevelMusicOptions[] = { 
     "Disable",
@@ -54,13 +51,6 @@ const VSyncSettings_t VSyncOptions[] = {
 
 int NumVSyncOptions = sizeof(VSyncOptions) / sizeof(VSyncOptions[0]);
 
-void GUIReleaseContext(ImGuiContext *Context)
-{    
-    igSetCurrentContext(Context);
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    igDestroyContext(Context);
-}
 void GUIFreeDialogList(GUI_t *GUI)
 {
     GUIFileDialog_t *Temp;
@@ -80,17 +70,12 @@ void GUIFreeDialogList(GUI_t *GUI)
 void GUIFree(GUI_t *GUI)
 {
     GUIReleaseContext(GUI->DefaultContext);
-    GUIReleaseContext(GUI->ProgressBar->Context);
+    ProgressBarDestroy(GUI->ProgressBar);
     GUIFreeDialogList(GUI);
-    
-    if( GUI->ProgressBar->DialogTitle ) {
-        free(GUI->ProgressBar->DialogTitle);
-    }
     if( GUI->ErrorMessage ) {
         free(GUI->ErrorMessage);
     }
     free(GUI->ConfigFilePath);
-    free(GUI->ProgressBar);
     free(GUI);
 }
 
@@ -174,18 +159,6 @@ void GUIToggleLevelSelectWindow(GUI_t *GUI)
 {
     GUI->LevelSelectWindowHandle = !GUI->LevelSelectWindowHandle;
     GUIUpdateWindowStack(GUI,GUI->LevelSelectWindowHandle);
-}
-void GUIBeginFrame()
-{
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL2_NewFrame();
-    igNewFrame();   
-}
-
-void GUIEndFrame()
-{
-    igRender();
-    ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 }
 bool GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...)
 {
@@ -428,98 +401,7 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
     }
 }
 
-void GUISetProgressBarDialogTitle(GUI_t *GUI,const char *Title)
-{
-    if( GUI->ProgressBar->DialogTitle ) {
-        free(GUI->ProgressBar->DialogTitle);
-    }
-    GUI->ProgressBar->DialogTitle = (Title != NULL) ? StringCopy(Title) : "Loading...";
-    //NOTE(Adriano):Forces a refresh...since changing the title disrupts the rendering process.
-    GUI->ProgressBar->IsOpen = 0;
-}
 
-void GUIProgressBarBegin(GUI_t *GUI,const char *Title)
-{
-    igSetCurrentContext(GUI->ProgressBar->Context);
-    GUI->ProgressBar->IsOpen = 0;
-    GUI->ProgressBar->CurrentPercentage = 0.f;
-    GUISetProgressBarDialogTitle(GUI,Title);
-}
-void GUIProgressBarReset(GUI_t *GUI)
-{
-    if(!GUI) {
-        return;
-    }
-    GUI->ProgressBar->CurrentPercentage = 0;
-}
-/*
-    This function can be seen as a complete rendering loop.
-    Each time we increment the progress bar, we check for any pending event that the GUI
-    can handle and then we clear the display, show the current progress and swap buffers.
- */
-void GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increment,const char *Message)
-{
-    SDL_Event Event;
-    ImGuiViewport *Viewport;
-    ImVec2 ScreenCenter;
-    ImVec2 Pivot;
-    ImVec2 Size;
-    
-    if( !GUI ) {
-        return;
-    }
-    
-    //NOTE(Adriano):Process any window event that could be generated while showing the progress bar.
-    while( SDL_PollEvent(&Event) ) {
-        ImGui_ImplSDL2_ProcessEvent(&Event);
-    }
-    //NOTE(Adriano):Since we are checking for events these function have now an updated view of the current window size.
-    Viewport = igGetMainViewport();
-    
-    ImGuiViewport_GetCenter(&ScreenCenter,Viewport);
-
-    Pivot.x = 0.5f;
-    Pivot.y = 0.5f;
-
-    glClear(GL_COLOR_BUFFER_BIT );
-    
-
-    GUIBeginFrame();
-    
-    if( !GUI->ProgressBar->IsOpen ) {
-        igOpenPopup_Str(GUI->ProgressBar->DialogTitle,0);
-        GUI->ProgressBar->IsOpen = 1;
-    }
-    
-    Size.x = 0.f;
-    Size.y = 0.f;
-    igSetNextWindowPos(ScreenCenter, ImGuiCond_Always, Pivot);
-    GUI->ProgressBar->CurrentPercentage += Increment;
-    if (igBeginPopupModal(GUI->ProgressBar->DialogTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        igProgressBar((GUI->ProgressBar->CurrentPercentage / 100.f),Size,Message);
-        igEnd();
-    }
-    GUIEndFrame();
-    VideoSystemSwapBuffers(VideoSystem);
-}
-
-void GUIProgressBarEnd(GUI_t *GUI,VideoSystem_t *VideoSystem)
-{
-    int Width;
-    int Height;
-    
-    igSetCurrentContext(GUI->DefaultContext);
-    GUI->ProgressBar->IsOpen = 0;
-    GUI->ProgressBar->CurrentPercentage = 0.f;
-    //NOTE(Adriano):Make sure to update the current window size.
-    VideoSystemGetCurrentWindowSize(VideoSystem,&Width,&Height);
-    if( Width != VidConfigWidth->IValue ) {
-        ConfigSetNumber("VideoWidth",Width);
-    }
-    if( Height != VidConfigHeight->IValue ) {
-        ConfigSetNumber("VideoHeight",Height);
-    }
-}
 int GUIGetVSyncOptionValue()
 {
     int i;
@@ -919,39 +801,6 @@ void GUIFileDialogSetOnDialogCancelledCallback(GUIFileDialog_t *FileDialog,FileD
     FileDialog->OnDialogCancelled = OnDialogCancelled;
 }
 
-void GUIContextInit(ImGuiContext *Context,VideoSystem_t *VideoSystem,const char *ConfigFilePath)
-{
-    ImGuiIO *IO;
-    ImGuiStyle *Style;
-    ImFont *Font;
-    ImFontConfig *FontConfig;
-    
-    IO = igGetIO();
-    igSetCurrentContext(Context);
-    ImGui_ImplSDL2_InitForOpenGL(VideoSystem->Window, &VideoSystem->GLContext);
-    ImGui_ImplOpenGL3_Init("#version 330 core");
-    igStyleColorsDark(NULL);
-    if( GUIFont->Value[0] ) {
-        Font = ImFontAtlas_AddFontFromFileTTF(IO->Fonts,GUIFont->Value,floor(GUIFontSize->FValue * VideoSystem->DPIScale),NULL,NULL);
-        if( !Font ) {
-            DPrintf("GUIContextInit:Invalid font file...using default\n");
-            ConfigSet("GUIFont","");
-        }
-    } else {
-        FontConfig = ImFontConfig_ImFontConfig();
-        FontConfig->OversampleH = 1;
-        FontConfig->OversampleV = 1;
-        FontConfig->PixelSnapH = true;
-        FontConfig->SizePixels = floor(GUIFontSize->FValue * VideoSystem->DPIScale);
-        ImFontAtlas_AddFontDefault(IO->Fonts,FontConfig);
-        ImFontConfig_destroy(FontConfig);
-    }
-    Style = igGetStyle();
-    Style->WindowTitleAlign.x = 0.5f;
-    ImGuiStyle_ScaleAllSizes(Style,VideoSystem->DPIScale);
-    IO->ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
-    IO->IniFilename = ConfigFilePath;
-}
 GUI_t *GUIInit(VideoSystem_t *VideoSystem)
 {
     GUI_t *GUI;
@@ -965,32 +814,27 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     }
     
     memset(GUI,0,sizeof(GUI_t));
-    GUI->ProgressBar = malloc(sizeof(GUIProgressBar_t));
     GUI->ErrorMessage = NULL;
     
     ConfigPath = AppGetConfigPath();
     asprintf(&GUI->ConfigFilePath,"%simgui.ini",ConfigPath);
     free(ConfigPath);
     
-    if( !GUI->ProgressBar ) {
-        DPrintf("GUIInit:Failed to allocate memory for ProgressBar struct\n");
-        free(GUI);
-        return NULL;
-    }
     GUI->NumRegisteredFileDialog = 0;
     
     GUI->FileDialogList = NULL;
-
-    GUIFont = ConfigGet("GUIFont");
-    GUIFontSize = ConfigGet("GUIFontSize");
-    GUIShowFPS = ConfigGet("GUIShowFPS");
+    
+    GUILoadCommonSettings();
     
     GUI->DefaultContext = igCreateContext(NULL);
-    GUI->ProgressBar->Context = igCreateContext(NULL);
-    GUI->ProgressBar->DialogTitle = NULL;
-    GUIContextInit(GUI->ProgressBar->Context,VideoSystem,GUI->ConfigFilePath);
-    GUIContextInit(GUI->DefaultContext,VideoSystem,GUI->ConfigFilePath);
+    GUI->ProgressBar = ProgressBarInitialize(VideoSystem);
     
+    if( !GUI->ProgressBar ) {
+        DPrintf("GUIInit:Failed to initialize ProgressBar\n");
+        free(GUI);
+        return NULL;
+    }
+    GUIContextInit(GUI->DefaultContext,VideoSystem,GUI->ConfigFilePath);
     GUI->NumActiveWindows = 0;
 
     return GUI;

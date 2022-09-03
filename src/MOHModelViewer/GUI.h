@@ -22,6 +22,7 @@
 #include "../Common/Common.h"
 #include "../Common/Config.h"
 #include "../Common/Video.h"
+#include "../Common/IMGUIUtils.h"
 
 typedef struct GUI_s GUI_t;
 typedef struct GUIFileDialog_s GUIFileDialog_t;
@@ -29,12 +30,6 @@ typedef struct GUIFileDialog_s GUIFileDialog_t;
 typedef void (*FileDialogSelectCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Directory,const char *File,void *UserData);
 typedef void (*FileDialogCancelCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI);
 
-typedef struct GUIProgressBar_s {
-    ImGuiContext    *Context;
-    float           CurrentPercentage;
-    int             IsOpen;
-    char            *DialogTitle;
-} GUIProgressBar_t;
 
 typedef struct GUIFileDialog_s {
     char                        *WindowTitle;
@@ -45,6 +40,7 @@ typedef struct GUIFileDialog_s {
     FileDialogCancelCallback_t  OnDialogCancelled;    
     struct GUIFileDialog_s      *Next;
 } GUIFileDialog_t;
+
 typedef struct GUI_s {
     ImGuiContext        *DefaultContext;
     
@@ -55,7 +51,7 @@ typedef struct GUI_s {
     bool                DebugWindowHandle;
     bool                VideoSettingsWindowHandle;
     int                 NumActiveWindows;
-    GUIProgressBar_t    *ProgressBar;
+    ProgressBar_t       *ProgressBar;
     char                *ErrorMessage;
     int                 ErrorDialogHandle;    
 } GUI_t;
@@ -92,11 +88,6 @@ void                GUIFileDialogOpenWithUserData(GUIFileDialog_t *FileDialog,vo
 void                *GUIFileDialogGetUserData(GUIFileDialog_t *FileDialog);
 void                GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *FileDialog);
 void                GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
-void                GUIProgressBarBegin(GUI_t *GUI,const char *Title);
-void                GUIProgressBarEnd(GUI_t *GUI,VideoSystem_t *VideoSystem);
-void                GUIProgressBarReset(GUI_t *GUI);
-void                GUISetProgressBarDialogTitle(GUI_t *GUI,const char *Title);
-void                GUIProgressBarIncrement(GUI_t *GUI,VideoSystem_t *VideoSystem,float Increment,const char *Message);
 void                GUIDraw(Engine_t *Engine);
 void                GUIFree(GUI_t *GUI);
 #endif//__GUI_H_

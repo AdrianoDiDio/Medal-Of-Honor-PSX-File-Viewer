@@ -15,8 +15,8 @@ SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 SET(CMAKE_INSTALL_RPATH "$\{ORIGIN\}")
 
 set(SOURCE_FILES    ../Common/Common.c ../Common/Config.c ../Common/Video.c 
-                    ../Common/ShaderManager.c ../Common/VAO.c Camera.c GUI.c 
-                    ../Common/TIM.c ../Common/VRAM.c BSD.c 
+                    ../Common/ShaderManager.c ../Common/VAO.c ../Common/IMGUIUtils.c 
+                    Camera.c GUI.c ../Common/TIM.c ../Common/VRAM.c BSD.c 
                     RenderObjectManager.c MOHModelViewer.c
 )
                  
@@ -34,6 +34,8 @@ set(IMGUI_SOURCE_FILES ../Libs/cimgui/cimgui.cpp
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
 target_compile_definitions(${PROJECT_NAME} PRIVATE APP_NAME="${PROJECT_NAME}")
 
+get_filename_component(PARENT_DIRECTORY ../ ABSOLUTE)
+
 FetchContent_Declare(
     PVS_CMakeModule
     GIT_REPOSITORY "https://github.com/viva64/pvs-studio-cmake-module.git"
@@ -45,7 +47,7 @@ pvs_studio_add_target(TARGET MOHModelViewer.Analyze ALL
                       LOG FORMAT fullhtml
                       SUPPRESS_BASE suppress_base.json
                       ANALYZE ${PROJECT_NAME}
-                      ARGS -e ${CMAKE_SOURCE_DIR}/Libs/*
+                      ARGS -e ${PARENT_DIRECTORY}/Libs/*
                       MODE GA:1,2)
                     
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)

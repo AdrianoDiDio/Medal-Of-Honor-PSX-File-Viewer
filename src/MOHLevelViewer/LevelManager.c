@@ -496,17 +496,17 @@ void LevelManagerExportToObj(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
         DPrintf("LevelManagerExportToObj:Failed to open %s for writing\n",ObjectFile);
         return;
     }
-    GUISetProgressBarDialogTitle(GUI,"Exporting to Obj...");
-    GUIProgressBarIncrement(GUI,VideoSystem,5,"Writing material file.");
+    ProgressBarSetDialogTitle(GUI->ProgressBar,"Exporting to Obj...");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,5,"Writing material file.");
     sprintf(MaterialNameTag,"mtllib vram.mtl\n");
     fwrite(MaterialNameTag,strlen(MaterialNameTag),1,OutFile);
-    GUIProgressBarIncrement(GUI,VideoSystem,35,"Writing TSP data.");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,35,"Writing TSP data.");
     TSPDumpDataToObjFile(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->VRAM,OutFile);
-    GUIProgressBarIncrement(GUI,VideoSystem,55,"Writing BSD data.");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,55,"Writing BSD data.");
     BSDDumpDataToObjFile(LevelManager->CurrentLevel->BSD,LevelManager->CurrentLevel->VRAM,LevelManager->GameEngine,OutFile);
-    GUIProgressBarIncrement(GUI,VideoSystem,95,"Exporting VRAM.");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,95,"Exporting VRAM.");
     VRAMDumpDataToFile(LevelManager->CurrentLevel->VRAM,Directory);
-    GUIProgressBarIncrement(GUI,VideoSystem,100,"Done.");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Done.");
     free(EngineName);
     free(FileName);
     free(ObjectFile);
@@ -528,9 +528,9 @@ void LevelManagerExportMusicToWav(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
     }
     asprintf(&EngineName,"%s",(LevelManager->GameEngine == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
     
-    GUISetProgressBarDialogTitle(GUI,"Exporting to Wav...");
+    ProgressBarSetDialogTitle(GUI->ProgressBar,"Exporting to Wav...");
     SoundSystemDumpMusicToWav(SoundSystem,EngineName,Directory);
-    GUIProgressBarIncrement(GUI,VideoSystem,100,"Done.");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Done.");
     free(EngineName);
 }
 void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
@@ -574,14 +574,14 @@ void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
         fclose(PlyLevelOutFile);
         return;
     }
-    GUISetProgressBarDialogTitle(GUI,"Exporting to Ply...");
-    GUIProgressBarIncrement(GUI,VideoSystem,5,"Writing TSP data.");
+    ProgressBarSetDialogTitle(GUI->ProgressBar,"Exporting to Ply...");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,5,"Writing TSP data.");
     TSPDumpDataToPlyFile(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->VRAM,PlyLevelOutFile);
-    GUIProgressBarIncrement(GUI,VideoSystem,55,"Writing BSD data.");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,55,"Writing BSD data.");
     BSDDumpDataToPlyFile(LevelManager->CurrentLevel->BSD,LevelManager->CurrentLevel->VRAM,LevelManager->GameEngine,PlyObjectOutFile);
-    GUIProgressBarIncrement(GUI,VideoSystem,95,"Exporting VRAM.");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,95,"Exporting VRAM.");
     VRAMSave(LevelManager->CurrentLevel->VRAM,TextureFile);
-    GUIProgressBarIncrement(GUI,VideoSystem,100,"Done.");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Done.");
     free(EngineName);
     free(PlyLevelFile);
     free(PlyObjectFile);
@@ -601,7 +601,7 @@ void LevelManagerOnExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,cons
     Exporter = (LevelManagerDialogData_t *) UserData;
     LevelManager = Exporter->LevelManager;
         
-    GUIProgressBarBegin(GUI,"Exporting...");
+    ProgressBarBegin(GUI->ProgressBar,"Exporting...");
 
     switch( Exporter->OutputFormat ) {
         case LEVEL_MANAGER_EXPORT_FORMAT_OBJ:
@@ -618,7 +618,7 @@ void LevelManagerOnExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,cons
             break;
     }
         
-    GUIProgressBarEnd(GUI,Exporter->VideoSystem);
+    ProgressBarEnd(GUI->ProgressBar,Exporter->VideoSystem);
     GUIFileDialogClose(GUI,FileDialog);
     free(Exporter);
 }
@@ -762,11 +762,11 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
         DPrintf("LevelManagerInitWithPath:Called without a valid path\n");
         return 0;
     }
-    GUIProgressBarBegin(GUI,"Loading Mission 1 Level 1");
+    ProgressBarBegin(GUI->ProgressBar,"Loading Mission 1 Level 1");
     Loaded = 0;
     for( int i = 1; i <= 2; i++ ) {
         asprintf(&Buffer,"Loading Mission %i Level 1",i);
-        GUISetProgressBarDialogTitle(GUI,Buffer);
+        ProgressBarSetDialogTitle(GUI->ProgressBar,Buffer);
         Level = LevelInit(GUI,VideoSystem,SoundSystem,Path,i,1,&GameEngine);
         free(Buffer);
         if( Level ) {
@@ -786,7 +786,7 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
             break;
         }
     }
-    GUIProgressBarEnd(GUI,VideoSystem);
+    ProgressBarEnd(GUI->ProgressBar,VideoSystem);
     return Loaded;
 }
 int LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
@@ -806,9 +806,9 @@ int LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t 
         }
     }
     asprintf(&Buffer,"Loading Mission %i Level %i...",MissionNumber,LevelNumber);
-    GUIProgressBarBegin(GUI,Buffer);
+    ProgressBarBegin(GUI->ProgressBar,Buffer);
     Level = LevelInit(GUI,VideoSystem,SoundSystem,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
-    GUIProgressBarEnd(GUI,VideoSystem);
+    ProgressBarEnd(GUI->ProgressBar,VideoSystem);
     if( !Level ) {
         printf("LevelManagerLoadLevel:Couldn't load mission %i level %i...\n",MissionNumber,LevelNumber);
         free(Buffer);
