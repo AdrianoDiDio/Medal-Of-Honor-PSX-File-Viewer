@@ -20,15 +20,15 @@ set(SOURCE_FILES    ../Common/Common.c ../Common/Config.c ../Common/Video.c
                     ../Common/VRAM.c Level.c LevelManager.c MOHLevelViewer.c
 )
                  
-set(IMGUI_SOURCE_FILES Libs/cimgui/cimgui.cpp
-                       Libs/cimgui/imgui/imgui.cpp 
-                       Libs/cimgui/imgui/imgui_draw.cpp 
-                       Libs/cimgui/imgui/imgui_demo.cpp 
-                       Libs/cimgui/imgui/imgui_widgets.cpp
-                       Libs/cimgui/imgui/imgui_tables.cpp
-                       Libs/cimgui/imgui/backends/imgui_impl_opengl3.cpp
-                       Libs/cimgui/imgui/backends/imgui_impl_sdl.cpp
-                       Libs/ImGuiFileDialog/ImGuiFileDialog.cpp
+set(IMGUI_SOURCE_FILES ../Libs/cimgui/cimgui.cpp
+                       ../Libs/cimgui/imgui/imgui.cpp 
+                       ../Libs/cimgui/imgui/imgui_draw.cpp 
+                       ../Libs/cimgui/imgui/imgui_demo.cpp 
+                       ../Libs/cimgui/imgui/imgui_widgets.cpp
+                       ../Libs/cimgui/imgui/imgui_tables.cpp
+                       ../Libs/cimgui/imgui/backends/imgui_impl_opengl3.cpp
+                       ../Libs/cimgui/imgui/backends/imgui_impl_sdl.cpp
+                       ../Libs/ImGuiFileDialog/ImGuiFileDialog.cpp
 )
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
 
@@ -51,24 +51,24 @@ pvs_studio_add_target(TARGET MOHLevelViewer.Analyze ALL
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 set_target_properties(${PROJECT_NAME} PROPERTIES RELEASE_POSTFIX -Release)
 
-add_subdirectory(Libs/cglm EXCLUDE_FROM_ALL)
+add_subdirectory(../Libs/cglm EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/Libs/cglm)
 
-add_subdirectory(Libs/libsamplerate)
-include_directories(Libs/libsamplerate/include/)
+add_subdirectory(../Libs/libsamplerate ${CMAKE_CURRENT_BINARY_DIR}/Libs/libsamplerate)
+include_directories(../Libs/libsamplerate/include/)
 
-include_directories(Libs/cimgui/imgui)
+include_directories(../Libs/cimgui/imgui)
 set(SDL2_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
 set(SDL2_DISABLE_UNINSTALL ON CACHE BOOL "" FORCE)
-add_subdirectory(Libs/SDL)
-include_directories(Libs/SDL/include)
+add_subdirectory(../Libs/SDL ${CMAKE_CURRENT_BINARY_DIR}/Libs/SDL)
+include_directories(../Libs/SDL/include)
 
 set(GLEW_CUSTOM_OUTPUT_DIRS ON CACHE BOOL "" FORCE)
 
-add_subdirectory(Libs/glew-cmake/build/cmake)
+add_subdirectory(../Libs/glew-cmake/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/Libs/glew-cmake)
 
-add_subdirectory(Libs/zlib ${CMAKE_CURRENT_BINARY_DIR}/Libs/zlib)
+add_subdirectory(../Libs/zlib ${CMAKE_CURRENT_BINARY_DIR}/Libs/zlib)
 
-set(ZLIB_ROOT Libs/zlib)
+set(ZLIB_ROOT ../Libs/zlib)
 
 set(ZLIB_LIBRARY zlib)
 set(PNG_BUILD_ZLIB OFF CACHE BOOL "" FORCE)
@@ -78,7 +78,7 @@ set(PNG_EXECUTABLES OFF CACHE BOOL "" FORCE)
 set(PNG_TESTS OFF CACHE BOOL "" FORCE) 
 set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
 
-add_subdirectory(Libs/libpng)
+add_subdirectory(../Libs/libpng ${CMAKE_CURRENT_BINARY_DIR}/Libs/libpng)
 
 set(OpenGL_GL_PREFERENCE LEGACY)
 find_package(OpenGL REQUIRED)
@@ -113,9 +113,9 @@ target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:-g>")
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:-O3>")
 
 include_directories(${OPENGL_INCLUDE_DIRS})
-include_directories(Libs/cimgui/generator/output/)
-include_directories(Libs/cimgui/)
-include_directories(Libs/ImGuiFileDialog/)
+include_directories(../Libs/cimgui/generator/output/)
+include_directories(../Libs/cimgui/)
+include_directories(../Libs/ImGuiFileDialog/)
 target_link_libraries(${PROJECT_NAME} SDL2 glew_s png ${OPENGL_LIBRARIES} m cimgui samplerate cglm_headers)
 
 add_custom_command(TARGET ${PROJECT_NAME}

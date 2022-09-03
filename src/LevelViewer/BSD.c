@@ -1156,12 +1156,7 @@ void BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM)
             DPrintf("Failed setting vao...Invalid NumFace %i\n",RenderObjectData->NumFaces);
             continue;
         }
-
-        if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            BSDCreateFaceVAO(RenderObjectData,VRAM);
-        } else {
-            BSDCreateFaceVAO(RenderObjectData,VRAM);
-        }
+        BSDCreateFaceVAO(RenderObjectData,VRAM);
     }
     BSDCreatePointListVAO(BSD);
     BSDCreateRenderObjectPointListVAO(BSD);

@@ -1,49 +1,27 @@
 [submodule "MOHLevelViewer/Libs/ImGuiFileDialog"]
-	path = src/MOHLevelViewer/Libs/ImGuiFileDialog
+	path = src/Libs/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog.git
 	branch = Lib_Only
 	update = merge
 [submodule "MOHLevelViewer/Libs/cimgui"]
-	path = src/MOHLevelViewer/Libs/cimgui
+	path = src/Libs/cimgui
 	url = https://github.com/cimgui/cimgui
 	update = merge
 [submodule "MOHLevelViewer/Libs/glew-cmake"]
-	path = src/MOHLevelViewer/Libs/glew-cmake
+	path = src/Libs/glew-cmake
 	url = https://github.com/Perlmint/glew-cmake.git
 [submodule "MOHLevelViewer/Libs/zlib"]
-	path = src/MOHLevelViewer/Libs/zlib
+	path = src/Libs/zlib
 	url = https://github.com/madler/zlib
 [submodule "MOHLevelViewer/Libs/libpng"]
-	path = src/MOHLevelViewer/Libs/libpng
+	path = src/Libs/libpng
 	url = https://github.com/glennrp/libpng.git
 [submodule "MOHLevelViewer/Libs/SDL"]
-	path = src/MOHLevelViewer/Libs/SDL
+	path = src/Libs/SDL
 	url = https://github.com/libsdl-org/SDL.git
 [submodule "MOHLevelViewer/Libs/libsamplerate"]
-	path = src/MOHLevelViewer/Libs/libsamplerate
+	path = src/Libs/libsamplerate
 	url = https://github.com/libsndfile/libsamplerate
-[submodule "MOHModelViewer/Libs/cglm"]
-	path = src/MOHModelViewer/Libs/cglm
-	url = https://github.com/recp/cglm
 [submodule "MOHLevelViewer/Libs/cglm"]
-	path = src/MOHLevelViewer/Libs/cglm
+	path = src/Libs/cglm
 	url = https://github.com/recp/cglm
-[submodule "MOHModelViewer/Libs/SDL"]
-	path = src/MOHModelViewer/Libs/SDL
-	url = https://github.com/libsdl-org/SDL
-[submodule "MOHModelViewer/Libs/zlib"]
-	path = src/MOHModelViewer/Libs/zlib
-	url = https://github.com/madler/zlib
-[submodule "MOHModelViewer/Libs/libpng"]
-	path = src/MOHModelViewer/Libs/libpng
-	url = https://github.com/glennrp/libpng.git
-[submodule "MOHModelViewer/Libs/glew-cmake"]
-	path = src/MOHModelViewer/Libs/glew-cmake
-	url = https://github.com/Perlmint/glew-cmake.git
-[submodule "MOHModelViewer/Libs/cimgui"]
-	path = src/MOHModelViewer/Libs/cimgui
-	url = https://github.com/cimgui/cimgui
-[submodule "MOHModelViewer/Libs/ImGuiFileDialog"]
-	path = src/MOHModelViewer/Libs/ImGuiFileDialog
-	url = https://github.com/aiekick/ImGuiFileDialog.git
-	branch = Lib_Only
