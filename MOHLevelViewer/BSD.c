@@ -106,73 +106,9 @@ void BSDDumpFaceDataToObjFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObject
         unsigned short Vert1;
         unsigned short Vert2;
         int BaseFaceUV;
-        Vert0 = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].VData & 0xFF);
-        Vert1 = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].VData & 0x3fc00) >> 10;
-        Vert2 = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].VData & 0xFF00000 ) >> 20;
-
-        sprintf(Buffer,"usemtl vram\n");
-        fwrite(Buffer,strlen(Buffer),1,OutFile);
-        BaseFaceUV = i * 3;
-        sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),-(BaseFaceUV+3),-(Vert1+1),-(BaseFaceUV+2),-(Vert2+1),-(BaseFaceUV+1));
-        fwrite(Buffer,strlen(Buffer),1,OutFile);
-    }
-}
-
-void BSDDumpFaceV2DataToObjFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,VRAM_t *VRAM,FILE *OutFile)
-{
-    char Buffer[256];
-    BSDRenderObjectElement_t *RenderObjectElement;
-    vec3 VertPos;
-    vec3 OutVector;
-    Color1i_t Color;
-    float TextureWidth;
-    float TextureHeight;
-    int i;
-        
-    RenderObjectElement = &BSD->RenderObjectTable.RenderObject[RenderObjectDrawable->RenderObjectIndex];
-    TextureWidth = VRAM->Page.Width;
-    TextureHeight = VRAM->Page.Height;
-    
-    for( i = RenderObjectElement->NumVertex - 1; i >= 0; i-- ) {
-        VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].x;
-        VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].y;
-        VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].z;
-        Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[i];
-        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"v %f %f %f %f %f %f\n",
-                (OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f,
-                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,
-                (OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
-                Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f
-        );
-        fwrite(Buffer,strlen(Buffer),1,OutFile); 
-    }
-    for( i = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].NumFaces - 1; i >= 0 ; i-- ) {
-        int VRAMPage = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].TexInfo;
-        int ColorMode = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].TexInfo & 0xC0) >> 7;
-        float U0 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV0.u + 
-            VRAMGetTexturePageX(VRAMPage))/TextureWidth);
-        float V0 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV0.v +
-                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        float U1 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV1.u + 
-            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-        float V1 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV1.v + 
-                    VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
-        float U2 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV2.u + 
-            VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
-        float V2 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV2.v + 
-                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
-        fwrite(Buffer,strlen(Buffer),1,OutFile);
-    }
-    for( i = 0; i < BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].NumFaces; i++ ) {
-        unsigned short Vert0;
-        unsigned short Vert1;
-        unsigned short Vert2;
-        int BaseFaceUV;
-        Vert0 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].Vert0;
-        Vert1 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].Vert1;
-        Vert2 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].Vert2;
+        Vert0 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].Vert0;
+        Vert1 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].Vert1;
+        Vert2 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].Vert2;
 
         sprintf(Buffer,"usemtl vram\n");
         fwrite(Buffer,strlen(Buffer),1,OutFile);
@@ -232,7 +168,7 @@ void BSDDumpDataToObjFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
         glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
         
         if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            BSDDumpFaceV2DataToObjFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
+            BSDDumpFaceDataToObjFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
         } else {
             BSDDumpFaceDataToObjFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
         }
@@ -268,9 +204,9 @@ void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObject
             VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
         float V2 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV2.v + 
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        int Vert0 = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].VData & 0xFF);
-        int Vert1 = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].VData & 0x3fc00) >> 10;
-        int Vert2 = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].VData & 0xFF00000 ) >> 20;
+        int Vert0 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].Vert0;
+        int Vert1 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].Vert1;
+        int Vert2 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].Vert2;
         
         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].x;
         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].y;
@@ -279,67 +215,6 @@ void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObject
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
         sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
                 (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f, (OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
-                Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U0,V0);
-        fwrite(Buffer,strlen(Buffer),1,OutFile);
-        Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert1];
-        VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].x;
-        VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].y;
-        VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert1].z;
-        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
-                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
-                Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U1,V1);
-        fwrite(Buffer,strlen(Buffer),1,OutFile);
-        Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert2];
-        VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].x;
-        VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].y;
-        VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert2].z;
-        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
-                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
-                Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U2,V2);
-        fwrite(Buffer,strlen(Buffer),1,OutFile);
-    }
-}
-
-void BSDDumpFaceV2DataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,VRAM_t *VRAM,FILE *OutFile)
-{
-    char Buffer[256];
-    vec3 VertPos;
-    vec3 OutVector;
-    Color1i_t Color;
-    float TextureWidth;
-    float TextureHeight;
-    int i;
-        
-    TextureWidth = VRAM->Page.Width;
-    TextureHeight = VRAM->Page.Height;
-    
-    for( i = 0 ; i < BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].NumFaces; i++ ) {
-        int VRAMPage = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].TexInfo;
-        int ColorMode = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].TexInfo & 0xC0) >> 7;
-        float U0 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV0.u + 
-            VRAMGetTexturePageX(VRAMPage))/TextureWidth);
-        float V0 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV0.v +
-                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        float U1 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV1.u + 
-            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-        float V1 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV1.v + 
-                    VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
-        float U2 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV2.u + 
-            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-        float V2 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].UV2.v + 
-                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        int Vert0 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].Vert0;
-        int Vert1 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].Vert1;
-        int Vert2 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].FaceV2[i].Vert2;
-        Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert0];
-        VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].x;
-        VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].y;
-        VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[Vert0].z;
-        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
-                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U0,V0);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
         Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[Vert1];
@@ -419,7 +294,7 @@ void BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
         glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
         
         if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            BSDDumpFaceV2DataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
+            BSDDumpFaceDataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
         } else {
             BSDDumpFaceDataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
         }
@@ -468,9 +343,6 @@ void BSDRenderObjectListCleanUp(BSD_t *BSD)
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
         if( BSD->RenderObjectList[i].Face != NULL ) {
             free(BSD->RenderObjectList[i].Face);
-        }
-        if( BSD->RenderObjectList[i].FaceV2 != NULL ) {
-            free(BSD->RenderObjectList[i].FaceV2);
         }
         if( BSD->RenderObjectList[i].Vertex != NULL ) {
             free(BSD->RenderObjectList[i].Vertex);
@@ -842,9 +714,9 @@ void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData,VRAM_t *VRAM)
     ColorOffset = 5;
     for( i = 0; i < RenderObjectData->NumFaces; i++ ) {
 
-        Vert0 = (RenderObjectData->Face[i].VData & 0xFF);
-        Vert1 = (RenderObjectData->Face[i].VData & 0x3fc00) >> 10;
-        Vert2 = (RenderObjectData->Face[i].VData & 0xFF00000 ) >> 20;
+        Vert0 = RenderObjectData->Face[i].Vert0;
+        Vert1 = RenderObjectData->Face[i].Vert1;
+        Vert2 = RenderObjectData->Face[i].Vert2;
 
         int VRAMPage = RenderObjectData->Face[i].TexInfo & 0x1F;
         int ColorMode = (RenderObjectData->Face[i].TexInfo & 0xC0) >> 7;
@@ -854,85 +726,6 @@ void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData,VRAM_t *VRAM)
         float V1 = /*255 -*/(((float)RenderObjectData->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
         float U2 = (((float)RenderObjectData->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
         float V2 = /*255 -*/(((float)RenderObjectData->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-
-                        
-        VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert0].x;
-        VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert0].y;
-        VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert0].z;
-        VertexData[VertexPointer+3] = U0;
-        VertexData[VertexPointer+4] = V0;
-        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert0].rgba[0] / 255.f;
-        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert0].rgba[1] / 255.f;
-        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert0].rgba[2] / 255.f;
-        VertexPointer += 8;
-                
-        VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert1].x;
-        VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert1].y;
-        VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert1].z;
-        VertexData[VertexPointer+3] = U1;
-        VertexData[VertexPointer+4] = V1;
-        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert1].rgba[0] / 255.f;
-        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert1].rgba[1] / 255.f;
-        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert1].rgba[2] / 255.f;
-        VertexPointer += 8;
-                
-        VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert2].x;
-        VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert2].y;
-        VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert2].z;
-        VertexData[VertexPointer+3] = U2;
-        VertexData[VertexPointer+4] = V2;
-        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert2].rgba[0] / 255.f;
-        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert2].rgba[1] / 255.f;
-        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert2].rgba[2] / 255.f;
-        VertexPointer += 8;
-    }
-    VAO = VAOInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,RenderObjectData->NumFaces * 3);
-    VAO->Next = RenderObjectData->VAO;
-    RenderObjectData->VAO = VAO;
-    free(VertexData);
-}
-
-void BSDCreateFaceV2VAO(BSDRenderObject_t *RenderObjectData,VRAM_t *VRAM)
-{
-    float TextureWidth;
-    float TextureHeight;
-    unsigned short Vert0;
-    unsigned short Vert1;
-    unsigned short Vert2;
-    float *VertexData;
-    int VertexSize;
-    int VertexPointer;
-    int Stride;
-    int VertexOffset;
-    int TextureOffset;
-    int ColorOffset;
-    VAO_t *VAO;
-    int i;
-    
-    TextureWidth = VRAM->Page.Width;
-    TextureHeight = VRAM->Page.Height;
-//            XYZ UV RGB
-    Stride = (3 + 2 + 3) * sizeof(float);
-    VertexSize = Stride * 3 * RenderObjectData->NumFaces;
-    VertexData = malloc(VertexSize);
-    VertexPointer = 0;
-    VertexOffset = 0;
-    TextureOffset = 3;
-    ColorOffset = 5;
-    for( i = 0; i < RenderObjectData->NumFaces; i++ ) {
-
-        Vert0 = RenderObjectData->FaceV2[i].Vert0;
-        Vert1 = RenderObjectData->FaceV2[i].Vert1;
-        Vert2 = RenderObjectData->FaceV2[i].Vert2;
-
-        int VRAMPage = RenderObjectData->FaceV2[i].TexInfo;
-        int ColorMode = (RenderObjectData->FaceV2[i].TexInfo & 0xC0) >> 7;
-        float U0 = (((float)RenderObjectData->FaceV2[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
-        float V0 = /*255 -*/(((float)RenderObjectData->FaceV2[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        float U1 = (((float)RenderObjectData->FaceV2[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-        float V1 = /*255 -*/(((float)RenderObjectData->FaceV2[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        float U2 = (((float)RenderObjectData->FaceV2[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
-        float V2 = /*255 -*/(((float)RenderObjectData->FaceV2[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
 
                         
         VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert0].x;
@@ -1365,7 +1158,7 @@ void BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM)
         }
 
         if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            BSDCreateFaceV2VAO(RenderObjectData,VRAM);
+            BSDCreateFaceVAO(RenderObjectData,VRAM);
         } else {
             BSDCreateFaceVAO(RenderObjectData,VRAM);
         }
@@ -2293,11 +2086,12 @@ int BSDParseRenderObjectVertexData(BSD_t *BSD,FILE *BSDFile)
 }
 int BSDParseRenderObjectFaceData(BSDRenderObject_t *RenderObject,FILE *BSDFile)
 {
-    unsigned short LV0;
-    unsigned short LV1;
-    unsigned short LV2;
-    int FaceListSize;
-    int i;
+    unsigned short Vert0;
+    unsigned short Vert1;
+    unsigned short Vert2;
+    unsigned int   PackedVertexData;
+    int            FaceListSize;
+    int            i;
     
     if( !RenderObject ) {
         DPrintf("BSDParseRenderObjectFaceData:Invalid RenderObject!\n");
@@ -2323,6 +2117,7 @@ int BSDParseRenderObjectFaceData(BSDRenderObject_t *RenderObject,FILE *BSDFile)
     for( i = 0; i < RenderObject->NumFaces; i++ ) {
         DPrintf("BSDParseRenderObjectFaceData:Reading Face at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
         fread(&RenderObject->Face[i],sizeof(BSDFace_t),1,BSDFile);
+        fread(&PackedVertexData,sizeof(PackedVertexData),1,BSDFile);
         DPrintf(" -- FACE %i --\n",i);
         DPrintf("Tex info %i | Color mode %i | Texture Page %i\n",RenderObject->Face[i].TexInfo,
                 (RenderObject->Face[i].TexInfo & 0xC0) >> 7,RenderObject->Face[i].TexInfo & 0x1f);
@@ -2333,14 +2128,17 @@ int BSDParseRenderObjectFaceData(BSDRenderObject_t *RenderObject,FILE *BSDFile)
         DPrintf("UV2:(%i;%i)\n",RenderObject->Face[i].UV2.u,RenderObject->Face[i].UV2.v);
         DPrintf("Pad is %i\n",RenderObject->Face[i].Pad);
 
-        LV0 = (RenderObject->Face[i].VData & 0xFF);
-        LV1 = (RenderObject->Face[i].VData & 0x3fc00) >> 10;
-        LV2 = (RenderObject->Face[i].VData & 0xFF00000 ) >> 20;
-        DPrintf("V0|V1|V2:%u;%u;%u\n",LV0,LV1,LV2);
+        Vert0 = (PackedVertexData & 0xFF);
+        Vert1 = (PackedVertexData & 0x3fc00) >> 10;
+        Vert2 = (PackedVertexData & 0xFF00000 ) >> 20;
+        RenderObject->Face[i].Vert0 = Vert0;
+        RenderObject->Face[i].Vert1 = Vert1;
+        RenderObject->Face[i].Vert2 = Vert2;
+        DPrintf("V0|V1|V2:%u;%u;%u\n",Vert0,Vert1,Vert2);
         DPrintf("V0|V1|V2:(%i;%i;%i)|(%i;%i;%i)|(%i;%i;%i)\n",
-                RenderObject->Vertex[LV0].x,RenderObject->Vertex[LV0].y,RenderObject->Vertex[LV0].z,
-                RenderObject->Vertex[LV1].x,RenderObject->Vertex[LV1].y,RenderObject->Vertex[LV1].z,
-                RenderObject->Vertex[LV2].x,RenderObject->Vertex[LV2].y,RenderObject->Vertex[LV2].z);
+                RenderObject->Vertex[Vert0].x,RenderObject->Vertex[Vert0].y,RenderObject->Vertex[Vert0].z,
+                RenderObject->Vertex[Vert1].x,RenderObject->Vertex[Vert1].y,RenderObject->Vertex[Vert1].z,
+                RenderObject->Vertex[Vert2].x,RenderObject->Vertex[Vert2].y,RenderObject->Vertex[Vert2].z);
     }
     return 1;
 }
@@ -2349,11 +2147,13 @@ int BSDParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffse
 {
     int FaceListSize;
     int CurrentFaceIndex;
+    unsigned int V0V1;
+    unsigned short V2;
     int Vert0;
     int Vert1;
     int Vert2;
     unsigned int Marker;
-    BSDFaceV2_t TempFace;
+    BSDFace_t TempFace;
     
     if( !RenderObject ) {
         DPrintf("BSDParseRenderObjectFaceDataV2:Invalid RenderObject!\n");
@@ -2366,47 +2166,47 @@ int BSDParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffse
     fseek(BSDFile,FaceOffset,SEEK_SET);
     fread(&RenderObject->NumFaces,sizeof(RenderObject->NumFaces),1,BSDFile);
     fseek(BSDFile,RenderObject->Data->FaceOffset + 2048,SEEK_SET);
-    FaceListSize = RenderObject->NumFaces * sizeof(BSDFaceV2_t);
-    RenderObject->FaceV2 = malloc(FaceListSize);
-    if( !RenderObject->FaceV2 ) {
+    FaceListSize = RenderObject->NumFaces * sizeof(BSDFace_t);
+    RenderObject->Face = malloc(FaceListSize);
+    if( !RenderObject->Face ) {
         DPrintf("BSDParseRenderObjectFaceDataV2:Failed to allocate memory for face array\n");
         return 0;
     }
-    memset(RenderObject->FaceV2,0,FaceListSize);
+    memset(RenderObject->Face,0,FaceListSize);
     CurrentFaceIndex = 0;
     while( CurrentFaceIndex < RenderObject->NumFaces ) {
         DPrintf("BSDParseRenderObjectFaceDataV2:Reading Face at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);                                
-        fread(&RenderObject->FaceV2[CurrentFaceIndex].V0V1,sizeof(RenderObject->FaceV2[CurrentFaceIndex].V0V1),1,BSDFile);
-        fread(&RenderObject->FaceV2[CurrentFaceIndex].V2,sizeof(RenderObject->FaceV2[CurrentFaceIndex].V2),1,BSDFile);
-        fread(&RenderObject->FaceV2[CurrentFaceIndex].UV0,sizeof(RenderObject->FaceV2[CurrentFaceIndex].UV0),1,BSDFile);
-        fread(&RenderObject->FaceV2[CurrentFaceIndex].TSB,sizeof(RenderObject->FaceV2[CurrentFaceIndex].TSB),1,BSDFile);
-        fread(&RenderObject->FaceV2[CurrentFaceIndex].UV1,sizeof(RenderObject->FaceV2[CurrentFaceIndex].UV1),1,BSDFile);
-        fread(&RenderObject->FaceV2[CurrentFaceIndex].TexInfo,sizeof(RenderObject->FaceV2[CurrentFaceIndex].TexInfo),1,BSDFile);
-        fread(&RenderObject->FaceV2[CurrentFaceIndex].UV2,sizeof(RenderObject->FaceV2[CurrentFaceIndex].UV2),1,BSDFile);
+        fread(&V0V1,sizeof(V0V1),1,BSDFile);
+        fread(&V2,sizeof(V2),1,BSDFile);
+        fread(&RenderObject->Face[CurrentFaceIndex].UV0,sizeof(RenderObject->Face[CurrentFaceIndex].UV0),1,BSDFile);
+        fread(&RenderObject->Face[CurrentFaceIndex].TSB,sizeof(RenderObject->Face[CurrentFaceIndex].TSB),1,BSDFile);
+        fread(&RenderObject->Face[CurrentFaceIndex].UV1,sizeof(RenderObject->Face[CurrentFaceIndex].UV1),1,BSDFile);
+        fread(&RenderObject->Face[CurrentFaceIndex].TexInfo,sizeof(RenderObject->Face[CurrentFaceIndex].TexInfo),1,BSDFile);
+        fread(&RenderObject->Face[CurrentFaceIndex].UV2,sizeof(RenderObject->Face[CurrentFaceIndex].UV2),1,BSDFile);
         DPrintf(" -- FACE %i --\n",CurrentFaceIndex);
-        DPrintf("V0V1:%i V2:%i\n",RenderObject->FaceV2[CurrentFaceIndex].V0V1,RenderObject->FaceV2[CurrentFaceIndex].V2);
-        DPrintf("Tex info %i | Color mode %i | Texture Page %i\n",RenderObject->FaceV2[CurrentFaceIndex].TexInfo,
-                (RenderObject->FaceV2[CurrentFaceIndex].TexInfo & 0xC0) >> 7,RenderObject->FaceV2[CurrentFaceIndex].TexInfo & 0x1f);
-        DPrintf("TSB is %i %ix%i\n",RenderObject->FaceV2[CurrentFaceIndex].TSB,
-                ((RenderObject->FaceV2[CurrentFaceIndex].TSB  & 0x3F ) << 4),
-                ((RenderObject->FaceV2[CurrentFaceIndex].TSB & 0x7FC0) >> 6));
-        DPrintf("UV0:(%i;%i)\n",RenderObject->FaceV2[CurrentFaceIndex].UV0.u,
-                RenderObject->FaceV2[CurrentFaceIndex].UV0.v);
-        DPrintf("UV1:(%i;%i)\n",RenderObject->FaceV2[CurrentFaceIndex].UV1.u,
-                RenderObject->FaceV2[CurrentFaceIndex].UV1.v);
-        DPrintf("UV2:(%i;%i)\n",RenderObject->FaceV2[CurrentFaceIndex].UV2.u,
-                RenderObject->FaceV2[CurrentFaceIndex].UV2.v);
+        DPrintf("V0V1:%i V2:%i\n",V0V1,V2);
+        DPrintf("Tex info %i | Color mode %i | Texture Page %i\n",RenderObject->Face[CurrentFaceIndex].TexInfo,
+                (RenderObject->Face[CurrentFaceIndex].TexInfo & 0xC0) >> 7,RenderObject->Face[CurrentFaceIndex].TexInfo & 0x1f);
+        DPrintf("TSB is %i %ix%i\n",RenderObject->Face[CurrentFaceIndex].TSB,
+                ((RenderObject->Face[CurrentFaceIndex].TSB  & 0x3F ) << 4),
+                ((RenderObject->Face[CurrentFaceIndex].TSB & 0x7FC0) >> 6));
+        DPrintf("UV0:(%i;%i)\n",RenderObject->Face[CurrentFaceIndex].UV0.u,
+                RenderObject->Face[CurrentFaceIndex].UV0.v);
+        DPrintf("UV1:(%i;%i)\n",RenderObject->Face[CurrentFaceIndex].UV1.u,
+                RenderObject->Face[CurrentFaceIndex].UV1.v);
+        DPrintf("UV2:(%i;%i)\n",RenderObject->Face[CurrentFaceIndex].UV2.u,
+                RenderObject->Face[CurrentFaceIndex].UV2.v);
         
-        Vert0 = RenderObject->FaceV2[CurrentFaceIndex].V0V1 & 0x1FFF;
-        Vert1 = ( RenderObject->FaceV2[CurrentFaceIndex].V0V1 >> 16 ) & 0X1FFF;
-        Vert2 = RenderObject->FaceV2[CurrentFaceIndex].V2 & 0X1FFF;
-        RenderObject->FaceV2[CurrentFaceIndex].Vert0 = TempFace.Vert0 = Vert0;
-        RenderObject->FaceV2[CurrentFaceIndex].Vert1 = TempFace.Vert1 = Vert1;
-        RenderObject->FaceV2[CurrentFaceIndex].Vert2 = TempFace.Vert2 = Vert2;
-        TempFace.TexInfo = RenderObject->FaceV2[CurrentFaceIndex].TexInfo;
-        TempFace.UV0 = RenderObject->FaceV2[CurrentFaceIndex].UV0;
-        TempFace.UV1 = RenderObject->FaceV2[CurrentFaceIndex].UV1;
-        TempFace.UV2 = RenderObject->FaceV2[CurrentFaceIndex].UV2;
+        Vert0 = V0V1 & 0x1FFF;
+        Vert1 = ( V0V1 >> 16 ) & 0X1FFF;
+        Vert2 = V2 & 0X1FFF;
+        RenderObject->Face[CurrentFaceIndex].Vert0 = TempFace.Vert0 = Vert0;
+        RenderObject->Face[CurrentFaceIndex].Vert1 = TempFace.Vert1 = Vert1;
+        RenderObject->Face[CurrentFaceIndex].Vert2 = TempFace.Vert2 = Vert2;
+        TempFace.TexInfo = RenderObject->Face[CurrentFaceIndex].TexInfo;
+        TempFace.UV0 = RenderObject->Face[CurrentFaceIndex].UV0;
+        TempFace.UV1 = RenderObject->Face[CurrentFaceIndex].UV1;
+        TempFace.UV2 = RenderObject->Face[CurrentFaceIndex].UV2;
         CurrentFaceIndex++;
         while( 1 ) {
             DPrintf("BSDParseRenderObjectFaceDataV2:Reading additional face %i \n",CurrentFaceIndex);
@@ -2416,7 +2216,7 @@ int BSDParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffse
                 DPrintf("BSDParseRenderObjectFaceDataV2:Aborting since a marker was found\n");
                 break;
             }
-            RenderObject->FaceV2[CurrentFaceIndex].TexInfo = TempFace.TexInfo;
+            RenderObject->Face[CurrentFaceIndex].TexInfo = TempFace.TexInfo;
                     
             if( (Marker & 0x8000) != 0 ) {
                 TempFace.Vert0 = TempFace.Vert2;
@@ -2431,20 +2231,20 @@ int BSDParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffse
             TempFace.UV2.u = (Marker >> 0x10) & 0xff;
             TempFace.UV2.v = (Marker >> 0x10) >> 8;
 
-            RenderObject->FaceV2[CurrentFaceIndex].Vert0 = TempFace.Vert0;
-            RenderObject->FaceV2[CurrentFaceIndex].Vert1 = TempFace.Vert1;
-            RenderObject->FaceV2[CurrentFaceIndex].Vert2 = TempFace.Vert2;
-            RenderObject->FaceV2[CurrentFaceIndex].UV0.u = TempFace.UV0.u;
-            RenderObject->FaceV2[CurrentFaceIndex].UV0.v = TempFace.UV0.v;
+            RenderObject->Face[CurrentFaceIndex].Vert0 = TempFace.Vert0;
+            RenderObject->Face[CurrentFaceIndex].Vert1 = TempFace.Vert1;
+            RenderObject->Face[CurrentFaceIndex].Vert2 = TempFace.Vert2;
+            RenderObject->Face[CurrentFaceIndex].UV0.u = TempFace.UV0.u;
+            RenderObject->Face[CurrentFaceIndex].UV0.v = TempFace.UV0.v;
 
-            RenderObject->FaceV2[CurrentFaceIndex].UV1.u = TempFace.UV1.u;
-            RenderObject->FaceV2[CurrentFaceIndex].UV1.v = TempFace.UV1.v;
+            RenderObject->Face[CurrentFaceIndex].UV1.u = TempFace.UV1.u;
+            RenderObject->Face[CurrentFaceIndex].UV1.v = TempFace.UV1.v;
             
-            RenderObject->FaceV2[CurrentFaceIndex].UV2.u = TempFace.UV2.u;
-            RenderObject->FaceV2[CurrentFaceIndex].UV2.v = TempFace.UV2.v;
+            RenderObject->Face[CurrentFaceIndex].UV2.u = TempFace.UV2.u;
+            RenderObject->Face[CurrentFaceIndex].UV2.v = TempFace.UV2.v;
 
-            DPrintf("BSDParseRenderObjectFaceDataV2:Vert0:%i Vert1:%i Vert2:%i Additional Face %i\n",TempFace.Vert0,TempFace.Vert1,
-                    TempFace.Vert2,RenderObject->FaceV2[CurrentFaceIndex].V2 >> 16);
+            DPrintf("BSDParseRenderObjectFaceDataV2:Vert0:%i Vert1:%i Vert2:%i\n",TempFace.Vert0,TempFace.Vert1,
+                    TempFace.Vert2);
             CurrentFaceIndex++;
         }
         if( Marker == 0x1fff1fff ) {
@@ -2464,7 +2264,7 @@ int BSDLoadRenderObjectsFaceData(BSD_t *BSD,int RenderObjectDataOffset,int GameE
         DPrintf("BSDLoadRenderObjectsFaceData:Object list is empty...\n");
         return 0;
     }
-    assert(sizeof(BSDFace_t) == 16);
+    assert(sizeof(BSDFace_t) == 24);
 
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
         if( BSD->RenderObjectList[i].Data->FaceOffset == 0 ) {
@@ -2472,7 +2272,6 @@ int BSDLoadRenderObjectsFaceData(BSD_t *BSD,int RenderObjectDataOffset,int GameE
         }
         DPrintf("BSDLoadRenderObjectsFaceData:RenderObject Id %u\n",BSD->RenderObjectList[i].Data->Id);
         BSD->RenderObjectList[i].Face = NULL;
-        BSD->RenderObjectList[i].FaceV2 = NULL;
         if( GameEngine == MOH_GAME_UNDERGROUND ) {
             FaceOffset = ( RenderObjectDataOffset + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) ) + 260;
             if( !BSDParseRenderObjectFaceDataV2(&BSD->RenderObjectList[i],FaceOffset,BSDFile) ) {

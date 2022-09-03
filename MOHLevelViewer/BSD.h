@@ -288,22 +288,11 @@ typedef struct BSDFace_s {
     short TexInfo;
     BSDUv_t UV2;
     short Pad;
-    unsigned int VData;
-} BSDFace_t;
-
-typedef struct BSDFaceV2_s {
-    unsigned int V0V1;
-    unsigned short V2;
-    short TSB;
-    BSDUv_t UV0;
-    BSDUv_t UV1;
-    unsigned short TexInfo;
-    BSDUv_t UV2;
     
     unsigned int Vert0;
     unsigned int Vert1;
     unsigned int Vert2;
-} BSDFaceV2_t;
+} BSDFace_t;
 
 //TODO: CLEANUP
 typedef struct BSDRenderObject_s {
@@ -311,7 +300,6 @@ typedef struct BSDRenderObject_s {
     BSDPosition_t  *Vertex;
     Color1i_t      *Color;
     BSDFace_t      *Face;
-    BSDFaceV2_t    *FaceV2;
     int             NumFaces;
     VAO_t          *VAO;
 } BSDRenderObject_t;
