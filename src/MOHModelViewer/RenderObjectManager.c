@@ -42,13 +42,13 @@ void RenderObjectManagerFreeBSDRenderObjectPack(BSDRenderObjectPack_t *BSDRender
     free(BSDRenderObjectPack);
 }
 
-void RenderObjectManagerFreeDialogData(GUIFileDialog_t *FileDialog)
+void RenderObjectManagerFreeDialogData(FileDialog_t *FileDialog)
 {
     RenderObjectManagerDialogData_t *DialogData;
     if( !FileDialog ) {
         return;
     }
-    DialogData = (RenderObjectManagerDialogData_t *) GUIFileDialogGetUserData(FileDialog);
+    DialogData = (RenderObjectManagerDialogData_t *) FileDialogGetUserData(FileDialog);
     if( DialogData ) {
         free(DialogData);
     }
@@ -66,10 +66,10 @@ void RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager)
     }
     
     //If the user didn't close the dialog free the user data that we passed to it.
-    if( GUIFileDialogIsOpen(RenderObjectManager->BSDFileDialog) ) {
+    if( FileDialogIsOpen(RenderObjectManager->BSDFileDialog) ) {
         RenderObjectManagerFreeDialogData(RenderObjectManager->BSDFileDialog);
     }
-    if( GUIFileDialogIsOpen(RenderObjectManager->ExportFileDialog) ) {
+    if( FileDialogIsOpen(RenderObjectManager->ExportFileDialog) ) {
         RenderObjectManagerFreeDialogData(RenderObjectManager->ExportFileDialog);
     }
     free(RenderObjectManager);
@@ -88,13 +88,13 @@ void RenderObjectManagerSetAnimationPlay(RenderObjectManager_t *RenderObjectMana
     }
     RenderObjectManager->PlayAnimation = Play;
 }
-void RenderObjectManagerCloseDialog(GUI_t *GUI,GUIFileDialog_t *FileDialog)
+void RenderObjectManagerCloseDialog(FileDialog_t *FileDialog)
 {
     RenderObjectManagerFreeDialogData(FileDialog);
-    GUIFileDialogClose(GUI,FileDialog);
+    FileDialogClose(FileDialog);
 
 }
-void RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
+void RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager_t *RenderObjectManager,ProgressBar_t *ProgressBar,VideoSystem_t *VideoSystem,
                                                const char *Directory)
 {
     char *EngineName;
@@ -132,12 +132,12 @@ void RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager_t *RenderObje
         DPrintf("RenderObjectManagerExportCurrentPoseToPly:Failed to open %s for writing\n",PlyFile);
         return;
     }
-    ProgressBarSetDialogTitle(GUI->ProgressBar,"Exporting Current Pose to Ply...");
-    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,10,"Writing BSD data.");
+    ProgressBarSetDialogTitle(ProgressBar,"Exporting Current Pose to Ply...");
+    ProgressBarIncrement(ProgressBar,VideoSystem,10,"Writing BSD data.");
     BSDRenderObjectExportCurrentPoseToPly(CurrentRenderObject,CurrentBSDPack->VRAM,OutFile);
-    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,95,"Exporting VRAM.");
+    ProgressBarIncrement(ProgressBar,VideoSystem,95,"Exporting VRAM.");
     VRAMSave(CurrentBSDPack->VRAM,TextureFile);
-    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Done.");
+    ProgressBarIncrement(ProgressBar,VideoSystem,100,"Done.");
     free(EngineName);
     free(FileName);
     free(PlyFile);
@@ -170,10 +170,11 @@ void RenderObjectManagerExportCurrentPose(RenderObjectManager_t *RenderObjectMan
     }
     Exporter->RenderObjectManager = RenderObjectManager;
     Exporter->VideoSystem = VideoSystem;
+    Exporter->GUI = GUI;
     Exporter->OutputFormat = OutputFormat;
 
-    GUIFileDialogSetTitle(RenderObjectManager->ExportFileDialog,"Export Current Pose");
-    GUIFileDialogOpenWithUserData(RenderObjectManager->ExportFileDialog,Exporter);
+    FileDialogSetTitle(RenderObjectManager->ExportFileDialog,"Export Current Pose");
+    FileDialogOpenWithUserData(RenderObjectManager->ExportFileDialog,Exporter);
 
 }
 
@@ -410,45 +411,45 @@ int RenderObjectManagerLoadPack(RenderObjectManager_t *RenderObjectManager,GUI_t
     return Result;
 }
 
-void RenderObjectManagerOnExportDirSelect(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Directory,const char *File,void *UserData)
+void RenderObjectManagerOnExportDirSelect(FileDialog_t *FileDialog,const char *Directory,const char *File,void *UserData)
 {
     RenderObjectManagerDialogData_t *Exporter;
     RenderObjectManager_t *RenderObjectManager;
     Exporter = (RenderObjectManagerDialogData_t *) UserData;
     RenderObjectManager = Exporter->RenderObjectManager;
         
-    ProgressBarBegin(GUI->ProgressBar,"Exporting...");
+    ProgressBarBegin(Exporter->GUI->ProgressBar,"Exporting...");
 
     switch( Exporter->OutputFormat ) {
         case RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY:
-            RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager,GUI,Exporter->VideoSystem,Directory);
+            RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager,Exporter->GUI->ProgressBar,Exporter->VideoSystem,Directory);
             break;
         default:
             DPrintf("RenderObjectManagerOnExportDirSelect:Invalid output format\n");
             break;
     }
         
-    ProgressBarEnd(GUI->ProgressBar,Exporter->VideoSystem);
-    GUIFileDialogClose(GUI,FileDialog);
+    ProgressBarEnd(Exporter->GUI->ProgressBar,Exporter->VideoSystem);
+    FileDialogClose(FileDialog);
     free(Exporter);
 }
 
-void RenderObjectManagerOnExportDirCancel(GUIFileDialog_t *FileDialog,GUI_t *GUI)
+void RenderObjectManagerOnExportDirCancel(FileDialog_t *FileDialog)
 {
-    RenderObjectManagerCloseDialog(GUI,FileDialog);
+    RenderObjectManagerCloseDialog(FileDialog);
 }
-void RenderObjectManagerOnBSDFileDialogSelect(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Directory,const char *File,void *UserData)
+void RenderObjectManagerOnBSDFileDialogSelect(FileDialog_t *FileDialog,const char *Directory,const char *File,void *UserData)
 {
     RenderObjectManagerDialogData_t *Data;
     Data = (RenderObjectManagerDialogData_t *) UserData;
-    RenderObjectManagerLoadPack(Data->RenderObjectManager,GUI,Data->VideoSystem,File);
+    RenderObjectManagerLoadPack(Data->RenderObjectManager,Data->GUI,Data->VideoSystem,File);
     RenderObjectManagerFreeDialogData(FileDialog);
-    GUIFileDialogClose(GUI,FileDialog);
+    FileDialogClose(FileDialog);
 }
 
-void RenderObjectManagerOnBSDFileDialogCancel(GUIFileDialog_t *FileDialog,GUI_t *GUI)
+void RenderObjectManagerOnBSDFileDialogCancel(FileDialog_t *FileDialog)
 {
-    RenderObjectManagerCloseDialog(GUI,FileDialog);
+    RenderObjectManagerCloseDialog(FileDialog);
 }
 
 void RenderObjectManagerDrawPack(BSDRenderObjectPack_t *RenderObjectPack,Camera_t *Camera,
@@ -462,7 +463,7 @@ void RenderObjectManagerDrawPack(BSDRenderObjectPack_t *RenderObjectPack,Camera_
     }
     BSDDrawRenderObject(RenderObjectPack->SelectedRenderObject,RenderObjectPack->VRAM,Camera,ProjectionMatrix);
 }
-void RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem)
+void RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
     RenderObjectManagerDialogData_t *DialogData;
     if( !RenderObjectManager ) {
@@ -476,8 +477,9 @@ void RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManage
     }
     DialogData->RenderObjectManager = RenderObjectManager;
     DialogData->VideoSystem = VideoSystem;
+    DialogData->GUI = GUI;
 
-    GUIFileDialogOpenWithUserData(RenderObjectManager->BSDFileDialog,DialogData);
+    FileDialogOpenWithUserData(RenderObjectManager->BSDFileDialog,DialogData);
 }
 void RenderObjectManagerUpdate(RenderObjectManager_t *RenderObjectManager)
 {
@@ -537,11 +539,11 @@ RenderObjectManager_t *RenderObjectManagerInit(GUI_t *GUI)
     RenderObjectManager->BSDList = NULL;
     RenderObjectManager->SelectedBSDPack = NULL;
 
-    RenderObjectManager->BSDFileDialog = GUIFileDialogRegister(GUI,"Open BSD File",
+    RenderObjectManager->BSDFileDialog = FileDialogRegister("Open BSD File",
                                                                "BSD files(*.BSD){.BSD}",
                                                                RenderObjectManagerOnBSDFileDialogSelect,
                                                                RenderObjectManagerOnBSDFileDialogCancel);
-    RenderObjectManager->ExportFileDialog = GUIFileDialogRegister(GUI,"Export Current Pose",NULL,
+    RenderObjectManager->ExportFileDialog = FileDialogRegister("Export Current Pose",NULL,
                                                            RenderObjectManagerOnExportDirSelect,
                                                            RenderObjectManagerOnExportDirCancel);
     EnableWireFrameMode = ConfigGet("EnableWireFrameMode");

@@ -41,113 +41,7 @@ void EngineShutDown(Engine_t *Engine)
     EngineQuitSDL();
     free(Engine);
 }
-/*
- Suppressed messages:
- Id = 131204 => Message:Texture state usage warning.
- Id = 131185 => Buffer Usage Hint.
- */
-void GLDebugOutput(GLenum Source, GLenum Type, unsigned int Id, GLenum Severity, GLsizei Length, const char *Message, const void *UserParam)
-{
-    if( Id == 131204 || Id == 131185) {
-        return;
-    }
-    DPrintf("---------------\n");
-    DPrintf("Debug message Id: %i\n",Id);
 
-
-    switch (Source) {
-        case GL_DEBUG_SOURCE_API:             
-            DPrintf("Source: API"); 
-            break;
-        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   
-            DPrintf("Source: Window System"); 
-            break;
-        case GL_DEBUG_SOURCE_SHADER_COMPILER: 
-            DPrintf("Source: Shader Compiler"); 
-            break;
-        case GL_DEBUG_SOURCE_THIRD_PARTY:     
-            DPrintf("Source: Third Party"); 
-            break;
-        case GL_DEBUG_SOURCE_APPLICATION:     
-            DPrintf("Source: Application"); 
-            break;
-        case GL_DEBUG_SOURCE_OTHER:           
-            DPrintf("Source: Other"); 
-            break;
-    }
-    DPrintf("\n");
-
-    switch (Type) {
-        case GL_DEBUG_TYPE_ERROR:               
-            DPrintf("Type: Error");
-            break;
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: 
-            DPrintf("Type: Deprecated Behaviour");
-            break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  
-            DPrintf("Type: Undefined Behaviour"); 
-            break; 
-        case GL_DEBUG_TYPE_PORTABILITY:         
-            DPrintf("Type: Portability");
-            break;
-        case GL_DEBUG_TYPE_PERFORMANCE:         
-            DPrintf("Type: Performance");
-            break;
-        case GL_DEBUG_TYPE_MARKER:              
-            DPrintf("Type: Marker");
-            break;
-        case GL_DEBUG_TYPE_PUSH_GROUP:          
-            DPrintf("Type: Push Group");
-            break;
-        case GL_DEBUG_TYPE_POP_GROUP:           
-            DPrintf("Type: Pop Group"); 
-            break;
-        case GL_DEBUG_TYPE_OTHER:               
-            DPrintf("Type: Other"); 
-            break;
-    } 
-    DPrintf("\n");
-    
-    switch (Severity) {
-        case GL_DEBUG_SEVERITY_HIGH:         
-            DPrintf("Severity: High"); 
-            break;
-        case GL_DEBUG_SEVERITY_MEDIUM:       
-            DPrintf("Severity: Medium"); 
-            break;
-        case GL_DEBUG_SEVERITY_LOW:          
-            DPrintf("Severity: Low");
-            break;
-        case GL_DEBUG_SEVERITY_NOTIFICATION:
-            DPrintf("Severity: Notification"); 
-            break;
-    } 
-    DPrintf("\n");
-    
-    DPrintf("Message:%s\n",Message);
-    DPrintf("---------------\n");
-    if( Severity == GL_DEBUG_SEVERITY_HIGH ) {
-        assert(1!=1);
-    }
-}
-
-void GLSetDefaultState()
-{
-    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
-
-    glClearDepth( 1.0f );
-
-    glDepthFunc( GL_LEQUAL );
-
-    glEnable( GL_DEPTH_TEST );
-    
-#ifdef _DEBUG
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
-    glDebugMessageCallback(GLDebugOutput, NULL);
-    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-#endif
-}
 void ComUpdateDelta(ComTimeInfo_t *TimeInfo)
 {
     long Now;
@@ -242,7 +136,6 @@ Engine_t *EngineInit()
     }
     memset(Engine->TimeInfo,0,sizeof(ComTimeInfo_t));
     
-    GLSetDefaultState();
     ShaderManagerInit();
     
     return Engine;

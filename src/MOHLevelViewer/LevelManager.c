@@ -421,19 +421,20 @@ int LevelManagerGetGameEngine(LevelManager_t *LevelManager)
 }
 
 
-void LevelManagerFreeDialogData(GUIFileDialog_t *FileDialog)
+void LevelManagerFreeDialogData(FileDialog_t *FileDialog)
 {
     LevelManagerDialogData_t *DialogData;
-    DialogData = (LevelManagerDialogData_t *) GUIFileDialogGetUserData(FileDialog);
+    DialogData = (LevelManagerDialogData_t *) FileDialogGetUserData(FileDialog);
     if( DialogData ) {
         free(DialogData);
     }
 }
 
-void LevelManagerCloseDialog(GUI_t *GUI,GUIFileDialog_t *FileDialog)
+void LevelManagerCloseDialog(GUI_t *GUI,FileDialog_t *FileDialog)
 {
     LevelManagerFreeDialogData(FileDialog);
-    GUIFileDialogClose(GUI,FileDialog);
+    FileDialogClose(FileDialog);
+    GUIPopWindow(GUI);
 }
 
 void LevelManagerCleanUp(LevelManager_t *LevelManager)
@@ -445,10 +446,10 @@ void LevelManagerCleanUp(LevelManager_t *LevelManager)
         free(LevelManager->BasePath);
     }
     //If the user didn't close the dialog free the user data that we passed to it.
-    if( GUIFileDialogIsOpen(LevelManager->ExportFileDialog) ) {
+    if( FileDialogIsOpen(LevelManager->ExportFileDialog) ) {
         LevelManagerFreeDialogData(LevelManager->ExportFileDialog);
     }
-    if( GUIFileDialogIsOpen(LevelManager->FileDialog) ) {
+    if( FileDialogIsOpen(LevelManager->FileDialog) ) {
         LevelManagerFreeDialogData(LevelManager->FileDialog);
     }
     free(LevelManager);
@@ -594,38 +595,39 @@ void LevelManagerExportToPly(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
 }
 
 
-void LevelManagerOnExportDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Directory,const char *File,void *UserData)
+void LevelManagerOnExportDirSelected(FileDialog_t *FileDialog,const char *Directory,const char *File,void *UserData)
 {
     LevelManagerDialogData_t *Exporter;
     LevelManager_t *LevelManager;
     Exporter = (LevelManagerDialogData_t *) UserData;
     LevelManager = Exporter->LevelManager;
         
-    ProgressBarBegin(GUI->ProgressBar,"Exporting...");
+    ProgressBarBegin(Exporter->GUI->ProgressBar,"Exporting...");
 
     switch( Exporter->OutputFormat ) {
         case LEVEL_MANAGER_EXPORT_FORMAT_OBJ:
-            LevelManagerExportToObj(LevelManager,GUI,Exporter->VideoSystem,Directory);
+            LevelManagerExportToObj(LevelManager,Exporter->GUI,Exporter->VideoSystem,Directory);
             break;
         case LEVEL_MANAGER_EXPORT_FORMAT_PLY:
-            LevelManagerExportToPly(LevelManager,GUI,Exporter->VideoSystem,Directory);
+            LevelManagerExportToPly(LevelManager,Exporter->GUI,Exporter->VideoSystem,Directory);
             break;
         case LEVEL_MANAGER_EXPORT_FORMAT_WAV:
-            LevelManagerExportMusicToWav(LevelManager,GUI,Exporter->VideoSystem,Exporter->SoundSystem,Directory);
+            LevelManagerExportMusicToWav(LevelManager,Exporter->GUI,Exporter->VideoSystem,Exporter->SoundSystem,Directory);
             break;
         default:
             DPrintf("LevelManagerOnExportDirSelected:Invalid output format\n");
             break;
     }
         
-    ProgressBarEnd(GUI->ProgressBar,Exporter->VideoSystem);
-    GUIFileDialogClose(GUI,FileDialog);
-    free(Exporter);
+    ProgressBarEnd(Exporter->GUI->ProgressBar,Exporter->VideoSystem);
+    LevelManagerCloseDialog(Exporter->GUI,FileDialog);
 }
 
-void LevelManagerOnExportDirCancelled(GUIFileDialog_t *FileDialog,GUI_t *GUI)
+void LevelManagerOnExportDirCancelled(FileDialog_t *FileDialog)
 {
-    LevelManagerCloseDialog(GUI,FileDialog);
+    LevelManagerDialogData_t *LevelManagerDialogData;
+    LevelManagerDialogData = (LevelManagerDialogData_t *) FileDialogGetUserData(FileDialog);
+    LevelManagerCloseDialog(LevelManagerDialogData->GUI,FileDialog);
 }
 
 /*
@@ -644,30 +646,30 @@ int LevelManagerLoadFromConfig(LevelManager_t *LevelManager,GUI_t *GUI,VideoSyst
     }
     return 1;
 }
-void LevelManagerOnDirSelected(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Path,const char *File,void *UserData)
+void LevelManagerOnDirSelected(FileDialog_t *FileDialog,const char *Path,const char *File,void *UserData)
 {
     LevelManagerDialogData_t *LevelManagerDialogData;
     int LoadStatus;
     
     LevelManagerDialogData = (LevelManagerDialogData_t *) UserData;
-    LoadStatus = LevelManagerInitWithPath(LevelManagerDialogData->LevelManager,GUI,LevelManagerDialogData->VideoSystem,
+    LoadStatus = LevelManagerInitWithPath(LevelManagerDialogData->LevelManager,LevelManagerDialogData->GUI,LevelManagerDialogData->VideoSystem,
                                           LevelManagerDialogData->SoundSystem,Path);
 
     if( !LoadStatus ) {
-        GUISetErrorMessage(GUI,"Selected path doesn't seems to contain any game file...\n"
+        GUISetErrorMessage(LevelManagerDialogData->GUI,"Selected path doesn't seems to contain any game file...\n"
         "Please select a folder containing MOH or MOH:Undergound.");
     } else {
         //Close it if we managed to load it.
         ConfigSet("GameBasePath",Path);
-        LevelManagerCloseDialog(GUI,FileDialog);
+        LevelManagerCloseDialog(LevelManagerDialogData->GUI,FileDialog);
     }
 }
-void LevelManagerOnDirSelectionCancelled(GUIFileDialog_t *FileDialog,GUI_t *GUI)
+void LevelManagerOnDirSelectionCancelled(FileDialog_t *FileDialog)
 {
     LevelManagerDialogData_t *LevelManagerDialogData;
-    LevelManagerDialogData = (LevelManagerDialogData_t *) GUIFileDialogGetUserData(FileDialog);
+    LevelManagerDialogData = (LevelManagerDialogData_t *) FileDialogGetUserData(FileDialog);
     if( LevelManagerDialogData->LevelManager->IsPathSet ) {
-        LevelManagerCloseDialog(GUI,FileDialog);
+        LevelManagerCloseDialog(LevelManagerDialogData->GUI,FileDialog);
     }
 }
 
@@ -689,12 +691,14 @@ void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t *V
         return;
     }
     Exporter->LevelManager = LevelManager;
+    Exporter->GUI = GUI;
     Exporter->VideoSystem = VideoSystem;
     Exporter->SoundSystem = SoundSystem;
     Exporter->OutputFormat = OutputFormat;
 
-    GUIFileDialogSetTitle(LevelManager->ExportFileDialog,"Export");
-    GUIFileDialogOpenWithUserData(GUI,LevelManager->ExportFileDialog,Exporter);
+    FileDialogSetTitle(LevelManager->ExportFileDialog,"Export");
+    FileDialogOpenWithUserData(LevelManager->ExportFileDialog,Exporter);
+    GUIPushWindow(GUI);
 }
 
 void LevelManagerSpawnCamera(const LevelManager_t *LevelManager,Camera_t *Camera)
@@ -825,7 +829,7 @@ void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
 {
     LevelManagerDialogData_t *DialogData;
     
-    if( GUIFileDialogIsOpen(LevelManager->FileDialog) ) {
+    if( FileDialogIsOpen(LevelManager->FileDialog) ) {
         if( LevelManager->IsPathSet ) {
             LevelManagerCloseDialog(GUI,LevelManager->FileDialog);
         }
@@ -836,9 +840,11 @@ void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
             return;
         }
         DialogData->LevelManager = LevelManager;
+        DialogData->GUI = GUI;
         DialogData->VideoSystem = VideoSystem;
         DialogData->SoundSystem = SoundSystem;
-        GUIFileDialogOpenWithUserData(GUI,LevelManager->FileDialog,DialogData);
+        FileDialogOpenWithUserData(LevelManager->FileDialog,DialogData);
+        GUIPushWindow(GUI);
     }
 }
 
@@ -854,9 +860,9 @@ LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSyst
     }
     LevelManager->CurrentLevel = NULL;
     LevelManager->HasToSpawnCamera = 0;
-    LevelManager->FileDialog = GUIFileDialogRegister(GUI,"Select Directory",NULL,
+    LevelManager->FileDialog = FileDialogRegister("Select Directory",NULL,
                                                      LevelManagerOnDirSelected,LevelManagerOnDirSelectionCancelled);
-    LevelManager->ExportFileDialog = GUIFileDialogRegister(GUI,"Export Level",NULL,
+    LevelManager->ExportFileDialog = FileDialogRegister("Export Level",NULL,
                                                            LevelManagerOnExportDirSelected,LevelManagerOnExportDirCancelled);
 
     LevelManager->BasePath = NULL;

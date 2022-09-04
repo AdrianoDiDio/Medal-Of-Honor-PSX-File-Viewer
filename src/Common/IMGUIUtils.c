@@ -24,6 +24,28 @@ Config_t *GUIFont;
 Config_t *GUIFontSize;
 Config_t *GUIShowFPS;
 
+FileDialog_t *FileDialogList = NULL;
+int NumRegisteredFileDialog = 0;
+
+const VSyncSettings_t VSyncOptions[] = { 
+    
+    {
+        "Disable",
+        0
+    },
+    {
+        "Standard",
+        1
+    },
+    {
+        "Adaptive",
+        -1
+    }
+};
+
+int NumVSyncOptions = sizeof(VSyncOptions) / sizeof(VSyncOptions[0]);
+
+
 void GUIReleaseContext(ImGuiContext *Context)
 {    
     igSetCurrentContext(Context);
@@ -196,8 +218,276 @@ ProgressBar_t *ProgressBarInitialize(VideoSystem_t *VideoSystem)
     }
     ProgressBar->Context = igCreateContext(NULL);
     ProgressBar->DialogTitle = NULL;
+    //NOTE(Adriano):Progress bar doesn't need a Config File since it's position
+    //is fixed and doesn't depend from the user.
     GUIContextInit(ProgressBar->Context,VideoSystem,NULL);
     return ProgressBar;
+}
+
+void FileDialogListFree()
+{
+    FileDialog_t *Temp;
+    
+    while( FileDialogList ) {
+        free(FileDialogList->WindowTitle);
+        free(FileDialogList->Key);
+        if( FileDialogList->Filters ) {
+            free(FileDialogList->Filters);
+        }
+        IGFD_Destroy(FileDialogList->Window);
+        Temp = FileDialogList;
+        FileDialogList = FileDialogList->Next;
+        free(Temp);
+    }
+}
+
+void FileDialogRender(FileDialog_t *FileDialog)
+{
+    ImVec2 MaxSize;
+    ImVec2 MinSize;
+    ImGuiViewport *Viewport;
+    ImVec2 WindowPosition;
+    ImVec2 WindowPivot;
+    char *DirectoryPath;
+    char *FileName;
+    void *UserData;
+    
+    if( !FileDialog ) {
+        return;
+    }
+    if( !IGFD_IsOpened(FileDialog->Window) ) {
+        return;
+    }
+    Viewport = igGetMainViewport();
+    WindowPosition.x = Viewport->WorkPos.x;
+    WindowPosition.y = Viewport->WorkPos.y;
+    WindowPivot.x = 0.f;
+    WindowPivot.y = 0.f;
+    MaxSize.x = Viewport->WorkSize.x;
+    MaxSize.y = Viewport->WorkSize.y;
+    MinSize.x = -1;
+    MinSize.y = -1;
+
+    igSetNextWindowSize(MaxSize,0);
+    igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
+    if (IGFD_DisplayDialog(FileDialog->Window, FileDialog->Key, 
+        ImGuiWindowFlags_NoCollapse  | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings, MinSize, MaxSize)) {
+        if (IGFD_IsOk(FileDialog->Window)) {
+                FileName = IGFD_GetFilePathName(FileDialog->Window);
+                DirectoryPath = IGFD_GetCurrentPath(FileDialog->Window);
+                UserData = IGFD_GetUserDatas(FileDialog->Window);
+                if( FileDialog->OnElementSelected ) {
+                    FileDialog->OnElementSelected(FileDialog,DirectoryPath,FileName,UserData);
+                }
+                if( DirectoryPath ) {
+                    free(DirectoryPath);
+                }
+                if( FileName ) {
+                    free(FileName);
+                }
+        } else {
+            if( FileDialog->OnDialogCancelled ) {
+                FileDialog->OnDialogCancelled(FileDialog);
+            }
+        }
+    }
+
+}
+void FileDialogRenderList()
+{
+    FileDialog_t *Iterator;
+    
+    for( Iterator = FileDialogList; Iterator; Iterator = Iterator->Next ) {
+        FileDialogRender(Iterator);
+    }
+}
+int FileDialogIsOpen(FileDialog_t *FileDialog)
+{
+    if( !FileDialog ) {
+        DPrintf("FileDialogIsOpen:Invalid dialog data\n");
+        return 0;
+    }
+    
+    return IGFD_IsOpened(FileDialog->Window);
+}
+
+void *FileDialogGetUserData(FileDialog_t *FileDialog)
+{
+    if( !FileDialog ) {
+        DPrintf("FileDialogGetUserData:Invalid dialog data\n");
+        return 0;
+    } 
+    return IGFD_GetUserDatas(FileDialog->Window);
+}
+void FileDialogOpenWithUserData(FileDialog_t *FileDialog,void *UserData)
+{
+    if( !FileDialog ) {
+        DPrintf("FileDialogOpenWithUserData:Invalid dialog data\n");
+        return;
+    }
+    
+    if( IGFD_IsOpened(FileDialog->Window) ) {
+        return;
+    }
+    IGFD_OpenDialog2(FileDialog->Window,FileDialog->Key,FileDialog->WindowTitle,FileDialog->Filters,".",1,
+                     UserData,ImGuiFileDialogFlags_DontShowHiddenFiles);
+}
+void FileDialogOpen(FileDialog_t *FileDialog)
+{
+    FileDialogOpenWithUserData(FileDialog,NULL);
+}
+
+void FileDialogClose(FileDialog_t *FileDialog)
+{
+    if( !FileDialog ) {
+        DPrintf("FileDialogClose:Invalid dialog data\n");
+        return;
+    }
+    
+    if( !IGFD_IsOpened(FileDialog->Window) ) {
+        return;
+    }
+    IGFD_CloseDialog(FileDialog->Window);
+}
+/*
+ Register a new file dialog.
+ Filters can be NULL if we want a dir selection dialog or have a value based on ImGuiFileDialog documentation if we want to
+ select a certain type of file.
+ OnElementSelected and OnDialogCancelled are two callback that can be set to NULL if we are not interested in the result.
+ NOTE that setting them to NULL or the cancel callback to NULL doesn't close the dialog.
+ */
+FileDialog_t *FileDialogRegister(const char *WindowTitle,const char *Filters,FileDialogSelectCallback_t OnElementSelected,
+                                       FileDialogCancelCallback_t OnDialogCancelled)
+{
+    FileDialog_t *FileDialog;
+    
+    if( !WindowTitle) {
+        DPrintf("FileDialogRegister:Invalid Window Title\n");
+        return NULL;
+    }
+
+    FileDialog = malloc(sizeof(FileDialog_t));
+    
+    if( !FileDialog ) {
+        DPrintf("FileDialogRegister:Couldn't allocate struct data.\n");
+        return NULL;
+    }
+    asprintf(&FileDialog->Key,"FileDialog%i",NumRegisteredFileDialog);
+    FileDialog->WindowTitle = StringCopy(WindowTitle);
+    if( Filters ) {
+        FileDialog->Filters = StringCopy(Filters);
+    } else {
+        FileDialog->Filters = NULL;
+    }
+    FileDialog->Window = IGFD_Create();
+    FileDialog->OnElementSelected = OnElementSelected;
+    FileDialog->OnDialogCancelled = OnDialogCancelled;
+    FileDialog->Next = FileDialogList;
+    FileDialogList = FileDialog;
+    NumRegisteredFileDialog++;
+    
+    return FileDialog;
+}
+void FileDialogSetTitle(FileDialog_t *FileDialog,const char *Title)
+{
+    if(!FileDialog) {
+        DPrintf("FileDialogSetTitle:Invalid dialog\n");
+        return;
+    }
+    if( !Title ) {
+        DPrintf("FileDialogSetTitle:Invalid title\n");
+        return;
+    }
+    if( FileDialog->WindowTitle ) {
+        free(FileDialog->WindowTitle);
+    }
+    FileDialog->WindowTitle = StringCopy(Title);
+}
+
+void FileDialogSetOnElementSelectedCallback(FileDialog_t *FileDialog,FileDialogSelectCallback_t OnElementSelected)
+{
+    if(!FileDialog) {
+        DPrintf("FileDialogSetOnElementSelectedCallback:Invalid dialog\n");
+        return;
+    }
+    FileDialog->OnElementSelected = OnElementSelected;
+}
+void FileDialogSetOnDialogCancelledCallback(FileDialog_t *FileDialog,FileDialogCancelCallback_t OnDialogCancelled)
+{
+    if(!FileDialog) {
+        DPrintf("FileDialogSetOnDialogCancelledCallback:Invalid dialog\n");
+        return;
+    }
+    FileDialog->OnDialogCancelled = OnDialogCancelled;
+}
+int GUIGetVSyncOptionValue()
+{
+    int i;
+    for (i = 0; i < NumVSyncOptions; i++) {
+        if( VSyncOptions[i].Value == VidConfigVSync->IValue ) {
+            return i;
+        }
+    }
+    return 0;
+}
+void GUIDrawVideoSettingsWindow(bool *WindowHandle,VideoSystem_t *VideoSystem)
+{
+    int OldValue;
+    int IsSelected;
+    int i;
+    int CurrentVSyncOption;
+
+    if( !WindowHandle || !(*WindowHandle) ) {
+        return;
+    }
+    ImVec2 ZeroSize;
+    ZeroSize.x = ZeroSize.y = 0.f;
+    int PreviewIndex = VideoSystem->CurrentVideoMode != -1 ? VideoSystem->CurrentVideoMode : 0;
+    if( igBegin("Video Settings",WindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
+        CurrentVSyncOption = GUIGetVSyncOptionValue();
+        if( igBeginCombo("VSync Options",VSyncOptions[CurrentVSyncOption].DisplayValue,0) ) {
+            for (i = 0; i < NumVSyncOptions; i++) {
+                IsSelected = (CurrentVSyncOption == i);
+                if (igSelectable_Bool(VSyncOptions[i].DisplayValue, IsSelected,0,ZeroSize)) {
+                    if( CurrentVSyncOption != i ) {
+                        OldValue = VidConfigVSync->IValue;
+                        if( VideoSystemSetSwapInterval(VSyncOptions[i].Value) < 0 ) {
+                            VideoSystemSetSwapInterval(OldValue);
+                        }
+                    }
+                }
+                if( IsSelected ) {
+                    igSetItemDefaultFocus();
+                }
+          
+            }
+            igEndCombo();
+        }
+        igSeparator();
+        //NOTE(Adriano):Only in Fullscreen mode we can select the video mode we want.
+        if( VidConfigFullScreen->IValue ) {
+            igText("Video Mode");
+            if( igBeginCombo("##Resolution", VideoSystem->VideoModeList[PreviewIndex].Description, 0) ) {
+                for( i = 0; i < VideoSystem->NumVideoModes; i++ ) {
+                    int IsSelected = ((VideoSystem->VideoModeList[i].Width == VidConfigWidth->IValue) && 
+                        (VideoSystem->VideoModeList[i].Height == VidConfigHeight->IValue)) ? 1 : 0;
+                    if( igSelectable_Bool(VideoSystem->VideoModeList[i].Description,IsSelected,0,ZeroSize ) ) {
+                        VideoSystemSetVideoSettings(VideoSystem,i);
+                    }
+                    if( IsSelected ) {
+                        igSetItemDefaultFocus();
+                    }
+                }
+                igEndCombo();
+            }
+            igSeparator();
+        }
+        if( igCheckbox("Fullscreen Mode",(bool *) &VidConfigFullScreen->IValue) ) {
+            DPrintf("VidConfigFullScreen:%i\n",VidConfigFullScreen->IValue);
+            VideoSystemSetVideoSettings(VideoSystem,-1);
+        }
+    }
+    igEnd();
 }
 
 void GUILoadCommonSettings()

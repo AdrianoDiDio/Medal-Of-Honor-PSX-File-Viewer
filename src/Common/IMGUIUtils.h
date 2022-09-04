@@ -23,6 +23,21 @@
 #include "Common.h"
 #include "Video.h"
 
+typedef struct FileDialog_s FileDialog_t;
+
+typedef void (*FileDialogSelectCallback_t)(FileDialog_t *FileDialog,const char *Directory,const char *File,void *UserData);
+typedef void (*FileDialogCancelCallback_t)(FileDialog_t *FileDialog);
+
+typedef struct FileDialog_s {
+    char *WindowTitle;
+    char *Key;
+    char *Filters;
+    ImGuiFileDialog *Window;
+    FileDialogSelectCallback_t OnElementSelected;
+    FileDialogCancelCallback_t OnDialogCancelled;    
+    struct FileDialog_s *Next;
+} FileDialog_t;
+
 typedef struct ProgressBar_s {
     ImGuiContext    *Context;
     ImGuiContext    *OldContext;
@@ -30,6 +45,12 @@ typedef struct ProgressBar_s {
     int             IsOpen;
     char            *DialogTitle;
 } ProgressBar_t;
+
+typedef struct VSyncSettings_s {
+    char        *DisplayValue;
+    int         Value;
+} VSyncSettings_t;
+
 
 extern Config_t *GUIFont;
 extern Config_t *GUIFontSize;
@@ -47,5 +68,20 @@ void            ProgressBarEnd(ProgressBar_t *GUIProgressBar,VideoSystem_t *Vide
 void            ProgressBarReset(ProgressBar_t *GUIProgressBar);
 void            ProgressBarSetDialogTitle(ProgressBar_t *GUIProgressBar,const char *Title);
 void            ProgressBarIncrement(ProgressBar_t *GUIProgressBar,VideoSystem_t *VideoSystem,float Increment,const char *Message);
+
+void            GUIDrawVideoSettingsWindow(bool *WindowHandle,VideoSystem_t *VideoSystem);
+
+FileDialog_t    *FileDialogRegister(const char *WindowTitle,const char *Filters,FileDialogSelectCallback_t OnElementSelected,
+                                       FileDialogCancelCallback_t OnDialogCancelled);
+void            FileDialogSetTitle(FileDialog_t *FileDialog,const char *Title);
+void            FileDialogSetOnElementSelectedCallback(FileDialog_t *FileDialog,FileDialogSelectCallback_t OnElementSelected);
+void            FileDialogSetOnDialogCancelledCallback(FileDialog_t *FileDialog,FileDialogCancelCallback_t OnDialogCancelled);
+int             FileDialogIsOpen(FileDialog_t *FileDialog);
+void            FileDialogOpen(FileDialog_t *FileDialog);
+void            FileDialogOpenWithUserData(FileDialog_t *FileDialog,void *UserData);
+void            *FileDialogGetUserData(FileDialog_t *FileDialog);
+void            FileDialogRenderList();
+void            FileDialogClose(FileDialog_t *FileDialog);
+void            FileDialogListFree();
 
 #endif//__IMGUI_UTILS_H_

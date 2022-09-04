@@ -60,8 +60,8 @@ typedef struct RenderObjectManager_s {
     BSDRenderObjectPack_t   *SelectedBSDPack;
     BSDRenderObject_t       *SelectedRenderObject;
     
-    GUIFileDialog_t         *BSDFileDialog;
-    GUIFileDialog_t         *ExportFileDialog;
+    FileDialog_t            *BSDFileDialog;
+    FileDialog_t            *ExportFileDialog;
     
     int                     PlayAnimation;
 } RenderObjectManager_t;
@@ -69,6 +69,7 @@ typedef struct RenderObjectManager_s {
 typedef struct RenderObjectManagerDialogData_s {
     RenderObjectManager_t           *RenderObjectManager;
     VideoSystem_t                   *VideoSystem;
+    GUI_t                           *GUI;
     int                             OutputFormat;
 } RenderObjectManagerDialogData_t;
 
@@ -77,7 +78,7 @@ extern Config_t *EnableAmbientLight;
 
 RenderObjectManager_t   *RenderObjectManagerInit(GUI_t *GUI);
 int                     RenderObjectManagerDeleteBSDPack(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName,int GameVersion);
-void                    RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem);
+void                    RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem);
 void                    RenderObjectManagerExportCurrentPose(RenderObjectManager_t *RenderObjectManager,
                                                              GUI_t *GUI,VideoSystem_t *VideoSystem,int OutputFormat);
 void                    RenderObjectManagerUpdate(RenderObjectManager_t *RenderObjectManager);

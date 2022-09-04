@@ -305,7 +305,7 @@ Byte *TIMToOpenGL24(TIMImage_t *Image)
     return Data;
 }
 
-Byte **SetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
+Byte **TIMSetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
 {
     Byte **RowPointer;
     int x;
@@ -419,7 +419,7 @@ Byte **SetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
     return RowPointer;
 }
 
-void WritePNGImage(char *OutName,TIMImage_t *Image)
+void TIMWritePNGImage(char *OutName,TIMImage_t *Image)
 {
     FILE *PNGImage;
     png_structp PNGPtr;
@@ -459,7 +459,7 @@ void WritePNGImage(char *OutName,TIMImage_t *Image)
                   PNG_INTERLACE_NONE,
                   PNG_COMPRESSION_TYPE_DEFAULT,
                   PNG_FILTER_TYPE_DEFAULT);
-    RowPointer = SetRowPointer(PNGPtr,Image);
+    RowPointer = TIMSetRowPointer(PNGPtr,Image);
     
     png_init_io (PNGPtr, PNGImage);
     png_set_rows (PNGPtr, PNGInfoPtr, RowPointer);

@@ -44,21 +44,22 @@ typedef struct Mission_s {
 } Mission_t;
 
 typedef struct LevelManager_s {
-    char    *BasePath;
-    char    MissionPath[256];
-    char    EngineName[256];
-    GUIFileDialog_t *FileDialog;
-    GUIFileDialog_t *ExportFileDialog;
-    Level_t *CurrentLevel;
-    int     HasToSpawnCamera;
-    int     IsPathSet;
-    int     GameEngine;
+    char            *BasePath;
+    char            MissionPath[256];
+    char            EngineName[256];
+    FileDialog_t    *FileDialog;
+    FileDialog_t    *ExportFileDialog;
+    Level_t         *CurrentLevel;
+    int             HasToSpawnCamera;
+    int             IsPathSet;
+    int             GameEngine;
 } LevelManager_t;
 
 typedef struct LevelManagerDialogData_s {
     LevelManager_t *LevelManager;
     VideoSystem_t  *VideoSystem;
     SoundSystem_t  *SoundSystem;
+    GUI_t          *GUI;
     int             OutputFormat;
 } LevelManagerDialogData_t;
 

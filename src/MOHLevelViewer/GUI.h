@@ -24,69 +24,30 @@
 #include "../Common/Video.h"
 #include "../Common/IMGUIUtils.h"
 
-typedef struct GUI_s GUI_t;
-typedef struct GUIFileDialog_s GUIFileDialog_t;
-
-typedef void (*FileDialogSelectCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI,const char *Directory,const char *File,void *UserData);
-typedef void (*FileDialogCancelCallback_t)(GUIFileDialog_t *FileDialog,GUI_t *GUI);
-
-
-
-typedef struct GUIFileDialog_s {
-    char *WindowTitle;
-    char *Key;
-    char *Filters;
-    ImGuiFileDialog *Window;
-    FileDialogSelectCallback_t OnElementSelected;
-    FileDialogCancelCallback_t OnDialogCancelled;    
-    struct GUIFileDialog_s *Next;
-} GUIFileDialog_t;
 typedef struct GUI_s {
-    ImGuiContext *DefaultContext;
-    
-    GUIFileDialog_t *FileDialogList;
-    int NumRegisteredFileDialog;
-        
-    char *ConfigFilePath;
-    bool DebugWindowHandle;
-    bool VideoSettingsWindowHandle;
-    bool LevelSelectWindowHandle;
-    int NumActiveWindows;
-    ProgressBar_t *ProgressBar;
-    char *ErrorMessage;
-    ImGuiID ErrorID;
-    
+    ImGuiContext        *DefaultContext;
+    char                *ConfigFilePath;
+    bool                DebugWindowHandle;
+    bool                VideoSettingsWindowHandle;
+    bool                LevelSelectWindowHandle;
+    int                 NumActiveWindows;
+    ProgressBar_t       *ProgressBar;
+    char                *ErrorMessage;
 } GUI_t;
-
-typedef struct VSyncSettings_s {
-    char *DisplayValue;
-    int Value;
-} VSyncSettings_t;
 
 typedef struct LevelManager_s LevelManager_t;
 typedef struct Camera_s Camera_t;
 typedef struct ComTimeInfo_s ComTimeInfo_t;
 typedef struct SoundSystem_s SoundSystem_t;
-extern Config_t *GUIFont;
-extern Config_t *GUIFontSize;
-extern Config_t *GUIShowFPS;
 
 GUI_t           *GUIInit(VideoSystem_t *VideoSystem);
+void            GUIPushWindow(GUI_t *GUI);
+void            GUIPopWindow(GUI_t *GUI);
 int             GUIIsActive(GUI_t *GUI);
 void            GUIToggleDebugWindow(GUI_t *GUI);
 void            GUIToggleVideoSettingsWindow(GUI_t *GUI);
 void            GUIToggleLevelSelectWindow(GUI_t *GUI);
 void            GUISetErrorMessage(GUI_t *GUI,const char *Message);
-GUIFileDialog_t *GUIFileDialogRegister(GUI_t *GUI,const char *WindowTitle,const char *Filters,FileDialogSelectCallback_t OnElementSelected,
-                                       FileDialogCancelCallback_t OnDialogCancelled);
-void            GUIFileDialogSetTitle(GUIFileDialog_t *FileDialog,const char *Title);
-void            GUIFileDialogSetOnElementSelectedCallback(GUIFileDialog_t *FileDialog,FileDialogSelectCallback_t OnElementSelected);
-void            GUIFileDialogSetOnDialogCancelledCallback(GUIFileDialog_t *FileDialog,FileDialogCancelCallback_t OnDialogCancelled);
-int             GUIFileDialogIsOpen(GUIFileDialog_t *FileDialog);
-void            GUIFileDialogOpen(GUI_t *GUI,GUIFileDialog_t *FileDialog);
-void            GUIFileDialogOpenWithUserData(GUI_t *GUI,GUIFileDialog_t *FileDialog,void *UserData);
-void            *GUIFileDialogGetUserData(GUIFileDialog_t *FileDialog);
-void            GUIFileDialogClose(GUI_t *GUI,GUIFileDialog_t *FileDialog);
 int             GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
 void            GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
                         ComTimeInfo_t *TimeInfo);
