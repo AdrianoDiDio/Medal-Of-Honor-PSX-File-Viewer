@@ -336,29 +336,29 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
     }
     igEnd();
 }
-void GUIDrawMenuBar(Engine_t *Engine)
+void GUIDrawMenuBar(Application_t *Application)
 {
     if( !igBeginMainMenuBar() ) {
         return;
     }
     if (igBeginMenu("File",true)) {
         if( igMenuItem_Bool("Open",NULL,false,true) ) {
-            RenderObjectManagerOpenFileDialog(Engine->RenderObjectManager,Engine->GUI,Engine->VideoSystem);
+            RenderObjectManagerOpenFileDialog(Application->RenderObjectManager,Application->GUI,Application->Engine->VideoSystem);
         }
         if( igMenuItem_Bool("Exit",NULL,false,true) ) {
-            Quit(Engine);
+            Quit(Application);
         }
         igEndMenu();
     }
     if (igBeginMenu("Settings",true)) {
-        if( igMenuItem_Bool("Video",NULL,Engine->GUI->VideoSettingsWindowHandle,true) ) {
-            Engine->GUI->VideoSettingsWindowHandle = 1;
+        if( igMenuItem_Bool("Video",NULL,Application->GUI->VideoSettingsWindowHandle,true) ) {
+            Application->GUI->VideoSettingsWindowHandle = 1;
         }
         igEndMenu();
     }
     if (igBeginMenu("View",true)) {
-        if( igMenuItem_Bool("Debug Window",NULL,Engine->GUI->DebugWindowHandle,true) ) {
-            Engine->GUI->DebugWindowHandle = 1;
+        if( igMenuItem_Bool("Debug Window",NULL,Application->GUI->DebugWindowHandle,true) ) {
+            Application->GUI->DebugWindowHandle = 1;
         }
         igEndMenu();
     }
@@ -388,17 +388,17 @@ void GUIDrawErrorMessage(GUI_t *GUI)
         igEndPopup();
     }
 }
-void GUIDraw(Engine_t *Engine)
+void GUIDraw(Application_t *Application)
 {
     
     GUIBeginFrame();
-    GUIDrawDebugOverlay(Engine->TimeInfo);
-    GUIDrawMenuBar(Engine);
+    GUIDrawDebugOverlay(Application->Engine->TimeInfo);
+    GUIDrawMenuBar(Application);
     FileDialogRenderList();
-    GUIDrawErrorMessage(Engine->GUI);
-    GUIDrawMainWindow(Engine->GUI,Engine->RenderObjectManager,Engine->VideoSystem,Engine->Camera);
-    GUIDrawDebugWindow(Engine->GUI,Engine->Camera,Engine->VideoSystem);
-    GUIDrawVideoSettingsWindow(&Engine->GUI->VideoSettingsWindowHandle,Engine->VideoSystem);
+    GUIDrawErrorMessage(Application->GUI);
+    GUIDrawMainWindow(Application->GUI,Application->RenderObjectManager,Application->Engine->VideoSystem,Application->Camera);
+    GUIDrawDebugWindow(Application->GUI,Application->Camera,Application->Engine->VideoSystem);
+    GUIDrawVideoSettingsWindow(&Application->GUI->VideoSettingsWindowHandle,Application->Engine->VideoSystem);
 //     igShowDemoWindow(NULL);
     GUIEndFrame();
 }

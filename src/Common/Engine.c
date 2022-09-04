@@ -38,6 +38,9 @@ void EngineShutDown(Engine_t *Engine)
     if( Engine->VideoSystem ) {
         VideoSystemShutdown(Engine->VideoSystem);
     }
+    if( Engine->SoundSystem ) {
+        SoundSystemCleanUp(Engine->SoundSystem);
+    }
     EngineQuitSDL();
     free(Engine);
 }
@@ -77,7 +80,6 @@ void EngineBeginFrame(Engine_t *Engine)
         DPrintf("EngineBeginFrame:Called without a valid engine\n");
         return;
     }
-//     EngineCheckEvents(Engine);
     ComUpdateDelta(Engine->TimeInfo);
     glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -111,7 +113,7 @@ Engine_t *EngineInit()
     
     Engine->TimeInfo = NULL;
     Engine->VideoSystem = NULL;
-
+    Engine->SoundSystem = NULL;
 
     if( !EngineInitSDL() ) {
         printf("EngineInit:Failed to initialize SDL subsystems.\n");
@@ -125,6 +127,12 @@ Engine_t *EngineInit()
         goto Failure;
     }
 
+    Engine->SoundSystem = SoundSystemInit();
+    
+    if( !Engine->SoundSystem ) {
+        printf("EngineInit:Failed to initialize Audio system\n");
+        goto Failure;
+    }
     
     Engine->KeyState = SDL_GetKeyboardState(NULL);
         

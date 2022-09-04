@@ -22,20 +22,7 @@
 #include "../Common/ShaderManager.h"
 #include "../Common/Config.h"
 
-Color4f_t    c_Black = {   0,    0,   0,   1.f};
-Color4f_t    c_Red    = {   1.f,  0,   0,   1.f};
-Color4f_t    c_Green    = {   0,    1.f, 0,   1.f};
-Color4f_t    c_Blue    = {   0,    0,   1.f, 1.f};
-Color4f_t    c_Yellow = {  1.f,  1.f, 0,   1.f};
-Color4f_t    c_White    = {   1.f,  1.f, 1.f, 1.f};
-Color4f_t    c_Grey =  {   0.75, 0.75,0.75,1.f};
-
-// char *AppGetConfigPath()
-// {
-//     return SDL_GetPrefPath(NULL,"MOHLevelViewer");
-// }
-
-void EngineCheckEvents(Engine_t *Engine)
+void ApplicationCheckEvents(Application_t *Application)
 {
     SDL_Event Event;
     while( SDL_PollEvent(&Event) ) {
@@ -44,62 +31,32 @@ void EngineCheckEvents(Engine_t *Engine)
             ConfigSetNumber("VideoHeight",Event.window.data2);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F1 ) {
-            GUIToggleDebugWindow(Engine->GUI);
+            GUIToggleDebugWindow(Application->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F2 ) {
-            GUIToggleVideoSettingsWindow(Engine->GUI);
+            GUIToggleVideoSettingsWindow(Application->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F3 ) {
-            GUIToggleLevelSelectWindow(Engine->GUI);
+            GUIToggleLevelSelectWindow(Application->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
-            LevelManagerToggleFileDialog(Engine->LevelManager,Engine->GUI,Engine->VideoSystem,Engine->SoundSystem);
+            LevelManagerToggleFileDialog(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem,
+                                         Application->Engine->SoundSystem);
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
-            Quit(Engine);
+            Quit(Application);
         }
         
-        if( !GUIProcessEvent(Engine->GUI,&Event) ) {
+        if( !GUIProcessEvent(Application->GUI,&Event) ) {
             if( Event.type == SDL_MOUSEMOTION ) {
-                CameraOnMouseEvent(Engine->Camera,Event.motion.xrel,Event.motion.yrel);
+                CameraOnMouseEvent(Application->Camera,Event.motion.xrel,Event.motion.yrel);
             }
         }
     }
     //NOTE(Adriano):If the GUI is closed and we pumped all the events then
     //              check if any key is down and update the camera.
-    if( !GUIIsActive(Engine->GUI) ) {
-        CameraCheckKeyEvents(Engine->Camera,Engine->KeyState,Engine->TimeInfo->Delta);
-    }
-}
-
-void ComUpdateDelta(ComTimeInfo_t *TimeInfo,Camera_t *Camera)
-{
-    long Now;
-    
-    Now = SysMilliseconds();
-
-    TimeInfo->UpdateLength = Now - TimeInfo->LastLoopTime;
-    TimeInfo->Delta = TimeInfo->UpdateLength * 0.001f;
-
-
-    // Update the frame counter
-    TimeInfo->LastFPSTime += TimeInfo->UpdateLength;
-    TimeInfo->FPS++;
-    TimeInfo->LastLoopTime = Now;
-    // Update our FPS counter if a second has passed since
-    // we last recorded
-    if (TimeInfo->LastFPSTime >= 1000 ) {
-        sprintf(TimeInfo->FPSString,"FPS:%i\nMs: %.2f ms\nLast FPS Time:%f\nDelta:%f",
-                TimeInfo->FPS,
-                1000.f/(float)TimeInfo->FPS,
-                TimeInfo->LastFPSTime,TimeInfo->Delta);
-        sprintf(TimeInfo->FPSSimpleString,"FPS %i Ms %.2f ms",
-                TimeInfo->FPS,
-                1000.f/(float)TimeInfo->FPS);
-        DPrintf("%s\n",TimeInfo->FPSString);
-        DPrintf("Current Camera Position:%f;%f;%f\n",Camera->Position[0],Camera->Position[1],Camera->Position[2]);
-        TimeInfo->LastFPSTime = 0;
-        TimeInfo->FPS = 0;
+    if( !GUIIsActive(Application->GUI) ) {
+        CameraCheckKeyEvents(Application->Camera,Application->Engine->KeyState,Application->Engine->TimeInfo->Delta);
     }
 }
 
@@ -211,71 +168,56 @@ void GLSetDefaultState()
 #endif
 }
 
-void Quit(Engine_t *Engine)
+void ApplicationShutDown(Application_t *Application)
 {
-    EngineShutDown(Engine);
-    ShaderManagerFree();
-    ConfigFree();
-    exit(0);
-}
-void EngineQuitSDL()
-{
-    SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-    SDL_Quit();
-}
-void EngineShutDown(Engine_t *Engine)
-{
-    if( !Engine ) {
+    if( !Application ) {
         return;
     }
-    if( Engine->LevelManager ) {
-        LevelManagerCleanUp(Engine->LevelManager);
+    if( Application->LevelManager ) {
+        LevelManagerCleanUp(Application->LevelManager);
     }
-    if( Engine->GUI ) {
-        GUIFree(Engine->GUI);
+    if( Application->GUI ) {
+        GUIFree(Application->GUI);
     }
-    if( Engine->TimeInfo ) {
-        free(Engine->TimeInfo);
+    if( Application->Camera ) {
+        CameraCleanUp(Application->Camera);
     }
-    if( Engine->VideoSystem ) {
-        VideoSystemShutdown(Engine->VideoSystem);
+    if( Application->Engine ) {
+        EngineShutDown(Application->Engine);
     }
-    if( Engine->SoundSystem ) {
-        SoundSystemCleanUp(Engine->SoundSystem);
-    }
-    if( Engine->Camera ) {
-        CameraCleanUp(Engine->Camera);
-    }
-    EngineQuitSDL();
-    free(Engine);
+    free(Application);
 }
 
-void EngineDraw(Engine_t *Engine)
+void Quit(Application_t *Application)
 {
-    if( !Engine ) {
-        DPrintf("EngineDraw:Called without a valid engine\n");
+    ApplicationShutDown(Application);
+    exit(0);
+}
+
+void ApplicationDraw(Application_t *Application)
+{
+    if( !Application ) {
+        DPrintf("ApplicationDraw:Called without a valid engine\n");
         return;
     }
-    glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    LevelManagerDraw(Engine->LevelManager,Engine->Camera);
+    LevelManagerDraw(Application->LevelManager,Application->Camera);
     glDisable (GL_DEPTH_TEST);
-    GUIDraw(Engine->GUI,Engine->LevelManager,Engine->Camera,Engine->VideoSystem,Engine->SoundSystem,Engine->TimeInfo);
+    GUIDraw(Application->GUI,Application->LevelManager,Application->Camera,
+            Application->Engine->VideoSystem,Application->Engine->SoundSystem,Application->Engine->TimeInfo);
     glEnable(GL_DEPTH_TEST);
 }
-void EngineFrame(Engine_t *Engine)
+void ApplicationFrame(Application_t *Application)
 {
-    if( !Engine ) {
-        DPrintf("EngineFrame:Called without a valid engine\n");
+    if( !Application ) {
+        DPrintf("ApplicationFrame:Called without a valid engine\n");
         return;
     }
-    ComUpdateDelta(Engine->TimeInfo,Engine->Camera);
-    EngineCheckEvents(Engine);
-    CameraBeginFrame(Engine->Camera);
-    LevelManagerUpdate(Engine->LevelManager,Engine->Camera);
-    EngineDraw(Engine);
-    
-    VideoSystemSwapBuffers(Engine->VideoSystem);
+    EngineBeginFrame(Application->Engine);
+    ApplicationCheckEvents(Application);
+    CameraBeginFrame(Application->Camera);
+    LevelManagerUpdate(Application->LevelManager,Application->Camera);
+    ApplicationDraw(Application);
+    EngineEndFrame(Application->Engine);
 }
 
 void RegisterDefaultSettings()
@@ -320,72 +262,31 @@ void RegisterDefaultSettings()
     ConfigRegister("SoundVolume","128","Sets the sound volume, the value must be in range 0-128, values outside that range will be clamped.");
 }
 
-int EngineInitSDL()
+Application_t *ApplicationInit(int argc,char **argv)
 {
-    if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0 ) {
-        return false;
-    }
-    return true;
-}
-
-Engine_t *EngineInit(int argc,char **argv)
-{
-    Engine_t *Engine;
+    Application_t *Application;
     
-    Engine = malloc(sizeof(Engine_t));
+    Application = malloc(sizeof(Application_t));
     
-    if( !Engine ) {
-        printf("EngineInit:Failed to allocate memory for engine\n");
+    if( !Application ) {
+        printf("ApplicationInit:Failed to allocate memory for the application\n");
         return NULL;
     }
     
-    Engine->LevelManager = NULL;
-    Engine->GUI = NULL;
-    Engine->Camera = NULL;
-    Engine->TimeInfo = NULL;
-    Engine->VideoSystem = NULL;
-    Engine->SoundSystem = NULL;
+    Application->Engine = NULL;
+    Application->GUI = NULL;
+    Application->Camera = NULL;
+    Application->LevelManager = NULL;
     
     RegisterDefaultSettings();
     ConfigInit();
-
-    if( !EngineInitSDL() ) {
-        printf("EngineInit:Failed to initialize SDL subsystems.\n");
+    
+    Application->Engine = EngineInit();
+    
+    if( !Application->Engine ) {
+        printf("ApplicationInit:Failed to initialize the Engine\n");
         goto Failure;
     }
-    
-    Engine->VideoSystem = VideoSystemInit();
-    
-    if( !Engine->VideoSystem ) {
-        printf("EngineInit:Failed to Initialize Video system...\n");
-        goto Failure;
-    }
-    VideoSystemGrabMouse(1);
-    Engine->SoundSystem = SoundSystemInit();
-    
-    if( !Engine->SoundSystem ) {
-        printf("EngineInit:Failed to initialize Audio system\n");
-        goto Failure;
-    }
-    
-    Engine->KeyState = SDL_GetKeyboardState(NULL);
-    
-    Engine->Camera = CameraInit();
-    
-    if( !Engine->Camera ) {
-        printf("EngineInit:Failed to Initialize Camera System\n");
-        goto Failure;
-    }
-    
-    Engine->TimeInfo = malloc(sizeof(ComTimeInfo_t));
-    if( !Engine->TimeInfo ) {
-        printf("EngineInit:Failed to allocate memory for time info\n");
-        goto Failure;
-    }
-    memset(Engine->TimeInfo,0,sizeof(ComTimeInfo_t));
-    
-    GLSetDefaultState();
-    ShaderManagerInit();
     
     //NOTE(Adriano):Allow the game path to be set using command line argument.
     //              If the path is not valid the game will discard it.
@@ -393,37 +294,47 @@ Engine_t *EngineInit(int argc,char **argv)
         ConfigSet("GameBasePath",argv[1]);
     }
 
-    Engine->GUI = GUIInit(Engine->VideoSystem);
-    if( !Engine->GUI ) {
-        printf("EngineInit:Failed to initialize GUI system\n");
+    Application->GUI = GUIInit(Application->Engine->VideoSystem);
+    if( !Application->GUI ) {
+        printf("ApplicationInit:Failed to initialize GUI system\n");
         goto Failure;
     }
     
-    Engine->LevelManager = LevelManagerInit(Engine->GUI,Engine->VideoSystem,Engine->SoundSystem);
+    Application->Camera = CameraInit();
     
-    if( !Engine->LevelManager ) {
-        printf("EngineInit:Failed to initialize LevelManager\n");
+    if( !Application->Camera ) {
+        printf("ApplicationInit:Failed to Initialize Camera System\n");
         goto Failure;
     }
-
-    return Engine;
+    
+    Application->LevelManager = LevelManagerInit(Application->GUI,Application->Engine->VideoSystem,
+                                                 Application->Engine->SoundSystem);
+    
+    if( !Application->LevelManager ) {
+        printf("ApplicationInit:Failed to initialize LevelManager\n");
+        goto Failure;
+    }
+    GLSetDefaultState();
+    VideoSystemGrabMouse(1);
+    return Application;
 
 Failure:
-    EngineShutDown(Engine);
+    ApplicationShutDown(Application);
     return NULL;
 }
+
 #define TEST_ENGINE 0
 int main(int argc,char **argv)
 {
-    Engine_t *Engine;
+    Application_t *Application;
     
     srand(time(NULL));
     
-    Engine = EngineInit(argc,argv);
+    Application = ApplicationInit(argc,argv);
     
-    if( !Engine ) {
-        printf("Failed to initialize engine...\n");
-        EngineShutDown(Engine);
+    if( !Application ) {
+        printf("Failed to initialize Application...\n");
+        ApplicationShutDown(Application);
         return -1;
     }
     
@@ -433,31 +344,35 @@ int main(int argc,char **argv)
     if( argc != 3 ) {
         printf("Engine test failed...Game Path were not specified\n");
         printf("Engine test requires 2 arguments <MOH Path> <MOH:Underground Path>\n");
-        Quit(Engine);
+        Quit(Application);
         return -1;
     }
     StartTime = SysMilliseconds();
-    LevelManagerInitWithPath(Engine->LevelManager,Engine->GUI,Engine->VideoSystem,Engine->SoundSystem,argv[1]);
+    LevelManagerInitWithPath(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem,
+                             Application->Engine->SoundSystem,argv[1]);
     for( int i = 0; i < NumMOHMissions; i++ ) {
         //NOTE(Adriano):LevelManagerInitWithPath loads the first level...make sure to skip it.
         for( int j = (MOHMissionsList[i].MissionNumber == 1 ? 1 : 0); j < MOHMissionsList[i].NumLevels; j++ ) {
-            assert( LevelManagerLoadLevel(Engine->LevelManager,Engine->GUI,Engine->VideoSystem,Engine->SoundSystem,
+            assert( LevelManagerLoadLevel(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem,
+                                          Application->Engine->SoundSystem,
                            MOHMissionsList[i].MissionNumber,MOHMissionsList[i].Levels[j].LevelNumber));
         }
     }
-    LevelManagerInitWithPath(Engine->LevelManager,Engine->GUI,Engine->VideoSystem,Engine->SoundSystem,argv[2]);
+    LevelManagerInitWithPath(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem,
+                             Application->Engine->SoundSystem,argv[2]);
     for( int i = 0; i < NumMOHUMissions; i++ ) {
         //NOTE(Adriano):LevelManagerInitWithPath loads the first level...make sure to skip it.
         for( int j = (MOHUMissionsList[i].MissionNumber == 2 ? 1 : 0); j < MOHUMissionsList[i].NumLevels; j++ ) {
-            assert(LevelManagerLoadLevel(Engine->LevelManager,Engine->GUI,Engine->VideoSystem,Engine->SoundSystem,
+            assert(LevelManagerLoadLevel(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem,
+                                         Application->Engine->SoundSystem,
                            MOHUMissionsList[i].MissionNumber,MOHUMissionsList[i].Levels[j].LevelNumber) );
         }
     }
     DPrintf("Engine Test Completed...took %i ms to load all the levels\n",(SysMilliseconds() - StartTime));
-    Quit(Engine);
+    Quit(Application);
 #endif
     while( 1 ) {
-        EngineFrame(Engine);
+        ApplicationFrame(Application);
     }
     
     return 0;

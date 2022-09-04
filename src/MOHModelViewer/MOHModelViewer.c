@@ -21,16 +21,7 @@
 #include "MOHModelViewer.h"
 #include "../Common/ShaderManager.h"
 
-Color4f_t    c_Black = {   0,    0,   0,   1.f};
-Color4f_t    c_Red    = {   1.f,  0,   0,   1.f};
-Color4f_t    c_Green    = {   0,    1.f, 0,   1.f};
-Color4f_t    c_Blue    = {   0,    0,   1.f, 1.f};
-Color4f_t    c_Yellow = {  1.f,  1.f, 0,   1.f};
-Color4f_t    c_White    = {   1.f,  1.f, 1.f, 1.f};
-Color4f_t    c_Grey =  {   0.75, 0.75,0.75,1.f};
-
-
-void EngineCheckEvents(Engine_t *Engine)
+void ApplicationCheckEvents(Application_t *Application)
 {
     SDL_Event Event;
     BSDRenderObject_t *CurrentRenderObject;
@@ -43,10 +34,10 @@ void EngineCheckEvents(Engine_t *Engine)
             ConfigSetNumber("VideoHeight",Event.window.data2);
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
-            Quit(Engine);
+            Quit(Application);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_m ) {
-            CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(Engine->RenderObjectManager);
+            CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(Application->RenderObjectManager);
             if( CurrentRenderObject != NULL ) {
                 NextFrame = (CurrentRenderObject->CurrentFrameIndex + 1) % 
                     CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames;
@@ -54,7 +45,7 @@ void EngineCheckEvents(Engine_t *Engine)
             }
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_n ) {
-            CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(Engine->RenderObjectManager);
+            CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(Application->RenderObjectManager);
             if( CurrentRenderObject != NULL ) {
                 NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1) % 
                     CurrentRenderObject->NumAnimations;
@@ -63,48 +54,18 @@ void EngineCheckEvents(Engine_t *Engine)
                 }                
             }
         }
-        GUIProcessEvent(Engine->GUI,&Event);
+        GUIProcessEvent(Application->GUI,&Event);
         if( GUIIsMouseFree() ) {
             if( Event.type == SDL_MOUSEWHEEL) {
-                CameraZoom(Engine->Camera,-Event.wheel.y);
+                CameraZoom(Application->Camera,-Event.wheel.y);
             }
             if( Event.type == SDL_MOUSEMOTION && Event.motion.state & SDL_BUTTON_LMASK ) {
-                CameraOnMouseEvent(Engine->Camera,Event.motion.xrel,Event.motion.yrel);
+                CameraOnMouseEvent(Application->Camera,Event.motion.xrel,Event.motion.yrel);
             }
         }
     }
     if( GUIIsKeyboardFree() ) {
-        CameraCheckKeyEvents(Engine->Camera,Engine->KeyState,Engine->TimeInfo->Delta);
-    }
-}
-
-void ComUpdateDelta(ComTimeInfo_t *TimeInfo)
-{
-    long Now;
-    
-    Now = SysMilliseconds();
-
-    TimeInfo->UpdateLength = Now - TimeInfo->LastLoopTime;
-    TimeInfo->Delta = TimeInfo->UpdateLength * 0.001f;
-
-
-    // Update the frame counter
-    TimeInfo->LastFPSTime += TimeInfo->UpdateLength;
-    TimeInfo->FPS++;
-    TimeInfo->LastLoopTime = Now;
-    // Update our FPS counter if a second has passed since
-    // we last recorded
-    if (TimeInfo->LastFPSTime >= 1000 ) {
-        sprintf(TimeInfo->FPSString,"FPS:%i\nMs: %.3f ms\nLast FPS Time:%.3f\nDelta:%.3f",
-                TimeInfo->FPS,
-                1000.f/(float)TimeInfo->FPS,
-                TimeInfo->LastFPSTime,TimeInfo->Delta);
-        sprintf(TimeInfo->FPSSimpleString,"FPS %i Ms %.2f ms",
-                TimeInfo->FPS,
-                1000.f/(float)TimeInfo->FPS);
-        DPrintf("%s\n",TimeInfo->FPSString);
-        TimeInfo->LastFPSTime = 0;
-        TimeInfo->FPS = 0;
+        CameraCheckKeyEvents(Application->Camera,Application->Engine->KeyState,Application->Engine->TimeInfo->Delta);
     }
 }
 
@@ -215,70 +176,54 @@ void GLSetDefaultState()
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 #endif
 }
-
-void Quit(Engine_t *Engine)
+void ApplicationShutDown(Application_t *Application)
 {
-    EngineShutDown(Engine);
-    ShaderManagerFree();
-    ConfigFree();
+    if( !Application ) {
+        return;
+    }
+    if( Application->RenderObjectManager ) {
+        RenderObjectManagerCleanUp(Application->RenderObjectManager);
+    }
+    if( Application->GUI ) {
+        GUIFree(Application->GUI);
+    }
+    if( Application->Camera ) {
+        CameraCleanUp(Application->Camera);
+    }
+    if( Application->Engine ) {
+        EngineShutDown(Application->Engine);
+    }
+    free(Application);
+}
+void Quit(Application_t *Application)
+{
+    ApplicationShutDown(Application);
     exit(0);
 }
-void EngineQuitSDL()
-{
-    SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-    SDL_Quit();
-}
-void EngineShutDown(Engine_t *Engine)
-{
-    if( !Engine ) {
-        return;
-    }
-    if( Engine->TimeInfo ) {
-        free(Engine->TimeInfo);
-    }
-    if( Engine->VideoSystem ) {
-        VideoSystemShutdown(Engine->VideoSystem);
-    }
-    if( Engine->RenderObjectManager ) {
-        RenderObjectManagerCleanUp(Engine->RenderObjectManager);
-    }
-    if( Engine->GUI ) {
-        GUIFree(Engine->GUI);
-    }
-    if( Engine->Camera ) {
-        CameraCleanUp(Engine->Camera);
-    }
-    EngineQuitSDL();
-    free(Engine);
-}
 
-void EngineDraw(Engine_t *Engine)
+void ApplicationDraw(Application_t *Application)
 {
-    if( !Engine ) {
-        DPrintf("EngineDraw:Called without a valid engine\n");
+    if( !Application ) {
+        DPrintf("ApplicationDraw:Called without a valid engine\n");
         return;
-    }
-    glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    RenderObjectManagerDraw(Engine->RenderObjectManager,Engine->Camera);
-    
+    }    
+    RenderObjectManagerDraw(Application->RenderObjectManager,Application->Camera);
     glDisable (GL_DEPTH_TEST);
-    GUIDraw(Engine);
+    GUIDraw(Application);
     glEnable(GL_DEPTH_TEST);
 }
-void EngineFrame(Engine_t *Engine)
+void ApplicationFrame(Application_t *Application)
 {
-    if( !Engine ) {
-        DPrintf("EngineFrame:Called without a valid engine\n");
+    if( !Application ) {
+        DPrintf("ApplicationFrame:Called without a valid Application\n");
         return;
     }
-    ComUpdateDelta(Engine->TimeInfo);
-    EngineCheckEvents(Engine);
-    CameraBeginFrame(Engine->Camera);
-    RenderObjectManagerUpdate(Engine->RenderObjectManager);
-    EngineDraw(Engine);
-    VideoSystemSwapBuffers(Engine->VideoSystem);
+    EngineBeginFrame(Application->Engine);
+    ApplicationCheckEvents(Application);
+    CameraBeginFrame(Application->Camera);
+    RenderObjectManagerUpdate(Application->RenderObjectManager);
+    ApplicationDraw(Application);
+    EngineEndFrame(Application->Engine);
 }
 void RegisterDefaultSettings()
 {
@@ -302,118 +247,80 @@ void RegisterDefaultSettings()
                                                     "surfaces");
 
 }
-int EngineInitSDL()
+
+Application_t *ApplicationInit(int argc,char **argv)
 {
-    if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0 ) {
-        return false;
-    }
-    return true;
-}
-Engine_t *EngineInit(int argc,char **argv)
-{
-    Engine_t *Engine;
+    Application_t *Application;
     
-    Engine = malloc(sizeof(Engine_t));
+    Application = malloc(sizeof(Application_t));
     
-    if( !Engine ) {
-        printf("EngineInit:Failed to allocate memory for engine\n");
+    if( !Application ) {
+        printf("ApplicationInit:Failed to allocate memory for the application\n");
         return NULL;
     }
     
-    Engine->TimeInfo = NULL;
-    Engine->VideoSystem = NULL;
-    Engine->GUI = NULL;
-    Engine->Camera = NULL;
-    Engine->RenderObjectManager = NULL;
+    Application->Engine = NULL;
+    Application->GUI = NULL;
+    Application->Camera = NULL;
+    Application->RenderObjectManager = NULL;
     
-    RegisterDefaultSettings();
-    ConfigInit();
-
-    if( !EngineInitSDL() ) {
-        printf("EngineInit:Failed to initialize SDL subsystems.\n");
+    Application->Engine = EngineInit();
+    
+    if( !Application->Engine ) {
+        printf("ApplicationInit:Failed to initialize the Engine\n");
         goto Failure;
     }
     
-    Engine->VideoSystem = VideoSystemInit();
+    Application->GUI = GUIInit(Application->Engine->VideoSystem);
     
-    if( !Engine->VideoSystem ) {
-        printf("EngineInit:Failed to Initialize Video system...\n");
+    if( !Application->GUI ) {
+        printf("ApplicationInit:Failed to initialize GUI system\n");
         goto Failure;
     }
     
-    Engine->GUI = GUIInit(Engine->VideoSystem);
+    Application->Camera = CameraInit();
     
-    if( !Engine->GUI ) {
-        printf("EngineInit:Failed to initialize GUI system\n");
+    if( !Application->Camera ) {
+        printf("ApplicationInit:Failed to Initialize Camera System\n");
         goto Failure;
     }
-    
-    Engine->Camera = CameraInit();
-    
-    if( !Engine->Camera ) {
-        printf("EngineInit:Failed to Initialize Camera System\n");
-        goto Failure;
-    }
-    
-    Engine->KeyState = SDL_GetKeyboardState(NULL);
         
-    Engine->TimeInfo = malloc(sizeof(ComTimeInfo_t));
+    Application->RenderObjectManager = RenderObjectManagerInit(Application->GUI);
     
-    if( !Engine->TimeInfo ) {
-        printf("EngineInit:Failed to allocate memory for time info\n");
-        goto Failure;
-    }
-    memset(Engine->TimeInfo,0,sizeof(ComTimeInfo_t));
-    
-    GLSetDefaultState();
-    ShaderManagerInit();
-    
-
-    
-    Engine->RenderObjectManager = RenderObjectManagerInit(Engine->GUI);
-    
-    if( !Engine->RenderObjectManager ) {
-        printf("EngineInit:Failed to initialize RenderObjectManager\n");
+    if( !Application->RenderObjectManager ) {
+        printf("ApplicationInit:Failed to initialize RenderObjectManager\n");
         goto Failure;
     }
     
     if( argc > 1 ) {
-        RenderObjectManagerLoadPack(Engine->RenderObjectManager,Engine->GUI,Engine->VideoSystem,argv[1]);
+        RenderObjectManagerLoadPack(Application->RenderObjectManager,Application->GUI,Application->Engine->VideoSystem,argv[1]);
     }
-    return Engine;
+    GLSetDefaultState();
+    return Application;
 
 Failure:
-    EngineShutDown(Engine);
+    ApplicationShutDown(Application);
     return NULL;
 }
-#define TEST_ENGINE 0
+
 int main(int argc,char **argv)
 {
-    Engine_t *Engine;
+    Application_t *Application;
     
     srand(time(NULL));
     
-//     BSDRenderObject_t *RenderObjectList;
-//     BSDRenderObject_t *Iterator;
-//     DPrintf("Processing %s\n",argv[1]);
-//     RenderObjectList = BSDLoadAllAnimatedRenderObjects(argv[1]);
-//     for( Iterator = RenderObjectList; Iterator; Iterator = Iterator->Next ) {
-//         DPrintf("Setting pose 0 for RenderObject %u\n",Iterator->Id);
-//         BSDRenderObjectSetAnimationPose(Iterator,0);
-//     }
+    RegisterDefaultSettings();
+    ConfigInit();
+    Application = ApplicationInit(argc,argv);
     
-    Engine = EngineInit(argc,argv);
-    
-    if( !Engine ) {
-        printf("Failed to initialize engine...\n");
-        EngineShutDown(Engine);
+    if( !Application ) {
+        printf("Failed to initialize application...\n");
+        ApplicationShutDown(Application);
         return -1;
     }
-//     BSDRenderObjectGenerateVAO(RenderObjectList);
 
     while( 1 ) {
-        EngineFrame(Engine);
+        ApplicationFrame(Application);
     }
-//     BSDFreeRenderObjectList(RenderObjectList);
     return 0;
 }

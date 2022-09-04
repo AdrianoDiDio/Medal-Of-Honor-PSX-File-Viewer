@@ -38,7 +38,7 @@ typedef struct GUI_s {
 typedef struct Camera_s Camera_t;
 typedef struct ComTimeInfo_s ComTimeInfo_t;
 typedef struct RenderObjectManager_s RenderObjectManager_t;
-typedef struct Engine_s Engine_t;
+typedef struct Application_s Application_t;
 
 GUI_t               *GUIInit(VideoSystem_t *VideoSystem);
 bool                GUIIsMouseFree();
@@ -48,6 +48,6 @@ void                GUIToggleVideoSettingsWindow(GUI_t *GUI);
 void                GUIToggleLevelSelectWindow(GUI_t *GUI);
 void                GUISetErrorMessage(GUI_t *GUI,const char *Message);
 void                GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
-void                GUIDraw(Engine_t *Engine);
+void                GUIDraw(Application_t *Application);
 void                GUIFree(GUI_t *GUI);
 #endif//__GUI_H_

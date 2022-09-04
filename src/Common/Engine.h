@@ -21,6 +21,7 @@
 #define __ENGINE_H_
 
 #include "Video.h"
+#include "Sound.h"
 
 typedef struct ComTimeInfo_s {
     int	  FPS;
@@ -38,6 +39,7 @@ typedef struct ComTimeInfo_s {
 typedef struct Engine_s {
    ComTimeInfo_t            *TimeInfo;
    VideoSystem_t            *VideoSystem;
+   SoundSystem_t            *SoundSystem;
    const Byte               *KeyState;
 } Engine_t;
 

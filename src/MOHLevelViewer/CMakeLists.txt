@@ -14,7 +14,7 @@ SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 SET(CMAKE_INSTALL_RPATH "$\{ORIGIN\}")
 
-set(SOURCE_FILES    ../Common/Common.c ../Common/Config.c ../Common/Video.c 
+set(SOURCE_FILES    ../Common/Common.c ../Common/Config.c ../Common/Video.c ../Common/Engine.c
                     ../Common/ShaderManager.c ../Common/VAO.c ../Common/Sound.c
                     ../Common/IMGUIUtils.c Camera.c GUI.c TSP.c ../Common/TIM.c 
                     Font.c BSD.c BSDTwoPlayers.c ../Common/VRAM.c Level.c LevelManager.c 

@@ -14,7 +14,7 @@ SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 SET(CMAKE_INSTALL_RPATH "$\{ORIGIN\}")
 
-set(SOURCE_FILES    ../Common/Common.c ../Common/Config.c ../Common/Video.c 
+set(SOURCE_FILES    ../Common/Common.c ../Common/Config.c ../Common/Video.c ../Common/Sound.c ../Common/Engine.c
                     ../Common/ShaderManager.c ../Common/VAO.c ../Common/IMGUIUtils.c 
                     Camera.c GUI.c ../Common/TIM.c ../Common/VRAM.c BSD.c 
                     RenderObjectManager.c MOHModelViewer.c
@@ -64,6 +64,9 @@ set(GLEW_CUSTOM_OUTPUT_DIRS ON CACHE BOOL "" FORCE)
 
 add_subdirectory(../Libs/glew-cmake/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/Libs/glew-cmake)
 add_subdirectory(../Libs/zlib ${CMAKE_CURRENT_BINARY_DIR}/Libs/zlib)
+
+add_subdirectory(../Libs/libsamplerate ${CMAKE_CURRENT_BINARY_DIR}/Libs/libsamplerate)
+include_directories(../Libs/libsamplerate/include/)
 
 set(ZLIB_ROOT ../Libs/zlib)
 
@@ -116,7 +119,7 @@ include_directories(../Libs/cimgui/generator/output/)
 include_directories(../Libs/cimgui/)
 include_directories(../Libs/ImGuiFileDialog/)
 
-target_link_libraries(${PROJECT_NAME} SDL2 glew_s png ${OPENGL_LIBRARIES} m cimgui cglm_headers)
+target_link_libraries(${PROJECT_NAME} SDL2 glew_s png ${OPENGL_LIBRARIES} m cimgui cglm_headers samplerate )
 
 add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD

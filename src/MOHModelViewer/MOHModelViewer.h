@@ -22,37 +22,19 @@
 #include "../Common/Common.h"
 #include "../Common/Config.h"
 #include "../Common/Video.h"
+#include "../Common/Engine.h"
 #include "Camera.h"
 #include "BSD.h"
 #include "GUI.h"
 #include "RenderObjectManager.h"
 
-#define MAX_FPS 120
+typedef struct Application_s {
+    Engine_t                    *Engine;
+    RenderObjectManager_t       *RenderObjectManager;
+    Camera_t                    *Camera;
+    GUI_t                       *GUI;
+} Application_t;
 
-typedef struct ComTimeInfo_s {
-    int	  FPS;
-    float Delta;
-    //Frame to frame time
-    //updated each second.
-    float LastFPSTime;
-    float LastLoopTime;
-    float OptimalTime;
-    float UpdateLength;
-    char  FPSString[256];
-    char  FPSSimpleString[256];
-} ComTimeInfo_t;
-
-typedef struct Engine_s {
-   ComTimeInfo_t            *TimeInfo;
-   VideoSystem_t            *VideoSystem;
-   RenderObjectManager_t    *RenderObjectManager;
-   Camera_t                 *Camera;
-   GUI_t                    *GUI;
-   const Byte               *KeyState;
-} Engine_t;
-
-Engine_t    *EngineInit(int argc,char **argv);
-void        EngineShutDown(Engine_t *Engine);
-void        Quit(Engine_t *Engine);
+void        Quit(Application_t *Application);
 
 #endif //__MOHMODELVIEWER_H_
