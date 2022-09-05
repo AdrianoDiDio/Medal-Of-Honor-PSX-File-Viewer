@@ -166,12 +166,8 @@ void BSDDumpDataToObjFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
         glm_scale_make(ScaleMatrix,RenderObjectIterator->Scale);
 
         glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
-        
-        if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            BSDDumpFaceDataToObjFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
-        } else {
-            BSDDumpFaceDataToObjFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
-        }
+
+        BSDDumpFaceDataToObjFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
     }
 
 }
@@ -277,7 +273,7 @@ void BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
         RotationAxis[2] = 0;
         glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);
         RotationAxis[0] = 0;
-        RotationAxis[1] = -1;
+        RotationAxis[1] = 1;
         RotationAxis[2] = 0;
         glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[1]), RotationAxis);
         RotationAxis[0] = 1;
@@ -293,11 +289,7 @@ void BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
 
         glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
         
-        if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            BSDDumpFaceDataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
-        } else {
-            BSDDumpFaceDataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
-        }
+        BSDDumpFaceDataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
     }
     VertexOffset = 0;
     for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {

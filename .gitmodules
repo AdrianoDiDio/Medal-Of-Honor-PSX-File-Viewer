@@ -1,27 +1,27 @@
 [submodule "MOHLevelViewer/Libs/ImGuiFileDialog"]
-	path = src/Libs/ImGuiFileDialog
+	path = Libs/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog.git
 	branch = Lib_Only
 	update = merge
 [submodule "MOHLevelViewer/Libs/cimgui"]
-	path = src/Libs/cimgui
+	path = Libs/cimgui
 	url = https://github.com/cimgui/cimgui
 	update = merge
 [submodule "MOHLevelViewer/Libs/glew-cmake"]
-	path = src/Libs/glew-cmake
+	path = Libs/glew-cmake
 	url = https://github.com/Perlmint/glew-cmake.git
 [submodule "MOHLevelViewer/Libs/zlib"]
-	path = src/Libs/zlib
+	path = Libs/zlib
 	url = https://github.com/madler/zlib
 [submodule "MOHLevelViewer/Libs/libpng"]
-	path = src/Libs/libpng
+	path = Libs/libpng
 	url = https://github.com/glennrp/libpng.git
 [submodule "MOHLevelViewer/Libs/SDL"]
-	path = src/Libs/SDL
+	path = Libs/SDL
 	url = https://github.com/libsdl-org/SDL.git
 [submodule "MOHLevelViewer/Libs/libsamplerate"]
-	path = src/Libs/libsamplerate
+	path = Libs/libsamplerate
 	url = https://github.com/libsndfile/libsamplerate
 [submodule "MOHLevelViewer/Libs/cglm"]
-	path = src/Libs/cglm
+	path = Libs/cglm
 	url = https://github.com/recp/cglm

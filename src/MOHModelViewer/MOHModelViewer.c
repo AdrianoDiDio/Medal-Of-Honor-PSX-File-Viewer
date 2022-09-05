@@ -263,6 +263,9 @@ Application_t *ApplicationInit(int argc,char **argv)
     Application->GUI = NULL;
     Application->Camera = NULL;
     Application->RenderObjectManager = NULL;
+
+    RegisterDefaultSettings();
+    ConfigInit();
     
     Application->Engine = EngineInit();
     
@@ -309,8 +312,6 @@ int main(int argc,char **argv)
     
     srand(time(NULL));
     
-    RegisterDefaultSettings();
-    ConfigInit();
     Application = ApplicationInit(argc,argv);
     
     if( !Application ) {
