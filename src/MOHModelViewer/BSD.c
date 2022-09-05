@@ -1199,6 +1199,21 @@ int BSDLoadAnimationHierarchyData(BSDRenderObject_t *RenderObject,int HierarchyD
     }
     return 1;
 }
+void BSDDecodeQuaternions(int QuatPart0,int QuatPart1,int QuatPart2,BSDQuaternion_t *OutQuaternion1,BSDQuaternion_t *OutQuaternion2)
+{
+    if( OutQuaternion1 ) {
+        OutQuaternion1->x = ( (QuatPart0 << 0x10) >> 0x14) * 2;
+        OutQuaternion1->y = (QuatPart1 << 0x14) >> 0x13;
+        OutQuaternion1->z = ( ( ( (QuatPart1 >> 0xC) << 0x1C ) >> 0x14) | ( (QuatPart0 >> 0xC) & 0xF0) | (QuatPart0 & 0xF) ) * 2;
+        OutQuaternion1->w = (QuatPart0 >> 0x14) * 2;
+    }
+    if( OutQuaternion2 ) {
+        OutQuaternion2->x = (QuatPart1  >> 0x14) * 2;
+        OutQuaternion2->y = ( (QuatPart2 << 0x4) >> 0x14 ) * 2;
+        OutQuaternion2->w = ( (QuatPart2 << 0x10) >> 0x14) * 2;
+        OutQuaternion2->z = ( (QuatPart2 >> 0x1C) << 0x8 | (QuatPart2 & 0xF ) << 0x4 | ( (QuatPart1 >> 0x10) & 0xF ) ) * 2;
+    }
+}
 int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
 {
     short NumAnimationOffset;
@@ -1210,7 +1225,6 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
     int j;
     int w;
     int q;
-    BSDQuaternion_t TempQuaternion;
     int Base;
     int QuatPart0;
     int QuatPart1;
@@ -1340,42 +1354,21 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
                     QuatPart0 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base];
                     QuatPart1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base+1];
                     QuatPart2 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base+2];
-                    TempQuaternion.x = ( (QuatPart0 << 0x10) >> 0x14) * 2;
-                    TempQuaternion.y = (QuatPart1 << 0x14) >> 0x13;
-                    TempQuaternion.z = ( ( ( (QuatPart1 >> 0xC) << 0x1C ) >> 0x14) | ( (QuatPart0 >> 0xC) & 0xF0) | (QuatPart0 & 0xF) ) * 2;
-                    TempQuaternion.w = (QuatPart0 >> 0x14) * 2;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].x = TempQuaternion.x;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].y = TempQuaternion.y;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].z = TempQuaternion.z;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].w = TempQuaternion.w;
-                    NumDecodedQuaternions++;
-                    DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
-                    TempQuaternion.x = (QuatPart1  >> 0x14) * 2;
-                    TempQuaternion.y = ( (QuatPart2 << 0x4) >> 0x14 ) * 2;
-                    TempQuaternion.w = ( (QuatPart2 << 0x10) >> 0x14) * 2;
-                    TempQuaternion.z = ( (QuatPart2 >> 0x1C) << 0x8 | (QuatPart2 & 0xF ) << 0x4 | ( (QuatPart1 >> 0x10) & 0xF ) ) * 2;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].x = TempQuaternion.x;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].y = TempQuaternion.y;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].z = TempQuaternion.z;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].w = TempQuaternion.w;
-                    DPrintf("{%i,%i,%i,%i},\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
-                    NumDecodedQuaternions ++;
+                    
+                    BSDDecodeQuaternions(QuatPart0,QuatPart1,QuatPart2,
+                                         &RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions],
+                                         &RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions+1]);
+                    NumDecodedQuaternions += 2;
                 }
 //                 DPrintf("Decoded %i quaternions out of %i\n",NumDecodedQuaternions,RenderObject->AnimationList[i].Frame[j].NumQuaternions);
                 if( NumDecodedQuaternions == (RenderObject->AnimationList[i].Frame[j].NumQuaternions - 1) ) {
                     QuatPart0 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[NumEncodedQuaternions-2];
                     QuatPart1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[NumEncodedQuaternions-1];
 //                     DPrintf("QuatPart0:%i QuatPart1:%i\n",QuatPart0,QuatPart1);
-                    TempQuaternion.x = ( (QuatPart0 << 0x10) >> 0x14) * 2;
-                    TempQuaternion.y = (QuatPart1 << 0x14) >> 0x13;
-                    TempQuaternion.z = ( ( ( (QuatPart1 >> 0xC) << 0x1C ) >> 0x14) | ( (QuatPart0 >> 0xC) & 0xF0) | (QuatPart0 & 0xF) ) * 2;
-                    TempQuaternion.w = (QuatPart0 >> 0x14) * 2;
+                    BSDDecodeQuaternions(QuatPart0,QuatPart1,-1,
+                                         &RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions],
+                                         NULL);
 //                     DPrintf("New quat is %i;%i;%i;%i\n",TempQuaternion.x,TempQuaternion.y,TempQuaternion.z,TempQuaternion.w);
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].x = TempQuaternion.x;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].y = TempQuaternion.y;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].z = TempQuaternion.z;
-                    RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions].w = TempQuaternion.w;
-
                     NumDecodedQuaternions++;
                 }
                 DPrintf("Decoded %i out of %i\n",NumDecodedQuaternions,RenderObject->AnimationList[i].Frame[j].NumQuaternions);

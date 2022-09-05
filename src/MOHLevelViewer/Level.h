@@ -25,7 +25,6 @@
 #include "GUI.h"
 #include "TSP.h"
 #include "BSD.h"
-#include "BSDTwoPlayers.h"
 #include "../Common/VRAM.h"
 #include "../Common/TIM.h"
 #include "Font.h"
@@ -37,7 +36,6 @@ typedef struct Level_s {
     int     MissionNumber;
     int     LevelNumber;
     BSD_t  *BSD;
-    BSD2P_t *BSDTwoP;
     TSP_t  *TSPList;
     TIMImage_t *ImageList;
     VRAM_t *VRAM;
