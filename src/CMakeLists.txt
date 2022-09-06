@@ -1,2 +1,5 @@
 add_subdirectory(MOHLevelViewer)
 add_subdirectory(MOHModelViewer)
+add_subdirectory(RSCExtractor)
+add_subdirectory(TIMExtractor)
+add_subdirectory(VABExtractor)

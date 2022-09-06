@@ -28,16 +28,16 @@
 #define PATHSEPARATOR '\\'
 #endif
 
-typedef struct RCS_s {
+typedef struct RSC_s {
     char DirName[64];
     long long NumEntry;
-} RCS_t;
+} RSC_t;
 
-typedef struct RCS_Entry_s {
+typedef struct RSC_Entry_s {
     char FName[68];
     int  Length;
     long long Offset;
-} RCS_Entry_t;
+} RSC_Entry_t;
 
 typedef enum {
     false,true
@@ -83,15 +83,15 @@ char *NormalizeSeparatorAndCreateDir(char *FName) {
     *Out = '\0';
     return Result;
 }
-void DumpChunk(FILE *RCSFile,RCS_Entry_t *Entry) {
+void DumpChunk(FILE *RSCFile,RSC_Entry_t *Entry) {
     FILE *OutFile;
     void *Chunk;
     int CurrentFilePosition;
     char *NormalizedFilePath;
     bool BadFile;
     
-    if( RCSFile == NULL || Entry == NULL ) {
-        BadFile = (RCSFile == NULL) ? true : false;
+    if( RSCFile == NULL || Entry == NULL ) {
+        BadFile = (RSCFile == NULL) ? true : false;
         printf("DumpChunk:Invalid %s\n", BadFile ? "File" : "Entry");
         return;
     }
@@ -102,12 +102,12 @@ void DumpChunk(FILE *RCSFile,RCS_Entry_t *Entry) {
         printf("Couldn't open output file.\n");
         return;
     }
-    CurrentFilePosition = ftell(RCSFile);
+    CurrentFilePosition = ftell(RSCFile);
     Chunk = (void *) malloc(Entry->Length);
-    fseek(RCSFile,Entry->Offset,SEEK_SET);
-    fread(Chunk,Entry->Length,1,RCSFile);
+    fseek(RSCFile,Entry->Offset,SEEK_SET);
+    fread(Chunk,Entry->Length,1,RSCFile);
     fwrite(Chunk,Entry->Length,1,OutFile);
-    fseek(RCSFile,CurrentFilePosition,SEEK_SET);
+    fseek(RSCFile,CurrentFilePosition,SEEK_SET);
     free(NormalizedFilePath);
     fflush(OutFile);
     fclose(OutFile);
@@ -116,8 +116,8 @@ void DumpChunk(FILE *RCSFile,RCS_Entry_t *Entry) {
 
 int main(int argc,char **argv) {
     FILE *PackFile;
-    RCS_t Pack;
-    RCS_Entry_t *Entries;
+    RSC_t Pack;
+    RSC_Entry_t *Entries;
     int i;
     int ArraySize;
     
@@ -141,12 +141,12 @@ int main(int argc,char **argv) {
     
     printf("Dir Name: %s\n",Pack.DirName);
     printf("Dir Contains %i entries %li\n",(int)Pack.NumEntry,sizeof(Pack.NumEntry));
-    ArraySize = (int)Pack.NumEntry * sizeof(RCS_Entry_t);
+    ArraySize = (int)Pack.NumEntry * sizeof(RSC_Entry_t);
     Entries = malloc(ArraySize);
     memset(Entries,0,ArraySize);
     
     for( i = 0; i < (int) Pack.NumEntry; i++ ) {
-        fread(&Entries[i], sizeof(RCS_Entry_t), 1, PackFile);
+        fread(&Entries[i], sizeof(RSC_Entry_t), 1, PackFile);
         printf("Reading entry %i....got %s with length %i and offset %i\n",i,Entries[i].FName,Entries[i].Length,(int)Entries[i].Offset);
         DumpChunk(PackFile,&Entries[i]);
     }

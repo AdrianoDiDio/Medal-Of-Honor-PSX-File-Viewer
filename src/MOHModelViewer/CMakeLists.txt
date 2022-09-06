@@ -10,12 +10,9 @@ set(SOURCE_FILES    ../Common/Common.c ../Common/Config.c ../Common/Video.c ../C
                  
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
-         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../${PROJECT_NAME})
-set_target_properties(${PROJECT_NAME} PROPERTIES
-         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../${PROJECT_NAME})
-set_target_properties(${PROJECT_NAME} PROPERTIES
-         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../${PROJECT_NAME})        
+         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../${PROJECT_NAME})    
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE APP_NAME="${PROJECT_NAME}")
 
@@ -67,4 +64,5 @@ add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Fonts/ $<TARGET_FILE_DIR:${PROJECT_NAME}>/Fonts/
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders/
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different  ${CMAKE_BINARY_DIR}/SharedLibraries/* $<TARGET_FILE_DIR:${PROJECT_NAME}>/
 )
