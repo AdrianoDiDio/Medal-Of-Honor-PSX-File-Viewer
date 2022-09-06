@@ -16,3 +16,10 @@
 [submodule "libs/libsamplerate"]
 	path = libs/libsamplerate
 	url = https://github.com/libsndfile/libsamplerate
+[submodule "libs/ImGuiFileDialog"]
+	path = libs/ImGuiFileDialog
+	url = https://github.com/aiekick/ImGuiFileDialog.git
+	branch = Lib_Only
+[submodule "libs/cglm"]
+	path = libs/cglm
+	url = https://github.com/recp/cglm
