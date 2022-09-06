@@ -465,6 +465,9 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
     Translation[2] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.z / 4096;
     glm_translate_make(TransformMatrix,Translation);
     if( RenderObject->CurrentAnimationIndex != -1 && RenderObject->CurrentFrameIndex != -1 ) {
+        assert(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions == 
+            RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[RenderObject->CurrentFrameIndex].NumQuaternions
+        );
         QuaternionList = malloc(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions * sizeof(BSDQuaternion_t));
         for( i = 0; i < RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions; i++ ) {
             FromQuaternion[0] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
