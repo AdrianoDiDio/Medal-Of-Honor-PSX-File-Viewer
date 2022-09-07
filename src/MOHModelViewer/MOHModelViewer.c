@@ -264,6 +264,7 @@ Application_t *ApplicationInit(int argc,char **argv)
     Application->Camera = NULL;
     Application->RenderObjectManager = NULL;
 
+    CommonInit("MOHModelViewer");
     RegisterDefaultSettings();
     ConfigInit();
     

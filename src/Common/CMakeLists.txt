@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 3.16)
+project(Common)
+
+set(COMMON_SOURCE_FILES Common.c Config.c Video.c Sound.c Engine.c
+                    ShaderManager.c VAO.c IMGUIUtils.c 
+                    TIM.c VRAM.c
+)
+
+add_library(${PROJECT_NAME} STATIC ${COMMON_SOURCE_FILES})
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/cimgui/)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/cimgui/generator)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/cimgui/generator/output)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/ImGuiFileDialog)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/SDL)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/libsamplerate)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/zlib)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/libpng)
+target_compile_definitions(${PROJECT_NAME} PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLEW CIMGUI_USE_OPENGL3 CIMGUI_USE_SDL)
+
+target_link_libraries(${PROJECT_NAME} SDL2 glew_s png m cimgui cglm_headers samplerate)

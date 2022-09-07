@@ -45,15 +45,14 @@ set(IMGUI_SOURCE_FILES cimgui/cimgui.cpp
 
 add_library(cimgui STATIC ${IMGUI_SOURCE_FILES})
 target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${PROJECT_SOURCE_DIR}/src/Common/IMGUIConfig.h\"")
+
 target_include_directories(cimgui PRIVATE cimgui/imgui)
 target_link_libraries(cimgui SDL2)
 
 if( WIN32 ) 
     target_link_libraries(cimgui -static-libstdc++ -static-libgcc -static)
-    add_definitions("-DIMGUI_IMPL_API=extern \"C\" __declspec\(dllexport\)")
+    target_compile_definitions(cimgui PRIVATE "-DIMGUI_IMPL_API=extern \"C\" __declspec\(dllexport\)")
 else()
     target_link_libraries(cimgui dl)
-    add_definitions("-DIMGUI_IMPL_API=extern \"C\" ")
+    target_compile_definitions(cimgui PRIVATE "-DIMGUI_IMPL_API=extern \"C\" ")
 endif()
-
-target_compile_definitions(cimgui PRIVATE "IMGUI_IMPL_OPENGL_LOADER_GLEW")

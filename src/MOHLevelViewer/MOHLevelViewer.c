@@ -277,7 +277,9 @@ Application_t *ApplicationInit(int argc,char **argv)
     Application->GUI = NULL;
     Application->Camera = NULL;
     Application->LevelManager = NULL;
-    
+        
+    CommonInit("MOHLevelViewer");
+
     RegisterDefaultSettings();
     ConfigInit();
     

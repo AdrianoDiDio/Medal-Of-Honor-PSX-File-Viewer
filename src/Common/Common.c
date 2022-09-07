@@ -20,6 +20,8 @@
 */ 
 #include "Common.h"
 
+const char *AppName = NULL;
+
 Byte HighNibble(Byte In)
 {
     return (In >> 0x4) & 0xF;
@@ -257,7 +259,11 @@ void SkipFileSection(int SectionSize,FILE *InFile)
 
 char *AppGetConfigPath()
 {
-    return SDL_GetPrefPath(NULL,APP_NAME);
+    if( !AppName ) {
+        DPrintf("AppGetConfigPath:CommonInit was not called!\n");
+        assert(1!=1);
+    }
+    return SDL_GetPrefPath(NULL,AppName);
 }
 int SysMilliseconds()
 {
@@ -287,3 +293,11 @@ void SysShowCursor()
     SDL_ShowCursor(true);
 }
 
+void CommonInit(const char *ApplicationName)
+{
+    if( AppName ) {
+        DPrintf("CommonInit:Already called!\n");
+        return;
+    }
+    AppName = StringCopy(ApplicationName != NULL ? ApplicationName : "UnknownApp");
+}

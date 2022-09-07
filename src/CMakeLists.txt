@@ -1,3 +1,4 @@
+add_subdirectory(Common)
 add_subdirectory(MOHLevelViewer)
 add_subdirectory(MOHModelViewer)
 add_subdirectory(RSCExtractor)
