@@ -5,24 +5,20 @@ Table of contents
 =================
 
   * [Introduction](#introduction)
+  * [Build](#build)
   * [Programs](#programs)
     + [MOHLevelViewer](#mohlevelviewer)
-      - [Build](#build)
       - [Usage](#usage)
       - [Credits](#credits)
     + [MOHModelViewer](#mohmodelviewer)
-      - [Build](#build)
       - [Usage](#usage)
       - [Credits](#credits)
     + [RSC Extractor](#rsc-extractor)
-      - [Build](#build-1)
       - [Run](#run)
     + [TIM Extractor](#tim-extractor)
-      - [Build](#build-2)
       - [Run](#run-1)
       - [Credits](#credits-1)
     + [VAB Extractor](#vab-extractor)
-      - [Build](#build-3)
       - [Run](#run-2)
       - [Credits](#credits-2)
   * [File Formats](#file-formats)
@@ -111,6 +107,23 @@ Some sample screenshot taken from MOHModelViewer:
 *GIF taken from Medal Of Honor:Underground showing JIMMY_P1.BSD Model
 using MOHModelViewer.*
 
+## Build
+Before building make sure to fetch all the submodules by typing:  
+> git submodule --init --recursive  
+
+then type:  
+
+> mkdir Build && cd Build && cmake .. && cmake --build .
+
+to build it.  
+When the build is completed, the executables can be
+found inside the Build directory under a new directory
+which has the same name as the executable (E.G:Build/
+MOHLevelViewer,Build/MOHModelViewer etc...).  
+The directories,created during the build process, will
+contain everything that it is required by the program
+in order to run properly.   
+
 ## Programs
 ### MOHLevelViewer
 MOHLevelViewer is able to load and render any level from
@@ -121,19 +134,6 @@ It is able to load level (that can be exported along with
 object to an Obj or Ply file) and the music (that can be
 exported to wav).  
 
-#### Build
-Before building make sure to fetch all the submodules by typing:  
-> git submodule --init --recursive  
-
-then type:  
-
-> cd MOHLevelViewer && mkdir Build && cmake .. && cmake --build . --target
-MOHLevelViewer
-
-to build it.  
-**NOTE: Make sure to move the shader folder in the same directory as the
-executable, otherwise the program will display only the GUI and not the
-levels.**  
 #### Usage
 > ./MOHLevelViewer `<Optional Game Directory>`  
 
@@ -158,19 +158,6 @@ animated.
 It is able to load any model contained in any BSD file and export any
 animation pose to a ply file  
 
-#### Build
-Before building make sure to fetch all the submodules by typing:  
-> git submodule --init --recursive  
-
-then type:  
-
-> cd MOHModelViewer && mkdir Build && cmake .. && cmake --build . --target
-MOHModelViewer
-
-to build it.  
-**NOTE: Make sure to move the shader folder in the same directory as the
-executable, otherwise the program will display only the GUI and not the
-models.**  
 #### Usage
 > ./MOHModelViewer `<Optional BSD file>`  
 
@@ -201,9 +188,7 @@ This command will extract the content of <File.rsc> creating all the required di
 ### TIM Extractor
 This tool is used to extract all the TIM images from different files and
 convert them to png.
-#### Build
-Compile:
-  > gcc -o TIMExtractor TIMExtractor.c
+
 #### Run
   > ./TIMExtractor `<File.tim>`
 
@@ -223,9 +208,6 @@ as TAF files.
 At the moment the only requirements is that the taf file must have the tim
 section removed otherwise it won't work.
 
-#### Build
-Compile:
-  > gcc -o VABExtractor VABExtractor.c
 #### Run
   > ./VABExtractor `<File.vab> <IsTaf> <Output Directory> <IsVag>`
 
