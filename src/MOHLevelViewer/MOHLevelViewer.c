@@ -222,21 +222,12 @@ void ApplicationFrame(Application_t *Application)
 
 void RegisterDefaultSettings()
 {
-    ConfigRegister("VideoWidth","800",NULL);
-    ConfigRegister("VideoHeight","600",NULL);
-    ConfigRegister("VideoRefreshRate","60",NULL);
-    ConfigRegister("VideoFullScreen","0",NULL);
-    ConfigRegister("VideoVSync","-1","Enable or disable vsync.\nPossible values are:-1 enable adaptive VSync (where supported),\n"
-                    "0 Disables it and 1 enables standard VSync.");
-    
     ConfigRegister("CameraSpeed","30.f",NULL);
     ConfigRegister("CameraMouseSensitivity","1.f",NULL);
 
     ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to "
                                     "being set to empty.");
-    ConfigRegister("GUIFont","Fonts/DroidSans.ttf","Sets the file to be used as the GUI font,if not valid the application will use the default one");
-    ConfigRegister("GUIFontSize","14.f",NULL);
-    ConfigRegister("GUIShowFPS","1",NULL);
+
 
     ConfigRegister("LevelEnableWireFrameMode","0","Draw the level surfaces as lines");
     ConfigRegister("LevelDrawCollisionData","0","Draw the level collision data");
@@ -259,7 +250,6 @@ void RegisterDefaultSettings()
     
     ConfigRegister("LevelEnableMusicTrack","1","When enabled sound will be played in background.\n"
                                        "There are 3 possible values:0 Disabled,1 Enable Music And Ambient sounds,2 Enable ambient sounds only.");
-    ConfigRegister("SoundVolume","128","Sets the sound volume, the value must be in range 0-128, values outside that range will be clamped.");
 }
 
 Application_t *ApplicationInit(int argc,char **argv)

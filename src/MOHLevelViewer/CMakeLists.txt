@@ -22,17 +22,6 @@ pvs_studio_add_target(TARGET MOHLevelViewer.Analyze
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 set_target_properties(${PROJECT_NAME} PROPERTIES RELEASE_POSTFIX -Release)
 
-# set(OpenGL_GL_PREFERENCE LEGACY)
-# find_package(OpenGL REQUIRED) 
-# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/cimgui/)
-# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/cimgui/generator)
-# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/cimgui/generator/output)
-# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/ImGuiFileDialog)
-# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/SDL)
-# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/libsamplerate)
-# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/zlib)
-# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/libpng)
-
 target_compile_options(${PROJECT_NAME} PRIVATE "-fdiagnostics-color=always")
 if(WIN32)
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
