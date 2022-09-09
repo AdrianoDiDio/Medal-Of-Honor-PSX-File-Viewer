@@ -3,8 +3,9 @@ include(FetchContent)
 
 project(Medal-Of-Honor-PSX-File-Viewer)
 
-
-set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/ )
+# On Windows CMAKE_RUNTIME_OUTPUT_DIRECTORY is used to tell CMAKE where
+# to put DLLs.
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/SharedLibraries )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/SharedLibraries )
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/ )
 
