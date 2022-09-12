@@ -847,8 +847,12 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
         } else {
             DPrintf("RenderObject No Reference set...\n");
         }
+        DPrintf("RenderObject Element Unknown Offset0: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].UnknownOffset0,
+                BSD->RenderObjectTable.RenderObject[i].UnknownOffset0 + BSD_HEADER_SIZE);
         DPrintf("RenderObject Element Animation Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].AnimationDataOffset,
                 BSD->RenderObjectTable.RenderObject[i].AnimationDataOffset + BSD_HEADER_SIZE);
+        DPrintf("RenderObject Element Unknown Offset1: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].UnknownOffset1,
+                BSD->RenderObjectTable.RenderObject[i].UnknownOffset1 + BSD_HEADER_SIZE);
         DPrintf("RenderObject Element Vertex Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].VertexOffset,
                 BSD->RenderObjectTable.RenderObject[i].VertexOffset + BSD_HEADER_SIZE);
         DPrintf("RenderObject Element NumVertex: %i\n",BSD->RenderObjectTable.RenderObject[i].NumVertex);

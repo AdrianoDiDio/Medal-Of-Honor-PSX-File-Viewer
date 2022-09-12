@@ -10,14 +10,16 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
          RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../${PROJECT_NAME})    
-
-pvs_studio_add_target(TARGET MOHModelViewer.Analyze
-                      LOG FORMAT fullhtml
-                      SUPPRESS_BASE suppress_base.json
+         
+pvs_studio_add_target(TARGET ${PROJECT_NAME}.Analyze
                       ANALYZE ${PROJECT_NAME}
-                      ARGS -e ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/*
-                      MODE GA:1,2)
-                    
+                      SUPPRESS_BASE suppress_base.json
+                      LOG FORMAT fullhtml
+                      LOG ${PROJECT_NAME}-Report
+                      ARGS -e *libs*
+                      MODE GA:1,2
+                      )
+                      
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 set_target_properties(${PROJECT_NAME} PROPERTIES RELEASE_POSTFIX -Release)
 
@@ -32,11 +34,6 @@ else()
   target_link_options(${PROJECT_NAME} PRIVATE  "$<$<CONFIG:DEBUG>:-fsanitize=address>")
 endif()
 
-
-target_compile_definitions(${PROJECT_NAME}
-    PRIVATE
-    $<$<CONFIG:Debug>:_DEBUG>
-)
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:-g>")
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:-O3>")
 

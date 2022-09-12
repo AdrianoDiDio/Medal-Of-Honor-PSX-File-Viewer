@@ -135,7 +135,8 @@ typedef struct BSDRenderObjectElement_s {
     int             Id;
     int             UnknownOffset0;
     int             AnimationDataOffset;
-    char            U0[32];
+    int             UnknownOffset1;
+    char            U0[28];
     int             FaceOffset;
     char            U[8];
     int             FaceTableOffset;

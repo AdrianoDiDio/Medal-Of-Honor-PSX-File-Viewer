@@ -1,0 +1,93 @@
+{
+    "version": 2,
+    "warnings": [
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 238437292,
+            "ErrorCode": "V1042",
+            "FileName": "VRAM.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 238437292,
+            "ErrorCode": "V1042",
+            "FileName": "TIM.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 238437292,
+            "ErrorCode": "V1042",
+            "FileName": "IMGUIUtils.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 238437292,
+            "ErrorCode": "V1042",
+            "FileName": "VAO.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 2078946131,
+            "CodeNext": 2319485155,
+            "CodePrev": 2164160142,
+            "ErrorCode": "V576",
+            "FileName": "TIM.c",
+            "Message": "Incorrect format. Consider checking the second actual argument of the 'DPrintf' function. The SIGNED integer type argument is expected."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 238437292,
+            "ErrorCode": "V1042",
+            "FileName": "ShaderManager.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 238437292,
+            "ErrorCode": "V1042",
+            "FileName": "Config.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 238437292,
+            "ErrorCode": "V1042",
+            "FileName": "Sound.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 238437292,
+            "ErrorCode": "V1042",
+            "FileName": "Common.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 238437292,
+            "ErrorCode": "V1042",
+            "FileName": "Video.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 238437292,
+            "ErrorCode": "V1042",
+            "FileName": "Engine.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        }
+    ]
+}
