@@ -428,8 +428,13 @@ void BSDRenderObjectResetVertexTable(BSDRenderObject_t *RenderObject)
         memcpy(RenderObject->CurrentVertexTable[i].VertexList,
                RenderObject->VertexTable[i].VertexList,sizeof(BSDVertex_t) * RenderObject->VertexTable[i].NumVertex);
     }
-
 }
+/*
+ Set the RenderObject to a specific pose, given AnimationIndex and FrameIndex.
+ Returns 0 if the pose was not valid ( pose was already set,pose didn't exists), 1 otherwise.
+ NOTE that calling this function will modify the RenderObject's VAO.
+ If the VAO is NULL a new one is created otherwise it will be updated to reflect the pose that was applied to the model.
+ */
 int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex,int FrameIndex)
 {
     BSDQuaternion_t *QuaternionList;
