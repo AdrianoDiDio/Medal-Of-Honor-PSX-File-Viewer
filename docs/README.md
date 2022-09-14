@@ -1337,7 +1337,7 @@ title screen).
 | char  | 28 bytes  | Texture File (found inside the RSC file) |
 | Byte  | 56 bytes |  Unknown |
 
-###### GFX Model
+##### GFX Model
 Every GFX file begins with an header containing all the data size needed to
 load it.  
 
