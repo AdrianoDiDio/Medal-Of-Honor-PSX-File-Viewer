@@ -7,78 +7,89 @@ Table of contents
   * [Introduction](#introduction)
   * [Build](#build)
   * [Programs](#programs)
-    + [MOHLevelViewer](#mohlevelviewer)
-      - [Usage](#usage)
-      - [Credits](#credits)
-    + [MOHModelViewer](#mohmodelviewer)
-      - [Usage](#usage)
-      - [Credits](#credits)
-    + [RSC Extractor](#rsc-extractor)
-      - [Run](#run)
-    + [TIM Extractor](#tim-extractor)
-      - [Run](#run-1)
-      - [Credits](#credits-1)
-    + [VAB Extractor](#vab-extractor)
-      - [Run](#run-2)
-      - [Credits](#credits-2)
+    * [MOHLevelViewer](#mohlevelviewer)
+      * [Usage](#usage)
+      * [Credits](#credits)
+    * [MOHModelViewer](#mohmodelviewer)
+      * [Usage](#usage)
+      * [Credits](#credits)
+    * [RSC Extractor](#rsc-extractor)
+      * [Run](#run)
+    * [TIM Extractor](#tim-extractor)
+      * [Run](#run-1)
+      * [Credits](#credits-1)
+    * [VAB Extractor](#vab-extractor)
+      * [Run](#run-2)
+      * [Credits](#credits-2)
   * [File Formats](#file-formats)
-    + [Common Formats](#common-formats)
-      - [TSB](#tsb)
-    + [TSP Files](#tsp-files)
-      - [BSP Nodes](#bsp-nodes)
+    * [Common Formats](#common-formats)
+      * [TSB](#tsb)
+    * [TSP Files](#tsp-files)
+      * [BSP Nodes](#bsp-nodes)
         * [Vector3](#vector3)
         * [Bounding Box](#bounding-box)
         * [BSP Node](#bsp-node)
-      - [Vertex](#vertex)
-      - [Color](#color)
-      - [Faces](#faces)
+      * [Vertex](#vertex)
+      * [Color](#color)
+      * [Faces](#faces)
         * [UV Coordinates](#uv-coordinates)
-      - [Texture Info](#texture-info)
+      * [Texture Info](#texture-info)
         * [Face Data](#face-data)
-      - [Dynamic Data](#dynamic-data)
+      * [Dynamic Data](#dynamic-data)
         * [Dynamic Face Data](#dynamic-face-data)
-      - [Collision Data](#collision-data)
+      * [Collision Data](#collision-data)
         * [KDTree Nodes](#kdtree-nodes)
         * [Face Index Array](#face-index-array)
         * [Collision Vertices](#collision-vertices)
         * [Collision Normals](#collision-normals)
         * [Collision Faces](#collision-faces)
-    + [BSD Files](#bsd-files)
-      - [File Format](#file-format)
+    * [BSD Files](#bsd-files)
+      * [File Format](#file-format)
         * [TSP Info Block](#tsp-info-block)
         * [Animated Lights Block](#animated-lights-block)
         * [Entry Table Block](#entry-table-block)
         * [Sky Box Definitions](#sky-box-definitions)
         * [RenderObject Block](#renderobject-block)
-          + [Color Mode](#color-mode)
-          + [Texture Page](#texture-page)
-          + [Vertex Data](#vertex-data)
-          + [Animations](#animations)
-          + [Animation Entry](#animation-entry)
-          + [Animation Data](#animation-data)
+          * [Color Mode](#color-mode)
+          * [Texture Page](#texture-page)
+          * [Vertex Data](#vertex-data)
+          * [Animations](#animations)
+          * [Animation Entry](#animation-entry)
+          * [Animation Data](#animation-data)
         * [Vertex Table](#vertex-table)
         * [Vertex Data](#vertex-data-1)
         * [Hierarchy Data](#hierarchy-data)
         * [Face Table](#face-table)
         * [Face Data](#face-data-1)
         * [Node Table](#node-table)
-          + [Node Table Data](#node-table-data)
-          + [Node Table Entry](#node-table-entry)
+          * [Node Table Data](#node-table-data)
+          * [Node Table Entry](#node-table-entry)
         * [Node](#node)
-          + [Node Position](#node-position)
-          + [Node Data](#node-data)
-          + [Node Type](#node-type)
+          * [Node Position](#node-position)
+          * [Node Data](#node-data)
+          * [Node Type](#node-type)
         * [Property Set File](#property-set-file)
-    + [RSC Files](#rsc-files)
-      - [File Format](#file-format-1)
-          + [RSC Header](#rsc-header)
-          + [RSC Entry](#rsc-entry)
-    + [TAF Files](#taf-files)
-    + [TIM Files](#tim-files)
-      - [File Format](#file-format-2)
-          + [TIM Header](#tim-header)
-          + [TIM CLUT Color](#tim-clut-color)
-          + [TIM Content](#tim-content)
+    * [RSC Files](#rsc-files)
+      * [File Format](#file-format-1)
+          * [RSC Header](#rsc-header)
+          * [RSC Entry](#rsc-entry)
+    * [TAF Files](#taf-files)
+    * [TIM Files](#tim-files)
+      * [File Format](#file-format-2)
+          * [TIM Header](#tim-header)
+          * [TIM CLUT Color](#tim-clut-color)
+          * [TIM Content](#tim-content)
+    * [SST Files](#sst-files)
+      * [SST Tokens](#sst-tokens)
+          * [Token Type 1](#token-type-1)
+          * [Token Type 2](#token-type-2)
+          * [Token Type 3](#token-type-3)
+          * [Token Type 5](#token-type-5)
+          * [Token Type 8](#token-type-8)
+          * [Token Type 9](#token-type-9)
+          * [Token Type 10](#token-type-10)
+            * [GFX Model](#gfx-model)
+          * [Token Type 11](#token-type-11)
 
 ## Introduction
 This project contains a set of tools that can be used to view Medal Of
@@ -1245,3 +1256,153 @@ TIM is a file format used for storing all the images in the game.
 | unsigned short  | 2 bytes |  FrameBufferY |
 | unsigned char   | 4 bytes |  CLUTColor |
 | unsigned short  | Pointer | Data |
+
+### SST Files
+
+SST files are used to store information about all the menus used in the
+game.  
+They can be found inside GLOBAL.RSC (under script folder) and to be loaded
+they require a correspondent RSC file that contains all the textures
+referenced by the script.  
+An example for Medal Of Honor is the script 'mtitle1.sst' where the
+corresponding RSC file can be located into the folder 'SCR1/mtitle1.rsc'.  
+An SST file is made of several tokens that declares the begin of a
+specific section.  
+Each token is 4-bytes and after reading it there is a specific number of
+bytes to be read in order to obtain the next one.
+So far, the following tokens have been found:  
+
+| Token | Section Size |
+| ----- | ------------ |
+| 1     | 28 bytes     |
+| 2     | 60 bytes     |
+| 3     | 68 bytes     |
+| 5     | 0 byte       |
+| 8     | 276 bytes    |
+| 9     | Variable     |
+| 10    | 112 bytes    |
+| 11    | 288 bytes    |
+
+
+#### SST Tokens
+
+##### Token Type 1
+Token 1 is used to declare the beginning of an SST Script whose name is
+stored in the next 28 bytes.
+##### Token Type 2
+Token 2 is used to declare the beginning of an SST Event that has a source
+callback stored in the first 28 bytes,destination callback stored in the
+next 28 bytes and finally an unknown field whose purpose has not been
+discovered yet.
+##### Token Type 3
+Token 3 is usually found after declaring a token of type 2 or 5 and
+contains all the data required to render a particular screen.  
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| char  | 28 bytes  | Texture File (found inside the RSC file)|
+| int  | 4 bytes  | Unknown |
+| unsigned short  | 2 bytes |  x |
+| unsigned short  | 2 bytes |  Pad |
+| unsigned short  | 2 bytes |  y |
+| unsigned short  | 2 bytes |  Pad |
+| unsigned char   | 4 bytes |  Width |
+| unsigned short  | 2 bytes |  Pad |
+| unsigned short  | 2 bytes |  Height |
+| unsigned short  | 2 bytes | Pad |
+| Byte  | 1 byte | Unknown |
+| Byte  | 1 byte | Unknown |
+| Byte  | 1 byte | Unknown |
+| Byte  | 1 byte | Unknown |
+| int  | 4 bytes  | Depth |
+| int  | 4 bytes  | Unknown |
+| int  | 4 bytes  | Unknown |
+| int  | 4 bytes  | Unknown |
+
+##### Token Type 5
+Token 5 is used to declare that all the elements declared afterwards do
+not respond to any events since they are put in background.
+##### Token Type 8
+Unknown
+##### Token Type 9
+Unknown...Seems to begin with an integer that tells how many elements we
+need to load where each element is 4-bytes.
+##### Token Type 10
+Token 10 is used to declare a new GFX model (like the one seen in the
+title screen).  
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| char  | 28 bytes  | Model File (found inside the RSC file)|
+| char  | 28 bytes  | Texture File (found inside the RSC file) |
+| Byte  | 56 bytes |  Unknown |
+
+###### GFX Model
+Every GFX file begins with an header containing all the data size needed to
+load it.  
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| int  | 4 bytes  | Number Of Vertices |
+| int  | 4 bytes  | Number Of Normals  |
+| int  | 4 bytes  | Number Of Faces    |
+| int  | 4 bytes  | Unknown            |
+| int  | 4 bytes  | Unknown Number     |
+| int  | 4 bytes  | Pad (Always 0)     |
+
+After reading the header we find an offset table containing all the data
+offsets needed to load it.
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| short | 2 bytes  | Offset0 |
+| short | 2 bytes  | Pad0 |
+| short | 2 bytes  | Offset1 |
+| short | 2 bytes  | Pad1 |
+| short | 2 bytes  | Offset2 |
+| short | 2 bytes  | Pad2 |
+| int  | 4 bytes   | Pad3 (Always 0) |
+
+After the offset table we have a section whose size is equals to the
+'Unknown Number' variable in the header multiplied by four.  
+After skipping this section we find the start of the vertex data, where
+each vertex is 8 bytes:  
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| short | 2 bytes  | x |
+| short | 2 bytes  | y |
+| short | 2 bytes  | z |
+| short | 2 bytes  | Pad |
+
+After reading all the vertices, as specified in the Header, we find the
+normal data that uses the same structure as the one used by the vertices:  
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| short | 2 bytes  | x |
+| short | 2 bytes  | y |
+| short | 2 bytes  | z |
+| short | 2 bytes  | Pad |
+
+Finally, After reading all the normals, as specified in the Header, we
+find the Faces data:    
+
+| Type | Size | Description |
+| ---- | ---- | ----------- |
+| short | 2 bytes  | Unknown |
+| unsigned short | 2 bytes  | Vertex 0 |
+| unsigned short | 2 bytes  | Vertex 1 |
+| unsigned short | 2 bytes  | Vertex 2 |
+| unsigned short | 2 bytes  | Normal 0 |
+| unsigned short | 2 bytes  | Normal 1 |
+| unsigned short | 2 bytes  | Normal 2 |
+| [UV](#uv-coordinates) | 2 bytes | Texture Coordinate for Vertex 0 |
+| [UV](#uv-coordinates) | 2 bytes | Texture Coordinate for Vertex 1 |
+| [UV](#uv-coordinates) | 2 bytes | Texture Coordinate for Vertex 2 |
+| Byte | 12 bytes | Unknown (Probably color data for each vertex) |
+| unsigned short | 2 bytes  | Texture Info |
+| unsigned short | 2 bytes  | CLUT data |
+
+##### Token Type 11
+Unknown, usually is found right after declaring a GFX model.
