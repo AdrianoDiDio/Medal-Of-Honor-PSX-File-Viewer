@@ -84,7 +84,22 @@ void LevelCleanUp(Level_t *Level)
     LevelUnload(Level);
     free(Level);
 }
-
+TSP_t *LevelGetTSPCompartmentByPoint(Level_t *Level,vec3 Point)
+{
+    TSP_t *TSP;
+    if( !Level ) {
+        return NULL;
+    }
+    for( TSP = Level->TSPList; TSP; TSP = TSP->Next ) {
+        if( Point[0] >= TSP->CollisionData->Header.CollisionBoundMinX && 
+            Point[0] <= TSP->CollisionData->Header.CollisionBoundMaxX &&
+            Point[2] >= TSP->CollisionData->Header.CollisionBoundMinZ && 
+            Point[2] <= TSP->CollisionData->Header.CollisionBoundMaxZ ) {
+                return TSP;
+        }
+    }
+    return NULL;
+}
 void LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int GameEngine,int SoundValue)
 {
     int IsAmbient;

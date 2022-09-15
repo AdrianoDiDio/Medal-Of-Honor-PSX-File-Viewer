@@ -228,6 +228,7 @@ void RegisterDefaultSettings()
     ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to "
                                     "being set to empty.");
 
+    ConfigRegister("GUIShowCurrentCompartment","0","When enabled, shows the current compartment based on the camera position.");
 
     ConfigRegister("LevelEnableWireFrameMode","0","Draw the level surfaces as lines");
     ConfigRegister("LevelDrawCollisionData","0","Draw the level collision data");

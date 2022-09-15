@@ -72,6 +72,7 @@ int             LevelManagerIsLevelLoaded(const LevelManager_t *LevelManager);
 int             LevelManagerGetGameEngine(LevelManager_t *LevelManager);
 int             LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
                                          const char *Path);
+TSP_t           *LevelManagerGetTSPCompartmentByPoint(LevelManager_t *LevelManager,vec3 Point);
 void            LevelManagerUpdate(LevelManager_t *LevelManager,Camera_t *Camera);
 void            LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera);
 void            LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem);

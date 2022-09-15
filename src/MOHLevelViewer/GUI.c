@@ -24,6 +24,8 @@
 #include "TSP.h"
 #include "MOHLevelViewer.h"
 
+Config_t *GUIShowCurrentCompartment;
+
 const char* LevelMusicOptions[] = { 
     "Disable",
     "Music and Ambient Sounds",
@@ -166,6 +168,10 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
             if( igCollapsingHeader_TreeNodeFlags("Settings",0) ) {
                 if( GUICheckBoxWithTooltip("Show FPS",(bool *) &GUIShowFPS->IValue,GUIShowFPS->Description) ) {
                     ConfigSetNumber("GUIShowFPS",GUIShowFPS->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Show Current Compartment",(bool *) &GUIShowCurrentCompartment->IValue,
+                    GUIShowCurrentCompartment->Description ) ) {
+                        ConfigSetNumber("GUIShowCurrentCompartment",GUIShowCurrentCompartment->IValue);
                 }
                 if( igSliderFloat("Camera Speed",&CameraSpeed->FValue,10.f,256.f,"%.2f",0) ) {
                         ConfigSetNumber("CameraSpeed",CameraSpeed->FValue);
@@ -336,13 +342,15 @@ void GUIDrawHelpOverlay()
     igEnd();
 }
 
-void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
+void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t *LevelManager)
 {
     ImGuiViewport *Viewport;
     ImVec2 WorkPosition;
     ImVec2 WorkSize;
     ImVec2 WindowPosition;
     ImVec2 WindowPivot;
+    TSP_t *TSP;
+    vec3 CameraPosition;
     int WindowFlags;
     
     WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | 
@@ -356,14 +364,39 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
     WindowPivot.x = 1.f;
     WindowPivot.y = 0.f;
 
-    
-    if( GUIShowFPS->IValue ) {
-        igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
-        if( igBegin("FPS", NULL, WindowFlags) ) {
+    igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
+    if( igBegin("Debug", NULL, WindowFlags) ) {
+        if( GUIShowFPS->IValue ) {
             igText(TimeInfo->FPSString);
         }
-        igEnd(); 
+        if( GUIShowCurrentCompartment->IValue ) {
+            glm_vec3_copy(Camera->Position,CameraPosition);
+            CameraPosition[2] = -CameraPosition[2];
+            TSP = LevelManagerGetTSPCompartmentByPoint(LevelManager,CameraPosition);
+            if( TSP ) {
+                igText("Current Compartment %s",TSP->FName);
+            } else {
+                igText("Camera is outside level boundaries");
+            }
+        }
     }
+    igEnd(); 
+
+//                     CompartmentFound = 0;
+//                 for( TSP = LevelManager->CurrentLevel->TSPList; TSP; TSP = TSP->Next ) {
+//                     if( Camera->Position[0] >= TSP->CollisionData->Header.CollisionBoundMinX && 
+//                         Camera->Position[0] <= TSP->CollisionData->Header.CollisionBoundMaxX &&
+//                         -Camera->Position[2] >= TSP->CollisionData->Header.CollisionBoundMinZ && 
+//                         -Camera->Position[2] <= TSP->CollisionData->Header.CollisionBoundMaxZ ) {
+//                         igText("Current Compartment %s",TSP->FName);
+//                         CompartmentFound = 1;
+//                         break;
+//                     }
+//                 }
+//                 if( !CompartmentFound ) {
+//                     igText("Camera is outside level boundaries");
+//                 }
+//             }
 }
 
 void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
@@ -486,7 +519,7 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSyste
     
     GUIBeginFrame();
     
-    GUIDrawDebugOverlay(TimeInfo);
+    GUIDrawDebugOverlay(TimeInfo,Camera,LevelManager);
     
     if( !GUI->NumActiveWindows ) {
         GUIDrawHelpOverlay();
@@ -539,6 +572,7 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     asprintf(&GUI->ConfigFilePath,"%simgui.ini",ConfigPath);
     free(ConfigPath);
     
+    GUIShowCurrentCompartment = ConfigGet("GUIShowCurrentCompartment");
     GUILoadCommonSettings();
     
     GUI->DefaultContext = igCreateContext(NULL);
