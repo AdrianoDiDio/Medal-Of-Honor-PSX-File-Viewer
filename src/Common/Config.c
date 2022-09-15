@@ -124,6 +124,7 @@ void ConfigLoadSettings()
     //Settings didn't exists save the default ones.
     if( !ConfigBuffer ) {
         free(PrefFile);
+        free(PrefPath);
         ConfigSaveSettings();
         return;
     }

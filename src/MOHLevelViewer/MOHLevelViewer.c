@@ -280,6 +280,8 @@ Application_t *ApplicationInit(int argc,char **argv)
         goto Failure;
     }
     
+    VideoSystemGrabMouse(1);
+
     //NOTE(Adriano):Allow the game path to be set using command line argument.
     //              If the path is not valid the game will discard it.
     if( argc > 1 ) {
@@ -307,7 +309,6 @@ Application_t *ApplicationInit(int argc,char **argv)
         goto Failure;
     }
     GLSetDefaultState();
-    VideoSystemGrabMouse(1);
     return Application;
 
 Failure:

@@ -129,8 +129,8 @@ then type:
 to build it.  
 When the build is completed, the executables can be
 found inside the Build directory under a new directory
-which has the same name as the executable (E.G:Build/
-MOHLevelViewer,Build/MOHModelViewer etc...).  
+which has the same name as the executable (E.G:Build/MOHLevelViewer,
+Build/MOHModelViewer etc...).  
 The directories,created during the build process, will
 contain everything that it is required by the program
 in order to run properly.   
@@ -148,8 +148,8 @@ exported to wav).
 #### Usage
 > ./MOHLevelViewer `<Optional Game Directory>`  
 
-**NOTE: The configuration is stored in the User preference folder (.local/
-share/MOHLevelViewer on Linux and %AppData% on Windows).**  
+**NOTE: The configuration is stored in the User preference folder (.local/share/MOHLevelViewer 
+on Linux and %AppData% on Windows).**  
 #### Credits
 MOHLevelViewer uses the following libraries:  
 
@@ -164,16 +164,14 @@ The font file shipped with the program is:
 ### MOHModelViewer
 MOHModelViewer is able to load and render any animated model from
 the games Medal Of Honor and Medal Of Honor:Underground.  
-At the moment only static poses are supported and the models are not
-animated.    
 It is able to load any model contained in any BSD file and export any
 animation pose to a ply file  
 
 #### Usage
 > ./MOHModelViewer `<Optional BSD file>`  
 
-**NOTE: The configuration is stored in the User preference folder (.local/
-share/MOHModelViewer on Linux and %AppData% on Windows).**  
+**NOTE: The configuration is stored in the User preference folder (.local/share/MOHModelViewer 
+on Linux and %AppData% on Windows).**  
 #### Credits
 MOHModelViewer uses the following libraries:  
 
