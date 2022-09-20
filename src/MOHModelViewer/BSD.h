@@ -117,6 +117,7 @@ typedef struct BSDAnimationFrame_s
     
     int             *EncodedQuaternionList;
     BSDQuaternion_t *QuaternionList;
+    BSDQuaternion_t *CurrentQuaternionList;
     
 //     short V2;
 //     short V3;
@@ -225,16 +226,19 @@ typedef struct BSD_s {
 
 typedef struct Camera_s Camera_t;
 
-BSDRenderObject_t   *BSDLoadAllAnimatedRenderObjects(const char *FName,int *GameVersion);
-void                BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
-void                BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
-void                BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
+BSDRenderObject_t       *BSDLoadAllAnimatedRenderObjects(const char *FName,int *GameVersion);
+void                    BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
+void                    BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
+void                    BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
                                                     BSDVertexTable_t *VertexTable,mat4 TransformMatrix);
-int                 BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex,int FrameIndex,int Override);
-void                BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject);
-void                BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile);
-void                BSDFree(BSD_t *BSD);
-void                BSDFreeRenderObjectList(BSDRenderObject_t *RenderObjectList);
+int                     BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex,int FrameIndex,int Override);
+BSDAnimationFrame_t     *BSDRenderObjectGetCurrentFrame(BSDRenderObject_t *RenderObject);
+void                    BSDRenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame);
+
+void                    BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject);
+void                    BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile);
+void                    BSDFree(BSD_t *BSD);
+void                    BSDFreeRenderObjectList(BSDRenderObject_t *RenderObjectList);
 
 
 #endif //__BSD_H_

@@ -105,7 +105,7 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
     ImVec2 WorkSize;
     ImVec2 WindowPosition;
     ImVec2 WindowPivot;
-    int WindowFlags;
+    ImGuiWindowFlags WindowFlags;
     
     WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | 
                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | 
@@ -136,13 +136,15 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
     BSDAnimationFrame_t *CurrentFrame;
     ImVec2 ZeroSize;
     int IsSelected;
-    int TreeNodeFlags;
     int DisableNode;
     char SmallBuffer[64];
     char DeleteButtonId[32];
     int i;
     int Changed;
     ImGuiTableFlags TableFlags;
+    ImGuiInputTextFlags InputTextFlags;
+    ImGuiTreeNodeFlags TreeNodeFlags;
+
     
     if( !igBegin("Main Window", NULL, ImGuiWindowFlags_AlwaysAutoResize) ) {
         return;
@@ -237,8 +239,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
         if( !CurrentRenderObject ) {
             igText("No RenderObject selected.");
         } else {
-            CurrentFrame = &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
-                Frame[CurrentRenderObject->CurrentFrameIndex];
+            CurrentFrame = BSDRenderObjectGetCurrentFrame(CurrentRenderObject);
             igText("Id:%i",CurrentRenderObject->Id);
             igText("Type:%i",CurrentRenderObject->Type);
             igText("Scale:%f;%f;%f",CurrentRenderObject->Scale[0],CurrentRenderObject->Scale[1],CurrentRenderObject->Scale[2]);
@@ -289,10 +290,15 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
             if( igCollapsingHeader_TreeNodeFlags("Quaternion List",ImGuiTreeNodeFlags_None) ) {
                 igSeparator();
                 igText("Changes to an input-field can be undo by pressing CTRL-Z.\n");
-                igText("To reset the list, the model needs to be reloaded.\n");
                 igText("Note that numbers are in fixed point math where 4096 is equals to 1\n");
-                TableFlags = ImGuiTableFlags_SizingStretchSame | 
-                    ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX;
+                if( igButton("Reset",ZeroSize) ) {
+                    BSDRenderObjectResetFrameQuaternionList(CurrentFrame);
+                    BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,
+                                                            CurrentRenderObject->CurrentFrameIndex,1);
+
+                }
+                TableFlags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Borders | 
+                    ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX;
                 if( igBeginTable("Quaternion List",5,TableFlags,ZeroSize,0.f) ) {
                     igTableSetupColumn("Quaternion",0,0.f,0);
                     igTableSetupColumn("x",0,0.f,0);
@@ -301,35 +307,44 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                     igTableSetupColumn("w",0,0.f,0);
 
                     igTableHeadersRow();
+                    InputTextFlags = ImGuiInputTextFlags_CharsDecimal;
+                    if( RenderObjectManagerIsAnimationPlaying(RenderObjectManager) ) {
+                        InputTextFlags |= ImGuiInputTextFlags_ReadOnly;
+                    }
                     for( i = 0; i < CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
                         Frame[CurrentRenderObject->CurrentFrameIndex].NumQuaternions; i++ ) {
                         Changed = 0;
                         igTableNextRow(0,0.f);
                         igTableSetColumnIndex(0);
+                        igAlignTextToFramePadding(); 
                         igText("Quaternion %i",i);
                         igTableSetColumnIndex(1);
                         igPushID_Int(5 * i + 1); 
                         Changed |= igInputScalar("##Q1", ImGuiDataType_S16, 
                                                 (short *) &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
-                                                Frame[CurrentRenderObject->CurrentFrameIndex].QuaternionList[i].x,NULL,NULL,NULL,0);
+                                                Frame[CurrentRenderObject->CurrentFrameIndex].
+                                                CurrentQuaternionList[i].x,NULL,NULL,NULL,InputTextFlags);
                         igPopID();
                         igTableSetColumnIndex(2);
                         igPushID_Int(5 * i + 2); 
                         Changed |= igInputScalar("##Q2", ImGuiDataType_S16, 
                                                 (short *) &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
-                                                Frame[CurrentRenderObject->CurrentFrameIndex].QuaternionList[i].y,NULL,NULL,NULL,0);
+                                                Frame[CurrentRenderObject->CurrentFrameIndex].
+                                                CurrentQuaternionList[i].y,NULL,NULL,NULL,InputTextFlags);
                         igPopID();
                         igTableSetColumnIndex(3);
                         igPushID_Int(5 * i + 3);
                         Changed |= igInputScalar("##Q3", ImGuiDataType_S16, 
                                                 (short *) &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
-                                                Frame[CurrentRenderObject->CurrentFrameIndex].QuaternionList[i].z,NULL,NULL,NULL,0);
+                                                Frame[CurrentRenderObject->CurrentFrameIndex].
+                                                CurrentQuaternionList[i].z,NULL,NULL,NULL,InputTextFlags);
                         igPopID();
                         igTableSetColumnIndex(4);
                         igPushID_Int(5 * i + 4);
                         Changed |= igInputScalar("##Q4", ImGuiDataType_S16, 
                                                 (short *) &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
-                                                Frame[CurrentRenderObject->CurrentFrameIndex].QuaternionList[i].w,NULL,NULL,NULL,0);
+                                                Frame[CurrentRenderObject->CurrentFrameIndex].
+                                                CurrentQuaternionList[i].w,NULL,NULL,NULL,InputTextFlags);
                         igPopID();
                         if( Changed ) {
                             BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,

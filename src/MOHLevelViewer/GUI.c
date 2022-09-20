@@ -286,7 +286,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
 
 void GUIDrawHelpOverlay()
 {
-    int WindowFlags;
+    ImGuiWindowFlags WindowFlags;
     ImGuiViewport *Viewport;
     ImVec2 WorkPosition;
     ImVec2 WindowPosition;
@@ -323,7 +323,7 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
     ImVec2 WindowPivot;
     TSP_t *TSP;
     vec3 CameraPosition;
-    int WindowFlags;
+    ImGuiWindowFlags WindowFlags;
     
     WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | 
                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | 
@@ -360,7 +360,7 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *Vid
 {
     static int FailedMissionNumber = -1;
     static int FailedLevelNumber = -1;
-    int TreeNodeFlags;
+    ImGuiTreeNodeFlags TreeNodeFlags;
     int i;
     int j;
     int DisableNode;
