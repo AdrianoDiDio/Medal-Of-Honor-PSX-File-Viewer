@@ -375,7 +375,7 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
     }
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,90,"Setting default pose");
     for( Iterator = BSDPack->RenderObjectList; Iterator; Iterator = Iterator->Next ) {
-        BSDRenderObjectSetAnimationPose(Iterator,0,0);
+        BSDRenderObjectSetAnimationPose(Iterator,0,0,0);
     }
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Done");
     RenderObjectManagerAppendBSDPack(RenderObjectManager,BSDPack);
@@ -506,7 +506,7 @@ void RenderObjectManagerUpdate(RenderObjectManager_t *RenderObjectManager)
     CurrentRenderObject = RenderObjectManager->SelectedBSDPack->SelectedRenderObject;
     NextFrame = (CurrentRenderObject->CurrentFrameIndex + 1) % 
                     CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames;
-    BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame);
+    BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame,0);
     RenderObjectManager->SelectedBSDPack->LastUpdateTime = Now;
 }
 void RenderObjectManagerDraw(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera)

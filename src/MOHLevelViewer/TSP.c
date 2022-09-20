@@ -146,9 +146,9 @@ void TSPVec3ToGLMVec3(TSPVec3_t In,vec3 Out)
     Out[1] = In.y;
     Out[2] = In.z;
 }
-float TSPFixedToFloat(int input,int FixedShift)
+float TSPFixedToFloat(int Input,int FixedShift)
 {
-    return ((float)input / (float)(1 << FixedShift));
+    return ((float)Input / (float)(1 << FixedShift));
 }
 
 void TSPvec4FromXYZ(float x,float y,float z,vec4 Out)
@@ -2113,7 +2113,7 @@ int TSPGetYFromCollisionFace(TSPCollision_t *CollisionData,TSPVec3_t Point,TSPCo
     Normal = CollisionData->Normal[Face->NormalIndex].Position;
     if( abs(Normal.y) < 257 ) {
         DPrintf("TSPGetYFromCollisionFace:Returning it normal...\n");
-        OutY = TSPFixedToFloat(Normal.y,15);
+        OutY = TSPFixedToFloat(CollisionData->Vertex[Face->V0].Position.y,15);
     } else {
         DPrintf("Normal fixed is:%i;%i;%i\n",Normal.x,Normal.y,Normal.z);
         float NormalX;
@@ -2122,13 +2122,12 @@ int TSPGetYFromCollisionFace(TSPCollision_t *CollisionData,TSPVec3_t Point,TSPCo
         float PointX;
         float PointZ;
         DPrintf("Normal as int is:%i;%i;%i\n",Normal.x,Normal.y,Normal.z);
-        NormalX = /*FixedToInt*/TSPFixedToFloat(Normal.x,15);
-        NormalY = /*FixedToInt*/TSPFixedToFloat(Normal.y,15);
-        NormalZ = /*FixedToInt*/TSPFixedToFloat(Normal.z,15);
-        PointX = /*fixed_to_float*/(Point2D[0]);
-        PointZ = /*fixed_to_float*/(Point2D[1]);
+        NormalX = TSPFixedToFloat(Normal.x,15);
+        NormalY = TSPFixedToFloat(Normal.y,15);
+        NormalZ = TSPFixedToFloat(Normal.z,15);
+        PointX =  Point2D[0];
+        PointZ =  Point2D[1];
         DPrintf("Normal as float is:%f;%f;%f\n",NormalX,NormalY,NormalZ);
-//         DistanceOffset = ;
         DPrintf("TSPGetYFromCollisionFace:DistanceOffset Fixed:%i Real:%i\n",Face->PlaneDistance << 0xf,Face->PlaneDistance );
         SolveFaceY = -(NormalX * PointX + NormalZ * PointZ + (Face->PlaneDistance /*<< 0xf*/));
         OutY = SolveFaceY / NormalY;
@@ -2250,7 +2249,7 @@ int TSPGetPointYComponentFromKDTree(vec3 Point,TSP_t *TSPList,int *PropertySetFi
             return TSPCheckCollisionFaceIntersection(CollisionData,Position,Node->Child1,~Node->Child0,OutY);
         }
         if( Node->Child1 < 0 ) {
-            MinValue = WorldBoundMinZ + Node->MaxX;
+            MinValue = WorldBoundMinZ + Node->SplitValue;
             if (Position.z < MinValue) {
                 CurrentNode = Node->Child0;
             } else {
@@ -2258,7 +2257,7 @@ int TSPGetPointYComponentFromKDTree(vec3 Point,TSP_t *TSPList,int *PropertySetFi
                 WorldBoundMinZ = MinValue;
             }
         } else {
-            MinValue = WorldBoundMinX + Node->MaxX;
+            MinValue = WorldBoundMinX + Node->SplitValue;
             if( Position.x < MinValue ) {
                 CurrentNode = Node->Child0;
             } else {

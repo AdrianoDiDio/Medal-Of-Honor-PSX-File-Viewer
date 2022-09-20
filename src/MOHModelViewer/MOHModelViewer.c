@@ -41,7 +41,7 @@ void ApplicationCheckEvents(Application_t *Application)
             if( CurrentRenderObject != NULL ) {
                 NextFrame = (CurrentRenderObject->CurrentFrameIndex + 1) % 
                     CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames;
-                BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame);
+                BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame,0);
             }
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_n ) {
@@ -49,7 +49,7 @@ void ApplicationCheckEvents(Application_t *Application)
             if( CurrentRenderObject != NULL ) {
                 NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1) % 
                     CurrentRenderObject->NumAnimations;
-                while( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,NextPose,0) ) {
+                while( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,NextPose,0,0) ) {
                     NextPose = (NextPose + 1 ) % CurrentRenderObject->NumAnimations;
                 }                
             }

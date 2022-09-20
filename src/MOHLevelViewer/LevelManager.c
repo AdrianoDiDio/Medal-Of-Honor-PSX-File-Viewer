@@ -423,7 +423,6 @@ int LevelManagerGetGameEngine(LevelManager_t *LevelManager)
 TSP_t *LevelManagerGetTSPCompartmentByPoint(LevelManager_t *LevelManager,vec3 Point)
 {
     if( !LevelManagerIsLevelLoaded(LevelManager) ) {
-        DPrintf("LevelManagerGetCurrentCompartment:Level is not loaded\n");
         return NULL;
     }
     return LevelGetTSPCompartmentByPoint(LevelManager->CurrentLevel,Point);

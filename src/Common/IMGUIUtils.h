@@ -61,6 +61,10 @@ void            GUIContextInit(ImGuiContext *Context,VideoSystem_t *VideoSystem,
 void            GUIReleaseContext(ImGuiContext *Context);
 void            GUIBeginFrame();
 void            GUIEndFrame();
+void            GUIPrepareModalWindow();
+bool            GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...);
+void            GUIDrawVideoSettingsWindow(bool *WindowHandle,VideoSystem_t *VideoSystem);
+
 ProgressBar_t   *ProgressBarInitialize(VideoSystem_t *VideoSystem);
 void            ProgressBarDestroy(ProgressBar_t *ProgressBar);
 void            ProgressBarBegin(ProgressBar_t *GUIProgressBar,const char *Title);
@@ -69,7 +73,6 @@ void            ProgressBarReset(ProgressBar_t *GUIProgressBar);
 void            ProgressBarSetDialogTitle(ProgressBar_t *GUIProgressBar,const char *Title);
 void            ProgressBarIncrement(ProgressBar_t *GUIProgressBar,VideoSystem_t *VideoSystem,float Increment,const char *Message);
 
-void            GUIDrawVideoSettingsWindow(bool *WindowHandle,VideoSystem_t *VideoSystem);
 
 FileDialog_t    *FileDialogRegister(const char *WindowTitle,const char *Filters,FileDialogSelectCallback_t OnElementSelected,
                                        FileDialogCancelCallback_t OnDialogCancelled);

@@ -46,19 +46,6 @@ void GUIFree(GUI_t *GUI)
     free(GUI);
 }
 
-void GUIPrepareModalWindow()
-{
-    ImGuiIO *IO;
-    ImVec2 Pivot; 
-    ImVec2 ModalPosition;
-    
-    IO = igGetIO();
-    Pivot.x = 0.5f;
-    Pivot.y = 0.5f;
-    ModalPosition.x = IO->DisplaySize.x * 0.5;
-    ModalPosition.y = IO->DisplaySize.y * 0.5;
-    igSetNextWindowPos(ModalPosition, ImGuiCond_Always, Pivot);
-}
 /*
  * Process a new event from the SDL system only when
  * it is active.
@@ -127,22 +114,7 @@ void GUIToggleLevelSelectWindow(GUI_t *GUI)
     GUI->LevelSelectWindowHandle = !GUI->LevelSelectWindowHandle;
     GUIUpdateWindowStack(GUI,GUI->LevelSelectWindowHandle);
 }
-bool GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...)
-{
-    va_list Arguments;
-    int IsChecked;
-    IsChecked = igCheckbox(Label,Value);
-    if( DescriptionFormat != NULL && igIsItemHovered(ImGuiHoveredFlags_None) ) {
-        igBeginTooltip();
-        igPushTextWrapPos(igGetFontSize() * 40.0f);
-        va_start(Arguments, DescriptionFormat);
-        igTextV(DescriptionFormat,Arguments);
-        va_end(Arguments);
-        igPopTextWrapPos();
-        igEndTooltip();
-    }
-    return IsChecked;
-}
+
 void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem)
 {
     ImVec2 ZeroSize;
@@ -371,7 +343,7 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
         }
         if( GUIShowCurrentCompartment->IValue ) {
             glm_vec3_copy(Camera->Position,CameraPosition);
-            CameraPosition[2] = -CameraPosition[2];
+            glm_vec3_rotate(CameraPosition, DEGTORAD(180.f), GLM_XUP);
             TSP = LevelManagerGetTSPCompartmentByPoint(LevelManager,CameraPosition);
             if( TSP ) {
                 igText("Current Compartment %s",TSP->FName);
@@ -381,22 +353,6 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
         }
     }
     igEnd(); 
-
-//                     CompartmentFound = 0;
-//                 for( TSP = LevelManager->CurrentLevel->TSPList; TSP; TSP = TSP->Next ) {
-//                     if( Camera->Position[0] >= TSP->CollisionData->Header.CollisionBoundMinX && 
-//                         Camera->Position[0] <= TSP->CollisionData->Header.CollisionBoundMaxX &&
-//                         -Camera->Position[2] >= TSP->CollisionData->Header.CollisionBoundMinZ && 
-//                         -Camera->Position[2] <= TSP->CollisionData->Header.CollisionBoundMaxZ ) {
-//                         igText("Current Compartment %s",TSP->FName);
-//                         CompartmentFound = 1;
-//                         break;
-//                     }
-//                 }
-//                 if( !CompartmentFound ) {
-//                     igText("Camera is outside level boundaries");
-//                 }
-//             }
 }
 
 void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,

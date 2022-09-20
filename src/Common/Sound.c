@@ -181,6 +181,7 @@ float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
     int Temp;
     int NumWrittenBytes;
     int NumTotalSample;
+    int LocalNumFrames;
     int Size;
     int  i;
     int  j;
@@ -199,9 +200,12 @@ float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
     // Thats why NumFramePerBlock is 28 ( 14 * 2).
     NumFramePerBlock = 28;
     NumTotalSample = VBFileSize / 16;
-    *NumFrames = NumTotalSample * NumFramePerBlock;
+    LocalNumFrames = NumTotalSample * NumFramePerBlock;
     //Size depends from the number of channels (in this case is 2).
-    Size = *NumFrames * 2 * sizeof(float);
+    Size = LocalNumFrames * 2 * sizeof(float);
+    if( NumFrames ) {
+        *NumFrames = LocalNumFrames;
+    }
     Result = malloc(Size);
     if( !Result ) {
         DPrintf("SoundSystemConvertADPCMToPCM:Couldn't allocate memory for PCM data\n");
@@ -319,7 +323,7 @@ int SoundSystemDumpMusicToWav(SoundSystem_t *SoundSystem,const char *EngineName,
  * to the SPU of the PSX.
  * They use a sample frequency of 22050Hz and contains only one channel (Mono).
  * In order to load it we need to first convert the ADPCM data to standard PCM and then
- * feed it to SDL (doing an internal conversion to change the frequency and the number of channels) in
+ * feed it to SDL (doing an internal conversion to change the frequency) in
  * order to be able to play it.
  */
 VBMusic_t *SoundSystemLoadVBFile(const char *VBFileName)

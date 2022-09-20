@@ -48,40 +48,9 @@ bool GUIIsKeyboardFree()
     IO = igGetIO();
     return !IO->WantCaptureKeyboard;
 }
-void GUIPrepareModalWindow()
-{
-    ImGuiIO *IO;
-    ImVec2 Pivot; 
-    ImVec2 ModalPosition;
-    
-    IO = igGetIO();
-    Pivot.x = 0.5f;
-    Pivot.y = 0.5f;
-    ModalPosition.x = IO->DisplaySize.x * 0.5;
-    ModalPosition.y = IO->DisplaySize.y * 0.5;
-    igSetNextWindowPos(ModalPosition, ImGuiCond_Always, Pivot);
-}
-
 void GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
 {
     ImGui_ImplSDL2_ProcessEvent(Event);
-}
-
-bool GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...)
-{
-    va_list Arguments;
-    int IsChecked;
-    IsChecked = igCheckbox(Label,Value);
-    if( DescriptionFormat != NULL && igIsItemHovered(ImGuiHoveredFlags_None) ) {
-        igBeginTooltip();
-        igPushTextWrapPos(igGetFontSize() * 40.0f);
-        va_start(Arguments, DescriptionFormat);
-        igTextV(DescriptionFormat,Arguments);
-        va_end(Arguments);
-        igPopTextWrapPos();
-        igEndTooltip();
-    }
-    return IsChecked;
 }
 
 void GUISetErrorMessage(GUI_t *GUI,const char *Message)
@@ -172,6 +141,8 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
     char SmallBuffer[64];
     char DeleteButtonId[32];
     int i;
+    int Changed;
+    ImGuiTableFlags TableFlags;
     
     if( !igBegin("Main Window", NULL, ImGuiWindowFlags_AlwaysAutoResize) ) {
         return;
@@ -286,7 +257,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                     sprintf(SmallBuffer,"Animation %i",i + 1);
                     if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
                         if( CurrentRenderObject->CurrentAnimationIndex != i ) {
-                            if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,i,0) ) {
+                            if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,i,0,0) ) {
                                 GUISetErrorMessage(GUI,"Failed to set animation pose");
                             }
                         }
@@ -304,7 +275,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                     sprintf(SmallBuffer,"Frame %i",i + 1);
                     if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
                         if( CurrentRenderObject->CurrentFrameIndex != i ) {
-                            if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,i) ) {
+                            if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,i,0) ) {
                                 GUISetErrorMessage(GUI,"Failed to set animation pose");
                             }
                         }
@@ -314,6 +285,59 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                     }
                 }
                 igEndCombo();
+            }
+            if( igCollapsingHeader_TreeNodeFlags("Quaternion List",ImGuiTreeNodeFlags_None) ) {
+                igSeparator();
+                igText("Changes to an input-field can be undo by pressing CTRL-Z.\n");
+                igText("To reset the list, the model needs to be reloaded.\n");
+                igText("Note that numbers are in fixed point math where 4096 is equals to 1\n");
+                TableFlags = ImGuiTableFlags_SizingStretchSame | 
+                    ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX;
+                if( igBeginTable("Quaternion List",5,TableFlags,ZeroSize,0.f) ) {
+                    igTableSetupColumn("Quaternion",0,0.f,0);
+                    igTableSetupColumn("x",0,0.f,0);
+                    igTableSetupColumn("y",0,0.f,0);
+                    igTableSetupColumn("z",0,0.f,0);
+                    igTableSetupColumn("w",0,0.f,0);
+
+                    igTableHeadersRow();
+                    for( i = 0; i < CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
+                        Frame[CurrentRenderObject->CurrentFrameIndex].NumQuaternions; i++ ) {
+                        Changed = 0;
+                        igTableNextRow(0,0.f);
+                        igTableSetColumnIndex(0);
+                        igText("Quaternion %i",i);
+                        igTableSetColumnIndex(1);
+                        igPushID_Int(5 * i + 1); 
+                        Changed |= igInputScalar("##Q1", ImGuiDataType_S16, 
+                                                (short *) &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
+                                                Frame[CurrentRenderObject->CurrentFrameIndex].QuaternionList[i].x,NULL,NULL,NULL,0);
+                        igPopID();
+                        igTableSetColumnIndex(2);
+                        igPushID_Int(5 * i + 2); 
+                        Changed |= igInputScalar("##Q2", ImGuiDataType_S16, 
+                                                (short *) &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
+                                                Frame[CurrentRenderObject->CurrentFrameIndex].QuaternionList[i].y,NULL,NULL,NULL,0);
+                        igPopID();
+                        igTableSetColumnIndex(3);
+                        igPushID_Int(5 * i + 3);
+                        Changed |= igInputScalar("##Q3", ImGuiDataType_S16, 
+                                                (short *) &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
+                                                Frame[CurrentRenderObject->CurrentFrameIndex].QuaternionList[i].z,NULL,NULL,NULL,0);
+                        igPopID();
+                        igTableSetColumnIndex(4);
+                        igPushID_Int(5 * i + 4);
+                        Changed |= igInputScalar("##Q4", ImGuiDataType_S16, 
+                                                (short *) &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
+                                                Frame[CurrentRenderObject->CurrentFrameIndex].QuaternionList[i].w,NULL,NULL,NULL,0);
+                        igPopID();
+                        if( Changed ) {
+                            BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,
+                                                            CurrentRenderObject->CurrentFrameIndex,1);
+                        }
+                    }
+                    igEndTable();
+                }
             }
             igSeparator();
             if( igButton("Play Animation",ZeroSize) ) {

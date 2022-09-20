@@ -45,6 +45,36 @@ const VSyncSettings_t VSyncOptions[] = {
 
 int NumVSyncOptions = sizeof(VSyncOptions) / sizeof(VSyncOptions[0]);
 
+void GUIPrepareModalWindow()
+{
+    ImGuiIO *IO;
+    ImVec2 Pivot; 
+    ImVec2 ModalPosition;
+    
+    IO = igGetIO();
+    Pivot.x = 0.5f;
+    Pivot.y = 0.5f;
+    ModalPosition.x = IO->DisplaySize.x * 0.5;
+    ModalPosition.y = IO->DisplaySize.y * 0.5;
+    igSetNextWindowPos(ModalPosition, ImGuiCond_Always, Pivot);
+}
+
+bool GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...)
+{
+    va_list Arguments;
+    int IsChecked;
+    IsChecked = igCheckbox(Label,Value);
+    if( DescriptionFormat != NULL && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+        igBeginTooltip();
+        igPushTextWrapPos(igGetFontSize() * 40.0f);
+        va_start(Arguments, DescriptionFormat);
+        igTextV(DescriptionFormat,Arguments);
+        va_end(Arguments);
+        igPopTextWrapPos();
+        igEndTooltip();
+    }
+    return IsChecked;
+}
 
 void GUIReleaseContext(ImGuiContext *Context)
 {    
@@ -53,6 +83,7 @@ void GUIReleaseContext(ImGuiContext *Context)
     ImGui_ImplSDL2_Shutdown();
     igDestroyContext(Context);
 }
+
 void GUIContextInit(ImGuiContext *Context,VideoSystem_t *VideoSystem,const char *ConfigFilePath)
 {
     ImGuiIO *IO;

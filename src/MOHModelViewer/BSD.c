@@ -351,7 +351,7 @@ void BSDRenderObjectUpdateVAO(BSDRenderObject_t *RenderObject)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,BSDVertexTable_t *VertexTable,
-                                     mat4 TransformMatrix,int AnimationIndex,int FrameIndex)
+                                     mat4 TransformMatrix)
 {
     versor Quaternion;
     mat4 LocalRotationMatrix;
@@ -408,10 +408,10 @@ void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQua
     }
 
     if( Bone->Child2 ) {
-        BSDRecursivelyApplyHierachyData(Bone->Child2,QuaternionList,VertexTable,TransformMatrix,AnimationIndex,FrameIndex);
+        BSDRecursivelyApplyHierachyData(Bone->Child2,QuaternionList,VertexTable,TransformMatrix);
     }
     if( Bone->Child1 ) {
-        BSDRecursivelyApplyHierachyData(Bone->Child1,QuaternionList,VertexTable,LocalTransformMatrix,AnimationIndex,FrameIndex);
+        BSDRecursivelyApplyHierachyData(Bone->Child1,QuaternionList,VertexTable,LocalTransformMatrix);
     }
 }
 void BSDRenderObjectResetVertexTable(BSDRenderObject_t *RenderObject)
@@ -434,8 +434,9 @@ void BSDRenderObjectResetVertexTable(BSDRenderObject_t *RenderObject)
  Returns 0 if the pose was not valid ( pose was already set,pose didn't exists), 1 otherwise.
  NOTE that calling this function will modify the RenderObject's VAO.
  If the VAO is NULL a new one is created otherwise it will be updated to reflect the pose that was applied to the model.
+ If Override is true then the pose will be set again in case the AnimationIndex and FrameIndex did not change.
  */
-int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex,int FrameIndex)
+int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex,int FrameIndex,int Override)
 {
     BSDQuaternion_t *QuaternionList;
     mat4 TransformMatrix;
@@ -450,7 +451,7 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
         DPrintf("BSDRenderObjectSetAnimationPose:Failed to set pose using index %i...Index is out of bounds\n",AnimationIndex);
         return 0;
     }
-    if( AnimationIndex == RenderObject->CurrentAnimationIndex && FrameIndex == RenderObject->CurrentFrameIndex) {
+    if( (AnimationIndex == RenderObject->CurrentAnimationIndex && FrameIndex == RenderObject->CurrentFrameIndex ) && !Override) {
         DPrintf("BSDRenderObjectSetAnimationPose:Pose is already set\n");
         return 0;
     }
@@ -502,12 +503,12 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
             QuaternionList[i].w = DestQuaternion[3] * 4096.f;
         }
         BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,QuaternionList,
-                                    RenderObject->CurrentVertexTable,TransformMatrix,AnimationIndex,FrameIndex);
+                                    RenderObject->CurrentVertexTable,TransformMatrix);
         free(QuaternionList);
 
     } else {
         BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].QuaternionList,
-                                    RenderObject->CurrentVertexTable,TransformMatrix,AnimationIndex,FrameIndex);
+                                    RenderObject->CurrentVertexTable,TransformMatrix);
     }
     
     RenderObject->CurrentAnimationIndex = AnimationIndex;
