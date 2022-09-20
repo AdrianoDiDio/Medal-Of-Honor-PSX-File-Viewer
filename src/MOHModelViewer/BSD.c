@@ -273,7 +273,7 @@ void BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject)
     VertexSize = Stride * 3 * RenderObject->NumFaces;
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
-    DPrintf("BSDRenderObjectGenerateVAO:Generating for %i faces Id:%u\n",RenderObject->NumFaces,RenderObject->Id);
+    DPrintf("BSDRenderObjectGenerateVAO:Generating for %i faces Id:%i\n",RenderObject->NumFaces,RenderObject->Id);
     for( i = 0; i < RenderObject->NumFaces; i++ ) {
         CurrentFace = &RenderObject->FaceList[i];
         VRAMPage = CurrentFace->TexInfo & 0x1F;
@@ -458,9 +458,14 @@ BSDAnimationFrame_t *BSDRenderObjectGetCurrentFrame(BSDRenderObject_t *RenderObj
  */
 int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex,int FrameIndex,int Override)
 {
+    BSDQuaternion_t *QuaternionList;
+    versor FromQuaternion;
+    versor ToQuaternion;
+    versor DestQuaternion;
     mat4 TransformMatrix;
     vec3 Translation;
     int NumVertices;
+    int i;
 
     if( AnimationIndex < 0 || AnimationIndex > RenderObject->NumAnimations ) {
         DPrintf("BSDRenderObjectSetAnimationPose:Failed to set pose using index %i...Index is out of bounds\n",AnimationIndex);
@@ -485,9 +490,47 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
     Translation[1] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.y / 4096;
     Translation[2] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.z / 4096;
     glm_translate_make(TransformMatrix,Translation);
-    BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,
+    //NOTE(Adriano):Interpolate only between frames of the same animation and not in-between two different one.
+    if( RenderObject->CurrentAnimationIndex == AnimationIndex && RenderObject->CurrentFrameIndex != -1) {
+        assert(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions == 
+            RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[RenderObject->CurrentFrameIndex].NumQuaternions
+        );
+        QuaternionList = malloc(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions * sizeof(BSDQuaternion_t));
+        for( i = 0; i < RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions; i++ ) {
+            FromQuaternion[0] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
+                Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].x / 4096.f;
+            FromQuaternion[1] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
+                Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].y / 4096.f;
+            FromQuaternion[2] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
+                Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].z / 4096.f;
+            FromQuaternion[3] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
+                Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].w / 4096.f;
+            ToQuaternion[0] = RenderObject->AnimationList[AnimationIndex].
+                Frame[FrameIndex].QuaternionList[i].x / 4096.f;
+            ToQuaternion[1] = RenderObject->AnimationList[AnimationIndex].
+                Frame[FrameIndex].QuaternionList[i].y / 4096.f;
+            ToQuaternion[2] = RenderObject->AnimationList[AnimationIndex].
+                Frame[FrameIndex].QuaternionList[i].z / 4096.f;
+            ToQuaternion[3] = RenderObject->AnimationList[AnimationIndex].
+                Frame[FrameIndex].QuaternionList[i].w / 4096.f;
+            glm_quat_nlerp(FromQuaternion,
+                ToQuaternion,
+                0.5f,
+                DestQuaternion
+            );
+            QuaternionList[i].x = DestQuaternion[0] * 4096.f;
+            QuaternionList[i].y = DestQuaternion[1] * 4096.f;
+            QuaternionList[i].z = DestQuaternion[2] * 4096.f;
+            QuaternionList[i].w = DestQuaternion[3] * 4096.f;
+        }
+        BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,QuaternionList,
+                                    RenderObject->CurrentVertexTable,TransformMatrix);
+        free(QuaternionList);
+    } else {
+        BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,
                                     RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].CurrentQuaternionList,
                                     RenderObject->CurrentVertexTable,TransformMatrix);
+    }
     RenderObject->CurrentAnimationIndex = AnimationIndex;
     RenderObject->CurrentFrameIndex = FrameIndex;
     
@@ -742,7 +785,7 @@ void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile,int GameEngine)
             DPrintf("BSDPatchRenderObjects:RenderObject Id %i not found\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
             continue;
         }
-        DPrintf("BSDPatchRenderObjects:Patching up RenderObject Id %u using Id %u\n",BSD->RenderObjectTable.RenderObject[i].Id,
+        DPrintf("BSDPatchRenderObjects:Patching up RenderObject Id %i using Id %i\n",BSD->RenderObjectTable.RenderObject[i].Id,
             BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId
         );
         if(CurrentRenderObject->AnimationDataOffset == -1 ) {
@@ -1561,7 +1604,7 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName,int *GameVe
             //For the moment this is bypassed and could cause the RenderObject to not be loaded due to missing offsets...
             ReferencedRenderObjectIndex = BSDGetRenderObjectIndexById(BSD,BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
         }
-        DPrintf("BSDLoadAllAnimatedRenderObjects:Loading Animated RenderObject %u\n",BSD->RenderObjectTable.RenderObject[i].Id);
+        DPrintf("BSDLoadAllAnimatedRenderObjects:Loading Animated RenderObject %i\n",BSD->RenderObjectTable.RenderObject[i].Id);
         RenderObject = BSDLoadAnimatedRenderObject(BSD->RenderObjectTable.RenderObject[i],BSD->EntryTable,
                                                    BSDFile,i,ReferencedRenderObjectIndex,LocalGameVersion);
         if( !RenderObject ) {
