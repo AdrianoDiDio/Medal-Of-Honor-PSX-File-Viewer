@@ -10,17 +10,18 @@ set(SOURCE_FILES    Camera.c GUI.c TSP.c Font.c
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../${PROJECT_NAME})   
+         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../bin/${PROJECT_NAME})   
 
-pvs_studio_add_target(TARGET ${PROJECT_NAME}.Analyze
-                      ANALYZE ${PROJECT_NAME}
-                      SUPPRESS_BASE suppress_base.json
-                      LOG FORMAT fullhtml
-                      LOG ${PROJECT_NAME}-Report
-                      ARGS -e *libs/*
-                      MODE GA:1,2
-                      )
-
+if( BUILD_ENABLE_PVS_STUDIO_ANALYZER )
+    pvs_studio_add_target(TARGET ${PROJECT_NAME}.Analyze
+                        ANALYZE ${PROJECT_NAME}
+                        SUPPRESS_BASE suppress_base.json
+                        LOG FORMAT fullhtml
+                        LOG ${PROJECT_NAME}-Report
+                        ARGS -e *libs/*
+                        MODE GA:1,2
+                        )
+endif()
                     
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)
 set_target_properties(${PROJECT_NAME} PROPERTIES RELEASE_POSTFIX -Release)

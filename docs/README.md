@@ -128,9 +128,9 @@ then type:
 
 to build it.  
 When the build is completed, the executables can be
-found inside the Build directory under a new directory
-which has the same name as the executable (E.G:Build/MOHLevelViewer,
-Build/MOHModelViewer etc...).  
+found inside the Build/bin directory under a new folder
+which has the same name as the executable (E.G:Build/bin/MOHLevelViewer,
+Build/bin/MOHModelViewer etc...).  
 The directories,created during the build process, will
 contain everything that it is required by the program
 in order to run properly.   

@@ -491,7 +491,10 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
     Translation[2] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.z / 4096;
     glm_translate_make(TransformMatrix,Translation);
     //NOTE(Adriano):Interpolate only between frames of the same animation and not in-between two different one.
-    if( RenderObject->CurrentAnimationIndex == AnimationIndex && RenderObject->CurrentFrameIndex != -1) {
+    //              Also do not interpolate if the frame is the same as the previous one.
+    if( RenderObject->CurrentAnimationIndex == AnimationIndex && RenderObject->CurrentFrameIndex != -1 && 
+        RenderObject->CurrentFrameIndex != FrameIndex
+    ) {
         assert(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions == 
             RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[RenderObject->CurrentFrameIndex].NumQuaternions
         );
