@@ -11,7 +11,7 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
 set_target_properties(${PROJECT_NAME} PROPERTIES
          RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../bin/${PROJECT_NAME})    
 
-if( BUILD_ENABLE_PVS_STUDIO_ANALYZER )
+if( ENABLE_PVS_STUDIO_ANALYZER )
     pvs_studio_add_target(TARGET ${PROJECT_NAME}.Analyze
                         ANALYZE ${PROJECT_NAME}
                         SUPPRESS_BASE suppress_base.json

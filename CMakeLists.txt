@@ -3,7 +3,7 @@ include(FetchContent)
 
 project(Medal-Of-Honor-PSX-File-Viewer)
 
-OPTION(BUILD_ENABLE_PVS_STUDIO_ANALYZER "Enable PVS studio analyzer." ON)
+OPTION(ENABLE_PVS_STUDIO_ANALYZER "Enable PVS studio analyzer." ON)
 
 # On Windows CMAKE_RUNTIME_OUTPUT_DIRECTORY is used to tell CMAKE where
 # to put DLLs.
@@ -19,7 +19,7 @@ SET(CMAKE_INSTALL_RPATH "$\{ORIGIN\}")
 set(OpenGL_GL_PREFERENCE LEGACY)
 find_package(OpenGL REQUIRED) 
 
-if( BUILD_ENABLE_PVS_STUDIO_ANALYZER )
+if( ENABLE_PVS_STUDIO_ANALYZER )
     # Make sure that PVS studio is available for every subdirectory...
     FetchContent_Declare(
         PVS_CMakeModule

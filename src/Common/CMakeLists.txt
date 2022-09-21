@@ -8,7 +8,7 @@ set(COMMON_SOURCE_FILES Common.c Config.c Video.c Sound.c Engine.c
 
 add_library(${PROJECT_NAME} STATIC ${COMMON_SOURCE_FILES})
 
-if( BUILD_ENABLE_PVS_STUDIO_ANALYZER )
+if( ENABLE_PVS_STUDIO_ANALYZER )
     pvs_studio_add_target(TARGET ${PROJECT_NAME}.Analyze
                         ANALYZE ${PROJECT_NAME}
                         SUPPRESS_BASE suppress_base.json
