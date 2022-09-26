@@ -46,4 +46,6 @@ target_link_libraries(${PROJECT_NAME} png)
 add_custom_command(TARGET ${PROJECT_NAME}
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different  ${CMAKE_BINARY_DIR}/SharedLibraries/*png* $<TARGET_FILE_DIR:${PROJECT_NAME}>/
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different  ${CMAKE_BINARY_DIR}/SharedLibraries/*z* $<TARGET_FILE_DIR:${PROJECT_NAME}>/
+
 )
