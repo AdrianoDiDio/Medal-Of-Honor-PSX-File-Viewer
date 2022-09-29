@@ -53,30 +53,30 @@ typedef struct LevelManager_s {
     int             HasToSpawnCamera;
     int             IsPathSet;
     int             GameEngine;
+    SoundSystem_t  *SoundSystem;
 } LevelManager_t;
 
 typedef struct LevelManagerDialogData_s {
     LevelManager_t *LevelManager;
     VideoSystem_t  *VideoSystem;
-    SoundSystem_t  *SoundSystem;
     GUI_t          *GUI;
     int             OutputFormat;
 } LevelManagerDialogData_t;
 
-LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem);
-int             LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
+LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem);
+int             LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
                                       int MissionNumber,int LevelNumber);
 void            LevelManagerDrawString(const LevelManager_t *LevelManager,const char *String,float x,float y,Color4f_t Color);
-void            LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,SoundSystem_t *SoundSystem,int SoundValue);
+void            LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,int SoundValue);
 int             LevelManagerIsLevelLoaded(const LevelManager_t *LevelManager);
 int             LevelManagerGetGameEngine(LevelManager_t *LevelManager);
-int             LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
+int             LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
                                          const char *Path);
 TSP_t           *LevelManagerGetTSPCompartmentByPoint(LevelManager_t *LevelManager,vec3 Point);
 void            LevelManagerUpdate(LevelManager_t *LevelManager,Camera_t *Camera);
 void            LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera);
-void            LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem);
-void            LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t  *VideoSystem,SoundSystem_t *SoundSystem,int OutputFormat);
+void            LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem);
+void            LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t  *VideoSystem,int OutputFormat);
 void            LevelManagerCleanUp(LevelManager_t *LevelManager);
 
 extern const Mission_t MOHMissionsList[];

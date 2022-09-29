@@ -59,24 +59,21 @@ typedef struct VBMusic_s {
 
 typedef struct SoundSystem_s {
     SDL_AudioDeviceID Device;
-    VBMusic_t *MusicList;
-    VBMusic_t *AmbientMusicList;
-    VBMusic_t *CurrentMusic;
-    int        IsAmbient;
 } SoundSystem_t;
 
 // typedef struct LevelManager_s LevelManager_t;
-SoundSystem_t *SoundSystemInit();
-void SoundSystemLockDevice(SoundSystem_t *SoundSystem);
-void SoundSystemUnlockDevice(SoundSystem_t *SoundSystem);
-void SoundSystemPlayMusic(SoundSystem_t *SoundSystem,int IsAmbient);
-void SoundSystemStopMusic(SoundSystem_t *SoundSystem);
-void SoundSystemPause(SoundSystem_t *SoundSystem);
-void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,const char *MissionPath,int MissionNumber,int LevelNumber,int GameEngine);
-int SoundSystemGetSoundDuration(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds);
-int SoundSystemGetCurrentSoundTime(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds);
-int SoundSystemDumpMusicToWav(SoundSystem_t *SoundSystem,const char *EngineName,const char *OutDirectory);
-void SoundSystemCleanUp(SoundSystem_t *SoundSystem);
+SoundSystem_t   *SoundSystemInit(SDL_AudioCallback Callback,void *UserData);
+void            SoundSystemLockDevice(SoundSystem_t *SoundSystem);
+void            SoundSystemUnlockDevice(SoundSystem_t *SoundSystem);
+void            SoundSystemPlay(SoundSystem_t *SoundSystem);
+void            SoundSystemPause(SoundSystem_t *SoundSystem);
+VBMusic_t       *SoundSystemLoadVBFile(const char *VBFileName);
+int             SoundSystemGetSoundDuration(VBMusic_t *Music,int *Minutes,int *Seconds);
+int             SoundSystemGetCurrentSoundTime(VBMusic_t *Music,int *Minutes,int *Seconds);
+void            SoundSystemAddMusicToList(VBMusic_t **MusicList,VBMusic_t *Music);
+void            SoundSystemDumpMusicToWav(VBMusic_t *Music,const char *EngineName,const char *OutDirectory);
+void            SoundSystemClearMusicList(VBMusic_t *MusicList);
+void            SoundSystemCleanUp(SoundSystem_t *SoundSystem);
 
 extern Config_t *SoundVolume;
 #endif//__SOUND_H_

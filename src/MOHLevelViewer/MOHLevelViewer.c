@@ -40,8 +40,7 @@ void ApplicationCheckEvents(Application_t *Application)
             GUIToggleLevelSelectWindow(Application->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
-            LevelManagerToggleFileDialog(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem,
-                                         Application->Engine->SoundSystem);
+            LevelManagerToggleFileDialog(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem);
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit(Application);
@@ -203,7 +202,7 @@ void ApplicationDraw(Application_t *Application)
     LevelManagerDraw(Application->LevelManager,Application->Camera);
     glDisable (GL_DEPTH_TEST);
     GUIDraw(Application->GUI,Application->LevelManager,Application->Camera,
-            Application->Engine->VideoSystem,Application->Engine->SoundSystem,Application->Engine->TimeInfo);
+            Application->Engine->VideoSystem,Application->Engine->TimeInfo);
     glEnable(GL_DEPTH_TEST);
 }
 void ApplicationFrame(Application_t *Application)
@@ -302,8 +301,7 @@ Application_t *ApplicationInit(int argc,char **argv)
         goto Failure;
     }
     
-    Application->LevelManager = LevelManagerInit(Application->GUI,Application->Engine->VideoSystem,
-                                                 Application->Engine->SoundSystem);
+    Application->LevelManager = LevelManagerInit(Application->GUI,Application->Engine->VideoSystem);
     
     if( !Application->LevelManager ) {
         printf("ApplicationInit:Failed to initialize LevelManager\n");
@@ -342,23 +340,19 @@ int main(int argc,char **argv)
         return -1;
     }
     StartTime = SysMilliseconds();
-    LevelManagerInitWithPath(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem,
-                             Application->Engine->SoundSystem,argv[1]);
+    LevelManagerInitWithPath(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem,argv[1]);
     for( int i = 0; i < NumMOHMissions; i++ ) {
         //NOTE(Adriano):LevelManagerInitWithPath loads the first level...make sure to skip it.
         for( int j = (MOHMissionsList[i].MissionNumber == 1 ? 1 : 0); j < MOHMissionsList[i].NumLevels; j++ ) {
             assert( LevelManagerLoadLevel(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem,
-                                          Application->Engine->SoundSystem,
                            MOHMissionsList[i].MissionNumber,MOHMissionsList[i].Levels[j].LevelNumber));
         }
     }
-    LevelManagerInitWithPath(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem,
-                             Application->Engine->SoundSystem,argv[2]);
+    LevelManagerInitWithPath(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem,argv[2]);
     for( int i = 0; i < NumMOHUMissions; i++ ) {
         //NOTE(Adriano):LevelManagerInitWithPath loads the first level...make sure to skip it.
         for( int j = (MOHUMissionsList[i].MissionNumber == 2 ? 1 : 0); j < MOHUMissionsList[i].NumLevels; j++ ) {
             assert(LevelManagerLoadLevel(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem,
-                                         Application->Engine->SoundSystem,
                            MOHUMissionsList[i].MissionNumber,MOHUMissionsList[i].Levels[j].LevelNumber) );
         }
     }

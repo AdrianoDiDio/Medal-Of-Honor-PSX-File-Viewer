@@ -115,7 +115,7 @@ void GUIToggleLevelSelectWindow(GUI_t *GUI)
     GUIUpdateWindowStack(GUI,GUI->LevelSelectWindowHandle);
 }
 
-void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem)
+void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem)
 {
     ImVec2 ZeroSize;
     SDL_version LinkedVersion;
@@ -158,7 +158,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                         IsSelected = (LevelEnableMusicTrack->IValue == i);
                         if (igSelectable_Bool(LevelMusicOptions[i], IsSelected,0,ZeroSize)) {
                             if( LevelEnableMusicTrack->IValue != i ) {
-                                LevelManagerUpdateSoundSettings(LevelManager,SoundSystem,i);
+                                LevelManagerUpdateSoundSettings(LevelManager,i);
                             }
                         }
                         if (IsSelected) {
@@ -167,14 +167,14 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                     }
                     igEndCombo();
                 }
-                if( !SoundSystem->MusicList ) {
+                if( !LevelManager->CurrentLevel->MusicList ) {
                     igText("This Level Doesn't contain any music files.");
                 } else {
                     if( LevelEnableMusicTrack->IValue ) {
-                        SoundSystemGetSoundDuration(SoundSystem,&MaxLengthMinutes,&MaxLengthSeconds);
-                        SoundSystemGetCurrentSoundTime(SoundSystem,&CurrentLengthMinutes,&CurrentLengthSeconds);
+                        SoundSystemGetSoundDuration(LevelManager->CurrentLevel->CurrentMusic,&MaxLengthMinutes,&MaxLengthSeconds);
+                        SoundSystemGetCurrentSoundTime(LevelManager->CurrentLevel->CurrentMusic,&CurrentLengthMinutes,&CurrentLengthSeconds);
                         igText("Music Track Info:");
-                        igText("Name:%s",SoundSystem->CurrentMusic->Name);
+                        igText("Name:%s",LevelManager->CurrentLevel->CurrentMusic->Name);
                         igText("%02i:%02i/%02i:%02i",CurrentLengthMinutes,CurrentLengthSeconds,MaxLengthMinutes,MaxLengthSeconds);
                         
                         if( igSliderInt("Sound Volume",&SoundVolume->IValue,0,128,"%i",0) ) {
@@ -246,16 +246,16 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                 ZeroSize.x = 0.f;
                 ZeroSize.y = 0.f;
                 if( igButton("Export to OBJ",ZeroSize) ) {
-                    LevelManagerExport(LevelManager,GUI,VideoSystem,SoundSystem,LEVEL_MANAGER_EXPORT_FORMAT_OBJ);
+                    LevelManagerExport(LevelManager,GUI,VideoSystem,LEVEL_MANAGER_EXPORT_FORMAT_OBJ);
                 }
                 igSameLine(0.f,10.f);
                 if( igButton("Export to Ply",ZeroSize) ) {
-                    LevelManagerExport(LevelManager,GUI,VideoSystem,SoundSystem,LEVEL_MANAGER_EXPORT_FORMAT_PLY);
+                    LevelManagerExport(LevelManager,GUI,VideoSystem,LEVEL_MANAGER_EXPORT_FORMAT_PLY);
                 }
                 igSeparator();
                 igText("Export current music and ambient sounds");
                 if( igButton("Export to WAV",ZeroSize) ) {
-                    LevelManagerExport(LevelManager,GUI,VideoSystem,SoundSystem,LEVEL_MANAGER_EXPORT_FORMAT_WAV);
+                    LevelManagerExport(LevelManager,GUI,VideoSystem,LEVEL_MANAGER_EXPORT_FORMAT_WAV);
                 }
             }
         }
@@ -355,8 +355,7 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
     igEnd(); 
 }
 
-void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
-                      const Mission_t *Missions,int NumMissions)
+void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem,const Mission_t *Missions,int NumMissions)
 {
     static int FailedMissionNumber = -1;
     static int FailedLevelNumber = -1;
@@ -395,8 +394,7 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *Vid
                 }
                 if( igTreeNodeEx_Str(Missions[i].Levels[j].LevelName,TreeNodeFlags) ) {
                     if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
-                        if( LevelManagerLoadLevel(LevelManager,GUI,VideoSystem,SoundSystem,
-                                              Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber) ) {
+                        if( LevelManagerLoadLevel(LevelManager,GUI,VideoSystem,Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber) ) {
                             //Close it if we selected a level and it was loaded properly.
                             GUI->LevelSelectWindowHandle = 0;
                         } else {
@@ -423,7 +421,7 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *Vid
         }
     }
 }
-void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem)
+void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem)
 {
     if( !GUI->LevelSelectWindowHandle ) {
         return;
@@ -436,9 +434,9 @@ void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager,VideoSyste
             igText(LevelManager->EngineName);
             igSeparator();
             if( LevelManagerGetGameEngine(LevelManager) == MOH_GAME_STANDARD ) {
-                GUIDrawLevelTree(GUI,LevelManager,VideoSystem,SoundSystem,MOHMissionsList,NumMOHMissions);
+                GUIDrawLevelTree(GUI,LevelManager,VideoSystem,MOHMissionsList,NumMOHMissions);
             } else {
-                GUIDrawLevelTree(GUI,LevelManager,VideoSystem,SoundSystem,MOHUMissionsList,NumMOHUMissions);
+                GUIDrawLevelTree(GUI,LevelManager,VideoSystem,MOHUMissionsList,NumMOHUMissions);
             }
         }
     }
@@ -468,7 +466,7 @@ void GUISetErrorMessage(GUI_t *GUI,const char *Message)
     GUIPushWindow(GUI);
 }
 
-void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,ComTimeInfo_t *TimeInfo)
+void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo)
 {
     ImVec2 ButtonSize;
     int PreviousHandleValue;
@@ -497,14 +495,14 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSyste
             igEndPopup();
         }
     }
-    GUIDrawDebugWindow(GUI,LevelManager,Camera,VideoSystem,SoundSystem);
+    GUIDrawDebugWindow(GUI,LevelManager,Camera,VideoSystem);
     
     PreviousHandleValue = GUI->VideoSettingsWindowHandle;
     GUIDrawVideoSettingsWindow(&GUI->VideoSettingsWindowHandle,VideoSystem);
     if( GUI->VideoSettingsWindowHandle != PreviousHandleValue ) {
         GUIUpdateWindowStack(GUI,GUI->VideoSettingsWindowHandle);
     }
-    GUIDrawLevelSelectWindow(GUI,LevelManager,VideoSystem,SoundSystem);
+    GUIDrawLevelSelectWindow(GUI,LevelManager,VideoSystem);
 //     igShowDemoWindow(NULL);
     GUIEndFrame();
 }

@@ -30,28 +30,35 @@
 #include "Font.h"
 
 typedef struct Level_s {
-    char    BasePath[256];
-    char    MissionPath[256];
-    char    EngineName[256];
-    int     MissionNumber;
-    int     LevelNumber;
-    BSD_t  *BSD;
-    TSP_t  *TSPList;
-    TIMImage_t *ImageList;
-    VRAM_t *VRAM;
-    Font_t *Font;
+    char        BasePath[256];
+    char        MissionPath[256];
+    char        EngineName[256];
+    int         MissionNumber;
+    int         LevelNumber;
+    BSD_t       *BSD;
+    TSP_t       *TSPList;
+    TIMImage_t  *ImageList;
+    VRAM_t      *VRAM;
+    Font_t      *Font;
+    
+    VBMusic_t   *MusicList;
+    VBMusic_t   *AmbientMusicList;
+    VBMusic_t   *CurrentMusic;
+    int         IsAmbient;
     // At any time there can only be 4 tsp to be rendered.
-    int     TSPNumberRenderList[4];
+    int         TSPNumberRenderList[4];
 } Level_t;
 
 Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,const char *BasePath,int MissionNumber,int LevelNumber,
                    int *GameEngine);
+void    LevelLoadDefaultSettings();
 void    LevelDraw(Level_t *Level,Camera_t *Camera,mat4 ProjectionMatrix);
 void    LevelGetPlayerSpawn(Level_t *Level,int SpawnIndex,vec3 Position,vec3 Rotation);
 void    LevelUpdate(Level_t *Level,Camera_t *Camera);
 TSP_t   *LevelGetTSPCompartmentByPoint(Level_t *Level,vec3 Point);
 int     LevelIsLoaded(Level_t *Level);
 void    LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int GameEngine,int SoundValue);
+int     LevelDumpMusicToWav(Level_t *Level,const char *EngineName,const char *OutDirectory);
 void    LevelUnload(Level_t *Level);
 void    LevelCleanUp(Level_t *Level);
 

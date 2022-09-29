@@ -446,6 +446,7 @@ void LevelManagerCloseDialog(GUI_t *GUI,FileDialog_t *FileDialog)
 
 void LevelManagerCleanUp(LevelManager_t *LevelManager)
 {
+    SoundSystemPause(LevelManager->SoundSystem);
     if( LevelManager->CurrentLevel != NULL ) {
         LevelCleanUp(LevelManager->CurrentLevel);
     }
@@ -459,7 +460,65 @@ void LevelManagerCleanUp(LevelManager_t *LevelManager)
     if( FileDialogIsOpen(LevelManager->FileDialog) ) {
         LevelManagerFreeDialogData(LevelManager->FileDialog);
     }
+    if( LevelManager->SoundSystem ) {
+        SoundSystemCleanUp(LevelManager->SoundSystem);
+    }
     free(LevelManager);
+}
+
+void LevelManagerOnAudioUpdate(void *UserData,Byte *Stream,int Length)
+{
+    LevelManager_t *LevelManager;
+    VBMusic_t *CurrentMusic;
+    VBMusic_t **CurrentMusicAddress;
+    int ChunkLength;
+    
+    LevelManager = (LevelManager_t *) UserData;
+    CurrentMusic = LevelManager->CurrentLevel->CurrentMusic;
+    CurrentMusicAddress = &LevelManager->CurrentLevel->CurrentMusic;
+
+    if( CurrentMusic->DataPointer >= CurrentMusic->Size ) {
+        CurrentMusic->DataPointer = 0;
+        if( CurrentMusic->Next ) {
+            *CurrentMusicAddress = (*CurrentMusicAddress)->Next;
+        } else {
+            if( LevelManager->CurrentLevel->IsAmbient ) {
+                *CurrentMusicAddress = LevelManager->CurrentLevel->AmbientMusicList;
+            } else {
+                *CurrentMusicAddress = LevelManager->CurrentLevel->MusicList;
+            }
+        }
+    }
+    for (int i = 0; i < Length; i++) {
+        Stream[i] = 0;
+    }
+    ChunkLength = (CurrentMusic->Size - CurrentMusic->DataPointer);
+    if( ChunkLength > Length ) {
+        ChunkLength = Length;
+    }
+    if( SoundVolume->IValue < 0 || SoundVolume->IValue > 128 ) {
+        ConfigSetNumber("SoundVolume",128);
+    }
+    SDL_MixAudioFormat(Stream, &CurrentMusic->Data[CurrentMusic->DataPointer], AUDIO_F32, ChunkLength, SoundVolume->IValue);
+    CurrentMusic->DataPointer += ChunkLength;
+}
+void LevelManagerSwitchLevel(LevelManager_t *LevelManager,Level_t *NewLevel)
+{
+    if( !LevelManager ) {
+        return;
+    }
+    if( !NewLevel ) {
+        return;
+    }
+    //NOTE(Adriano):Always pause the music, but resume only
+    //              if needed.
+    SoundSystemPause(LevelManager->SoundSystem);
+    LevelCleanUp(LevelManager->CurrentLevel);
+    LevelManager->CurrentLevel = NewLevel;
+    //NOTE(Adriano):Make sure the music is enabled and the new level has a valid music file.
+    if( LevelEnableMusicTrack->IValue && NewLevel->MusicList) {
+        SoundSystemPlay(LevelManager->SoundSystem);
+    }
 }
 void LevelManagerDrawString(const LevelManager_t *LevelManager,const char *String,float x,float y,Color4f_t Color)
 {
@@ -473,9 +532,13 @@ void LevelManagerDrawString(const LevelManager_t *LevelManager,const char *Strin
     }
     FontDrawString(LevelManager->CurrentLevel->Font,LevelManager->CurrentLevel->VRAM,String,x,y,Color);
 }
-void LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,SoundSystem_t *SoundSystem,int SoundValue)
+void LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,int SoundValue)
 {
-    LevelSetMusicTrackSettings(LevelManager->CurrentLevel,SoundSystem,LevelManager->GameEngine,SoundValue);
+    SoundSystemPause(LevelManager->SoundSystem);
+    LevelSetMusicTrackSettings(LevelManager->CurrentLevel,LevelManager->SoundSystem,LevelManager->GameEngine,SoundValue);
+    if( LevelEnableMusicTrack->IValue && LevelManager->CurrentLevel->MusicList ) {
+        SoundSystemPlay(LevelManager->SoundSystem);
+    }
 }
 void LevelManagerExportToObj(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *Directory)
 {
@@ -520,8 +583,7 @@ void LevelManagerExportToObj(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
     free(ObjectFile);
     fclose(OutFile);
 }
-void LevelManagerExportMusicToWav(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
-                                  const char *Directory)
+void LevelManagerExportMusicToWav(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *Directory)
 {
     char *EngineName;
     
@@ -537,7 +599,7 @@ void LevelManagerExportMusicToWav(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
     asprintf(&EngineName,"%s",(LevelManager->GameEngine == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
     
     ProgressBarSetDialogTitle(GUI->ProgressBar,"Exporting to Wav...");
-    SoundSystemDumpMusicToWav(SoundSystem,EngineName,Directory);
+    LevelDumpMusicToWav(LevelManager->CurrentLevel,EngineName,Directory);
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Done.");
     free(EngineName);
 }
@@ -619,7 +681,7 @@ void LevelManagerOnExportDirSelected(FileDialog_t *FileDialog,const char *Direct
             LevelManagerExportToPly(LevelManager,Exporter->GUI,Exporter->VideoSystem,Directory);
             break;
         case LEVEL_MANAGER_EXPORT_FORMAT_WAV:
-            LevelManagerExportMusicToWav(LevelManager,Exporter->GUI,Exporter->VideoSystem,Exporter->SoundSystem,Directory);
+            LevelManagerExportMusicToWav(LevelManager,Exporter->GUI,Exporter->VideoSystem,Directory);
             break;
         default:
             DPrintf("LevelManagerOnExportDirSelected:Invalid output format\n");
@@ -642,12 +704,12 @@ void LevelManagerOnExportDirCancelled(FileDialog_t *FileDialog)
  * Returns 0 if the config value is not valid 1 otherwise.
  * Note that the config key is cleared if it was not valid.
  */
-int LevelManagerLoadFromConfig(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem)
+int LevelManagerLoadFromConfig(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
     if( !LevelManagerBasePath->Value[0] ) {
         return 0;
     }
-    if( !LevelManagerInitWithPath(LevelManager,GUI,VideoSystem,SoundSystem,LevelManagerBasePath->Value) ) {
+    if( !LevelManagerInitWithPath(LevelManager,GUI,VideoSystem,LevelManagerBasePath->Value) ) {
         ConfigSet("GameBasePath","");
         return 0;
     }
@@ -659,8 +721,7 @@ void LevelManagerOnDirSelected(FileDialog_t *FileDialog,const char *Path,const c
     int LoadStatus;
     
     LevelManagerDialogData = (LevelManagerDialogData_t *) UserData;
-    LoadStatus = LevelManagerInitWithPath(LevelManagerDialogData->LevelManager,LevelManagerDialogData->GUI,LevelManagerDialogData->VideoSystem,
-                                          LevelManagerDialogData->SoundSystem,Path);
+    LoadStatus = LevelManagerInitWithPath(LevelManagerDialogData->LevelManager,LevelManagerDialogData->GUI,LevelManagerDialogData->VideoSystem,Path);
 
     if( !LoadStatus ) {
         GUISetErrorMessage(LevelManagerDialogData->GUI,"Selected path doesn't seems to contain any game file...\n"
@@ -680,7 +741,7 @@ void LevelManagerOnDirSelectionCancelled(FileDialog_t *FileDialog)
     }
 }
 
-void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,int OutputFormat)
+void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,int OutputFormat)
 {
     LevelManagerDialogData_t *Exporter;
     
@@ -699,8 +760,7 @@ void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t *V
     }
     Exporter->LevelManager = LevelManager;
     Exporter->GUI = GUI;
-    Exporter->VideoSystem = VideoSystem;
-    Exporter->SoundSystem = SoundSystem;
+    Exporter->VideoSystem = VideoSystem;;
     Exporter->OutputFormat = OutputFormat;
 
     FileDialogSetTitle(LevelManager->ExportFileDialog,"Export");
@@ -758,7 +818,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera)
     LevelDraw(LevelManager->CurrentLevel,Camera,ProjectionMatrix);
 }
 
-int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,const char *Path)
+int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *Path)
 {
     Level_t *Level;
     int Loaded;
@@ -775,22 +835,20 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
     }
     ProgressBarBegin(GUI->ProgressBar,"Loading Mission 1 Level 1");
     Loaded = 0;
+
     for( int i = 1; i <= 2; i++ ) {
         asprintf(&Buffer,"Loading Mission %i Level 1",i);
         ProgressBarSetDialogTitle(GUI->ProgressBar,Buffer);
-        Level = LevelInit(GUI,VideoSystem,SoundSystem,Path,i,1,&GameEngine);
+        Level = LevelInit(GUI,VideoSystem,LevelManager->SoundSystem,Path,i,1,&GameEngine);
         free(Buffer);
         if( Level ) {
             if( LevelManager->BasePath ) {
                 free(LevelManager->BasePath);
             }
-            if( LevelManagerIsLevelLoaded(LevelManager) ) {
-                LevelCleanUp(LevelManager->CurrentLevel);
-            }
+            LevelManagerSwitchLevel(LevelManager,Level);
             Loaded = 1;
             LevelManager->IsPathSet = Loaded;
             LevelManager->BasePath = StringCopy(Path);
-            LevelManager->CurrentLevel = Level;
             LevelManager->GameEngine = GameEngine;
             sprintf(LevelManager->EngineName,"%s",GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
             LevelManager->HasToSpawnCamera = 1;
@@ -800,8 +858,7 @@ int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem
     ProgressBarEnd(GUI->ProgressBar,VideoSystem);
     return Loaded;
 }
-int LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
-                           int MissionNumber,int LevelNumber)
+int LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,int MissionNumber,int LevelNumber)
 {
     Level_t *Level;
     char *Buffer;
@@ -818,21 +875,20 @@ int LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t 
     }
     asprintf(&Buffer,"Loading Mission %i Level %i...",MissionNumber,LevelNumber);
     ProgressBarBegin(GUI->ProgressBar,Buffer);
-    Level = LevelInit(GUI,VideoSystem,SoundSystem,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
+    Level = LevelInit(GUI,VideoSystem,LevelManager->SoundSystem,LevelManager->BasePath,MissionNumber,LevelNumber,NULL);
     ProgressBarEnd(GUI->ProgressBar,VideoSystem);
     if( !Level ) {
         printf("LevelManagerLoadLevel:Couldn't load mission %i level %i...\n",MissionNumber,LevelNumber);
         free(Buffer);
         return 0;
     }
-    LevelCleanUp(LevelManager->CurrentLevel);
-    LevelManager->CurrentLevel = Level;
+    LevelManagerSwitchLevel(LevelManager,Level);
     LevelManager->HasToSpawnCamera = 1;
     free(Buffer);
     return 1;
 }
 
-void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem)
+void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
     LevelManagerDialogData_t *DialogData;
     
@@ -849,13 +905,12 @@ void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
         DialogData->LevelManager = LevelManager;
         DialogData->GUI = GUI;
         DialogData->VideoSystem = VideoSystem;
-        DialogData->SoundSystem = SoundSystem;
         FileDialogOpenWithUserData(LevelManager->FileDialog,DialogData);
         GUIPushWindow(GUI);
     }
 }
 
-LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem)
+LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
     LevelManager_t *LevelManager;
 
@@ -865,6 +920,14 @@ LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSyst
         printf("LevelManagerInit:Failed to allocate memory for struct\n");
         return NULL;
     }
+    LevelManager->SoundSystem = NULL;
+    LevelManager->SoundSystem = SoundSystemInit(LevelManagerOnAudioUpdate,LevelManager);
+    if( !LevelManager->SoundSystem ) {
+        DPrintf("LevelManagerInit:Couldn't Initialize SoundSystem\n");
+        free(LevelManager);
+        return NULL;
+    }
+    LevelLoadDefaultSettings();
     LevelManager->CurrentLevel = NULL;
     LevelManager->HasToSpawnCamera = 0;
     LevelManager->FileDialog = FileDialogRegister("Select Directory",NULL,
@@ -878,8 +941,8 @@ LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSyst
     
     LevelManagerBasePath = ConfigGet("GameBasePath");
 
-    if( !LevelManagerLoadFromConfig(LevelManager,GUI,VideoSystem,SoundSystem) ) {
-        LevelManagerToggleFileDialog(LevelManager,GUI,VideoSystem,SoundSystem);
+    if( !LevelManagerLoadFromConfig(LevelManager,GUI,VideoSystem) ) {
+        LevelManagerToggleFileDialog(LevelManager,GUI,VideoSystem);
     }
     return LevelManager;
 }

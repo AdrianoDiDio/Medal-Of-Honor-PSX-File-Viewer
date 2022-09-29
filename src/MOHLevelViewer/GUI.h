@@ -49,7 +49,6 @@ void            GUIToggleVideoSettingsWindow(GUI_t *GUI);
 void            GUIToggleLevelSelectWindow(GUI_t *GUI);
 void            GUISetErrorMessage(GUI_t *GUI,const char *Message);
 int             GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
-void            GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,
-                        ComTimeInfo_t *TimeInfo);
+void            GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo);
 void            GUIFree(GUI_t *GUI);
 #endif//__GUI_H_

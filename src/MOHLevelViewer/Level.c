@@ -68,6 +68,10 @@ void LevelUnload(Level_t *Level)
     if( Level->Font ) {
         FontFree(Level->Font);
     }
+    
+    SoundSystemClearMusicList(Level->MusicList);
+    SoundSystemClearMusicList(Level->AmbientMusicList);
+
     Level->MissionNumber = 0;
     Level->LevelNumber = 0;
     Level->BSD = NULL;
@@ -75,6 +79,9 @@ void LevelUnload(Level_t *Level)
     Level->ImageList = NULL;
     Level->VRAM = NULL;
     Level->Font = NULL;
+    Level->MusicList = NULL;
+    Level->AmbientMusicList = NULL;
+    Level->IsAmbient = 0;
 }
 void LevelCleanUp(Level_t *Level)
 {
@@ -100,6 +107,39 @@ TSP_t *LevelGetTSPCompartmentByPoint(Level_t *Level,vec3 Point)
     }
     return NULL;
 }
+int LevelDumpMusicToWav(Level_t *Level,const char *EngineName,const char *OutDirectory)
+{
+    VBMusic_t *Iterator;
+    if( !Level ) {
+        return 0;
+    }
+    if( !Level->MusicList ) {
+        return 0;
+    }
+    
+    for( Iterator = Level->MusicList; Iterator; Iterator = Iterator->Next ) {
+        SoundSystemDumpMusicToWav(Iterator,EngineName,OutDirectory);
+    }
+    for( Iterator = Level->AmbientMusicList; Iterator; Iterator = Iterator->Next ) {
+        SoundSystemDumpMusicToWav(Iterator,EngineName,OutDirectory);
+    }
+    return 1;
+}
+void LevelStopMusic(Level_t *Level,SoundSystem_t *SoundSystem)
+{
+    SoundSystemPause(SoundSystem);
+    Level->CurrentMusic = NULL;
+    Level->IsAmbient = 0;
+}
+void LevelSetCurrentMusic(Level_t *Level,int IsAmbient)
+{
+    if( !Level->MusicList ) {
+        return;
+    }
+    Level->CurrentMusic = IsAmbient ? Level->AmbientMusicList : Level->MusicList;
+    Level->IsAmbient = IsAmbient;
+
+}
 void LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int GameEngine,int SoundValue)
 {
     int IsAmbient;
@@ -107,10 +147,10 @@ void LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int Ga
         SoundValue = 1;
     }
     if( !SoundValue ) {
-        SoundSystemStopMusic(SoundSystem);
+        LevelStopMusic(Level,SoundSystem);
     } else {
         IsAmbient = (SoundValue == 2) ? 1 : 0;
-        SoundSystemPlayMusic(SoundSystem,IsAmbient);
+        LevelSetCurrentMusic(Level,IsAmbient);
     }
     ConfigSetNumber("LevelEnableMusicTrack",SoundValue);
 }
@@ -150,7 +190,7 @@ void LevelGetPlayerSpawn(Level_t *Level,int SpawnIndex,vec3 Position,vec3 Rotati
 {
     BSDGetPlayerSpawn(Level->BSD,SpawnIndex,Position,Rotation);
 }
-void LevelLoadSettings()
+void LevelLoadDefaultSettings()
 {
     LevelEnableWireFrameMode = ConfigGet("LevelEnableWireFrameMode");
     LevelDrawCollisionData = ConfigGet("LevelDrawCollisionData");
@@ -168,6 +208,76 @@ void LevelLoadSettings()
     LevelEnableAnimatedSurfaces = ConfigGet("LevelEnableAnimatedSurfaces");
     LevelEnableMusicTrack = ConfigGet("LevelEnableMusicTrack");
 }
+
+void LevelLoadMusic(Level_t *Level,SoundSystem_t *SoundSystem,int MissionNumber,int LevelNumber,int GameEngine)
+{
+    VBMusic_t *Music;
+    char *Buffer;
+    int NumLoadedVB;
+    
+    SoundSystemClearMusicList(Level->MusicList);
+    SoundSystemClearMusicList(Level->AmbientMusicList);
+    Level->MusicList = NULL;
+    Level->AmbientMusicList = NULL;
+    Level->CurrentMusic = NULL;
+    Level->IsAmbient = 0;
+    NumLoadedVB = 1;
+    
+    if( GameEngine == MOH_GAME_STANDARD ) {
+        asprintf(&Buffer,"%s%cM%i_%i.VB",Level->MissionPath,PATH_SEPARATOR,MissionNumber,LevelNumber);
+        Music = SoundSystemLoadVBFile(Buffer);
+        if( !Music ) {
+            DPrintf("SoundSystemLoadLevelMusic:Failed to open %s\n",Buffer);
+            free(Buffer);
+            return;
+        }
+        SoundSystemAddMusicToList(&Level->MusicList,Music);
+        free(Buffer);
+        asprintf(&Buffer,"%s%cM%i_%iA.VB",Level->MissionPath,PATH_SEPARATOR,MissionNumber,LevelNumber);
+        Music = SoundSystemLoadVBFile(Buffer);
+        if( !Music ) {
+            DPrintf("SoundSystemLoadLevelMusic:Failed to open %s\n",Buffer);
+            free(Buffer);
+            return;
+        }
+        SoundSystemAddMusicToList(&Level->AmbientMusicList,Music);
+        NumLoadedVB++;
+        free(Buffer);
+    } else {
+        /*
+         * NOTE(Adriano):
+         * MOH:Underground uses multiple track files per level that are swapped dynamically based on the 
+         * collision between the camera and a specific node (like the TSP trigger).
+         * What we do here is just append all the available VB files into a circular list that gets played
+         * in a loop inside the audio callback.
+         * Since we don't know how many VB files are required per level, we just try to load them in a loop that
+         * stops only when the file cannot be opened (meaning that we have loaded all the available files).
+         */
+        while( 1 ) {
+
+            asprintf(&Buffer,"%s%cM%i_%i_%i.VB",Level->MissionPath,PATH_SEPARATOR,MissionNumber,LevelNumber,NumLoadedVB);
+            Music = SoundSystemLoadVBFile(Buffer);
+            if( !Music ) {
+                free(Buffer);
+                break;
+            }
+            SoundSystemAddMusicToList(&Level->MusicList,Music);
+            free(Buffer);
+            asprintf(&Buffer,"%s%cM%i_%i_%iA.VB",Level->MissionPath,PATH_SEPARATOR,MissionNumber,LevelNumber,NumLoadedVB);
+            Music = SoundSystemLoadVBFile(Buffer);
+            if( !Music ) {
+                free(Buffer);
+                break;
+            }
+            SoundSystemAddMusicToList(&Level->AmbientMusicList,Music);
+            NumLoadedVB++;
+            free(Buffer);
+        }
+        DPrintf("Loaded %i files\n",NumLoadedVB);
+    }
+    return;
+}
+
 Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSystem,const char *BasePath,int MissionNumber,int LevelNumber,
                int *GameEngine)
 {
@@ -198,9 +308,11 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
     Level->ImageList = NULL;
     Level->MissionNumber = MissionNumber;
     Level->LevelNumber = LevelNumber;
-        
-    LevelLoadSettings();
-
+    Level->MusicList = NULL;
+    Level->AmbientMusicList = NULL;
+    Level->CurrentMusic = NULL;
+    Level->IsAmbient = 0;
+    
     snprintf(Level->MissionPath,sizeof(Level->MissionPath),"%s%cDATA%cMSN%i%cLVL%i",BasePath,PATH_SEPARATOR,PATH_SEPARATOR,
              Level->MissionNumber,PATH_SEPARATOR,Level->LevelNumber);
     DPrintf("LevelInit:Working directory:%s\n",BasePath);
@@ -273,10 +385,10 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,Increment,"Fixing Objects Position");
     BSDFixRenderObjectPosition(Level);
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,Increment,"Loading Music");
-    SoundSystemLoadLevelMusic(SoundSystem,Level->MissionPath,MissionNumber,LevelNumber,LocalGameEngine);
+    LevelLoadMusic(Level,SoundSystem,MissionNumber,LevelNumber,LocalGameEngine);
     if( LevelEnableMusicTrack->IValue ) {
         PlayAmbientMusic = (LevelEnableMusicTrack->IValue == 2) ? 1 : 0;
-        SoundSystemPlayMusic(SoundSystem,PlayAmbientMusic);
+        LevelSetCurrentMusic(Level,PlayAmbientMusic);
     }
     DPrintf("LevelInit:Allocated level struct\n");
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Ready");

@@ -38,9 +38,6 @@ void EngineShutDown(Engine_t *Engine)
     if( Engine->VideoSystem ) {
         VideoSystemShutdown(Engine->VideoSystem);
     }
-    if( Engine->SoundSystem ) {
-        SoundSystemCleanUp(Engine->SoundSystem);
-    }
     EngineQuitSDL();
     free(Engine);
 }
@@ -113,7 +110,6 @@ Engine_t *EngineInit()
     
     Engine->TimeInfo = NULL;
     Engine->VideoSystem = NULL;
-    Engine->SoundSystem = NULL;
 
     if( !EngineInitSDL() ) {
         printf("EngineInit:Failed to initialize SDL subsystems.\n");
@@ -124,13 +120,6 @@ Engine_t *EngineInit()
     
     if( !Engine->VideoSystem ) {
         printf("EngineInit:Failed to Initialize Video system...\n");
-        goto Failure;
-    }
-
-    Engine->SoundSystem = SoundSystemInit();
-    
-    if( !Engine->SoundSystem ) {
-        printf("EngineInit:Failed to initialize Audio system\n");
         goto Failure;
     }
     

@@ -50,46 +50,7 @@ void SoundSystemClearMusicList(VBMusic_t *MusicList)
 void SoundSystemCleanUp(SoundSystem_t *SoundSystem)
 {
     SDL_CloseAudioDevice(SoundSystem->Device);
-    SoundSystemClearMusicList(SoundSystem->MusicList);
-    SoundSystemClearMusicList(SoundSystem->AmbientMusicList);
     free(SoundSystem);
-}
-void SoundSystemOnAudioUpdate(void *UserData,Byte *Stream,int Length)
-{
-    SoundSystem_t *SoundSystem;
-    VBMusic_t *CurrentMusic;
-    VBMusic_t **CurrentMusicAddress;
-    int ChunkLength;
-    
-    SoundSystem = (SoundSystem_t *) UserData;
-    CurrentMusic = SoundSystem->CurrentMusic;
-    CurrentMusicAddress = &SoundSystem->CurrentMusic;
-
-    if( CurrentMusic->DataPointer >= CurrentMusic->Size ) {
-        CurrentMusic->DataPointer = 0;
-        if( CurrentMusic->Next ) {
-            *CurrentMusicAddress = (*CurrentMusicAddress)->Next;
-        } else {
-            if( SoundSystem->IsAmbient ) {
-                *CurrentMusicAddress = SoundSystem->AmbientMusicList;
-            } else {
-                *CurrentMusicAddress = SoundSystem->MusicList;
-            }
-        }
-    }
-    for (int i = 0; i < Length; i++) {
-        Stream[i] = 0;
-    }
-
-    ChunkLength = (CurrentMusic->Size - CurrentMusic->DataPointer);
-    if( ChunkLength > Length ) {
-        ChunkLength = Length;
-    }
-    if( SoundVolume->IValue < 0 || SoundVolume->IValue > 128 ) {
-        ConfigSetNumber("SoundVolume",128);
-    }
-    SDL_MixAudioFormat(Stream, &CurrentMusic->Data[CurrentMusic->DataPointer], AUDIO_F32, ChunkLength, SoundVolume->IValue);
-    CurrentMusic->DataPointer += ChunkLength;
 }
 
 void SoundSystemPause(SoundSystem_t *SoundSystem)
@@ -99,22 +60,6 @@ void SoundSystemPause(SoundSystem_t *SoundSystem)
 void SoundSystemPlay(SoundSystem_t *SoundSystem)
 {
     SDL_PauseAudioDevice(SoundSystem->Device, 0);
-}
-void SoundSystemPlayMusic(SoundSystem_t *SoundSystem,int IsAmbient)
-{
-    if( !SoundSystem->MusicList ) {
-        return;
-    }
-    SoundSystemPause(SoundSystem);
-    SoundSystem->CurrentMusic = IsAmbient ? SoundSystem->AmbientMusicList : SoundSystem->MusicList;
-    SoundSystem->IsAmbient = IsAmbient;
-    SoundSystemPlay(SoundSystem);
-}
-void SoundSystemStopMusic(SoundSystem_t *SoundSystem)
-{
-    SoundSystemPause(SoundSystem);
-    SoundSystem->CurrentMusic = NULL;
-    SoundSystem->IsAmbient = 0;
 }
 void SoundSystemLockDevice(SoundSystem_t *SoundSystem)
 {
@@ -145,22 +90,22 @@ int SoundSystemCalculateSoundDuration(int Size,int Frequency,int NumChannels,int
 {
     return Size / SoundSystemGetByteRate(Frequency,NumChannels,BitDepth);
 }
-int SoundSystemGetSoundDuration(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds)
+int SoundSystemGetSoundDuration(VBMusic_t *Music,int *Minutes,int *Seconds)
 {
-    if( !SoundSystem->CurrentMusic ) {
+    if( !Music ) {
         return 0;
     }
-    *Minutes = SoundSystem->CurrentMusic->Duration / 60;
-    *Seconds = SoundSystem->CurrentMusic->Duration % 60;
-    return SoundSystem->CurrentMusic->Duration;
+    *Minutes = Music->Duration / 60;
+    *Seconds = Music->Duration % 60;
+    return Music->Duration;
 }
-int SoundSystemGetCurrentSoundTime(SoundSystem_t *SoundSystem,int *Minutes,int *Seconds)
+int SoundSystemGetCurrentSoundTime(VBMusic_t *Music,int *Minutes,int *Seconds)
 {
     int CurrentLength;
-    if( !SoundSystem->CurrentMusic ) {
+    if( !Music ) {
         return 0;
     }
-    CurrentLength = SoundSystemCalculateSoundDuration(SoundSystem->CurrentMusic->DataPointer,SOUND_SYSTEM_FREQUENCY,SOUND_SYSTEM_NUM_CHANNELS,32);
+    CurrentLength = SoundSystemCalculateSoundDuration(Music->DataPointer,SOUND_SYSTEM_FREQUENCY,SOUND_SYSTEM_NUM_CHANNELS,32);
     *Minutes = CurrentLength / 60;
     *Seconds = CurrentLength % 60;
     return CurrentLength;
@@ -245,7 +190,7 @@ float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
     }
     return Result;
 }
-void SoundSystemDumpMusic(VBMusic_t *Music,const char *EngineName,const char *OutDirectory)
+void SoundSystemDumpMusicToWav(VBMusic_t *Music,const char *EngineName,const char *OutDirectory)
 {
     WAVHeader_t WAVHeader;
     FILE *WAVFile;
@@ -253,7 +198,7 @@ void SoundSystemDumpMusic(VBMusic_t *Music,const char *EngineName,const char *Ou
     char *WAVFileName;
     
     if( !Music ) {
-        DPrintf("SoundSystemDumpMusic:Invalid Music data\n");
+        DPrintf("SoundSystemDumpMusicToWav:Invalid Music data\n");
         return;
     }
     DPrintf("Switching %s\n",Music->Name);
@@ -300,22 +245,6 @@ void SoundSystemDumpMusic(VBMusic_t *Music,const char *EngineName,const char *Ou
     free(VBFileName);
     free(WAVFileName);
     fclose(WAVFile);
-}
-int SoundSystemDumpMusicToWav(SoundSystem_t *SoundSystem,const char *EngineName,const char *OutDirectory)
-{
-    VBMusic_t *Iterator;
-    if( !SoundSystem->MusicList ) {
-        return 0;
-    }
-    
-    for( Iterator = SoundSystem->MusicList; Iterator; Iterator = Iterator->Next ) {
-        SoundSystemDumpMusic(Iterator,EngineName,OutDirectory);
-    }
-    for( Iterator = SoundSystem->AmbientMusicList; Iterator; Iterator = Iterator->Next ) {
-        SoundSystemDumpMusic(Iterator,EngineName,OutDirectory);
-    }
-    return 1;
-    
 }
 /*
  * NOTE(Adriano):
@@ -402,76 +331,8 @@ void SoundSystemAddMusicToList(VBMusic_t **MusicList,VBMusic_t *Music)
         LastNode->Next = Music;
     }
 }
-void SoundSystemLoadLevelMusic(SoundSystem_t *SoundSystem,const char *MissionPath,int MissionNumber,int LevelNumber,int GameEngine)
-{
-    VBMusic_t *Music;
-    char *Buffer;
-    int NumLoadedVB;
-    
-    SoundSystemPause(SoundSystem);
-    SoundSystemClearMusicList(SoundSystem->MusicList);
-    SoundSystemClearMusicList(SoundSystem->AmbientMusicList);
-    SoundSystem->MusicList = NULL;
-    SoundSystem->AmbientMusicList = NULL;
-    SoundSystem->CurrentMusic = NULL;
-    SoundSystem->IsAmbient = 0;
-    NumLoadedVB = 1;
-    
-    if( GameEngine == MOH_GAME_STANDARD ) {
-        asprintf(&Buffer,"%s%cM%i_%i.VB",MissionPath,PATH_SEPARATOR,MissionNumber,LevelNumber);
-        Music = SoundSystemLoadVBFile(Buffer);
-        if( !Music ) {
-            DPrintf("SoundSystemLoadLevelMusic:Failed to open %s\n",Buffer);
-            free(Buffer);
-            return;
-        }
-        SoundSystemAddMusicToList(&SoundSystem->MusicList,Music);
-        free(Buffer);
-        asprintf(&Buffer,"%s%cM%i_%iA.VB",MissionPath,PATH_SEPARATOR,MissionNumber,LevelNumber);
-        Music = SoundSystemLoadVBFile(Buffer);
-        if( !Music ) {
-            DPrintf("SoundSystemLoadLevelMusic:Failed to open %s\n",Buffer);
-            free(Buffer);
-            return;
-        }
-        SoundSystemAddMusicToList(&SoundSystem->AmbientMusicList,Music);
-        NumLoadedVB++;
-        free(Buffer);
-    } else {
-        /*
-         * NOTE(Adriano):
-         * MOH:Underground uses multiple track files per level that are swapped dynamically based on the 
-         * collision between the camera and a specific node (like the TSP trigger).
-         * What we do here is just append all the available VB files into a circular list that gets played
-         * in a loop inside the audio callback.
-         * Since we don't know how many VB files are required per level, we just try to load them in a loop that
-         * stops only when the file cannot be opened (meaning that we have loaded all the available files).
-         */
-        while( 1 ) {
 
-            asprintf(&Buffer,"%s%cM%i_%i_%i.VB",MissionPath,PATH_SEPARATOR,MissionNumber,LevelNumber,NumLoadedVB);
-            Music = SoundSystemLoadVBFile(Buffer);
-            if( !Music ) {
-                free(Buffer);
-                break;
-            }
-            SoundSystemAddMusicToList(&SoundSystem->MusicList,Music);
-            free(Buffer);
-            asprintf(&Buffer,"%s%cM%i_%i_%iA.VB",MissionPath,PATH_SEPARATOR,MissionNumber,LevelNumber,NumLoadedVB);
-            Music = SoundSystemLoadVBFile(Buffer);
-            if( !Music ) {
-                free(Buffer);
-                break;
-            }
-            SoundSystemAddMusicToList(&SoundSystem->AmbientMusicList,Music);
-            NumLoadedVB++;
-            free(Buffer);
-        }
-        DPrintf("Loaded %i files\n",NumLoadedVB);
-    }
-    return;
-}
-SoundSystem_t *SoundSystemInit()
+SoundSystem_t *SoundSystemInit(SDL_AudioCallback Callback,void *UserData)
 {
     SoundSystem_t *SoundSystem;
     SDL_AudioSpec DesiredAudioSpec;
@@ -484,10 +345,6 @@ SoundSystem_t *SoundSystemInit()
         return NULL;
     }
 
-    SoundSystem->MusicList = NULL;
-    SoundSystem->AmbientMusicList = NULL;
-    SoundSystem->CurrentMusic = NULL;
-    
     SoundVolume = ConfigGet("SoundVolume");
     
     SDL_zero(DesiredAudioSpec);
@@ -495,8 +352,8 @@ SoundSystem_t *SoundSystemInit()
     DesiredAudioSpec.format = SOUND_SYSTEM_BUFFER_FORMAT;
     DesiredAudioSpec.channels = SOUND_SYSTEM_NUM_CHANNELS;
     DesiredAudioSpec.samples = SOUND_SYSTEM_NUM_SAMPLES;
-    DesiredAudioSpec.callback = SoundSystemOnAudioUpdate;
-    DesiredAudioSpec.userdata = SoundSystem;
+    DesiredAudioSpec.callback = Callback;
+    DesiredAudioSpec.userdata = UserData;
     
     SoundSystem->Device = SDL_OpenAudioDevice(NULL,0,&DesiredAudioSpec, &ObtainedAudioSpec,0);
     
