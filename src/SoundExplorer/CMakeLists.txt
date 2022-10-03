@@ -10,12 +10,14 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
          RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../bin/${PROJECT_NAME})   
 
 if( ENABLE_PVS_STUDIO_ANALYZER )
-    pvs_studio_add_target(TARGET SoundExplorer.Analyze
-                        LOG FORMAT fullhtml
-                        SUPPRESS_BASE suppress_base.json
+    pvs_studio_add_target(TARGET ${PROJECT_NAME}.Analyze
                         ANALYZE ${PROJECT_NAME}
-                        ARGS -e ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/*
-                        MODE GA:1,2)
+                        SUPPRESS_BASE suppress_base.json
+                        LOG FORMAT fullhtml
+                        LOG ${PROJECT_NAME}-Report
+                        ARGS -e *libs/*
+                        MODE GA:1,2
+                        )
 endif()
                     
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX -Debug)

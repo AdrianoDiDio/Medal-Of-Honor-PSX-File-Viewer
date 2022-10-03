@@ -132,6 +132,7 @@ void VABPrintToneAttributeTable(VAB_t *VAB)
 
 void VABReadToneAttributeTable(VAB_t *VAB,FILE *InFile)
 {
+    int Size;
     int Result;
     if( !VAB || !InFile ) {
         bool InvalidFile = (InFile == NULL ? true : false);
@@ -142,8 +143,9 @@ void VABReadToneAttributeTable(VAB_t *VAB,FILE *InFile)
         DPrintf("VABReadToneAttributeTable:No tones specified in header.\n");
         return;
     }
-    VAB->ToneAttributeTable = malloc(VAB_MAX_TONE_NUMBER * VAB->Header.NumPrograms * sizeof(VABToneAttribute_t));
-    Result = fread(&VAB->ToneAttributeTable,sizeof(VAB->ToneAttributeTable),1,InFile);
+    Size = VAB_MAX_TONE_NUMBER * VAB->Header.NumPrograms * sizeof(VABToneAttribute_t);
+    VAB->ToneAttributeTable = malloc(Size);
+    Result = fread(&VAB->ToneAttributeTable,Size,1,InFile);
     if( Result != 1 ) {
         DPrintf("VABReadToneAttributeTable:Error when reading tone attribute table.\n");
         return;

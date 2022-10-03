@@ -1,0 +1,37 @@
+{
+    "version": 2,
+    "warnings": [
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 1274711439,
+            "ErrorCode": "V1042",
+            "FileName": "SoundExplorer.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 1274711439,
+            "ErrorCode": "V1042",
+            "FileName": "VAB.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 1274711439,
+            "ErrorCode": "V1042",
+            "FileName": "GUI.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 1274711439,
+            "ErrorCode": "V1042",
+            "FileName": "SoundManager.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        }
+    ]
+}

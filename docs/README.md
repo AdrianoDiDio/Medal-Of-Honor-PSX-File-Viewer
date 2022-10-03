@@ -18,7 +18,7 @@ Table of contents
     * [TIM Extractor](#tim-extractor)
       * [Run](#run-1)
       * [Credits](#credits-1)
-    * [VAB Extractor](#vab-extractor)
+    * [Sound Explorer](#sound-explorer)
       * [Run](#run-2)
       * [Credits](#credits-2)
   * [File Formats](#file-formats)
@@ -118,6 +118,13 @@ Some sample screenshot taken from MOHModelViewer:
 *GIF taken from Medal Of Honor:Underground showing JIMMY_P1.BSD Model
 using MOHModelViewer.*
 
+Some sample screenshot taken from SoundExplorer:  
+
+<img src="Images/SoundExplorer_Main_Interface.png" width="600" />
+
+*Screenshot taken from SoundExplorer when opening the
+TAF file contained in Medal Of Honor Mission 1 Level 1*
+
 ## Build
 Before building make sure to fetch all the submodules by typing:  
 > git submodule --init --recursive  
@@ -148,7 +155,7 @@ exported to wav).
 #### Usage
 > ./MOHLevelViewer `<Optional Game Directory>`  
 
-**NOTE: The configuration is stored in the User preference folder (.local/share/MOHLevelViewer 
+**NOTE: The configuration is stored in the User preference folder (.local/share/MOHLevelViewer
 on Linux and %AppData% on Windows).**  
 #### Credits
 MOHLevelViewer uses the following libraries:  
@@ -170,7 +177,7 @@ animation pose to a ply file
 #### Usage
 > ./MOHModelViewer `<Optional BSD file>`  
 
-**NOTE: The configuration is stored in the User preference folder (.local/share/MOHModelViewer 
+**NOTE: The configuration is stored in the User preference folder (.local/share/MOHModelViewer
 on Linux and %AppData% on Windows).**  
 #### Credits
 MOHModelViewer uses the following libraries:  
@@ -210,24 +217,23 @@ found in the file will be saved inside that folder.
 TIMExtractor uses the following libraries:  
 **libpng**: http://www.libpng.org/  
 
-### VAB Extractor
+### Sound Explorer
 
-This utility can be used to extract music contained in *.vb files as well
+This utility can be used to view and export any music contained in *.vb files as well
 as TAF files.  
-At the moment the only requirements is that the taf file must have the tim
-section removed otherwise it won't work.
 
 #### Run
-  > ./VABExtractor `<File.vab> <IsTaf> <Output Directory> <IsVag>`
+  > ./SoundExplorer `<Optional Audio File>`
 
-This command will read the content of <File.vab>, convert it to wav and
-save it in the output directory.  
-If it is a TAF file, then it will convert all the files that are found
-inside otherwise if IsVag is set to 1 will convert only one file to
-wav.
 #### Credits
-VABExtractor uses the following libraries:  
-**libsndfile**: https://github.com/libsndfile/libsndfile  
+SoundExplorer uses the following libraries:  
+**SDL2**: https://www.libsdl.org/  
+**zlib**: https://github.com/madler/zlib  
+**libpng**:http://www.libpng.org/  
+**IMGUI**: https://github.com/ocornut/imgui/  
+**IMGUI_FileDialog**:  https://github.com/aiekick/ImGuiFileDialog  
+The font file shipped with the program is:  
+**DroidSans.ttf**: https://www.fontsquirrel.com/fonts/droid-sans
 ## File Formats
 ### Common Formats
 #### TSB
