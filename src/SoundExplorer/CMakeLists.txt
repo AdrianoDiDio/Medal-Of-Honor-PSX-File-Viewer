@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(VABExtractor)
+project(SoundExplorer)
 
-set(SOURCE_FILES VABExtractor.c)
+set(SOURCE_FILES GUI.c SoundManager.c VAB.c SoundExplorer.c)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
 
@@ -10,7 +10,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
          RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../bin/${PROJECT_NAME})   
 
 if( ENABLE_PVS_STUDIO_ANALYZER )
-    pvs_studio_add_target(TARGET VABExtractor.Analyze
+    pvs_studio_add_target(TARGET SoundExplorer.Analyze
                         LOG FORMAT fullhtml
                         SUPPRESS_BASE suppress_base.json
                         ANALYZE ${PROJECT_NAME}
@@ -39,6 +39,11 @@ target_compile_definitions(${PROJECT_NAME}
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:-g>")
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:-O3>")
 
-find_library(sndfile libsndfile)
 
-target_link_libraries(${PROJECT_NAME} sndfile)
+target_link_libraries(${PROJECT_NAME} Common)
+
+add_custom_command(TARGET ${PROJECT_NAME}
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Fonts/ $<TARGET_FILE_DIR:${PROJECT_NAME}>/Fonts/
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different  ${CMAKE_BINARY_DIR}/SharedLibraries/* $<TARGET_FILE_DIR:${PROJECT_NAME}>/
+)

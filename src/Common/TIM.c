@@ -510,7 +510,7 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
         DPrintf("TIMLoadImage:Failed to allocate memory for image\n");
         return NULL;
     }
-    
+    ResultImage->Next = NULL;
     Ret = fread(&ResultImage->Header.Magic,sizeof(ResultImage->Header.Magic),1,TIMImage);
     if( Ret != 1 ) {
         DPrintf("EOF reached.\n");
@@ -520,6 +520,8 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     if( ResultImage->Header.Magic != 0x10 ) {
         DPrintf("Wrong signature detected (%i (%#08x)).\n",ResultImage->Header.Magic,ResultImage->Header.Magic);
         DPrintf("Current offset in file is %li\n",ftell(TIMImage));
+        //NOTE(Adriano):Rewind the stream if the Magic number doesn't match.
+        fseek(TIMImage,-sizeof(ResultImage->Header.Magic),SEEK_CUR);
         free(ResultImage);
         return NULL;
     }

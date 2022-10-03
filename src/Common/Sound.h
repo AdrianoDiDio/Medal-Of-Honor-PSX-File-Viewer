@@ -46,13 +46,16 @@ typedef struct WAVHeader_s {
 } WAVHeader_t;
 //VAB Body Music files.
 typedef struct VBMusic_s {
-    char *Name;
-    Byte *Data;
-    int    Size;
-    int    DataLeft;
-    int    NumFrames;
-    int    Duration;
-    int    DataPointer;
+    char    *Name;
+    Byte    *Data;
+    float   *OriginalData;
+    int     Size;
+    int     DataLeft;
+    int     NumFrames;
+    int     Duration;
+    int     DataPointer;
+    float   Frequency;
+    int     OriginalNumFrames;
     
     struct VBMusic_s *Next;
 } VBMusic_t;
@@ -67,7 +70,10 @@ void            SoundSystemLockDevice(SoundSystem_t *SoundSystem);
 void            SoundSystemUnlockDevice(SoundSystem_t *SoundSystem);
 void            SoundSystemPlay(SoundSystem_t *SoundSystem);
 void            SoundSystemPause(SoundSystem_t *SoundSystem);
-VBMusic_t       *SoundSystemLoadVBFile(const char *VBFileName);
+int             SoundSystemIsPaused(SoundSystem_t *SoundSystem);
+int             SoundSystemResampleMusic(VBMusic_t *Music,float DesiredFrequency);
+VBMusic_t       *SoundSystemLoadVBMusic(const char *VBFileName,int Length);
+VBMusic_t       *SoundSystemLoadVBFile(FILE *VBFile,int Length,const char *VBFileName,float InFrequency);
 int             SoundSystemGetSoundDuration(VBMusic_t *Music,int *Minutes,int *Seconds);
 int             SoundSystemGetCurrentSoundTime(VBMusic_t *Music,int *Minutes,int *Seconds);
 void            SoundSystemAddMusicToList(VBMusic_t **MusicList,VBMusic_t *Music);

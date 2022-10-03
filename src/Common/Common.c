@@ -109,6 +109,18 @@ char *StringCopy(const char *From)
     return Dest;
 }
 
+char *StringAppend(const char *FirstString,const char *SecondString)
+{
+    char *Result;
+    if( !FirstString || !SecondString ) {
+        return NULL;
+    }
+    Result = malloc(strlen(FirstString) + strlen(SecondString) + 1);
+    strcpy(Result, FirstString);
+    strcat(Result, SecondString);
+    return Result;
+}
+
 char *StringToUpper(const char *In)
 {
     char *Result;
@@ -191,7 +203,14 @@ char *SwitchExt(const char *In, const char *Ext)
     strncat(NewExt, Ext, strlen(NewExt));
     return NewExt;
 }
-
+const char *GetFileExtension(const char *FileName) {
+    const char *Dot;
+    Dot = strrchr(FileName, '.');
+    if(!Dot || Dot == FileName) { 
+        return NULL;
+    }
+    return Dot + 1;
+}
 int GetFileLength(FILE *Fp)
 {
     int Length;

@@ -40,6 +40,7 @@ void SoundSystemClearMusicList(VBMusic_t *MusicList)
 {
     VBMusic_t *Temp;
     while( MusicList ) {
+        free(MusicList->OriginalData);
         free(MusicList->Data);
         free(MusicList->Name);
         Temp = MusicList;
@@ -60,6 +61,10 @@ void SoundSystemPause(SoundSystem_t *SoundSystem)
 void SoundSystemPlay(SoundSystem_t *SoundSystem)
 {
     SDL_PauseAudioDevice(SoundSystem->Device, 0);
+}
+int SoundSystemIsPaused(SoundSystem_t *SoundSystem)
+{
+    return SDL_GetAudioDeviceStatus(SoundSystem->Device) == SDL_AUDIO_PAUSED;
 }
 void SoundSystemLockDevice(SoundSystem_t *SoundSystem)
 {
@@ -99,6 +104,7 @@ int SoundSystemGetSoundDuration(VBMusic_t *Music,int *Minutes,int *Seconds)
     *Seconds = Music->Duration % 60;
     return Music->Duration;
 }
+
 int SoundSystemGetCurrentSoundTime(VBMusic_t *Music,int *Minutes,int *Seconds)
 {
     int CurrentLength;
@@ -110,7 +116,12 @@ int SoundSystemGetCurrentSoundTime(VBMusic_t *Music,int *Minutes,int *Seconds)
     *Seconds = CurrentLength % 60;
     return CurrentLength;
 }
-float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
+/*
+ * Convert ADPCM data to PCM.
+ * Length can be -1 to indicate that the length is the whole file size or a
+ * number of bytes containing the ADPCM data.
+ */
+float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int Length,int *NumFrames)
 {
     float *Result;
     int VBFileSize;
@@ -137,8 +148,8 @@ float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
         return NULL;
     }
 
-    VBFileSize = GetFileLength(VBFile);
-    
+    VBFileSize = Length == -1 ? GetFileLength(VBFile) : Length;
+    DPrintf("SoundSystemConvertADPCMToPCM:Length %i\n",VBFileSize);
     State[0] = 0;
     State[1] = 0;
     // In Every block we have 14 bytes of compressed data where each Byte contains 2 compressed sample.
@@ -148,6 +159,8 @@ float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
     LocalNumFrames = NumTotalSample * NumFramePerBlock;
     //Size depends from the number of channels (in this case is 2).
     Size = LocalNumFrames * 2 * sizeof(float);
+    float samples = NumTotalSample / 2 / ( 16 / 8 );
+    
     if( NumFrames ) {
         *NumFrames = LocalNumFrames;
     }
@@ -190,21 +203,84 @@ float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int *NumFrames)
     }
     return Result;
 }
+/*
+ * Given an input buffer containing raw PCM data sampled using the given frequency, resample
+ * it to the system frequency, returning a new buffer with the new data at the desired frequency.
+ */
+float *SoundSystemResample(float *InBuffer,int NumFrames,float Frequency,int *OutFrames)
+{
+    float *OutBuffer;
+    float SamplingRatio;
+    int NumChannels;
+    SRC_DATA ConverterSrcData;
+    
+    SamplingRatio = (float) SOUND_SYSTEM_FREQUENCY / Frequency;
+    NumChannels = 2;
+    
+    OutBuffer = malloc( NumFrames * SamplingRatio * NumChannels * sizeof(float));
+    ConverterSrcData.data_in = InBuffer;
+    ConverterSrcData.input_frames = NumFrames;
+    ConverterSrcData.data_out = OutBuffer;
+    ConverterSrcData.output_frames = NumFrames * SamplingRatio;
+    ConverterSrcData.src_ratio = SamplingRatio;
+    int ResamplingStatus = src_simple(&ConverterSrcData, SRC_LINEAR, NumChannels);
+    if( ResamplingStatus != 0) {
+        DPrintf("SoundSystemResample:Failed to resample audio %s.\n",src_strerror(ResamplingStatus));
+        return NULL;
+    }
+    if( OutFrames ) {
+        *OutFrames = ConverterSrcData.output_frames;
+    }
+    return OutBuffer;
+}
+int SoundSystemResampleMusic(VBMusic_t *Music,float DesiredFrequency)
+{
+    float *ConvertedData;
+    int    ConvertedOutFrames;
+    if( !Music ) {
+        return 0;
+    }
+    if( Music->Frequency == DesiredFrequency ) {
+        return 0;
+    }
+    ConvertedData = SoundSystemResample(Music->OriginalData,Music->OriginalNumFrames,DesiredFrequency,&ConvertedOutFrames);
+    if( !ConvertedData ) {
+        return 0;
+    }
+    free(Music->Data);
+    Music->Size = ConvertedOutFrames * 2 * sizeof(float);
+    Music->NumFrames = ConvertedOutFrames;
+    Music->Duration = SoundSystemCalculateSoundDuration(Music->Size,SOUND_SYSTEM_FREQUENCY,SOUND_SYSTEM_NUM_CHANNELS,32);
+    Music->DataPointer = 0;
+    Music->Data = (Byte *) ConvertedData;
+    Music->Frequency = DesiredFrequency;
+    return 1;
+}
 void SoundSystemDumpMusicToWav(VBMusic_t *Music,const char *EngineName,const char *OutDirectory)
 {
     WAVHeader_t WAVHeader;
     FILE *WAVFile;
     char *VBFileName;
     char *WAVFileName;
+    const char *CurrentExt;
     
     if( !Music ) {
         DPrintf("SoundSystemDumpMusicToWav:Invalid Music data\n");
         return;
     }
     DPrintf("Switching %s\n",Music->Name);
-    VBFileName = SwitchExt(Music->Name, ".wav");
+    CurrentExt = GetFileExtension(Music->Name);
+    if( CurrentExt != NULL ) {
+        VBFileName = SwitchExt(Music->Name, ".wav");
+    } else {
+        VBFileName = StringAppend(Music->Name,".wav");
+    }
     DPrintf("Switched %s\n",VBFileName);
-    asprintf(&WAVFileName,"%s%c%s-%s",OutDirectory,PATH_SEPARATOR,EngineName,VBFileName);
+    if( EngineName ) {
+        asprintf(&WAVFileName,"%s%c%s-%s",OutDirectory,PATH_SEPARATOR,EngineName,VBFileName);
+    } else {
+        asprintf(&WAVFileName,"%s%c%s",OutDirectory,PATH_SEPARATOR,VBFileName);
+    }
     WAVFile = fopen(WAVFileName,"wb");
     if( !WAVFile ) {
         return;
@@ -246,77 +322,80 @@ void SoundSystemDumpMusicToWav(VBMusic_t *Music,const char *EngineName,const cha
     free(WAVFileName);
     fclose(WAVFile);
 }
+
 /*
  * NOTE(Adriano):
- * VB files are used to store level music and contain raw ADPCM data that gets sent
- * to the SPU of the PSX.
- * They use a sample frequency of 22050Hz and contains only one channel (Mono).
+ * VB files are used to store level music and effects.
+ * They contains raw ADPCM data that gets sent to the SPU of the PSX.
+ * They use a sample frequency of 22050Hz for all the effects and music, while the voices are sampled at a frequency
+ * of 11025Hz, and contains only one channel (Mono).
  * In order to load it we need to first convert the ADPCM data to standard PCM and then
- * feed it to SDL (doing an internal conversion to change the frequency) in
- * order to be able to play it.
+ * feed it to SDL (doing an internal conversion to change the frequency) in order to be able to play it.
  */
-VBMusic_t *SoundSystemLoadVBFile(const char *VBFileName)
+VBMusic_t *SoundSystemLoadVBFile(FILE *VBFile,int Length,const char *VBFileName,float InFrequency)
 {
     VBMusic_t *Music;
-    FILE *VBFile;
     float  *PCMData;
     float  *ConvertedData;
     int    NumFrames;
     float SamplingRatio;
     int   ResamplingStatus;
     int   NumChannels;
+    int OutFrames;
     SRC_DATA ConverterSrcData;
     
-    if( !VBFileName ) {
-        DPrintf("SoundSystemLoadVBFile:Invalid file\n");
-        return NULL;
-    }
-    VBFile = fopen(VBFileName,"rb");
     if( !VBFile ) {
         return NULL;
     }
-    PCMData = SoundSystemConvertADPCMToPCM(VBFile,&NumFrames);
+    
+    PCMData = SoundSystemConvertADPCMToPCM(VBFile,Length,&NumFrames);
     if( !PCMData ) {
         DPrintf("SoundSystemLoadVBFile:Failed to convert ADPCM to PCM\n");
-        fclose(VBFile);
         return NULL;
     }
-    //Perform a fast conversion to a more appropriate format...
-    //NOTE(Adriano):Level Music will always have a frequency of 22050 Hz...
-    //This is not true when loading sound effects which can use a frequency of
-    //11025 Hz or 22050 Hz.
-    SamplingRatio = (float) SOUND_SYSTEM_FREQUENCY / 22050.f;
     NumChannels = 2;
-    ConvertedData = malloc( NumFrames * SamplingRatio * NumChannels * sizeof(float));
-    ConverterSrcData.data_in = PCMData;
-    ConverterSrcData.input_frames = NumFrames;
-    ConverterSrcData.data_out = ConvertedData;
-    ConverterSrcData.output_frames = NumFrames * SamplingRatio;
-    ConverterSrcData.src_ratio = SamplingRatio;
-    ResamplingStatus = src_simple(&ConverterSrcData, SRC_LINEAR, NumChannels);
-    if( ResamplingStatus != 0 ) {
-        DPrintf("SoundSystemLoadVBFile:Failed to resample audio %s.\n",src_strerror(ResamplingStatus));
+    ConvertedData = SoundSystemResample(PCMData,NumFrames,InFrequency,&OutFrames);
+
+    if( !ConvertedData) {
         free(PCMData);
         free(ConvertedData);
-        fclose(VBFile);
         return NULL;
     }
     Music = malloc(sizeof(VBMusic_t));
     if( !Music ) {
         DPrintf("SoundSystemLoadVBFile:Failed to allocate memory for music data\n");
         free(PCMData);
-        fclose(VBFile);
         return NULL;
     }
     Music->Name = GetBaseName(VBFileName);
-    Music->Size = ConverterSrcData.output_frames * NumChannels * sizeof(float);
+    Music->Size = OutFrames * NumChannels * sizeof(float);
+    Music->NumFrames = OutFrames;
     Music->Duration = SoundSystemCalculateSoundDuration(Music->Size,SOUND_SYSTEM_FREQUENCY,SOUND_SYSTEM_NUM_CHANNELS,32);
     Music->DataPointer = 0;
-    Music->Data = (Byte *) ConverterSrcData.data_out;
+    Music->OriginalData = PCMData;
+    Music->Data = (Byte *) ConvertedData;
+    Music->OriginalNumFrames = NumFrames;
     Music->Next = NULL;
-    free(PCMData);
-    fclose(VBFile);
+    Music->Frequency = InFrequency;
     return Music;
+}
+
+VBMusic_t *SoundSystemLoadVBMusic(const char *VBFileName,int Length)
+{
+    FILE *VBFile;
+    VBMusic_t *Result;
+    if( !VBFileName ) {
+        DPrintf("SoundSystemLoadVBMusic:Invalid file\n");
+        return NULL;
+    }
+    VBFile = fopen(VBFileName,"rb");
+    if( !VBFile ) {
+        return NULL;
+    }
+    //NOTE(Adriano):Music is always guaranteed to have a sampling frequency of 22050Hz.
+    Result = SoundSystemLoadVBFile(VBFile,Length,VBFileName,22050.f);
+    fclose(VBFile);
+    return Result;
 }
 void SoundSystemAddMusicToList(VBMusic_t **MusicList,VBMusic_t *Music)
 {
