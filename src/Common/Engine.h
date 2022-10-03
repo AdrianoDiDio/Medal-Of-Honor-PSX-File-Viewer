@@ -44,7 +44,7 @@ typedef struct Engine_s {
 } Engine_t;
 
 
-Engine_t    *EngineInit();
+Engine_t    *EngineInit(const char *WindowTitle);
 void        EngineBeginFrame(Engine_t *Engine);
 void        EngineEndFrame(Engine_t *Engine);
 void        EngineShutDown(Engine_t *Engine);

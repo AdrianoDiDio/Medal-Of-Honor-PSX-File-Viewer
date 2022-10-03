@@ -31,6 +31,7 @@ typedef struct VideoMode_s {
 } VideoMode_t;
 
 typedef struct VideoSystem_s {
+    char        *WindowTitle;
     VideoMode_t *VideoModeList;
     float   DPIScale;
     int     NumVideoModes;
@@ -45,7 +46,7 @@ extern Config_t *VidConfigRefreshRate;
 extern Config_t *VidConfigFullScreen;
 extern Config_t *VidConfigVSync;
 
-VideoSystem_t   *VideoSystemInit();
+VideoSystem_t   *VideoSystemInit(const char *WindowTitle);
 void            VideoSystemSetVideoSettings(VideoSystem_t *VideoSystem,int PreferredModeIndex);
 void            VideoSystemSetWindowResizable(VideoSystem_t *VideoSystem,int Resizable);
 void            VideoSystemGetCurrentWindowSize(VideoSystem_t *VideoSystem,int *Width,int *Height);

@@ -32,6 +32,7 @@ void VideoSystemShutdown(VideoSystem_t *VideoSystem)
     for( i = 0; i < VideoSystem->NumVideoModes; i++ ) {
         free(VideoSystem->VideoModeList[i].Description);
     }
+    free(VideoSystem->WindowTitle);
     free(VideoSystem->VideoModeList);
     SDL_GL_DeleteContext(VideoSystem->GLContext);
     SDL_DestroyWindow(VideoSystem->Window);
@@ -221,7 +222,7 @@ int VideoSystemOpenWindow(VideoSystem_t *VideoSystem)
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    VideoSystem->Window = SDL_CreateWindow("MOH Level Viewer",SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    VideoSystem->Window = SDL_CreateWindow(VideoSystem->WindowTitle,SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                      VidConfigWidth->IValue, VidConfigHeight->IValue, 
                      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     
@@ -255,7 +256,7 @@ void VideoSystemLoadConfigs()
     VidConfigVSync = ConfigGet("VideoVSync");
 }
 
-VideoSystem_t *VideoSystemInit()
+VideoSystem_t *VideoSystemInit(const char *WindowTitle)
 {
     VideoSystem_t *VideoSystem;
     int GlewError;
@@ -264,6 +265,11 @@ VideoSystem_t *VideoSystemInit()
     if( !VideoSystem ) {
         printf("VideoSystemInit:Failed to allocate memory for VideoSystem struct\n");
         return NULL;
+    }
+    if( WindowTitle ) {
+        VideoSystem->WindowTitle = StringCopy(WindowTitle);
+    } else {
+        asprintf(&VideoSystem->WindowTitle,"Unknown Application");
     }
     VideoSystemLoadConfigs();
     VideoSystemGetAvailableVideoModes(VideoSystem);

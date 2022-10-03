@@ -502,6 +502,7 @@ void LevelManagerOnAudioUpdate(void *UserData,Byte *Stream,int Length)
     SDL_MixAudioFormat(Stream, &CurrentMusic->Data[CurrentMusic->DataPointer], AUDIO_F32, ChunkLength, SoundVolume->IValue);
     CurrentMusic->DataPointer += ChunkLength;
 }
+
 void LevelManagerSwitchLevel(LevelManager_t *LevelManager,Level_t *NewLevel)
 {
     if( !LevelManager ) {
@@ -510,8 +511,7 @@ void LevelManagerSwitchLevel(LevelManager_t *LevelManager,Level_t *NewLevel)
     if( !NewLevel ) {
         return;
     }
-    //NOTE(Adriano):Always pause the music, but resume only
-    //              if needed.
+    //NOTE(Adriano):Always pause the music, but resume only if needed.
     SoundSystemPause(LevelManager->SoundSystem);
     LevelCleanUp(LevelManager->CurrentLevel);
     LevelManager->CurrentLevel = NewLevel;

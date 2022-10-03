@@ -97,7 +97,7 @@ int EngineInitSDL()
     }
     return true;
 }
-Engine_t *EngineInit()
+Engine_t *EngineInit(const char *WindowTitle)
 {
     Engine_t *Engine;
     
@@ -116,7 +116,7 @@ Engine_t *EngineInit()
         goto Failure;
     }
     
-    Engine->VideoSystem = VideoSystemInit();
+    Engine->VideoSystem = VideoSystemInit(WindowTitle);
     
     if( !Engine->VideoSystem ) {
         printf("EngineInit:Failed to Initialize Video system...\n");

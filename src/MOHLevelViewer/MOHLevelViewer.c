@@ -273,7 +273,7 @@ Application_t *ApplicationInit(int argc,char **argv)
     RegisterDefaultSettings();
     ConfigInit();
     
-    Application->Engine = EngineInit();
+    Application->Engine = EngineInit("MOH Level Viewer");
     
     if( !Application->Engine ) {
         printf("ApplicationInit:Failed to initialize the Engine\n");
