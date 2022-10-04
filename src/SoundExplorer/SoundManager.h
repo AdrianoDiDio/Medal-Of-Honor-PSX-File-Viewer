@@ -57,5 +57,5 @@ void                    SoundManagerExport(SoundManager_t *SoundManager,VBMusic_
                                            GUI_t *GUI,VideoSystem_t  *VideoSystem);
 void                    SoundManagerOpenFileDialog(SoundManager_t *SoundManager,GUI_t *GUI,VideoSystem_t *VideoSystem);
 void                    SoundManagerCleanUp(SoundManager_t *SoundManager);
-#endif//__RENDER_OBJECT_MANAGER_H_
+#endif//__SOUND_MANAGER_H_
  

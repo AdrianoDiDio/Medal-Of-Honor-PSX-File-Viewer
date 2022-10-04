@@ -22,12 +22,12 @@
 #include "Common.h"
 
 typedef enum {
-    BPP_4 = 8,
-    BPP_4_NO_CLUT = 0,
-    BPP_8 = 9,
-    BPP_8_NO_CLUT = 1,
-    BPP_16 = 2,
-    BPP_24 = 3
+    TIM_IMAGE_BPP_4 = 8,
+    TIM_IMAGE_BPP_4_NO_CLUT = 0,
+    TIM_IMAGE_BPP_8 = 9,
+    TIM_IMAGE_BPP_8_NO_CLUT = 1,
+    TIM_IMAGE_BPP_16 = 2,
+    TIM_IMAGE_BPP_24 = 3
 } TIMBPP;
 
 typedef struct TIMHeader_s {

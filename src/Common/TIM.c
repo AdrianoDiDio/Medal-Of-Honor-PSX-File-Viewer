@@ -109,7 +109,7 @@ Byte *TIMExpandCLUTImageData(TIMImage_t *Image)
         DPrintf("TIMExpandCLUTImageData:Invalid Image\n");
         return NULL;
     }
-    if( Image->Header.BPP != BPP_4 && Image->Header.BPP != BPP_8 ) {
+    if( Image->Header.BPP != TIM_IMAGE_BPP_4 && Image->Header.BPP != TIM_IMAGE_BPP_8 ) {
         DPrintf("TIMExpandCLUTImageData:Cannot expand CLUT data on a non-paletted image.\n");
         return NULL;
     }
@@ -119,7 +119,7 @@ Byte *TIMExpandCLUTImageData(TIMImage_t *Image)
         return NULL;
     }
     WritePointer = 0;
-    if( Image->Header.BPP == BPP_8  ) {
+    if( Image->Header.BPP == TIM_IMAGE_BPP_8  ) {
         for (y = 0; y < Image->Height; y++) {
             for (x = 0; x < Image->RowCount; x++) {
                 Byte ClutIndex0 = Image->Data[x+Image->RowCount*y] & 0xFF;
@@ -128,7 +128,7 @@ Byte *TIMExpandCLUTImageData(TIMImage_t *Image)
                 Data[WritePointer++] = ClutIndex1;
             }
         }
-    } else if ( Image->Header.BPP == BPP_4 ) {
+    } else if ( Image->Header.BPP == TIM_IMAGE_BPP_4 ) {
         for( y = 0; y < Image->Height; y++ ) {
             for( x = 0; x < Image->RowCount; x++ ) {
                 Byte ClutIndex0 = Image->Data[x+Image->RowCount*y] & 0xF;
@@ -165,7 +165,7 @@ Byte *TIMToOpenGL32(TIMImage_t *Image)
         return NULL;
     }
 
-    if( Image->Header.BPP == BPP_8  ) {
+    if( Image->Header.BPP == TIM_IMAGE_BPP_8  ) {
         for (y = 0; y < Image->Height; y++) {
             xOffs = 0;
             for (x = 0; x < Image->RowCount; x++) {
@@ -185,7 +185,7 @@ Byte *TIMToOpenGL32(TIMImage_t *Image)
                 xOffs++;
             }
         }
-    } else if ( Image->Header.BPP == BPP_4 ) {
+    } else if ( Image->Header.BPP == TIM_IMAGE_BPP_4 ) {
         for( y = 0; y < Image->Height; y++ ) {
             xOffs = 0;
             for( x = 0; x < Image->RowCount; x++ ) {
@@ -220,7 +220,7 @@ Byte *TIMToOpenGL32(TIMImage_t *Image)
                 xOffs++;
             }
         }
-    } else if ( Image->Header.BPP == BPP_16 ) {
+    } else if ( Image->Header.BPP == TIM_IMAGE_BPP_16 ) {
         for( y = 0; y < Image->Height; y++ ) {
             for( x = 0; x < Image->RowCount; x++ ) {
                 int BaseLocation0 = (x + Image->Width * y)*4;
@@ -252,7 +252,7 @@ Byte *TIMToOpenGL24(TIMImage_t *Image)
         return NULL;
     }
     
-    if( Image->Header.BPP == BPP_8  ) {
+    if( Image->Header.BPP == TIM_IMAGE_BPP_8  ) {
         for (y = 0; y < Image->Height; y++) {
             xOffs = 0;
             for (x = 0; x < Image->RowCount; x++) {
@@ -270,7 +270,7 @@ Byte *TIMToOpenGL24(TIMImage_t *Image)
                 xOffs++;
             }
         }
-    } else if ( Image->Header.BPP == BPP_4 ) {
+    } else if ( Image->Header.BPP == TIM_IMAGE_BPP_4 ) {
         for( y = 0; y < Image->Height; y++ ) {
             xOffs = 0;
             for( x = 0; x < Image->RowCount; x++ ) {
@@ -320,7 +320,7 @@ Byte **TIMSetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
     Byte B2;
 
     RowPointer = png_malloc  (PNGPtr, Image->Height * sizeof (Byte *));
-    if( Image->Header.BPP == BPP_4  ) {
+    if( Image->Header.BPP == TIM_IMAGE_BPP_4  ) {
         for (y = 0; y < Image->Height; y++) {
             Byte *Row = png_malloc (PNGPtr, sizeof (Byte) * Image->Width * 3);
             RowPointer[y] = Row;
@@ -345,7 +345,7 @@ Byte **TIMSetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
             }
         }
     }
-    if( Image->Header.BPP == BPP_8  ) {
+    if( Image->Header.BPP == TIM_IMAGE_BPP_8  ) {
         for (y = 0; y < Image->Height; y++) {
             Byte *Row = png_malloc (PNGPtr, sizeof (Byte) * Image->Width * 3);
             RowPointer[y] = Row;
@@ -363,7 +363,7 @@ Byte **TIMSetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
         }
     }
     
-    if( Image->Header.BPP == BPP_16  ) {
+    if( Image->Header.BPP == TIM_IMAGE_BPP_16  ) {
         for (y = 0; y < Image->Height; y++) {
             Byte *Row = png_malloc (PNGPtr, sizeof (Byte) * Image->Width * 3);
             RowPointer[y] = Row;
@@ -378,7 +378,7 @@ Byte **TIMSetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
             }
         }
     }
-    if( Image->Header.BPP == BPP_24 ) {
+    if( Image->Header.BPP == TIM_IMAGE_BPP_24 ) {
         NumComponent = 0;
         for (y = 0; y < Image->Height; y++) {
             Byte *Row = png_malloc (PNGPtr, sizeof (Byte) * Image->Width * 3);
@@ -533,25 +533,25 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     DPrintf("Flags are %i\n",ResultImage->Header.BPP);
     ImageSizeOffset = 1;
     switch(ResultImage->Header.BPP) {
-        case BPP_4:
+        case TIM_IMAGE_BPP_4:
             DPrintf("Found image with 4 BPP and CLUT!\n");
             ImageSizeOffset = 4;
             break;
-        case BPP_4_NO_CLUT:
+        case TIM_IMAGE_BPP_4_NO_CLUT:
             DPrintf("Found image with 4 BPP without CLUT!\n");
             break;
-        case BPP_8:
+        case TIM_IMAGE_BPP_8:
             DPrintf("Found image with 8 BPP and CLUT!\n");
             ImageSizeOffset = 2;
             break;
-        case BPP_8_NO_CLUT:
+        case TIM_IMAGE_BPP_8_NO_CLUT:
             DPrintf("Found image with 8 BPP without CLUT!\n");
             break;
-        case BPP_16:
+        case TIM_IMAGE_BPP_16:
             DPrintf("Found image with 16 BPP!\n");
             ImageSizeOffset = 1;
             break;
-        case BPP_24:
+        case TIM_IMAGE_BPP_24:
             DPrintf("Found image with 24 BPP!\n");
             ImageSizeOffset = 0.5f; //Or 2/3?
             break;
@@ -561,17 +561,17 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
             return NULL;
     }
     
-    if( ResultImage->Header.BPP == BPP_4_NO_CLUT || ResultImage->Header.BPP == BPP_8_NO_CLUT ) {
+    if( ResultImage->Header.BPP == TIM_IMAGE_BPP_4_NO_CLUT || ResultImage->Header.BPP == TIM_IMAGE_BPP_8_NO_CLUT ) {
         DPrintf("Unsupported BPP %i\n",ResultImage->Header.BPP);
         free(ResultImage);
         return NULL;
     }
     
-    if( ResultImage->Header.BPP == BPP_24 ) {
+    if( ResultImage->Header.BPP == TIM_IMAGE_BPP_24 ) {
         DPrintf("Warning: BPP 24 was not tested.\n");
     }
     
-    if( ResultImage->Header.BPP == BPP_4 || ResultImage->Header.BPP == BPP_8 ) {
+    if( ResultImage->Header.BPP == TIM_IMAGE_BPP_4 || ResultImage->Header.BPP == TIM_IMAGE_BPP_8 ) {
         TIMGetPalette(TIMImage,ResultImage);
     } else {
         ResultImage->CLUT = NULL;

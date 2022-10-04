@@ -125,7 +125,7 @@ int VRAMGetTexturePageY(int VRAMPage,int ColorMode)
 {
     float ModeOffset;
     float PageY;
-    if( ColorMode == BPP_4 || ColorMode == 0) {
+    if( ColorMode == TIM_IMAGE_BPP_4 || ColorMode == 0) {
         ModeOffset = 0;
     } else {
         ModeOffset = 512;
@@ -148,7 +148,7 @@ int VRAMGetCLUTPage(int CLUTPosX,int CLUTPosY)
 }
 int VRAMGetCLUTOffsetY(int ColorMode)
 {
-    if( ColorMode == BPP_8 || ColorMode == 1 ) {
+    if( ColorMode == TIM_IMAGE_BPP_8 || ColorMode == 1 ) {
         return 512;
     }
     
@@ -165,20 +165,16 @@ int VRAMGetCLUTPositionX(int CLUTX,int CLUTY,int CLUTPage)
     }
     return Offset;
 }
-void VRAMPutTexture(VRAM_t *VRAM,TIMImage_t *Image)
+
+void VRAMGetTIMImageCoordinates(TIMImage_t *Image,int *ImageX,int *ImageY)
 {
-    int VRAMPage;
-    SDL_Surface *Src;
-    SDL_Rect SrcRect;
+    int ColorOffsetMultiplier;
     int DestX;
     int DestY;
-    float ColorOffsetMultiplier;
     
-    VRAMPage = Image->TexturePage;
-    
-    if( Image->Header.BPP == BPP_4 ) {
+    if( Image->Header.BPP == TIM_IMAGE_BPP_4 ) {
         ColorOffsetMultiplier = 4;
-    } else if( Image->Header.BPP == BPP_8) {
+    } else if( Image->Header.BPP == TIM_IMAGE_BPP_8) {
         ColorOffsetMultiplier = 2;
     } else {
         ColorOffsetMultiplier = 1;
@@ -191,6 +187,24 @@ void VRAMPutTexture(VRAM_t *VRAM,TIMImage_t *Image)
         DestX = (Image->FrameBufferX - (Image->TexturePage * 64)) * ColorOffsetMultiplier;
         DestY = Image->FrameBufferY;
     }
+    if( ImageX ) {
+        *ImageX = DestX;
+    }
+    if( ImageY ) {
+        *ImageY = DestY;
+    }
+}
+void VRAMPutTexture(VRAM_t *VRAM,TIMImage_t *Image)
+{
+    int VRAMPage;
+    SDL_Surface *Src;
+    SDL_Rect SrcRect;
+    int DestX;
+    int DestY;
+    float ColorOffsetMultiplier;
+    
+    VRAMPage = Image->TexturePage;
+    VRAMGetTIMImageCoordinates(Image,&DestX,&DestY);
     SrcRect.x = VRAMGetTexturePageX(VRAMPage) + DestX;
     SrcRect.y = VRAMGetTexturePageY(VRAMPage,Image->Header.BPP) + DestY;
     SrcRect.w = Image->Width;
@@ -211,20 +225,7 @@ void VRAMPutRawTexture(VRAM_t *VRAM,TIMImage_t *Image)
     Byte *ImageData;
     
     VRAMPage = Image->TexturePage;
-    
-    if( Image->Header.BPP == BPP_4 ) {
-        ColorOffsetMultiplier = 4;
-    } else {
-        ColorOffsetMultiplier = 2;
-    }
-    
-    if( Image->FrameBufferY >= 256 ) {
-        DestX = (Image->FrameBufferX - ((Image->TexturePage - 16) * 64)) * ColorOffsetMultiplier;
-        DestY = Image->FrameBufferY - 256;
-    } else {
-        DestX = (Image->FrameBufferX - (Image->TexturePage * 64)) * ColorOffsetMultiplier;
-        DestY = Image->FrameBufferY;
-    }
+    VRAMGetTIMImageCoordinates(Image,&DestX,&DestY);
     SrcRect.x = VRAMGetTexturePageX(VRAMPage) + DestX;
     SrcRect.y = VRAMGetTexturePageY(VRAMPage,Image->Header.BPP) + DestY;
     SrcRect.w = Image->Width;
@@ -251,7 +252,7 @@ void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
     //     create a new storage for direct textures to be bind and passed to shaders.
     //     Either way we need to pass ColorMode to shader in order to fetch the correct data!
     //     (NOTE):An example of 16-bit texture can be found in MOH:Mission 7 Level 2!
-    if( Image->Header.BPP == BPP_16 ) {
+    if( Image->Header.BPP == TIM_IMAGE_BPP_16 ) {
         return;
     }
 
@@ -263,7 +264,7 @@ void VRAMPutCLUT(VRAM_t *VRAM,TIMImage_t *Image)
     SrcRect.y = DestY;
     SrcRect.w = Image->Header.NumCLUTColors;
     SrcRect.h = Image->Header.NumCLUTs;
-    if( Image->Header.BPP == BPP_4 ) {
+    if( Image->Header.BPP == TIM_IMAGE_BPP_4 ) {
         if( SrcRect.w > 16 ) {
             SrcRect.w = 16;
         }
@@ -287,15 +288,8 @@ void VRAMPutDirectModeIntoCLUT(VRAM_t *VRAM,TIMImage_t *Image)
     VRAMPage = Image->TexturePage;
     
     //NOTE:Guarding against 24-bpp images which are not tested yet.
-    assert(Image->Header.BPP == BPP_16);
-    
-    if( Image->FrameBufferY >= 256 ) {
-        DestX = (Image->FrameBufferX - ((Image->TexturePage - 16) * 64));
-        DestY = Image->FrameBufferY - 256;
-    } else {
-        DestX = (Image->FrameBufferX - (Image->TexturePage * 64));
-        DestY = Image->FrameBufferY;
-    }
+    assert(Image->Header.BPP == TIM_IMAGE_BPP_16);
+    VRAMGetTIMImageCoordinates(Image,&DestX,&DestY);
     SrcRect.x = VRAMGetTexturePageX(VRAMPage) + DestX;
     SrcRect.y = VRAMGetTexturePageY(VRAMPage,Image->Header.BPP) + DestY;
     SrcRect.w = Image->Width;
@@ -345,9 +339,9 @@ VRAM_t *VRAMInit(TIMImage_t *ImageList)
     for( Iterator = ImageList; Iterator; Iterator = Iterator->Next ) {
         //NOTE(Adriano):This guard is used in case there are 24-bits textures that requires loading.
         //At the moment only 16-BPP are used in MOH:MSN7LVL2.
-        assert(Iterator->Header.BPP != BPP_24);
+        assert(Iterator->Header.BPP != TIM_IMAGE_BPP_24);
         VRAMPutTexture(VRAM,Iterator);
-        if( Iterator->Header.BPP == BPP_16 ) {
+        if( Iterator->Header.BPP == TIM_IMAGE_BPP_16 ) {
             VRAMPutDirectModeIntoCLUT(VRAM,Iterator);
         } else {
             VRAMPutRawTexture(VRAM,Iterator);

@@ -27,15 +27,11 @@ typedef struct GUI_s {
     ImGuiContext        *DefaultContext;
     char                *ConfigFilePath;
     bool                VideoSettingsWindowHandle;
-    int                 NumActiveWindows;
     ProgressBar_t       *ProgressBar;
     char                *ErrorMessage;
     int                 ErrorDialogHandle;    
 } GUI_t;
 
-typedef struct Camera_s Camera_t;
-typedef struct ComTimeInfo_s ComTimeInfo_t;
-typedef struct RenderObjectManager_s RenderObjectManager_t;
 typedef struct Application_s Application_t;
 
 GUI_t               *GUIInit(VideoSystem_t *VideoSystem);

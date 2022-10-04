@@ -27,7 +27,6 @@ void SoundManagerAudioUpdate(void *UserData,Byte *Stream,int Length)
 {
     SoundManager_t *SoundManager;
     VBMusic_t *SelectedSound;
-//     VBMusic_t **CurrentMusicAddress;
     int ChunkLength;
     
     SoundManager = (SoundManager_t *) UserData;
@@ -95,20 +94,6 @@ void SoundManagerCloseDialog(FileDialog_t *FileDialog)
     FileDialogClose(FileDialog);
 }
 
-void SoundManagerAppendVBFile(SoundManager_t *SoundManager,VBMusic_t *VBFile)
-{
-    VBMusic_t *LastNode;
-    if( !SoundManager->SoundList ) {
-        SoundManager->SoundList = VBFile;
-    } else {
-        LastNode = SoundManager->SoundList;
-        while( LastNode->Next ) {
-            LastNode = LastNode->Next;
-        }
-        LastNode->Next = VBFile;
-    }
-}
-
 VBMusic_t *SoundManagerLoadVBFile(const char *File,GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
     VBMusic_t *VBFile;
@@ -154,11 +139,6 @@ VBMusic_t *SoundManagerLoadTAFFile(const char *File,GUI_t *GUI,VideoSystem_t *Vi
     int *VABOffsetList;
     int TAFHeaderPosition;
     int i;
-//     VBMusic_t *VBFile;
-//     
-//     VBFile = SoundSystemLoadVBFile(File);
-//     SoundManagerAppendVBFile(SoundManager,VBFile);
-//     return VBFile != NULL;
     
     //First load all the TIM images and free them in order to obtain the correct offset....
     TAFFile = fopen(File,"rb");
