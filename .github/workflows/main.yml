@@ -60,13 +60,8 @@ jobs:
             -G Ninja \
       - name: Build
         run: cmake --build Build --parallel
-      #- name: Setup tmate session
-        #if: success() || failure()
-        #uses: mxschmitt/action-tmate@v3
-      - name: Package artifact
-        run: cd Build/bin/ && zip -r ${{ matrix.config.artifact }} *
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.config.artifact }}
-          path: Build/bin/${{ matrix.config.artifact }}.zip
+          path: Build/bin/
