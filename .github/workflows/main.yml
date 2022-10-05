@@ -30,10 +30,6 @@ jobs:
             artifact: "Release-Linux",
           }
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Checkout submodules
-        run: git submodule update --init --recursive
       - name: Setup Windows dependencies
         if: startsWith(matrix.config.os, 'Windows')
         uses: msys2/setup-msys2@v2
@@ -48,6 +44,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt install libegl1-mesa-dev libglu1-mesa-dev ninja-build cmake build-essential -y
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
       - name: Configure
         run: |
           mkdir Build
@@ -63,5 +63,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: Artifact
+          name: ${{ matrix.config.artifact }}
           path: Build/bin/${{ matrix.config.artifact }}.zip
