@@ -23,12 +23,12 @@ jobs:
             shell: "msys2 {0}",
             artifact: "Release-Windows"
           }
-        #- {
-            #name: "Ubuntu",
-            #os: ubuntu-latest,
-            #shell: "sh",
-            #artifact: "Release-Linux",
-          #}
+        - {
+            name: "Ubuntu",
+            os: ubuntu-latest,
+            shell: "sh",
+            artifact: "Release-Linux",
+          }
     steps:
       - name: Setup Windows dependencies
         if: startsWith(matrix.config.os, 'Windows')
@@ -59,9 +59,9 @@ jobs:
             -G Ninja \
       - name: Build
         run: cmake --build Build --parallel
-      - name: Setup tmate session
-        if: success() || failure()
-        uses: mxschmitt/action-tmate@v3
+      #- name: Setup tmate session
+        #if: success() || failure()
+        #uses: mxschmitt/action-tmate@v3
       - name: Package artifact
         run: cd Build/bin/ && zip -r ${{ matrix.config.artifact }} *
       - name: Upload artifact
