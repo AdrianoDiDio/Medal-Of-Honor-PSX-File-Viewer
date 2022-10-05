@@ -59,6 +59,9 @@ jobs:
             -G Ninja \
       - name: Build
         run: cmake --build Build --parallel
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 15
       - name: Package artifact
         run: cd Build/bin/ && zip -r ${{ matrix.config.artifact }} *
       - name: Upload artifact
