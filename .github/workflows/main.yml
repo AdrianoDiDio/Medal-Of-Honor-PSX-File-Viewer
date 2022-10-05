@@ -1,0 +1,67 @@
+name: CMake Build Matrix
+on:
+  push:
+
+jobs:
+  build:
+
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+
+    defaults:
+      run:
+        shell: ${{ matrix.config.shell }}
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        config:
+        - {
+            name: "Windows",
+            os: windows-latest,
+            shell: "msys2 {0}",
+            artifact: "Release-Windows"
+          }
+        - {
+            name: "Ubuntu",
+            os: ubuntu-latest,
+            shell: "sh",
+            artifact: "Release-Linux",
+          }
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
+      - name: Setup Windows dependencies
+        if: startsWith(matrix.config.os, 'Windows')
+        uses: msys2/setup-msys2@v2
+        with:
+            install: >-
+                mingw-w64-x86_64-cmake
+                mingw-w64-x86_64-ninja
+                mingw-w64-x86_64-gcc
+                mingw-w64-x86_64-mesa
+      - name: Setup Ubuntu dependencies
+        if: startsWith(matrix.config.name, 'Ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt install libegl1-mesa-dev libglu1-mesa-dev ninja-build cmake build-essential -y
+      - name: Configure
+        run: |
+          mkdir Build
+          cmake \
+            -B Build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_PVS_STUDIO_ANALYZER=OFF \
+            -G Ninja \
+      - name: Build
+        run: cmake --build Build --parallel
+      - name: Package artifact
+        run: cd Build/bin/ && zip -r ${{ matrix.config.artifact }} *
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Artifact
+          path: Build/bin/${{ matrix.config.artifact }}.zip
