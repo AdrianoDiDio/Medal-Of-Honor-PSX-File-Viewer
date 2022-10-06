@@ -151,7 +151,7 @@ VBMusic_t *SoundManagerLoadTAFFile(const char *File,GUI_t *GUI,VideoSystem_t *Vi
     NumImages = 0;
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,10.f,"Loading all TIM Images");
     while( 1 ) {
-        Image = TIMLoadImage(TAFFile,NumImages);
+        Image = TIMLoadImage(TAFFile,NULL,NumImages);
         if( Image == NULL ) {
             break;
         }

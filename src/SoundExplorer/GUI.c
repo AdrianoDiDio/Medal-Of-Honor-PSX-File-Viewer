@@ -80,29 +80,13 @@ void GUIDrawMenuBar(Application_t *Application)
     }
     if (igBeginMenu("Settings",true)) {
         if( igMenuItem_Bool("Video",NULL,Application->GUI->VideoSettingsWindowHandle,true) ) {
-            Application->GUI->VideoSettingsWindowHandle = 1;
+            Application->GUI->VideoSettingsWindowHandle = !Application->GUI->VideoSettingsWindowHandle;
         }
         igEndMenu();
     }
     igEndMainMenuBar();
 }
-int GUIDrawTitleBar(const char *Title,float ContentWidth)
-{
-    char *Buffer;
-    ImVec2 TextSize;
-    int Result;
-    igPushStyleVar_Float(ImGuiStyleVar_DisabledAlpha,1.f);
-    igBeginDisabled(1);
-    asprintf(&Buffer,"##%s\n",Title);
-    Result = igCollapsingHeader_TreeNodeFlags(Buffer, ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Leaf );
-    igCalcTextSize(&TextSize,Title,NULL,false,-1);
-    igSameLine( (ContentWidth - TextSize.x ) / 2,-1);
-    igText(Title);
-    igEndDisabled();
-    igPopStyleVar(1);
-    free(Buffer);
-    return Result;
-}
+
 void GUIDrawMainWindow(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundManager_t *SoundManager)
 {
     ImGuiViewport *Viewport;
@@ -134,7 +118,7 @@ void GUIDrawMainWindow(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundManager_t *Sou
     igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
 
     if( !igBegin("Main Window", NULL,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | 
-            ImGuiWindowFlags_NoScrollWithMouse
+            ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoBringToFrontOnFocus
     ) ) {
         return;
     }

@@ -36,16 +36,16 @@ jobs:
         with:
             install: >-
                 git
-                zip
                 mingw-w64-x86_64-cmake
                 mingw-w64-x86_64-ninja
                 mingw-w64-x86_64-gcc
                 mingw-w64-x86_64-mesa
+                mingw-w64-x86_64-pulseaudio
       - name: Setup Ubuntu dependencies
         if: startsWith(matrix.config.name, 'Ubuntu')
         run: |
           sudo apt-get update
-          sudo apt install libegl1-mesa-dev libglu1-mesa-dev ninja-build cmake build-essential -y
+          sudo apt install libegl1-mesa-dev libglu1-mesa-dev libasound2-dev libpulse-dev ninja-build cmake build-essential -y
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Checkout submodules

@@ -35,7 +35,24 @@ void TIMImageListFree(TIMImage_t *ImageList)
         free(Temp);
     }
 }
-
+const char *TIMGetBPPFromImage(TIMImage_t *Image)
+{
+    if( !Image ) {
+        return "";
+    }
+    switch( Image->Header.BPP ) {
+        case TIM_IMAGE_BPP_4:
+            return "4-BPP image";
+        case TIM_IMAGE_BPP_8:
+            return "8-BPP image";
+        case TIM_IMAGE_BPP_16:
+            return "16-BPP image";
+        case TIM_IMAGE_BPP_24:
+            return "24-BPP image";
+        default:
+            return "Unknown BPP";
+    }
+}
 Byte GetR(short Color)
 {
     return (Color & 0x1f) << 3;
@@ -419,7 +436,7 @@ Byte **TIMSetRowPointer(png_structp PNGPtr,TIMImage_t *Image)
     return RowPointer;
 }
 
-void TIMWritePNGImage(char *OutName,TIMImage_t *Image)
+void TIMWritePNGImage(TIMImage_t *Image,char *OutName)
 {
     FILE *PNGImage;
     png_structp PNGPtr;
@@ -469,6 +486,7 @@ void TIMWritePNGImage(char *OutName,TIMImage_t *Image)
         png_free (PNGPtr, RowPointer[y]);
     }
     png_free (PNGPtr, RowPointer);
+    png_destroy_write_struct(&PNGPtr,&PNGInfoPtr);
     fclose(PNGImage);
 }
 
@@ -497,9 +515,11 @@ void TIMGetPalette(FILE *TIMIMage,TIMImage_t *Image)
 }
 
 
-TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
+TIMImage_t *TIMLoadImage(FILE *TIMImage,const char *FileName,int NumImages)
 {
     TIMImage_t *ResultImage;
+    char *BaseName;
+    char *FinalName;
     float ImageSizeOffset;
     int Ret;
     int i;
@@ -527,6 +547,15 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     }
     DPrintf("Found image at offset %li\n",ftell(TIMImage) - sizeof(ResultImage->Header.Magic));
     fread(&ResultImage->Header.BPP,sizeof(ResultImage->Header.BPP),1,TIMImage);
+    if( FileName ) {
+        BaseName = GetBaseName(FileName);
+        FinalName = SwitchExt(BaseName,"");
+        sprintf(ResultImage->Name,"%s-Image-%i",FinalName,NumImages);
+        free(BaseName);
+        free(FinalName);
+    } else {
+        sprintf(ResultImage->Name,"Image-%i",NumImages);
+    }
     sprintf(ResultImage->Name,"IMAGE %i",NumImages);
     DPrintf("-- %s --\n",ResultImage->Name);
     DPrintf("Magic is %i\n",ResultImage->Header.Magic);
@@ -616,32 +645,47 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,int NumImages)
     return ResultImage;
 }
 
-TIMImage_t *TIMGetAllImages(const char *File)
+void TIMAppendImageToList(TIMImage_t **ImageList,TIMImage_t *Image)
+{
+    TIMImage_t *LastNode;
+    if( !*ImageList ) {
+        *ImageList = Image;
+    } else {
+        LastNode = *ImageList;
+        while( LastNode->Next ) {
+            LastNode = LastNode->Next;
+        }
+        LastNode->Next = Image;
+    }
+}
+TIMImage_t *TIMLoadAllImages(const char *File,int *NumImages)
 {
     TIMImage_t *List;
     FILE *TIMFile;
-    int NumImages;
+    int LocalNumImages;
     
     List = NULL;
     
     TIMFile = fopen(File,"rb");
     
     if( !TIMFile ) {
-        printf("TIMGetAllImages:Error opening file %s!\n",File);
+        printf("TIMLoadAllImages:Error opening file %s!\n",File);
         return NULL;
     }
     List = NULL;
-    NumImages = 0;
+    LocalNumImages = 0;
     while( 1 ) {
-        TIMImage_t *Image = TIMLoadImage(TIMFile,NumImages);
+        TIMImage_t *Image = TIMLoadImage(TIMFile,File,LocalNumImages);
         if( Image == NULL ) {
             break;
         }
-        Image->Next = List;
-        List = Image;
-        NumImages++;
+        TIMAppendImageToList(&List,Image);
+        LocalNumImages++;
     }
-    DPrintf("TIMGetAllImages:Loaded %i images\n",NumImages);
+    DPrintf("TIMLoadAllImages:Loaded %i images\n",LocalNumImages);
+    if( NumImages ) {
+        *NumImages = LocalNumImages;
+    }
     fclose(TIMFile);
     return List;
 }

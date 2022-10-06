@@ -45,6 +45,24 @@ const VSyncSettings_t VSyncOptions[] = {
 
 int NumVSyncOptions = sizeof(VSyncOptions) / sizeof(VSyncOptions[0]);
 
+int GUIDrawTitleBar(const char *Title,float ContentWidth)
+{
+    char *Buffer;
+    ImVec2 TextSize;
+    int Result;
+    igPushStyleVar_Float(ImGuiStyleVar_DisabledAlpha,1.f);
+    igBeginDisabled(1);
+    asprintf(&Buffer,"##%s\n",Title);
+    Result = igCollapsingHeader_TreeNodeFlags(Buffer, ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Leaf );
+    igCalcTextSize(&TextSize,Title,NULL,false,-1);
+    igSameLine( (ContentWidth - TextSize.x ) / 2,-1);
+    igText(Title);
+    igEndDisabled();
+    igPopStyleVar(1);
+    free(Buffer);
+    return Result;
+}
+
 void GUIPrepareModalWindow()
 {
     ImGuiIO *IO;

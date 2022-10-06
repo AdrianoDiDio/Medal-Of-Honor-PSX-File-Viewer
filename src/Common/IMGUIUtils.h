@@ -64,6 +64,7 @@ void            GUIEndFrame();
 void            GUIPrepareModalWindow();
 bool            GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...);
 void            GUIDrawVideoSettingsWindow(bool *WindowHandle,VideoSystem_t *VideoSystem);
+int             GUIDrawTitleBar(const char *Title,float ContentWidth);
 
 ProgressBar_t   *ProgressBarInitialize(VideoSystem_t *VideoSystem);
 void            ProgressBarDestroy(ProgressBar_t *ProgressBar);

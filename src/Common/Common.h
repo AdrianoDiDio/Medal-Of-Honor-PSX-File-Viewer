@@ -90,7 +90,7 @@ char        *StringCopy(const char *From);
 char        *StringAppend(const char *FirstString,const char *SecondString);
 int         StringToInt(const char *String);
 int         GetFileLength(FILE *Fp);
-const char *GetFileExtension(const char *FileName);
+char        *GetFileExtension(const char *FileName);
 char        *ReadTextFile(const char *File,int Length);
 int         GetCurrentFilePosition(FILE *Fp);
 void        SkipFileSection(int SectionSize,FILE *InFile);

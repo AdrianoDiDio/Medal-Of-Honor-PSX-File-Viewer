@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-    Copyright (C) 2018-2020 Adriano Di Dio.
+    Copyright (C) 2018-2022 Adriano Di Dio.
     
     SoundExplorer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,23 +16,27 @@
     along with SoundExplorer.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */ 
-
-#ifndef __SOUND_EXPLORER_H_
-#define __SOUND_EXPLORER_H_
+#ifndef __GUI_H_
+#define __GUI_H_
 
 #include "../Common/Common.h"
-#include "../Common/Config.h"
-#include "../Common/Engine.h"
-#include "GUI.h"
-#include "SoundManager.h"
+#include "../Common/Video.h"
+#include "../Common/IMGUIUtils.h"
 
+typedef struct GUI_s {
+    ImGuiContext        *DefaultContext;
+    char                *ConfigFilePath;
+    bool                VideoSettingsWindowHandle;
+    ProgressBar_t       *ProgressBar;
+    char                *ErrorMessage;
+    int                 ErrorDialogHandle;    
+} GUI_t;
 
-typedef struct Application_s {
-    Engine_t                    *Engine;
-    GUI_t                       *GUI;
-    SoundManager_t              *SoundManager;
-} Application_t;
+typedef struct Application_s Application_t;
 
-void        Quit(Application_t *Application);
-
-#endif //__SOUND_EXPLORER_H_
+GUI_t               *GUIInit(VideoSystem_t *VideoSystem);
+void                GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
+void                GUIDraw(Application_t *Application);
+void                GUIFree(GUI_t *GUI);
+#endif//__GUI_H_
+ 

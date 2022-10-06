@@ -325,7 +325,7 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
     //0 is hardcoded...for the images it doesn't make any difference between 0 and 1
     //but if we need to load all the level sounds then 0 means Standard Mode while 1 American (All voices are translated to english!).
     snprintf(Buffer,sizeof(Buffer),"%s%c%i_%i0.TAF",Level->MissionPath,PATH_SEPARATOR,Level->MissionNumber,Level->LevelNumber);
-    Level->ImageList = TIMGetAllImages(Buffer);
+    Level->ImageList = TIMLoadAllImages(Buffer,NULL);
 
     if( !Level->ImageList ) {
         DPrintf("LevelInit:Failed to load TAF file %s\n",Buffer);

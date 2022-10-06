@@ -15,7 +15,7 @@ Table of contents
       * [Credits](#credits)
     * [RSC Extractor](#rsc-extractor)
       * [Run](#run)
-    * [TIM Extractor](#tim-extractor)
+    * [TIM Viewer](#tim-viewer)
       * [Run](#run-1)
       * [Credits](#credits-1)
     * [Sound Explorer](#sound-explorer)
@@ -201,21 +201,23 @@ Compile:
 
 This command will extract the content of <File.rsc> creating all the required directories as declared in the RSC file.
 
-### TIM Extractor
-This tool is used to extract all the TIM images from different files and
+### TIM Viewer
+This tool is used to view all the TIM images from different files and
 convert them to png.
 
 #### Run
-  > ./TIMExtractor `<File.tim>`
+  > ./TIMViewer `<Optional File.tim>`
 
-This command will read the content of <File.tim>, convert it to png and
-save it in the current folder.  
-If the file contains more than one TIM then it creates a folder with the
-same name as <File.tim> (without the extension) and all the images that were
-found in the file will be saved inside that folder.
 #### Credits
-TIMExtractor uses the following libraries:  
-**libpng**: http://www.libpng.org/  
+TIMViewer uses the following libraries:  
+
+**SDL2**: https://www.libsdl.org/  
+**zlib**: https://github.com/madler/zlib  
+**libpng**:http://www.libpng.org/  
+**IMGUI**: https://github.com/ocornut/imgui/  
+**IMGUI_FileDialog**:  https://github.com/aiekick/ImGuiFileDialog  
+The font file shipped with the program is:  
+**DroidSans.ttf**: https://www.fontsquirrel.com/fonts/droid-sans
 
 ### Sound Explorer
 

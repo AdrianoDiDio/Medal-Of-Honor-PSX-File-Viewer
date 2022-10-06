@@ -343,11 +343,11 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
     
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,0,"Loading all images");
     TAFFile = SwitchExt(File,".TAF");
-    BSDPack->ImageList = TIMGetAllImages(TAFFile);
+    BSDPack->ImageList = TIMLoadAllImages(TAFFile,NULL);
     if( !BSDPack->ImageList ) {
         free(TAFFile);
         TAFFile = SwitchExt(File,"0.TAF");
-        BSDPack->ImageList = TIMGetAllImages(TAFFile);
+        BSDPack->ImageList = TIMLoadAllImages(TAFFile,NULL);
         if( !BSDPack->ImageList ) {
             DPrintf("RenderObjectManagerLoadBSD:Failed to load images from TAF file %s\n",TAFFile);
             ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_INVALID_TAF_FILE;

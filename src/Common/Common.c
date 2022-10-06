@@ -203,7 +203,7 @@ char *SwitchExt(const char *In, const char *Ext)
     strncat(NewExt, Ext, strlen(NewExt));
     return NewExt;
 }
-const char *GetFileExtension(const char *FileName) {
+char *GetFileExtension(const char *FileName) {
     const char *Dot;
     Dot = strrchr(FileName, '.');
     if(!Dot || Dot == FileName) { 
