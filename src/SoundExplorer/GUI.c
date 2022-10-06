@@ -151,7 +151,7 @@ void GUIDrawMainWindow(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundManager_t *Sou
                         "Sound effects and music are usually encoded with a frequency of 22050 Hz "
                         "while voice effects are sampled using a frequency of 11025 Hz.\n"
                         "When loading a TAF file only sounds contained inside the third and fourth VAB are sampled using a frequency "
-                        "of 11025 since they mostly contains only voices.\n"
+                        "of 11025 Hz since they mostly contains only voices.\n"
                         "Before exporting make sure to set the right frequency otherwise the sound will not play correctly.");
                 if( igRadioButton_Bool("11025",CurrentSound->Frequency == 11025.f) ) {
                     ProgressBarBegin(GUI->ProgressBar,"Resampling");

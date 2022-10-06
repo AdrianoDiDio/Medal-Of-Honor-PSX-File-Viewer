@@ -125,6 +125,13 @@ Some sample screenshot taken from SoundExplorer:
 *Screenshot taken from SoundExplorer when opening the
 TAF file contained in Medal Of Honor Mission 1 Level 1*
 
+Some sample screenshot taken from TIMViewer:  
+
+<img src="Images/TIMViewer_Main_Interface.png" width="600" />
+
+*Screenshot taken from SoundExplorer when opening all the
+tims inside the TAF file contained in Medal Of Honor Mission 1 Level 3*
+
 ## Build
 Before building make sure to fetch all the submodules by typing:  
 > git submodule --init --recursive  

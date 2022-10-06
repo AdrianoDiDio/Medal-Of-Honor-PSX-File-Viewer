@@ -556,7 +556,6 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,const char *FileName,int NumImages)
     } else {
         sprintf(ResultImage->Name,"Image-%i",NumImages);
     }
-    sprintf(ResultImage->Name,"IMAGE %i",NumImages);
     DPrintf("-- %s --\n",ResultImage->Name);
     DPrintf("Magic is %i\n",ResultImage->Header.Magic);
     DPrintf("Flags are %i\n",ResultImage->Header.BPP);
