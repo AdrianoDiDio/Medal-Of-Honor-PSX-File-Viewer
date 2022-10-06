@@ -129,7 +129,7 @@ Some sample screenshot taken from TIMViewer:
 
 <img src="Images/TIMViewer_Main_Interface.png" width="600" />
 
-*Screenshot taken from SoundExplorer when opening all the
+*Screenshot taken from TIMViewer when opening all the
 tims inside the TAF file contained in Medal Of Honor Mission 1 Level 3*
 
 ## Build

@@ -40,7 +40,6 @@ jobs:
                 mingw-w64-x86_64-ninja
                 mingw-w64-x86_64-gcc
                 mingw-w64-x86_64-mesa
-                mingw-w64-x86_64-pulseaudio
       - name: Setup Ubuntu dependencies
         if: startsWith(matrix.config.name, 'Ubuntu')
         run: |
