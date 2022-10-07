@@ -103,7 +103,7 @@ VBMusic_t *SoundManagerLoadVBFile(const char *File,GUI_t *GUI,VideoSystem_t *Vid
         return NULL;
     }
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,50.f,"Loading Music file");
-    VBFile = SoundSystemLoadVBMusic(File,0);
+    VBFile = SoundSystemLoadVBMusic(File,-1);
     if( !VBFile ) {
         DPrintf("SoundManagerLoadVBFile:Couldn't load VB file %s\n",File);
         return NULL;

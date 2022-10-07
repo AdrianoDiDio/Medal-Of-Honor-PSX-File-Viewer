@@ -325,20 +325,6 @@ void GUIDrawMainWindow(GUI_t *GUI,VideoSystem_t *VideoSystem,ImageManager_t *Ima
         GUIDrawTextureWindow(ImageManager,igGetColumnWidth(0));
         igSeparator();
         GUIDrawVRAMWindow(ImageManager);
-//         igSameLine(0,-1);
-//         if( SoundManager->SoundList ) {
-//             if( igButton("Export All Sounds to WAV",ZeroSize) ) {
-//                 SoundManagerExportAll(SoundManager,GUI,VideoSystem);
-//             }
-//         }
-//         TreeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-//         if( igCollapsingHeader_TreeNodeFlags("Current Image Info",TreeNodeFlags) ) {
-//             if( ImageManager->SelectedImage ) {
-//                 igSeparator();
-//             } else {
-//                 igText("Please select an image in order to see the details.");
-//             }
-//         }
         igEnd();
         igTableSetColumnIndex(1);
         igBeginChild_Str("ImageList",ZeroSize,false,0);
@@ -348,6 +334,7 @@ void GUIDrawMainWindow(GUI_t *GUI,VideoSystem_t *VideoSystem,ImageManager_t *Ima
             TreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
             if( ImageIterator == ImageManager->SelectedImage ) {
                 TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
+                igSetScrollHereY(0.5f);
             }
             if( igTreeNodeEx_Str(ImageIterator->Name,TreeNodeFlags) ) {
                 if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
