@@ -141,8 +141,8 @@ void GUIDrawTextureWindow(ImageManager_t *ImageManager,float ColumnWidth)
     if( ImageManager->SelectedImage->Header.BPP == TIM_IMAGE_BPP_4 || ImageManager->SelectedImage->Header.BPP == TIM_IMAGE_BPP_8 ) {
         igText("CLUT Position:%ix%i",ImageManager->SelectedImage->Header.CLUTOrgX,ImageManager->SelectedImage->Header.CLUTOrgY);
         igText("CLUT Size:%i",ImageManager->SelectedImage->Header.CLUTSize);
-        igText("Num CLUTS:%i",ImageManager->SelectedImage->Header.NumCLUTs);
-        igText("Num CLUTS colors:%i",ImageManager->SelectedImage->Header.NumCLUTColors);
+        igText("Number of CLUT tables:%i",ImageManager->SelectedImage->Header.NumCLUTs);
+        igText("Number of Colors inside CLUT:%i",ImageManager->SelectedImage->Header.NumCLUTColors);
     } else {
         igText("Image has no CLUT data\n");
     }
