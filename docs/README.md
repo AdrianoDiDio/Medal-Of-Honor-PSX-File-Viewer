@@ -93,8 +93,7 @@ Table of contents
       * [Token Type 11](#token-type-11)
   + [STR Files](#str-files)
     
-    ## Introduction
-
+## Introduction
 This project contains a set of tools that can be used to view Medal Of
 Honor and Medal Of Honor Underground Level files and images.  
 It was tested under Linux and Windows but it should also run on any other
