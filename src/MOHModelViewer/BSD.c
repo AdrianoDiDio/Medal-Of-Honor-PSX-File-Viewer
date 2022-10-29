@@ -486,9 +486,9 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
     BSDRenderObjectResetVertexTable(RenderObject);
     glm_vec3_zero(RenderObject->Center);
     glm_mat4_identity(TransformMatrix);
-    Translation[0] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.x / 4096;
-    Translation[1] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.y / 4096;
-    Translation[2] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.z / 4096;
+    Translation[0] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.x / 4096.f;
+    Translation[1] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.y / 4096.f;
+    Translation[2] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.z / 4096.f;
     glm_translate_make(TransformMatrix,Translation);
     //NOTE(Adriano):Interpolate only between frames of the same animation and not in-between two different one.
     //              Also do not interpolate if the frame is the same as the previous one.
