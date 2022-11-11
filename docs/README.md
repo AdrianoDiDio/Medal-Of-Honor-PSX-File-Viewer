@@ -92,8 +92,9 @@ Table of contents
       * [GFX Model](#gfx-model)
       * [Token Type 11](#token-type-11)
   + [STR Files](#str-files)
-    
+
 ## Introduction
+
 This project contains a set of tools that can be used to view Medal Of
 Honor and Medal Of Honor Underground Level files and images.  
 It was tested under Linux and Windows but it should also run on any other
@@ -266,6 +267,7 @@ SoundExplorer uses the following libraries:
 **libpng**:http://www.libpng.org/  
 **IMGUI**: https://github.com/ocornut/imgui/  
 **IMGUI_FileDialog**:  https://github.com/aiekick/ImGuiFileDialog  
+**LibSampleRate**: https://github.com/libsndfile/libsamplerate  
 The font file shipped with the program is:  
 **DroidSans.ttf**: https://www.fontsquirrel.com/fonts/droid-sans
 
@@ -300,7 +302,7 @@ case).
 ### TSP Files
 
 All TSP files starts with an header which contains the following data:  
-If Version is 1:
+If Version is 2:
 
 | Type  | Size    | Description            |
 | ----- | ------- | ---------------------- |
@@ -397,7 +399,7 @@ the face array that goes from
 Otherwise it represents the next node offset in the array that needs to be
 loaded.
 
-**Note that this is valid only in TSP version 1, TSP version 3 uses a
+**Note that this is valid only in TSP version 2, TSP version 3 uses a
 different algorithm based on what is described on
 the [Face Section](#faces).**
 
@@ -478,7 +480,7 @@ After reading the data and storing it into an array, we need to iterate and
 read the next 4-bytes that contains a vertex and a new face index.  
 Note that unlike V2, that it is not encoded, V0 and V1 can be extracted
 using bit shifting: (V0V1 & 0x1FFF) and (V0V1 >> 16 ) & 0X1FFF  
-There are three possible cases that we can find when reading this int: 
+There are three possible cases that we can find when reading this int:
 
 * *If it is equal to 0x1fff1fff than this is the last data that we need to
   read for that node.  
@@ -585,8 +587,8 @@ If Child0 is less than 0 then the current node is a leaf and contains
 Face Index array.
 
 If the node is not a leaf one then Child0 and Child1 are used to iterate
-over the KDTree
-Child1 has two function It represents the next node in the KDTree and also
+over the KDTree.  
+Child1 has two functions, It represents the next node in the KDTree and also
 the split axis:  
 
 ```
@@ -876,7 +878,7 @@ There are three possible cases that we can find when reading this int:
 * If, instead, is equal to 0x1FFF then we need to read a new face struct and
   read the next int until one of the two markers is found.  
 
-* Otherwise it is a valid int and can be used to build a new face. 
+* Otherwise it is a valid int and can be used to build a new face.
 
 The new face is made from the main face structure that we read at the
 beginning with only the vertex updated using the current integer.  
@@ -1265,8 +1267,7 @@ Each Property contains the following data:
 | short | n bytes | Node List       |
 
 **IMPORTANT: The actual number of nodes is found by subtracting the value 
-
-255 to the one that was  loaded.**
+255 to the one that was loaded.**  
 
 ### RSC Files
 

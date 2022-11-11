@@ -270,9 +270,9 @@ int ConfigSetNumber(const char *Name,float Value)
 
 /*
  Register a new configuration key using the given Name,Value and Description.
- If the config has already been registered then a reference to it is returned,
- otherwise a new config entry is created and added to the list and the return value will be the new config entry pointer.
- If the config cannot be created due to memory allocation errors then NULL is returned.
+ If the config has already been registered the function will return 0,
+ otherwise a new config entry is created and added to the list and the return value will be 1.
+ If the config cannot be created due to memory allocation errors then it will return -1.
  */
 int ConfigRegister(const char *Name,const char *Value,const char *Description)
 {

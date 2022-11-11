@@ -155,7 +155,8 @@ void GUIDrawTextureWindow(ImageManager_t *ImageManager,float ColumnWidth)
     igEndGroup();
     igEndGroup();
 }
-void GUIDrawVRAMWindow(ImageManager_t *ImageManager)
+
+void GUIDrawVRAMWindow(GUI_t *GUI,ImageManager_t *ImageManager)
 {
     ImGuiIO *IO;
     
@@ -254,6 +255,7 @@ void GUIDrawVRAMWindow(ImageManager_t *ImageManager)
             if( MousePosition.x >= Min.x && MousePosition.y >= Min.y && 
                 MousePosition.x <= Max.x && MousePosition.y <= Max.y ) {
                 ImageManager->SelectedImage = Image;
+                GUI->ImageSelectionChanged = 1;
                 break;
             }
         }
@@ -324,7 +326,7 @@ void GUIDrawMainWindow(GUI_t *GUI,VideoSystem_t *VideoSystem,ImageManager_t *Ima
         }
         GUIDrawTextureWindow(ImageManager,igGetColumnWidth(0));
         igSeparator();
-        GUIDrawVRAMWindow(ImageManager);
+        GUIDrawVRAMWindow(GUI,ImageManager);
         igEnd();
         igTableSetColumnIndex(1);
         igBeginChild_Str("ImageList",ZeroSize,false,0);
@@ -334,7 +336,10 @@ void GUIDrawMainWindow(GUI_t *GUI,VideoSystem_t *VideoSystem,ImageManager_t *Ima
             TreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
             if( ImageIterator == ImageManager->SelectedImage ) {
                 TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
-                igSetScrollHereY(0.5f);
+                if( GUI->ImageSelectionChanged ) {
+                    igSetScrollHereY(0.5f);
+                    GUI->ImageSelectionChanged = 0;
+                }
             }
             if( igTreeNodeEx_Str(ImageIterator->Name,TreeNodeFlags) ) {
                 if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
@@ -376,6 +381,7 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     memset(GUI,0,sizeof(GUI_t));
     GUI->ErrorMessage = NULL;
     GUI->ErrorDialogHandle = 0;
+    GUI->ImageSelectionChanged = 0;
     
     ConfigPath = AppGetConfigPath();
     asprintf(&GUI->ConfigFilePath,"%simgui.ini",ConfigPath);

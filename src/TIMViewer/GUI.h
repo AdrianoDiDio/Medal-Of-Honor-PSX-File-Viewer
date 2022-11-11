@@ -29,7 +29,8 @@ typedef struct GUI_s {
     bool                VideoSettingsWindowHandle;
     ProgressBar_t       *ProgressBar;
     char                *ErrorMessage;
-    int                 ErrorDialogHandle;    
+    int                 ErrorDialogHandle;
+    int                 ImageSelectionChanged;
 } GUI_t;
 
 typedef struct Application_s Application_t;

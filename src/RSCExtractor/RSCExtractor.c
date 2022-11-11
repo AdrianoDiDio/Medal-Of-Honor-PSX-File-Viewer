@@ -111,6 +111,7 @@ void DumpChunk(FILE *RSCFile,RSC_Entry_t *Entry) {
     fwrite(Chunk,Entry->Length,1,OutFile);
     fseek(RSCFile,CurrentFilePosition,SEEK_SET);
     free(NormalizedFilePath);
+    free(Chunk);
     fflush(OutFile);
     fclose(OutFile);
     return;
