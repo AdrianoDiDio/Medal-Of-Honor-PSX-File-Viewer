@@ -45,6 +45,85 @@ const VSyncSettings_t VSyncOptions[] = {
 
 int NumVSyncOptions = sizeof(VSyncOptions) / sizeof(VSyncOptions[0]);
 
+
+void ErrorMessageDialogFree(ErrorMessageDialog_t *ErrorMessageDialog)
+{
+    if( !ErrorMessageDialog ) {
+        return;
+    }
+    
+    if( ErrorMessageDialog->Message ) {
+        free(ErrorMessageDialog->Message);
+        ErrorMessageDialog->Message = NULL;
+    }
+    free(ErrorMessageDialog);
+}
+
+void ErrorMessageDialogSet(ErrorMessageDialog_t *ErrorMessageDialog,const char *ErrorMessage)
+{
+    if( !ErrorMessageDialog ) {
+        DPrintf("ErrorMessageDialogSet:Invalid Dialog\n");
+        return;
+    }
+    if( !ErrorMessage ) {
+        DPrintf("ErrorMessageDialogSet:Invalid Error Message\n");
+        return;
+    }
+    
+    if( ErrorMessageDialog->Message ) {
+        free(ErrorMessageDialog->Message);
+    }
+    
+    ErrorMessageDialog->Message = StringCopy(ErrorMessage);
+}
+
+void ErrorMessageDialogDraw(ErrorMessageDialog_t *ErrorMessageDialog)
+{
+    ImVec2 ButtonSize;
+    
+    if( !ErrorMessageDialog ) {
+        return;
+    }
+    
+    if( !ErrorMessageDialog->Message ) {
+        return;
+    }
+    
+    if( !ErrorMessageDialog->Handle ) {
+        igOpenPopup_Str("Error",0);
+        ErrorMessageDialog->Handle = 1;
+    }
+    ButtonSize.x = 120;
+    ButtonSize.y = 0;
+    GUIPrepareModalWindow();
+    if( igBeginPopupModal("Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
+        igText(ErrorMessageDialog->Message);
+        if (igButton("OK", ButtonSize) ) {
+            igCloseCurrentPopup();
+            free(ErrorMessageDialog->Message);
+            ErrorMessageDialog->Message = NULL;
+            ErrorMessageDialog->Handle = 0;
+            return;
+        }
+        igEndPopup();
+    }
+    return;
+}
+ErrorMessageDialog_t *ErrorMessageDialogInit()
+{
+    ErrorMessageDialog_t *Dialog;
+    
+    Dialog = malloc(sizeof(ErrorMessageDialog_t));
+    
+    if( !Dialog ) {
+        DPrintf("ErrorMessageDialogInit:Failed to allocate memory\n");
+        return NULL;
+    }
+    Dialog->Message = NULL;
+    Dialog->Handle = 0;
+    return Dialog;
+}
+
 int GUIDrawTitleBar(const char *Title,float ContentWidth)
 {
     char *Buffer;
@@ -379,7 +458,7 @@ void FileDialogOpenWithUserData(FileDialog_t *FileDialog,void *UserData)
         return;
     }
     IGFD_OpenDialog2(FileDialog->Window,FileDialog->Key,FileDialog->WindowTitle,FileDialog->Filters,".",1,
-                     UserData,ImGuiFileDialogFlags_DontShowHiddenFiles);
+                     UserData,ImGuiFileDialogFlags_DontShowHiddenFiles | ImGuiFileDialogFlags_CaseInsensitiveExtention);
 }
 void FileDialogOpen(FileDialog_t *FileDialog)
 {

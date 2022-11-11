@@ -39,9 +39,7 @@ void GUIFree(GUI_t *GUI)
     GUIReleaseContext(GUI->DefaultContext);
     ProgressBarDestroy(GUI->ProgressBar);
     FileDialogListFree();
-    if( GUI->ErrorMessage ) {
-        free(GUI->ErrorMessage);
-    }
+    ErrorMessageDialogFree(GUI->ErrorMessageDialog);
     free(GUI->ConfigFilePath);
     free(GUI);
 }
@@ -446,26 +444,6 @@ void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager,VideoSyste
     }
 }
 
-void GUISetErrorMessage(GUI_t *GUI,const char *Message)
-{
-    if( !GUI ) {
-        DPrintf("GUISetErrorMessage:Invalid GUI struct\n");
-        return;
-    }
-    if( !Message ) {
-        DPrintf("GUISetErrorMessage:Invalid Message.");
-        return;
-    }
-    
-    if( GUI->ErrorMessage ) {
-        free(GUI->ErrorMessage);
-    }
-    
-    GUI->ErrorMessage = StringCopy(Message);
-    igOpenPopup_Str("Error",0);
-    GUIPushWindow(GUI);
-}
-
 void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo)
 {
     ImVec2 ButtonSize;
@@ -482,19 +460,7 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSyste
     }
     
     FileDialogRenderList();
-    if( GUI->ErrorMessage ) {
-        ButtonSize.x = 120;
-        ButtonSize.y = 0;
-        GUIPrepareModalWindow();
-        if( igBeginPopupModal("Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
-            igText(GUI->ErrorMessage);
-            if (igButton("OK", ButtonSize) ) {
-                GUIPopWindow(GUI);
-                igCloseCurrentPopup(); 
-            }
-            igEndPopup();
-        }
-    }
+    ErrorMessageDialogDraw(GUI->ErrorMessageDialog);
     GUIDrawDebugWindow(GUI,LevelManager,Camera,VideoSystem);
     
     PreviousHandleValue = GUI->VideoSettingsWindowHandle;
@@ -520,7 +486,11 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     }
     
     memset(GUI,0,sizeof(GUI_t));
-    GUI->ErrorMessage = NULL;
+    GUI->ErrorMessageDialog = ErrorMessageDialogInit();
+    if( !GUI->ErrorMessageDialog ) {
+        DPrintf("GUIInit:Failed to initialize error message dialog\n");
+        return NULL;
+    }
     
     ConfigPath = AppGetConfigPath();
     asprintf(&GUI->ConfigFilePath,"%simgui.ini",ConfigPath);

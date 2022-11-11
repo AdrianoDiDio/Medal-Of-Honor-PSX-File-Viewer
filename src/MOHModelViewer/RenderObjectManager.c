@@ -404,7 +404,7 @@ int RenderObjectManagerLoadPack(RenderObjectManager_t *RenderObjectManager,GUI_t
     Result = RenderObjectManagerLoadBSD(RenderObjectManager,GUI,VideoSystem,File);
     ProgressBarEnd(GUI->ProgressBar,VideoSystem);
     if( Result <= 0) {
-        GUISetErrorMessage(GUI,RenderObjectManagerErrorToString(Result));
+        ErrorMessageDialogSet(GUI->ErrorMessageDialog,RenderObjectManagerErrorToString(Result));
     }
     free(Title);
     free(BaseName);

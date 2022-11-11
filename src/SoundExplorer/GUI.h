@@ -24,12 +24,11 @@
 #include "../Common/IMGUIUtils.h"
 
 typedef struct GUI_s {
-    ImGuiContext        *DefaultContext;
-    char                *ConfigFilePath;
-    bool                VideoSettingsWindowHandle;
-    ProgressBar_t       *ProgressBar;
-    char                *ErrorMessage;
-    int                 ErrorDialogHandle;    
+    ImGuiContext            *DefaultContext;
+    char                    *ConfigFilePath;
+    bool                    VideoSettingsWindowHandle;
+    ProgressBar_t           *ProgressBar;
+    ErrorMessageDialog_t    *ErrorMessageDialog;   
 } GUI_t;
 
 typedef struct Application_s Application_t;

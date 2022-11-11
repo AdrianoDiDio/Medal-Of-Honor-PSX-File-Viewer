@@ -28,10 +28,7 @@ void GUIFree(GUI_t *GUI)
     GUIReleaseContext(GUI->DefaultContext);
     ProgressBarDestroy(GUI->ProgressBar);
     FileDialogListFree();
-    
-    if( GUI->ErrorMessage ) {
-        free(GUI->ErrorMessage);
-    }
+    ErrorMessageDialogFree(GUI->ErrorMessageDialog);
     free(GUI->ConfigFilePath);
     free(GUI);
 }
@@ -40,30 +37,7 @@ void GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
 {
     ImGui_ImplSDL2_ProcessEvent(Event);
 }
-void GUIDrawErrorMessage(GUI_t *GUI)
-{
-    ImVec2 ButtonSize;
-    if( !GUI->ErrorMessage ) {
-        return;
-    }
-    if( !GUI->ErrorDialogHandle ) {
-        igOpenPopup_Str("Error",0);
-        GUI->ErrorDialogHandle = 1;
-    }
-    ButtonSize.x = 120;
-    ButtonSize.y = 0;
-    GUIPrepareModalWindow();
-    if( igBeginPopupModal("Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
-        igText(GUI->ErrorMessage);
-        if (igButton("OK", ButtonSize) ) {
-            igCloseCurrentPopup();
-            GUI->ErrorDialogHandle = 0;
-            free(GUI->ErrorMessage);
-            GUI->ErrorMessage = NULL;
-        }
-        igEndPopup();
-    }
-}
+
 void GUIDrawMenuBar(Application_t *Application)
 {
     if( !igBeginMainMenuBar() ) {
@@ -235,6 +209,7 @@ void GUIDraw(Application_t *Application)
     GUIDrawMainWindow(Application->GUI,Application->Engine->VideoSystem,Application->SoundManager);
     GUIDrawVideoSettingsWindow(&Application->GUI->VideoSettingsWindowHandle,Application->Engine->VideoSystem);
     FileDialogRenderList();
+    ErrorMessageDialogDraw(Application->GUI->ErrorMessageDialog);
 //     igShowDemoWindow(NULL);
     GUIEndFrame();
 }
@@ -252,9 +227,11 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     }
     
     memset(GUI,0,sizeof(GUI_t));
-    GUI->ErrorMessage = NULL;
-    GUI->ErrorDialogHandle = 0;
-    
+    GUI->ErrorMessageDialog = ErrorMessageDialogInit();
+    if( !GUI->ErrorMessageDialog ) {
+        DPrintf("GUIInit:Failed to initialize error message dialog\n");
+        return NULL;
+    }
     ConfigPath = AppGetConfigPath();
     asprintf(&GUI->ConfigFilePath,"%simgui.ini",ConfigPath);
     free(ConfigPath);

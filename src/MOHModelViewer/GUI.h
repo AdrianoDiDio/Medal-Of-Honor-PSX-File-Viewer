@@ -25,14 +25,13 @@
 #include "../Common/IMGUIUtils.h"
 
 typedef struct GUI_s {
-    ImGuiContext        *DefaultContext;
-    char                *ConfigFilePath;
-    bool                DebugWindowHandle;
-    bool                VideoSettingsWindowHandle;
-    int                 NumActiveWindows;
-    ProgressBar_t       *ProgressBar;
-    char                *ErrorMessage;
-    int                 ErrorDialogHandle;    
+    ImGuiContext            *DefaultContext;
+    char                    *ConfigFilePath;
+    bool                    DebugWindowHandle;
+    bool                    VideoSettingsWindowHandle;
+    int                     NumActiveWindows;
+    ProgressBar_t           *ProgressBar;
+    ErrorMessageDialog_t    *ErrorMessageDialog;  
 } GUI_t;
 
 typedef struct Camera_s Camera_t;
@@ -46,7 +45,6 @@ bool                GUIIsKeyboardFree();
 void                GUIToggleDebugWindow(GUI_t *GUI);
 void                GUIToggleVideoSettingsWindow(GUI_t *GUI);
 void                GUIToggleLevelSelectWindow(GUI_t *GUI);
-void                GUISetErrorMessage(GUI_t *GUI,const char *Message);
 void                GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
 void                GUIDraw(Application_t *Application);
 void                GUIFree(GUI_t *GUI);

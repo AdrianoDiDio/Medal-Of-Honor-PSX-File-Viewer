@@ -106,6 +106,7 @@ int ImageManagerLoadTIMFile(ImageManager_t *ImageManager,GUI_t *GUI,VideoSystem_
     return 1;
 Failure:
     ProgressBarEnd(GUI->ProgressBar,VideoSystem);
+    ErrorMessageDialogSet(GUI->ErrorMessageDialog,"No TIM files found.");
     return 0;
 }
 void ImageManagerOnImageFileDialogSelect(FileDialog_t *FileDialog,const char *Directory,const char *File,void *UserData)

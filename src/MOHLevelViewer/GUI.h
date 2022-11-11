@@ -25,14 +25,15 @@
 #include "../Common/IMGUIUtils.h"
 
 typedef struct GUI_s {
-    ImGuiContext        *DefaultContext;
-    char                *ConfigFilePath;
-    bool                DebugWindowHandle;
-    bool                VideoSettingsWindowHandle;
-    bool                LevelSelectWindowHandle;
-    int                 NumActiveWindows;
-    ProgressBar_t       *ProgressBar;
-    char                *ErrorMessage;
+    ImGuiContext            *DefaultContext;
+    char                    *ConfigFilePath;
+    bool                    DebugWindowHandle;
+    bool                    VideoSettingsWindowHandle;
+    bool                    LevelSelectWindowHandle;
+    int                     NumActiveWindows;
+    ProgressBar_t           *ProgressBar;
+    ErrorMessageDialog_t    *ErrorMessageDialog;  
+
 } GUI_t;
 
 typedef struct LevelManager_s LevelManager_t;
@@ -47,7 +48,6 @@ int             GUIIsActive(GUI_t *GUI);
 void            GUIToggleDebugWindow(GUI_t *GUI);
 void            GUIToggleVideoSettingsWindow(GUI_t *GUI);
 void            GUIToggleLevelSelectWindow(GUI_t *GUI);
-void            GUISetErrorMessage(GUI_t *GUI,const char *Message);
 int             GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
 void            GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo);
 void            GUIFree(GUI_t *GUI);

@@ -28,8 +28,7 @@ typedef struct GUI_s {
     char                *ConfigFilePath;
     bool                VideoSettingsWindowHandle;
     ProgressBar_t       *ProgressBar;
-    char                *ErrorMessage;
-    int                 ErrorDialogHandle;
+    ErrorMessageDialog_t *ErrorMessageDialog;
     int                 ImageSelectionChanged;
 } GUI_t;
 
@@ -37,6 +36,7 @@ typedef struct Application_s Application_t;
 
 GUI_t               *GUIInit(VideoSystem_t *VideoSystem);
 void                GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
+void                GUISetErrorMessage(GUI_t *GUI,const char *Message);
 void                GUIDraw(Application_t *Application);
 void                GUIFree(GUI_t *GUI);
 #endif//__GUI_H_

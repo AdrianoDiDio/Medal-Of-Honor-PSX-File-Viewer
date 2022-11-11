@@ -28,10 +28,7 @@ void GUIFree(GUI_t *GUI)
     GUIReleaseContext(GUI->DefaultContext);
     ProgressBarDestroy(GUI->ProgressBar);
     FileDialogListFree();
-    
-    if( GUI->ErrorMessage ) {
-        free(GUI->ErrorMessage);
-    }
+    ErrorMessageDialogFree(GUI->ErrorMessageDialog);
     free(GUI->ConfigFilePath);
     free(GUI);
 }
@@ -51,24 +48,6 @@ bool GUIIsKeyboardFree()
 void GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
 {
     ImGui_ImplSDL2_ProcessEvent(Event);
-}
-
-void GUISetErrorMessage(GUI_t *GUI,const char *Message)
-{
-    if( !GUI ) {
-        DPrintf("GUISetErrorMessage:Invalid GUI struct\n");
-        return;
-    }
-    if( !Message ) {
-        DPrintf("GUISetErrorMessage:Invalid Message.");
-        return;
-    }
-    
-    if( GUI->ErrorMessage ) {
-        free(GUI->ErrorMessage);
-    }
-    
-    GUI->ErrorMessage = StringCopy(Message);
 }
 
 void GUIDrawDebugWindow(GUI_t *GUI,Camera_t *Camera,VideoSystem_t *VideoSystem)
@@ -207,7 +186,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                         igTreePop();
                         break;
                     }
-                    GUISetErrorMessage(GUI,"Failed to remove BSD pack from list");
+                    ErrorMessageDialogSet(GUI->ErrorMessageDialog,"Failed to remove BSD pack from list");
                 }
                 for( RenderObjectIterator = PackIterator->RenderObjectList; RenderObjectIterator; 
                     RenderObjectIterator = RenderObjectIterator->Next ) {
@@ -259,7 +238,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                     if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
                         if( CurrentRenderObject->CurrentAnimationIndex != i ) {
                             if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,i,0,0) ) {
-                                GUISetErrorMessage(GUI,"Failed to set animation pose");
+                                ErrorMessageDialogSet(GUI->ErrorMessageDialog,"Failed to set animation pose");
                             }
                         }
                     }
@@ -277,7 +256,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                     if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
                         if( CurrentRenderObject->CurrentFrameIndex != i ) {
                             if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,i,0) ) {
-                                GUISetErrorMessage(GUI,"Failed to set animation pose");
+                                ErrorMessageDialogSet(GUI->ErrorMessageDialog,"Failed to set animation pose");
                             }
                         }
                     }
@@ -403,30 +382,7 @@ void GUIDrawMenuBar(Application_t *Application)
     }
     igEndMainMenuBar();
 }
-void GUIDrawErrorMessage(GUI_t *GUI)
-{
-    ImVec2 ButtonSize;
-    if( !GUI->ErrorMessage ) {
-        return;
-    }
-    if( !GUI->ErrorDialogHandle ) {
-        igOpenPopup_Str("Error",0);
-        GUI->ErrorDialogHandle = 1;
-    }
-    ButtonSize.x = 120;
-    ButtonSize.y = 0;
-    GUIPrepareModalWindow();
-    if( igBeginPopupModal("Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
-        igText(GUI->ErrorMessage);
-        if (igButton("OK", ButtonSize) ) {
-            igCloseCurrentPopup();
-            GUI->ErrorDialogHandle = 0;
-            free(GUI->ErrorMessage);
-            GUI->ErrorMessage = NULL;
-        }
-        igEndPopup();
-    }
-}
+
 void GUIDraw(Application_t *Application)
 {
     
@@ -434,7 +390,7 @@ void GUIDraw(Application_t *Application)
     GUIDrawDebugOverlay(Application->Engine->TimeInfo);
     GUIDrawMenuBar(Application);
     FileDialogRenderList();
-    GUIDrawErrorMessage(Application->GUI);
+    ErrorMessageDialogDraw(Application->GUI->ErrorMessageDialog);
     GUIDrawMainWindow(Application->GUI,Application->RenderObjectManager,Application->Engine->VideoSystem,Application->Camera);
     GUIDrawDebugWindow(Application->GUI,Application->Camera,Application->Engine->VideoSystem);
     GUIDrawVideoSettingsWindow(&Application->GUI->VideoSettingsWindowHandle,Application->Engine->VideoSystem);
@@ -455,9 +411,11 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     }
     
     memset(GUI,0,sizeof(GUI_t));
-    GUI->ErrorMessage = NULL;
-    GUI->ErrorDialogHandle = 0;
-    
+    GUI->ErrorMessageDialog = ErrorMessageDialogInit();
+    if( !GUI->ErrorMessageDialog ) {
+        DPrintf("GUIInit:Failed to initialize error message dialog\n");
+        return NULL;
+    }
     ConfigPath = AppGetConfigPath();
     asprintf(&GUI->ConfigFilePath,"%simgui.ini",ConfigPath);
     free(ConfigPath);

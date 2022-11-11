@@ -724,7 +724,7 @@ void LevelManagerOnDirSelected(FileDialog_t *FileDialog,const char *Path,const c
     LoadStatus = LevelManagerInitWithPath(LevelManagerDialogData->LevelManager,LevelManagerDialogData->GUI,LevelManagerDialogData->VideoSystem,Path);
 
     if( !LoadStatus ) {
-        GUISetErrorMessage(LevelManagerDialogData->GUI,"Selected path doesn't seems to contain any game file...\n"
+        ErrorMessageDialogSet(LevelManagerDialogData->GUI->ErrorMessageDialog,"Selected path doesn't seems to contain any game file...\n"
         "Please select a folder containing MOH or MOH:Undergound.");
     } else {
         //Close it if we managed to load it.

@@ -202,16 +202,16 @@ void SoundManagerLoadAudioFile(SoundManager_t *SoundManager,GUI_t *GUI,VideoSyst
     Extension = GetFileExtension(File);
     VBMusicList = NULL;
     ProgressBarBegin(GUI->ProgressBar,"Loading Audio File");
-    if( !strcasecmp(Extension,"TAF") ) {
-        DPrintf("SoundManagerLoadAudioFile:Loading TAF file\n");
-        ProgressBarIncrement(GUI->ProgressBar,VideoSystem,10.f,"Loading TAF file");
-        VBMusicList = SoundManagerLoadTAFFile(File,GUI,VideoSystem);
-    } else if( !strcasecmp(Extension,"VB") ) {
-        DPrintf("SoundManagerLoadAudioFile:Loading VB file\n");
-        ProgressBarIncrement(GUI->ProgressBar,VideoSystem,10.f,"Loading VB file");
-        VBMusicList = SoundManagerLoadVBFile(File,GUI,VideoSystem);
-    } else {
-        DPrintf("Unknown file %s\n",File);
+    if( Extension ) {
+        if( !strcasecmp(Extension,"TAF") ) {
+            DPrintf("SoundManagerLoadAudioFile:Loading TAF file\n");
+            ProgressBarIncrement(GUI->ProgressBar,VideoSystem,10.f,"Loading TAF file");
+            VBMusicList = SoundManagerLoadTAFFile(File,GUI,VideoSystem);
+        } else if( !strcasecmp(Extension,"VB") ) {
+            DPrintf("SoundManagerLoadAudioFile:Loading VB file\n");
+            ProgressBarIncrement(GUI->ProgressBar,VideoSystem,10.f,"Loading VB file");
+            VBMusicList = SoundManagerLoadVBFile(File,GUI,VideoSystem);
+        }
     }
     ProgressBarEnd(GUI->ProgressBar,VideoSystem);
 
@@ -221,6 +221,8 @@ void SoundManagerLoadAudioFile(SoundManager_t *SoundManager,GUI_t *GUI,VideoSyst
         }
         SoundManager->SoundList = VBMusicList;
         SoundManager->SelectedSound = VBMusicList;
+    } else {
+        ErrorMessageDialogSet(GUI->ErrorMessageDialog,"Couldn't open the file");
     }
 }
 void SoundManagerOnAudioFileDialogSelect(FileDialog_t *FileDialog,const char *Directory,const char *File,void *UserData)
