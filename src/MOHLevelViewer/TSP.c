@@ -671,7 +671,10 @@ void TSPCreateFaceVAO(TSP_t *TSP,TSPNode_t *Node)
     VAO = VAOInitXYZUVRGBCLUTColorModeInteger(NULL,TotalVertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,ColorModeOffset,
                                               (Node->NumFaces - NumTransparentFaces) * 3);
     Node->OpaqueFacesVAO = VAO;
-    for( i = Base; i < Target; i++ ) {
+    //NOTE(Adriano):Some levels have duplicated triangles...we need to make sure that the order in which they are rendered
+    //              is such that they do not get overwritten by a later triangle definition with an invalid texture coordinate.
+    //              An example can be found in MOH MSN4:LVL2 where in some part of the level the geometry is specified twice.
+    for( i = Target - 1; i >= Base; i-- ) {
         if( TSPIsVersion3(TSP) ) {
             TextureInfo = TSP->TextureData[Node->FaceList[i].TextureDataIndex];            
             Vert0 = Node->FaceList[i].Vert0;
