@@ -235,6 +235,9 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                 for (i = 0; i < CurrentRenderObject->NumAnimations; i++) {
                     IsSelected = (CurrentRenderObject->CurrentAnimationIndex == i);
                     sprintf(SmallBuffer,"Animation %i",i + 1);
+                    if( !CurrentRenderObject->AnimationList[i].NumFrames ) {
+                        igBeginDisabled(1);
+                    }
                     if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
                         if( CurrentRenderObject->CurrentAnimationIndex != i ) {
                             if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,i,0,0) ) {
@@ -244,6 +247,9 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                     }
                     if( IsSelected ) {
                         igSetItemDefaultFocus();
+                    }
+                    if( !CurrentRenderObject->AnimationList[i].NumFrames ) {
+                        igEndDisabled();
                     }
                 }
                 igEndCombo();

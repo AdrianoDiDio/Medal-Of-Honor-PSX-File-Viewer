@@ -1293,17 +1293,16 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
     assert(Pad == 52685);
     
     AnimationOffsetTable = malloc(NumAnimationOffset * sizeof(int) );
-    RenderObject->NumAnimations = 0;
+    RenderObject->NumAnimations = NumAnimationOffset;
     for( i = 0; i < NumAnimationOffset; i++ ) {
         fread(&AnimationOffsetTable[i],sizeof(AnimationOffsetTable[i]),1,BSDFile);
         if( AnimationOffsetTable[i] == -1 ) {
             continue;
         }
-        RenderObject->NumAnimations++;
     }
 
     AnimationTableEntry = malloc(RenderObject->NumAnimations * sizeof(BSDAnimationTableEntry_t) );
-    for( i = 0; i < RenderObject->NumAnimations; i++ ) {
+    for( i = 0; i < NumAnimationOffset; i++ ) {
         DPrintf("BSDLoadAnimationData:Animation Offset %i for entry %i\n",AnimationOffsetTable[i],i);
         if( AnimationOffsetTable[i] == -1 ) {
             continue;
@@ -1319,7 +1318,7 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
         assert(AnimationTableEntry[i].Pad == 52480);
     }
     RenderObject->AnimationList = malloc(RenderObject->NumAnimations * sizeof(BSDAnimation_t));
-    for( i = 0; i < RenderObject->NumAnimations; i++ ) {
+    for( i = 0; i < NumAnimationOffset; i++ ) {
         RenderObject->AnimationList[i].Frame = NULL;
         RenderObject->AnimationList[i].NumFrames = 0;
         if( AnimationOffsetTable[i] == -1 ) {
