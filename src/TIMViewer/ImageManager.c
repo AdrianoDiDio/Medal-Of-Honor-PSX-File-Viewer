@@ -272,7 +272,7 @@ ImageManager_t *ImageManagerInit(GUI_t *GUI)
     ImageManager->VRAM = NULL;
 
     ImageManager->ImageFileDialog = FileDialogRegister("Open TIM Files",
-                                                               "*.*",
+                                                               ".*",
                                                                ImageManagerOnImageFileDialogSelect,
                                                                ImageManagerOnImageFileDialogCancel);
     ImageManager->ExportFileDialog = FileDialogRegister("Export Audio File",
