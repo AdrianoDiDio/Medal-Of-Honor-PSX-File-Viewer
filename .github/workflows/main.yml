@@ -1,6 +1,8 @@
 name: CMake Build Matrix
 on:
   push:
+    branches:
+        - '**'
 
 jobs:
   build:
