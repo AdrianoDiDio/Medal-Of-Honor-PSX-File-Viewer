@@ -128,21 +128,11 @@ void GUIDrawMainWindow(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundManager_t *Sou
                         "of 11025 Hz since they mostly contains only voices.\n"
                         "Before exporting make sure to set the right frequency otherwise the sound will not play correctly.");
                 if( igRadioButton_Bool("11025",CurrentSound->Frequency == 11025.f) ) {
-                    ProgressBarBegin(GUI->ProgressBar,"Resampling");
-                    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20.f,"Downsampling");
-                    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,50.f,"Downsampling");
-                    SoundSystemResampleMusic(CurrentSound,11025.f);
-                    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100.f,"Done");
-                    ProgressBarEnd(GUI->ProgressBar,VideoSystem);
+                    SoundManagerResample(SoundManager,GUI,VideoSystem,CurrentSound,0);
                 }
                 igSameLine(0,-1);
                 if( igRadioButton_Bool("22050",CurrentSound->Frequency == 22050.f) ) {
-                    ProgressBarBegin(GUI->ProgressBar,"Resampling");
-                    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20.f,"Upsampling");
-                    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,50.f,"Upsampling");
-                    SoundSystemResampleMusic(CurrentSound,22050.f);
-                    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100.f,"Done");
-                    ProgressBarEnd(GUI->ProgressBar,VideoSystem);
+                    SoundManagerResample(SoundManager,GUI,VideoSystem,CurrentSound,1);
                 }
                 igSeparator();
                 SoundSystemGetSoundDuration(CurrentSound,&MaxLengthMinutes,&MaxLengthSeconds);

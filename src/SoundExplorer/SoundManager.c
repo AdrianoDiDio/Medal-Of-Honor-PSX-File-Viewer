@@ -54,6 +54,34 @@ void SoundManagerAudioUpdate(void *UserData,Byte *Stream,int Length)
     SDL_MixAudioFormat(Stream, &SelectedSound->Data[SelectedSound->DataPointer], AUDIO_F32, ChunkLength, SoundVolume->IValue);
     SelectedSound->DataPointer += ChunkLength;
 }
+
+void SoundManagerResample(SoundManager_t *SoundManager,GUI_t *GUI,VideoSystem_t *VideoSystem,VBMusic_t *Sound,int UpSample)
+{
+    float SampleRate;
+    int   WasPaused;
+    
+    ProgressBarBegin(GUI->ProgressBar,"Resampling");
+    if( UpSample ) {
+        ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20.f,"Upsampling");
+        ProgressBarIncrement(GUI->ProgressBar,VideoSystem,50.f,"Upsampling");
+        SampleRate = 22050.f;
+    } else {
+        ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20.f,"Downsampling");
+        ProgressBarIncrement(GUI->ProgressBar,VideoSystem,50.f,"Downsampling");
+        SampleRate = 11025.f;
+    }
+    WasPaused = SoundSystemIsPaused(SoundManager->SoundSystem);
+    if( !WasPaused ) {
+        SoundSystemPause(SoundManager->SoundSystem);
+    }
+    SoundSystemResampleMusic(Sound,SampleRate);
+    if( !WasPaused ) {
+        SoundSystemPlay(SoundManager->SoundSystem);
+    }
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100.f,"Done");
+    ProgressBarEnd(GUI->ProgressBar,VideoSystem);    
+}
+
 void SoundManagerFreeDialogData(FileDialog_t *FileDialog)
 {
     SoundManagerDialogData_t *DialogData;
