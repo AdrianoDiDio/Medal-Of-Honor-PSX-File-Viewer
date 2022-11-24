@@ -40,7 +40,7 @@ typedef union {
     Byte rgba[4];
 } Color1i_t;
 
-typedef struct Color3_s {
+typedef struct Color3b_s {
     Byte r;
     Byte g;
     Byte b;

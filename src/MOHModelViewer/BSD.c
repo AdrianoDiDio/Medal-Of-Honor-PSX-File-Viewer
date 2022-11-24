@@ -1015,7 +1015,7 @@ void BSDPrintAnimatedModelFace(BSDAnimatedModelFace_t Face)
  * NOTE(Adriano):
  * MOH:Underground stores face data in a different way than the one used by Medal Of Honor.
  * In order to obtain the offset we need to first read the Global Face Offset which is stored at position
- * 0x5A4 and the total number of faces is stored at 0x5A8 (both offset are stored without counting the header size 2048).
+ * 0x5A4 and the total number of faces stored at 0x5A8 (both offset are stored without counting the header size 2048).
  * Then we need to load the data from the RenderObject stored at position 0x106 (as a short) and 0x108 that are needed to load all the
  * required faces.
  * Data at 0x106 contains the number of faces that we need to load while the offset at 0x108 contains the local offset that must

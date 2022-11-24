@@ -337,26 +337,29 @@ typedef struct BSDSky_s {
     VAO_t *StarsVAO;
 } BSDSky_t;
 
+typedef struct BSDSceneInfo_s {
+    char Unknown[62];
+    Color3b_t ClearColor;
+    char Unknown2[7];
+} BSDSceneInfo_t;
 typedef struct BSD_s {
-    BSDHeader_t Header;
-    BSDTSPInfo_t TSPInfo;
-    char Unknown[72];
-    BSDAnimatedLightTable_t   AnimatedLightsTable;
-    BSDEntryTable_t EntryTable;
-    BSDSky_t SkyData;
-    BSDRenderObjectBlock_t RenderObjectTable;
-    BSDNodeInfo_t NodeData;
-    BSDPropertySetFile_t PropertySetFile;
+    BSDHeader_t                 Header;
+    BSDTSPInfo_t                TSPInfo;
+    BSDSceneInfo_t              SceneInfo;
+    BSDAnimatedLightTable_t     AnimatedLightsTable;
+    BSDEntryTable_t             EntryTable;
+    BSDSky_t                    SkyData;
+    BSDRenderObjectBlock_t      RenderObjectTable;
+    BSDNodeInfo_t               NodeData;
+    BSDPropertySetFile_t        PropertySetFile;
     
-    BSDRenderObject_t *RenderObjectList;
-    BSDRenderObjectDrawable_t *RenderObjectDrawableList;
-//     BSDRenderObject_t *RenderObjectRealList;
-//     BSDRenderObject_t *RenderObjectShowCaseList;
-    //
-    VAO_t       *NodeVAO;
-    VAO_t       *RenderObjectPointVAO;
-    VAO_t       *CollisionVolumeVAO[BSD_COLLISION_VOLUME_MAX_VALUE];
-    int          NumRenderObjectPoint;
+    BSDRenderObject_t           *RenderObjectList;
+    BSDRenderObjectDrawable_t   *RenderObjectDrawableList;
+
+    VAO_t                       *NodeVAO;
+    VAO_t                       *RenderObjectPointVAO;
+    VAO_t                       *CollisionVolumeVAO[BSD_COLLISION_VOLUME_MAX_VALUE];
+    int                         NumRenderObjectPoint;
     //Easy lookup to see if the camera is in that node position so that
     //we can update the TSPNumberRenderList.
     BSDTSPStreamNode_t *TSPStreamNodeList;  

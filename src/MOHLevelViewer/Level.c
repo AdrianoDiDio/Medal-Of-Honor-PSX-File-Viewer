@@ -391,6 +391,7 @@ Level_t *LevelInit(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundSystem_t *SoundSys
         LevelSetCurrentMusic(Level,PlayAmbientMusic);
     }
     DPrintf("LevelInit:Allocated level struct\n");
+    glClearColor( Level->BSD->SceneInfo.ClearColor.r / 255.f, Level->BSD->SceneInfo.ClearColor.g / 255.f, Level->BSD->SceneInfo.ClearColor.b / 255.f,0.f);
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Ready");
     return Level;
 Failure:

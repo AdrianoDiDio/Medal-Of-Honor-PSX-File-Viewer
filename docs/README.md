@@ -47,6 +47,7 @@ Table of contents
   + [BSD Files](#bsd-files)
     - [File Format](#file-format)
       * [TSP Info Block](#tsp-info-block)
+      * [Scene Info Block](#scene-info-block)
       * [Animated Lights Block](#animated-lights-block)
       * [Entry Table Block](#entry-table-block)
       * [Sky Box Definitions](#sky-box-definitions)
@@ -662,6 +663,20 @@ The other TSP are loaded in real time when hitting specific triggers
 contained into the level that unloads the previous one that were loaded in
 memory.
 
+#### Scene Info Block
+Right after the TSP info block we find some data related to the scene.  
+This block has a fixed size of 72 bytes and contains data related to
+the fog and the clear color.  
+
+| Type | Size      | Description                                            |
+| ---- | --------- | ------------------------------------------------------ |
+| char | 60 bytes | Unknown                                          |
+| short  | 2 bytes   | Fog Near Value |                              |
+| char  | 1 byte   | Red Component of the Clear Color |                              |
+| char  | 1 byte   | Green Component of the Clear Color |
+| char  | 1 byte   | Blue Component of the Clear Color |     
+| char | 7 bytes | Unknown                                          |
+
 ##### Animated Lights Block
 
 This block is found at position 216 (excluding the header) or 2264
@@ -1266,7 +1281,7 @@ Each Property contains the following data:
 | Byte  | 1 byte  | Number of Nodes |
 | short | n bytes | Node List       |
 
-**IMPORTANT: The actual number of nodes is found by subtracting the value 
+**IMPORTANT: The actual number of nodes is found by subtracting the value
 255 to the one that was loaded.**  
 
 ### RSC Files
