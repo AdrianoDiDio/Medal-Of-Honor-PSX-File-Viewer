@@ -461,7 +461,7 @@ Each face is made by 3 vertices that forms a triangle.
 | unsigned short        | 2 bytes | V1 Second vertex and color index in array                                                    |
 | unsigned short        | 2 bytes | V2 Third vertex and color index in array                                                     |
 | [UV](#uv-coordinates) | 2 byte  | UV0 Texture coordinate for vertex 0                                                          |
-| short                 | 2 bytes | CBA (Contains CLUT Data for TIM Images, Not Used)                                            |
+| short                 | 2 bytes | CBA (Contains CLUT Data for TIM Images)                                                      |
 | [UV](#uv-coordinates) | 2 bytes | UV1 Texture coordinate for vertex 1                                                          |
 | short                 | 2 bytes | TSB that contains info about the used texture (see [TSB](#tsb) section for more information) |
 | [UV](#uv-coordinates) | 2 bytes | UV2 Texture coordinate for vertex 2                                                          |
@@ -860,7 +860,7 @@ using the following face structure:
 | Type                  | Size    | Description                |
 | --------------------- | ------- | -------------------------- |
 | [UV](#uv-coordinates) | 2 bytes | UV Coordinates of Vertex 0 |
-| short                 | 2 bytes | [TSB](#TSB) Info           |
+| short                 | 2 bytes | CBA (Contains CLUT Data for TIM Images)                  |
 | [UV](#uv-coordinates) | 2 bytes | UV Coordinates of Vertex 1 |
 | short                 | 2 bytes | Texture Info               |
 | [UV](#uv-coordinates) | 2 bytes | UV Coordinates of Vertex 2 |
@@ -873,7 +873,7 @@ following format:
 | --------------------- | ------- | ------------------------------------- |
 | unsigned int          | 4 bytes | Vertex 0 and Vertex 1                 |
 | unsigned short        | 2 bytes | Vertex 2                              |
-| short                 | 2 bytes | [TSB](#TSB) Info                      |
+| short                 | 2 bytes | CBA (Contains CLUT Data for TIM Images)                      |
 | [UV](#uv-coordinates) | 2 bytes | UV Coordinates of Vertex 0            |
 | [UV](#uv-coordinates) | 2 bytes | UV Coordinates of Vertex 1            |
 | short                 | 2 bytes | TexInfo (Texture page and Color Mode) |

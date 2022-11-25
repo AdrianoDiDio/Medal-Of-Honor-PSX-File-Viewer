@@ -1087,7 +1087,7 @@ void TSPDrawNode(TSPNode_t *Node,VRAM_t *VRAM,mat4 MVPMatrix)
 
     if( Node->NumFaces != 0 ) {
         if( LevelDrawSurfaces->IValue ) {
-            Shader = ShaderCache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
+            Shader = ShaderCache("RenderObjectShader","Shaders/RenderObjectVertexShader.glsl","Shaders/RenderObjectFragmentShader.glsl");
             if( Shader ) {
                 glUseProgram(Shader->ProgramId);
 
@@ -1419,7 +1419,7 @@ void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM,mat4 MVPMatrix)
         return;
     }
     
-    Shader = ShaderCache("TSPShader","Shaders/TSPVertexShader.glsl","Shaders/TSPFragmentShader.glsl");
+    Shader = ShaderCache("RenderObjectShader","Shaders/RenderObjectVertexShader.glsl","Shaders/RenderObjectFragmentShader.glsl");
     
     if( !Shader ) {
         DPrintf("TSPDrawTransparentFaces:Invalid Shader.\n");

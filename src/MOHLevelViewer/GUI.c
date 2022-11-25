@@ -446,7 +446,6 @@ void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager,VideoSyste
 
 void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo)
 {
-    ImVec2 ButtonSize;
     int PreviousHandleValue;
     
     GUIBeginFrame();

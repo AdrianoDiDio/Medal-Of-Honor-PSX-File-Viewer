@@ -281,7 +281,7 @@ typedef struct BSDHeader_s {
 
 typedef struct BSDFace_s {
     BSDUv_t UV0;
-    short TSB;
+    short CBA;
     BSDUv_t UV1;
     short TexInfo;
     BSDUv_t UV2;

@@ -679,45 +679,65 @@ void BSDAddNodeToRenderObjecDrawabletList(BSD_t *BSD,int IsMultiplayer,unsigned 
 }
 void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData,VRAM_t *VRAM)
 {
-    float TextureWidth;
-    float TextureHeight;
     unsigned short Vert0;
     unsigned short Vert1;
     unsigned short Vert2;
-    float *VertexData;
+    int *VertexData;
     int VertexSize;
     int VertexPointer;
     int Stride;
     int VertexOffset;
     int TextureOffset;
     int ColorOffset;
+    int CLUTOffset;
+    int ColorModeOffset;
+    int U0;
+    int V0;
+    int U1;
+    int V1;
+    int U2;
+    int V2;
+    int VRAMPage;
+    int ColorMode;
+    int CLUTPosX;
+    int CLUTPosY;
+    int CLUTPage;
+    int CLUTDestX;
+    int CLUTDestY;
     VAO_t *VAO;
     int i;
     
-    TextureWidth = VRAM->Page.Width;
-    TextureHeight = VRAM->Page.Height;
-//            XYZ UV RGB
-    Stride = (3 + 2 + 3) * sizeof(float);
+//            XYZ UV RGB CLUT ColorMode
+    Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
     VertexSize = Stride * 3 * RenderObjectData->NumFaces;
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
     VertexOffset = 0;
     TextureOffset = 3;
     ColorOffset = 5;
+    CLUTOffset = 8;
+    ColorModeOffset = 10;
+
     for( i = 0; i < RenderObjectData->NumFaces; i++ ) {
 
         Vert0 = RenderObjectData->Face[i].Vert0;
         Vert1 = RenderObjectData->Face[i].Vert1;
         Vert2 = RenderObjectData->Face[i].Vert2;
 
-        int VRAMPage = RenderObjectData->Face[i].TexInfo & 0x1F;
-        int ColorMode = (RenderObjectData->Face[i].TexInfo & 0xC0) >> 7;
-        float U0 = (((float)RenderObjectData->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage))/TextureWidth);
-        float V0 = /*255 -*/(((float)RenderObjectData->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        float U1 = (((float)RenderObjectData->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-        float V1 = /*255 -*/(((float)RenderObjectData->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        float U2 = (((float)RenderObjectData->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage)) /TextureWidth);
-        float V2 = /*255 -*/(((float)RenderObjectData->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+        VRAMPage = RenderObjectData->Face[i].TexInfo & 0x1F;
+        ColorMode = (RenderObjectData->Face[i].TexInfo & 0xC0) >> 7;
+        U0 = RenderObjectData->Face[i].UV0.u + VRAMGetTexturePageX(VRAMPage);
+        V0 = RenderObjectData->Face[i].UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+        U1 = RenderObjectData->Face[i].UV1.u + VRAMGetTexturePageX(VRAMPage);
+        V1 = RenderObjectData->Face[i].UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+        U2 = RenderObjectData->Face[i].UV2.u + VRAMGetTexturePageX(VRAMPage);
+        V2 = RenderObjectData->Face[i].UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+        CLUTPosX = (RenderObjectData->Face[i].CBA << 4) & 0x3F0;
+        CLUTPosY = (RenderObjectData->Face[i].CBA >> 6) & 0x1ff;
+        CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
+        CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
+        CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
+        CLUTDestX += VRAMGetTexturePageX(CLUTPage);
 
                         
         VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert0].x;
@@ -725,32 +745,42 @@ void BSDCreateFaceVAO(BSDRenderObject_t *RenderObjectData,VRAM_t *VRAM)
         VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert0].z;
         VertexData[VertexPointer+3] = U0;
         VertexData[VertexPointer+4] = V0;
-        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert0].rgba[0] / 255.f;
-        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert0].rgba[1] / 255.f;
-        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert0].rgba[2] / 255.f;
-        VertexPointer += 8;
+        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert0].rgba[0];
+        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert0].rgba[1];
+        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert0].rgba[2];
+        VertexData[VertexPointer+8] = CLUTDestX;
+        VertexData[VertexPointer+9] = CLUTDestY;
+        VertexData[VertexPointer+10] = ColorMode;
+        VertexPointer += 11;
                 
         VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert1].x;
         VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert1].y;
         VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert1].z;
         VertexData[VertexPointer+3] = U1;
         VertexData[VertexPointer+4] = V1;
-        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert1].rgba[0] / 255.f;
-        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert1].rgba[1] / 255.f;
-        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert1].rgba[2] / 255.f;
-        VertexPointer += 8;
+        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert1].rgba[0];
+        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert1].rgba[1];
+        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert1].rgba[2];
+        VertexData[VertexPointer+8] = CLUTDestX;
+        VertexData[VertexPointer+9] = CLUTDestY;
+        VertexData[VertexPointer+10] = ColorMode;
+        VertexPointer += 11;
                 
         VertexData[VertexPointer] =   RenderObjectData->Vertex[Vert2].x;
         VertexData[VertexPointer+1] = RenderObjectData->Vertex[Vert2].y;
         VertexData[VertexPointer+2] = RenderObjectData->Vertex[Vert2].z;
         VertexData[VertexPointer+3] = U2;
         VertexData[VertexPointer+4] = V2;
-        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert2].rgba[0] / 255.f;
-        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert2].rgba[1] / 255.f;
-        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert2].rgba[2] / 255.f;
-        VertexPointer += 8;
+        VertexData[VertexPointer+5] = RenderObjectData->Color[Vert2].rgba[0];
+        VertexData[VertexPointer+6] = RenderObjectData->Color[Vert2].rgba[1];
+        VertexData[VertexPointer+7] = RenderObjectData->Color[Vert2].rgba[2];
+        VertexData[VertexPointer+8] = CLUTDestX;
+        VertexData[VertexPointer+9] = CLUTDestY;
+        VertexData[VertexPointer+10] = ColorMode;
+        VertexPointer += 11;
     }
-    VAO = VAOInitXYZUVRGB(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,RenderObjectData->NumFaces * 3);
+    VAO = VAOInitXYZUVRGBCLUTColorModeInteger(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,ColorModeOffset,
+                                              RenderObjectData->NumFaces * 3);
     VAO->Next = RenderObjectData->VAO;
     RenderObjectData->VAO = VAO;
     free(VertexData);
@@ -1835,6 +1865,8 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     mat4 ModelMatrix;
     vec3 PSpawn;
     int MVPMatrixId;
+    int PaletteTextureId;
+    int TextureIndexId;
     int EnableLightingId;
     int i;
     
@@ -1890,13 +1922,20 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     
     
     if( LevelDrawBSDRenderObjects->IValue ) {
-        Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
+        Shader = ShaderCache("RenderObjectShader","Shaders/RenderObjectVertexShader.glsl","Shaders/RenderObjectFragmentShader.glsl");
         if( Shader ) {
             glUseProgram(Shader->ProgramId);
             MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
             EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
+            PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
+            TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+            glUniform1i(TextureIndexId, 0);
+            glUniform1i(PaletteTextureId,  1);
             glUniform1i(EnableLightingId, LevelEnableAmbientLight->IValue);
-            glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
+            glActiveTexture(GL_TEXTURE0 + 0);
+            glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
+            glActiveTexture(GL_TEXTURE0 + 1);
+            glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
 
             for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; 
                 RenderObjectIterator = RenderObjectIterator->Next ) {
@@ -1914,18 +1953,26 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
                     glBindVertexArray(0);
                 }
             }
+            glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D,0);
             glUseProgram(0);
         }
     }
     
     if( LevelDrawBSDShowcase->IValue ) {
-        Shader = ShaderCache("BSDObjectShader","Shaders/BSDObjectVertexShader.glsl","Shaders/BSDObjectFragmentShader.glsl");
+        Shader = ShaderCache("RenderObjectShader","Shaders/RenderObjectVertexShader.glsl","Shaders/RenderObjectFragmentShader.glsl");
         if( Shader ) {
             glUseProgram(Shader->ProgramId);
             MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-            glBindTexture(GL_TEXTURE_2D,VRAM->Page.TextureId);
-        
+            PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
+            TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+            glUniform1i(TextureIndexId, 0);
+            glUniform1i(PaletteTextureId,  1);
+            glUniform1i(EnableLightingId, LevelEnableAmbientLight->IValue);
+            glActiveTexture(GL_TEXTURE0 + 0);
+            glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
+            glActiveTexture(GL_TEXTURE0 + 1);
+            glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
             BSDGetPlayerSpawn(BSD,0,PSpawn,NULL);
         
             for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
@@ -1949,6 +1996,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
                     glBindVertexArray(0);
                 }
             }
+            glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D,0);
             glUseProgram(0);
         }
@@ -2105,7 +2153,7 @@ int BSDParseRenderObjectFaceData(BSDRenderObject_t *RenderObject,FILE *BSDFile)
         DPrintf("BSDParseRenderObjectFaceData:Reading Face at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
         
         fread(&RenderObject->Face[i].UV0,sizeof(RenderObject->Face[i].UV0),1,BSDFile);
-        fread(&RenderObject->Face[i].TSB,sizeof(RenderObject->Face[i].TSB),1,BSDFile);
+        fread(&RenderObject->Face[i].CBA,sizeof(RenderObject->Face[i].CBA),1,BSDFile);
         fread(&RenderObject->Face[i].UV1,sizeof(RenderObject->Face[i].UV1),1,BSDFile);
         fread(&RenderObject->Face[i].TexInfo,sizeof(RenderObject->Face[i].TexInfo),1,BSDFile);
         fread(&RenderObject->Face[i].UV2,sizeof(RenderObject->Face[i].UV2),1,BSDFile);
@@ -2115,8 +2163,8 @@ int BSDParseRenderObjectFaceData(BSDRenderObject_t *RenderObject,FILE *BSDFile)
         DPrintf(" -- FACE %i --\n",i);
         DPrintf("Tex info %i | Color mode %i | Texture Page %i\n",RenderObject->Face[i].TexInfo,
                 (RenderObject->Face[i].TexInfo & 0xC0) >> 7,RenderObject->Face[i].TexInfo & 0x1f);
-        DPrintf("TSB is %i %ix%i\n",RenderObject->Face[i].TSB,
-                ((RenderObject->Face[i].TSB  & 0x3F ) << 4),((RenderObject->Face[i].TSB & 0x7FC0) >> 6));
+        DPrintf("CBA is %i %ix%i\n",RenderObject->Face[i].CBA,
+                ((RenderObject->Face[i].CBA  & 0x3F ) << 4),((RenderObject->Face[i].CBA & 0x7FC0) >> 6));
         DPrintf("UV0:(%i;%i)\n",RenderObject->Face[i].UV0.u,RenderObject->Face[i].UV0.v);
         DPrintf("UV1:(%i;%i)\n",RenderObject->Face[i].UV1.u,RenderObject->Face[i].UV1.v);
         DPrintf("UV2:(%i;%i)\n",RenderObject->Face[i].UV2.u,RenderObject->Face[i].UV2.v);
@@ -2173,7 +2221,7 @@ int BSDParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffse
         fread(&V0V1,sizeof(V0V1),1,BSDFile);
         fread(&V2,sizeof(V2),1,BSDFile);
         fread(&RenderObject->Face[CurrentFaceIndex].UV0,sizeof(RenderObject->Face[CurrentFaceIndex].UV0),1,BSDFile);
-        fread(&RenderObject->Face[CurrentFaceIndex].TSB,sizeof(RenderObject->Face[CurrentFaceIndex].TSB),1,BSDFile);
+        fread(&RenderObject->Face[CurrentFaceIndex].CBA,sizeof(RenderObject->Face[CurrentFaceIndex].CBA),1,BSDFile);
         fread(&RenderObject->Face[CurrentFaceIndex].UV1,sizeof(RenderObject->Face[CurrentFaceIndex].UV1),1,BSDFile);
         fread(&RenderObject->Face[CurrentFaceIndex].TexInfo,sizeof(RenderObject->Face[CurrentFaceIndex].TexInfo),1,BSDFile);
         fread(&RenderObject->Face[CurrentFaceIndex].UV2,sizeof(RenderObject->Face[CurrentFaceIndex].UV2),1,BSDFile);
@@ -2181,9 +2229,9 @@ int BSDParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffse
         DPrintf("V0V1:%i V2:%i\n",V0V1,V2);
         DPrintf("Tex info %i | Color mode %i | Texture Page %i\n",RenderObject->Face[CurrentFaceIndex].TexInfo,
                 (RenderObject->Face[CurrentFaceIndex].TexInfo & 0xC0) >> 7,RenderObject->Face[CurrentFaceIndex].TexInfo & 0x1f);
-        DPrintf("TSB is %i %ix%i\n",RenderObject->Face[CurrentFaceIndex].TSB,
-                ((RenderObject->Face[CurrentFaceIndex].TSB  & 0x3F ) << 4),
-                ((RenderObject->Face[CurrentFaceIndex].TSB & 0x7FC0) >> 6));
+        DPrintf("CBA is %i %ix%i\n",RenderObject->Face[CurrentFaceIndex].CBA,
+                ((RenderObject->Face[CurrentFaceIndex].CBA  & 0x3F ) << 4),
+                ((RenderObject->Face[CurrentFaceIndex].CBA & 0x7FC0) >> 6));
         DPrintf("UV0:(%i;%i)\n",RenderObject->Face[CurrentFaceIndex].UV0.u,
                 RenderObject->Face[CurrentFaceIndex].UV0.v);
         DPrintf("UV1:(%i;%i)\n",RenderObject->Face[CurrentFaceIndex].UV1.u,
@@ -2198,6 +2246,7 @@ int BSDParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffse
         RenderObject->Face[CurrentFaceIndex].Vert1 = TempFace.Vert1 = Vert1;
         RenderObject->Face[CurrentFaceIndex].Vert2 = TempFace.Vert2 = Vert2;
         TempFace.TexInfo = RenderObject->Face[CurrentFaceIndex].TexInfo;
+        TempFace.CBA = RenderObject->Face[CurrentFaceIndex].CBA;
         TempFace.UV0 = RenderObject->Face[CurrentFaceIndex].UV0;
         TempFace.UV1 = RenderObject->Face[CurrentFaceIndex].UV1;
         TempFace.UV2 = RenderObject->Face[CurrentFaceIndex].UV2;
@@ -2211,7 +2260,8 @@ int BSDParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffse
                 break;
             }
             RenderObject->Face[CurrentFaceIndex].TexInfo = TempFace.TexInfo;
-                    
+            RenderObject->Face[CurrentFaceIndex].CBA = TempFace.CBA;
+
             if( (Marker & 0x8000) != 0 ) {
                 TempFace.Vert0 = TempFace.Vert2;
                 TempFace.UV0 = TempFace.UV2;

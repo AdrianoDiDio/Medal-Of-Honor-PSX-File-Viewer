@@ -204,7 +204,7 @@ char *SwitchExt(const char *In, const char *Ext)
     return NewExt;
 }
 char *GetFileExtension(const char *FileName) {
-    const char *Dot;
+    char *Dot;
     Dot = strrchr(FileName, '.');
     if(!Dot || Dot == FileName) { 
         return NULL;
