@@ -21,7 +21,6 @@
 
 #include "BSD.h"
 #include "MOHLevelViewer.h"
-#include "../Common/ShaderManager.h"
 
 Color3b_t StarsColors[7] = {
     {128,128,128},
@@ -1855,7 +1854,7 @@ void BSDDrawCollisionVolumes(BSD_t *BSD,Camera_t *Camera,mat4 ProjectionMatrix)
 }
 //TODO:Spawn the RenderObject when loading node data!
 //     Some nodes don't have a corresponding RenderObject like the PlayerSpawn.
-void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
+void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *RenderObjectShader,mat4 ProjectionMatrix)
 {
     Shader_t *Shader;
     BSDRenderObjectDrawable_t *RenderObjectIterator;
@@ -1864,10 +1863,8 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     mat4 ModelViewMatrix;
     mat4 ModelMatrix;
     vec3 PSpawn;
+//     RenderObjectShader_t *RenderObjectShader;
     int MVPMatrixId;
-    int PaletteTextureId;
-    int TextureIndexId;
-    int EnableLightingId;
     int i;
     
     glm_mat4_mul(ProjectionMatrix,Camera->ViewMatrix,MVPMatrix);
@@ -1922,21 +1919,13 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     
     
     if( LevelDrawBSDRenderObjects->IValue ) {
-        Shader = ShaderCache("RenderObjectShader","Shaders/RenderObjectVertexShader.glsl","Shaders/RenderObjectFragmentShader.glsl");
-        if( Shader ) {
-            glUseProgram(Shader->ProgramId);
-            MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-            EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
-            PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
-            TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
-            glUniform1i(TextureIndexId, 0);
-            glUniform1i(PaletteTextureId,  1);
-            glUniform1i(EnableLightingId, LevelEnableAmbientLight->IValue);
+        if( RenderObjectShader ) {
+            glUseProgram(RenderObjectShader->Shader->ProgramId);
             glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
             glActiveTexture(GL_TEXTURE0 + 1);
             glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
-
+            glUniform1i(RenderObjectShader->EnableLightingId, LevelEnableAmbientLight->IValue);
             for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; 
                 RenderObjectIterator = RenderObjectIterator->Next ) {
                 glm_mat4_identity(ModelViewMatrix);
@@ -1944,7 +1933,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
                 glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
                 glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);            
                 glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
-                glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+                glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
 
                 for( VAOIterator = BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].VAO; VAOIterator; 
                     VAOIterator = VAOIterator->Next ) {
@@ -1960,15 +1949,9 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     }
     
     if( LevelDrawBSDShowcase->IValue ) {
-        Shader = ShaderCache("RenderObjectShader","Shaders/RenderObjectVertexShader.glsl","Shaders/RenderObjectFragmentShader.glsl");
-        if( Shader ) {
-            glUseProgram(Shader->ProgramId);
-            MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-            PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
-            TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
-            glUniform1i(TextureIndexId, 0);
-            glUniform1i(PaletteTextureId,  1);
-            glUniform1i(EnableLightingId, LevelEnableAmbientLight->IValue);
+        if( RenderObjectShader ) {
+            glUseProgram(RenderObjectShader->Shader->ProgramId);
+            glUniform1i(RenderObjectShader->EnableLightingId, LevelEnableAmbientLight->IValue);
             glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
             glActiveTexture(GL_TEXTURE0 + 1);
@@ -1988,7 +1971,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
                 
                 //Emulate PSX Coordinate system...
                 glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
-                glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+                glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
 
                 for( VAOIterator = BSD->RenderObjectList[i].VAO; VAOIterator; VAOIterator = VAOIterator->Next ) {
                     glBindVertexArray(VAOIterator->VAOId[0]);

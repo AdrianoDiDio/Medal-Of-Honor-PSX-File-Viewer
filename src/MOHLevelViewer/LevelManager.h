@@ -36,6 +36,7 @@ typedef struct MissionLevel_s {
     char *LevelName;
     int LevelNumber;
 } MissionLevel_t;
+
 typedef struct Mission_s {
     char *MissionName;
     int   MissionNumber;
@@ -43,17 +44,27 @@ typedef struct Mission_s {
     MissionLevel_t *Levels;
 } Mission_t;
 
+typedef struct RenderObjectShader_s {
+    int             MVPMatrixId;
+    int             EnableLightingId;
+    int             PaletteTextureId;
+    int             TextureIndexId;
+    Shader_t        *Shader;
+} RenderObjectShader_t;
+
 typedef struct LevelManager_s {
-    char            *BasePath;
-    char            MissionPath[256];
-    char            EngineName[256];
-    FileDialog_t    *FileDialog;
-    FileDialog_t    *ExportFileDialog;
-    Level_t         *CurrentLevel;
-    int             HasToSpawnCamera;
-    int             IsPathSet;
-    int             GameEngine;
-    SoundSystem_t  *SoundSystem;
+    char                    *BasePath;
+    char                    MissionPath[256];
+    char                    EngineName[256];
+    FileDialog_t            *FileDialog;
+    FileDialog_t            *ExportFileDialog;
+    Level_t                 *CurrentLevel;
+    int                     HasToSpawnCamera;
+    int                     IsPathSet;
+    int                     GameEngine;
+    SoundSystem_t           *SoundSystem;
+    RenderObjectShader_t    *RenderObjectShader;
+
 } LevelManager_t;
 
 typedef struct LevelManagerDialogData_s {

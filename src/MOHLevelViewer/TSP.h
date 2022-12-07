@@ -261,9 +261,10 @@ typedef struct TSP_s {
 
 typedef struct Camera_s Camera_t;
 typedef struct BSD_s BSD_t;
+typedef struct RenderObjectShader_s RenderObjectShader_t;
 
 TSP_t  *TSPLoad(const char *FName,int TSPNumber);
-void    TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
+void    TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *RenderObjectShader,mat4 ProjectionMatrix);
 void    TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,Camera_t *Camera,int Reset);
 void    TSPUpdateDynamicFaces(TSP_t *TSPList,Camera_t *Camera,int DynamicDataIndex);
 void    TSPCreateVAOs(TSP_t *TSPList);

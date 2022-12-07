@@ -174,16 +174,15 @@ void LevelUpdate(Level_t *Level,Camera_t *Camera)
         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,Camera,0);
     }
 }
-void LevelDraw(Level_t *Level,Camera_t *Camera,mat4 ProjectionMatrix)
+void LevelDraw(Level_t *Level,Camera_t *Camera,RenderObjectShader_t *RenderObjectShader,mat4 ProjectionMatrix)
 {
     if( !Level ) {
         DPrintf("LevelDraw:Invalid Level\n");
         return;
     }
-             
     BSDDrawSky(Level->BSD,Level->VRAM,Camera,ProjectionMatrix);
-    BSDDraw(Level->BSD,Level->VRAM,Camera,ProjectionMatrix);
-    TSPDrawList(Level->TSPList,Level->VRAM,Camera,ProjectionMatrix);
+    BSDDraw(Level->BSD,Level->VRAM,Camera,RenderObjectShader,ProjectionMatrix);
+    TSPDrawList(Level->TSPList,Level->VRAM,Camera,RenderObjectShader,ProjectionMatrix);
 }
 
 void LevelGetPlayerSpawn(Level_t *Level,int SpawnIndex,vec3 Position,vec3 Rotation)

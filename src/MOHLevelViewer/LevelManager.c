@@ -463,6 +463,9 @@ void LevelManagerCleanUp(LevelManager_t *LevelManager)
     if( LevelManager->SoundSystem ) {
         SoundSystemCleanUp(LevelManager->SoundSystem);
     }
+    if( LevelManager->RenderObjectShader ) {
+        free(LevelManager->RenderObjectShader);
+    }
     free(LevelManager);
 }
 
@@ -815,7 +818,7 @@ void LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera)
     
     glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);     
     
-    LevelDraw(LevelManager->CurrentLevel,Camera,ProjectionMatrix);
+    LevelDraw(LevelManager->CurrentLevel,Camera,LevelManager->RenderObjectShader,ProjectionMatrix);
 }
 
 int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *Path)
@@ -909,7 +912,35 @@ void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
         GUIPushWindow(GUI);
     }
 }
-
+int LevelManagerInitRenderObjectShader(LevelManager_t *LevelManager)
+{
+    Shader_t *Shader;
+    
+    if( !LevelManager ) {
+        DPrintf("LevelManagerInitRenderObjectShader:Invalid LevelManager\n");
+        return 0;
+    }
+    Shader = ShaderCache("RenderObjectShader","Shaders/RenderObjectVertexShader.glsl","Shaders/RenderObjectFragmentShader.glsl");
+    if( !Shader ) {
+        DPrintf("LevelManagerInitRenderObjectShader:Couldn't cache Shader.\n");
+        return 0;
+    }
+    LevelManager->RenderObjectShader = malloc(sizeof(RenderObjectShader_t));
+    if( !LevelManager->RenderObjectShader ) {
+        DPrintf("LevelManagerInitRenderObjectShader:Failed to allocate memory for shader\n");
+        return 0;
+    }
+    LevelManager->RenderObjectShader->Shader = Shader;
+    glUseProgram(LevelManager->RenderObjectShader->Shader->ProgramId);
+    LevelManager->RenderObjectShader->MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+    LevelManager->RenderObjectShader->EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
+    LevelManager->RenderObjectShader->PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
+    LevelManager->RenderObjectShader->TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+    glUniform1i(LevelManager->RenderObjectShader->TextureIndexId, 0);
+    glUniform1i(LevelManager->RenderObjectShader->PaletteTextureId,  1);
+    glUniform1i(LevelManager->RenderObjectShader->EnableLightingId, 0);
+    return 1;
+}
 LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
     LevelManager_t *LevelManager;
@@ -924,6 +955,13 @@ LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem)
     LevelManager->SoundSystem = SoundSystemInit(LevelManagerOnAudioUpdate,LevelManager);
     if( !LevelManager->SoundSystem ) {
         DPrintf("LevelManagerInit:Couldn't Initialize SoundSystem\n");
+        free(LevelManager);
+        return NULL;
+    }
+    LevelManager->RenderObjectShader = NULL;
+    if( !LevelManagerInitRenderObjectShader(LevelManager) ) {
+        DPrintf("LevelManagerInit:Couldn't load RenderObjectShader\n");
+        SoundSystemCleanUp(LevelManager->SoundSystem);
         free(LevelManager);
         return NULL;
     }

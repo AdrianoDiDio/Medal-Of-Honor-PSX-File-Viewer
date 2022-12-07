@@ -1065,14 +1065,8 @@ bool IsTSPInRenderArray(Level_t *Level,int TSPNumber)
     return false;
 }
 
-void TSPDrawNode(TSPNode_t *Node,VRAM_t *VRAM,mat4 MVPMatrix)
-{
-    Shader_t *Shader;
-    int MVPMatrixId;
-    int EnableLightingId;
-    int PaletteTextureId;
-    int TextureIndexId;
-    
+void TSPDrawNode(TSPNode_t *Node,RenderObjectShader_t *RenderObjectShader,VRAM_t *VRAM,mat4 MVPMatrix)
+{    
     if( !Node ) {
         return;
     }
@@ -1087,23 +1081,13 @@ void TSPDrawNode(TSPNode_t *Node,VRAM_t *VRAM,mat4 MVPMatrix)
 
     if( Node->NumFaces != 0 ) {
         if( LevelDrawSurfaces->IValue ) {
-            Shader = ShaderCache("RenderObjectShader","Shaders/RenderObjectVertexShader.glsl","Shaders/RenderObjectFragmentShader.glsl");
-            if( Shader ) {
-                glUseProgram(Shader->ProgramId);
-
-                MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-                glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
-                EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
-                PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
-                TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
-                glUniform1i(TextureIndexId, 0);
-                glUniform1i(PaletteTextureId,  1);
-                glUniform1i(EnableLightingId, LevelEnableAmbientLight->IValue);
+            if( RenderObjectShader ) {
                 if( LevelEnableWireFrameMode->IValue ) {
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                 } else {
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                 }
+                glUseProgram(RenderObjectShader->Shader->ProgramId);
                 glActiveTexture(GL_TEXTURE0 + 0);
                 glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
                 glActiveTexture(GL_TEXTURE0 + 1);
@@ -1117,16 +1101,15 @@ void TSPDrawNode(TSPNode_t *Node,VRAM_t *VRAM,mat4 MVPMatrix)
                 glBindTexture(GL_TEXTURE_2D,0);
                 glDisable(GL_BLEND);
                 glBlendColor(1.f, 1.f, 1.f, 1.f);
-                glUseProgram(0);
                 if( LevelEnableWireFrameMode->IValue ) {
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                 }
             }
         }
     } else {
-        TSPDrawNode(Node->Child[1],VRAM,MVPMatrix);
-        TSPDrawNode(Node->Next,VRAM,MVPMatrix);
-        TSPDrawNode(Node->Child[0],VRAM,MVPMatrix);
+        TSPDrawNode(Node->Child[1],RenderObjectShader,VRAM,MVPMatrix);
+        TSPDrawNode(Node->Next,RenderObjectShader,VRAM,MVPMatrix);
+        TSPDrawNode(Node->Child[0],RenderObjectShader,VRAM,MVPMatrix);
 
     }
 }
@@ -1406,35 +1389,14 @@ void TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,Camera_t *Camera,int Reset
         TSPUpdateTransparentAnimatedFaces(Iterator,BSD,Reset);
     }
 }
-void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM,mat4 MVPMatrix)
+void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM)
 {
-    Shader_t *Shader;
-    int MVPMatrixId;
-    int EnableLightingId;
-    int PaletteTextureId;
-    int TextureIndexId;
     TSPRenderingFace_t *TransparentFaceIterator;
 
     if( !LevelDrawSurfaces->IValue ) {
         return;
     }
     
-    Shader = ShaderCache("RenderObjectShader","Shaders/RenderObjectVertexShader.glsl","Shaders/RenderObjectFragmentShader.glsl");
-    
-    if( !Shader ) {
-        DPrintf("TSPDrawTransparentFaces:Invalid Shader.\n");
-        return;
-    }
-    glUseProgram(Shader->ProgramId);
-
-    MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-    glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
-    EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
-    PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
-    TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
-    glUniform1i(TextureIndexId, 0);
-    glUniform1i(PaletteTextureId,  1);
-    glUniform1i(EnableLightingId, LevelEnableAmbientLight->IValue);
     if( LevelEnableWireFrameMode->IValue ) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
@@ -1470,37 +1432,43 @@ void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM,mat4 MVPMatrix)
     glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D,0);
     glDisable(GL_BLEND);
-    glUseProgram(0);
     if( LevelEnableWireFrameMode->IValue ) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 }
-void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
+void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *RenderObjectShader,mat4 ProjectionMatrix)
 {
     TSP_t *Iterator;
     mat4 MVPMatrix;
     
     if( !TSPList ) {
-        DPrintf("DrawTSP:Invalid TSP data\n");
+        DPrintf("TSPDrawList:Invalid TSP data\n");
         return;
     }
     
+    if( !RenderObjectShader ) {
+        DPrintf("TSPDrawList:Invalid Shader.\n");
+        return;
+    }
     glm_mat4_mul(ProjectionMatrix,Camera->ViewMatrix,MVPMatrix);
     
     //Emulate PSX Coordinate system...
     glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
-
+    glUseProgram(RenderObjectShader->Shader->ProgramId);
+    glUniform1i(RenderObjectShader->EnableLightingId, LevelEnableAmbientLight->IValue);
+    glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);  
-        TSPDrawNode(&Iterator->Node[0],VRAM,MVPMatrix);
+        TSPDrawNode(&Iterator->Node[0],RenderObjectShader,VRAM,MVPMatrix);
         glDisable(GL_CULL_FACE);
     }
 
     // Alpha pass.
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
-        TSPDrawTransparentFaces(Iterator,VRAM,MVPMatrix);
+        TSPDrawTransparentFaces(Iterator,VRAM);
     }
+    glUseProgram(0);
     if( LevelDrawCollisionData->IValue ) {
         for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
             TSPDrawCollisionData(Iterator,MVPMatrix);
