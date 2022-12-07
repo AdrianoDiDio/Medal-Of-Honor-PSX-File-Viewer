@@ -1860,6 +1860,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *Rend
     BSDRenderObjectDrawable_t *RenderObjectIterator;
     VAO_t *VAOIterator;
     mat4 MVPMatrix;
+    mat4 MVMatrix;
     mat4 ModelViewMatrix;
     mat4 ModelMatrix;
     vec3 PSpawn;
@@ -1926,6 +1927,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *Rend
             glActiveTexture(GL_TEXTURE0 + 1);
             glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
             glUniform1i(RenderObjectShader->EnableLightingId, LevelEnableAmbientLight->IValue);
+            glUniform1i(RenderObjectShader->EnableFogId, LevelEnableFog->IValue);
             for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; 
                 RenderObjectIterator = RenderObjectIterator->Next ) {
                 glm_mat4_identity(ModelViewMatrix);
@@ -1933,8 +1935,9 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *Rend
                 glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
                 glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);            
                 glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+                glm_rotate_x(ModelViewMatrix,glm_rad(180.f), MVMatrix);
                 glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
-
+                glUniformMatrix4fv(RenderObjectShader->MVMatrixId,1,false,&MVMatrix[0][0]);
                 for( VAOIterator = BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].VAO; VAOIterator; 
                     VAOIterator = VAOIterator->Next ) {
                     glBindVertexArray(VAOIterator->VAOId[0]);
@@ -1952,6 +1955,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *Rend
         if( RenderObjectShader ) {
             glUseProgram(RenderObjectShader->Shader->ProgramId);
             glUniform1i(RenderObjectShader->EnableLightingId, LevelEnableAmbientLight->IValue);
+            glUniform1i(RenderObjectShader->EnableFogId, LevelEnableFog->IValue);
             glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
             glActiveTexture(GL_TEXTURE0 + 1);
@@ -1971,8 +1975,9 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *Rend
                 
                 //Emulate PSX Coordinate system...
                 glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+                glm_rotate_x(ModelViewMatrix,glm_rad(180.f), MVMatrix);
                 glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
-
+                glUniformMatrix4fv(RenderObjectShader->MVMatrixId,1,false,&MVMatrix[0][0]);
                 for( VAOIterator = BSD->RenderObjectList[i].VAO; VAOIterator; VAOIterator = VAOIterator->Next ) {
                     glBindVertexArray(VAOIterator->VAOId[0]);
                     glDrawArrays(GL_TRIANGLES, 0, VAOIterator->Count);

@@ -46,7 +46,11 @@ typedef struct Mission_s {
 
 typedef struct RenderObjectShader_s {
     int             MVPMatrixId;
+    int             MVMatrixId;
     int             EnableLightingId;
+    int             EnableFogId;
+    int             FogNearId;
+    int             FogColorId;
     int             PaletteTextureId;
     int             TextureIndexId;
     Shader_t        *Shader;
@@ -83,6 +87,7 @@ int             LevelManagerIsLevelLoaded(const LevelManager_t *LevelManager);
 int             LevelManagerGetGameEngine(LevelManager_t *LevelManager);
 int             LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
                                          const char *Path);
+void            LevelManagerUpdateRenderObjectShaderFog(LevelManager_t *LevelManager);
 TSP_t           *LevelManagerGetTSPCompartmentByPoint(LevelManager_t *LevelManager,vec3 Point);
 void            LevelManagerUpdate(LevelManager_t *LevelManager,Camera_t *Camera);
 void            LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera);

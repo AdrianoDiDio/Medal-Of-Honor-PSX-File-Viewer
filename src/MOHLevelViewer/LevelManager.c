@@ -522,6 +522,7 @@ void LevelManagerSwitchLevel(LevelManager_t *LevelManager,Level_t *NewLevel)
     if( LevelEnableMusicTrack->IValue && NewLevel->MusicList) {
         SoundSystemPlay(LevelManager->SoundSystem);
     }
+    LevelManagerUpdateRenderObjectShaderFog(LevelManager);
 }
 void LevelManagerDrawString(const LevelManager_t *LevelManager,const char *String,float x,float y,Color4f_t Color)
 {
@@ -915,7 +916,7 @@ void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
 int LevelManagerInitRenderObjectShader(LevelManager_t *LevelManager)
 {
     Shader_t *Shader;
-    
+    vec3 ClearColor;
     if( !LevelManager ) {
         DPrintf("LevelManagerInitRenderObjectShader:Invalid LevelManager\n");
         return 0;
@@ -933,13 +934,36 @@ int LevelManagerInitRenderObjectShader(LevelManager_t *LevelManager)
     LevelManager->RenderObjectShader->Shader = Shader;
     glUseProgram(LevelManager->RenderObjectShader->Shader->ProgramId);
     LevelManager->RenderObjectShader->MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+    LevelManager->RenderObjectShader->MVMatrixId = glGetUniformLocation(Shader->ProgramId,"MVMatrix");
     LevelManager->RenderObjectShader->EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
     LevelManager->RenderObjectShader->PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
     LevelManager->RenderObjectShader->TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+    LevelManager->RenderObjectShader->EnableFogId = glGetUniformLocation(Shader->ProgramId,"EnableFog");
+    LevelManager->RenderObjectShader->FogNearId = glGetUniformLocation(Shader->ProgramId,"FogNear");
+    LevelManager->RenderObjectShader->FogColorId = glGetUniformLocation(Shader->ProgramId,"FogColor");
     glUniform1i(LevelManager->RenderObjectShader->TextureIndexId, 0);
     glUniform1i(LevelManager->RenderObjectShader->PaletteTextureId,  1);
     glUniform1i(LevelManager->RenderObjectShader->EnableLightingId, 0);
+    glUniform1i(LevelManager->RenderObjectShader->EnableFogId, 0);
+    glUniform1f(LevelManager->RenderObjectShader->FogNearId, 0);
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, ClearColor);
+    glUniform3fv(LevelManager->RenderObjectShader->FogColorId, 1, ClearColor);
     return 1;
+}
+void LevelManagerUpdateRenderObjectShaderFog(LevelManager_t *LevelManager)
+{
+    vec3 ClearColor;
+    if( !LevelManager ) {
+        return;
+    }
+    if( !LevelManagerIsLevelLoaded(LevelManager) ) {
+        return;
+    }
+    glUseProgram(LevelManager->RenderObjectShader->Shader->ProgramId);
+    glUniform1f(LevelManager->RenderObjectShader->FogNearId, LevelManager->CurrentLevel->BSD->SceneInfo.FogNear);
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, ClearColor);
+    glUniform3fv(LevelManager->RenderObjectShader->FogColorId, 1, ClearColor);
+    glUseProgram(0);
 }
 LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem)
 {

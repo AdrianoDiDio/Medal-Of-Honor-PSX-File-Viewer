@@ -1440,6 +1440,7 @@ void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader
 {
     TSP_t *Iterator;
     mat4 MVPMatrix;
+    mat4 MVMatrix;
     
     if( !TSPList ) {
         DPrintf("TSPDrawList:Invalid TSP data\n");
@@ -1454,9 +1455,12 @@ void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader
     
     //Emulate PSX Coordinate system...
     glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+    glm_rotate_x(Camera->ViewMatrix,glm_rad(180.f), MVMatrix);
     glUseProgram(RenderObjectShader->Shader->ProgramId);
     glUniform1i(RenderObjectShader->EnableLightingId, LevelEnableAmbientLight->IValue);
+    glUniform1i(RenderObjectShader->EnableFogId, LevelEnableFog->IValue);
     glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
+    glUniformMatrix4fv(RenderObjectShader->MVMatrixId,1,false,&MVMatrix[0][0]);
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);  

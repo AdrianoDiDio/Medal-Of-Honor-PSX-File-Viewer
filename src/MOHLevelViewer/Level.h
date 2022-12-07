@@ -73,6 +73,7 @@ extern Config_t *LevelDrawBSDRenderObjects;
 extern Config_t *LevelDrawBSDShowcase;
 extern Config_t *LevelEnableFrustumCulling;
 extern Config_t *LevelEnableAmbientLight;
+extern Config_t *LevelEnableFog;
 extern Config_t *LevelEnableSemiTransparency;
 extern Config_t *LevelEnableAnimatedLights;
 extern Config_t *LevelEnableAnimatedSurfaces;

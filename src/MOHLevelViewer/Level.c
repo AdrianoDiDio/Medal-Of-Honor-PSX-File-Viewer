@@ -33,6 +33,7 @@ Config_t *LevelDrawBSDRenderObjects;
 Config_t *LevelDrawBSDShowcase;
 Config_t *LevelEnableFrustumCulling;
 Config_t *LevelEnableAmbientLight;
+Config_t *LevelEnableFog;
 Config_t *LevelEnableSemiTransparency;
 Config_t *LevelEnableAnimatedLights;
 Config_t *LevelEnableAnimatedSurfaces;
@@ -202,6 +203,7 @@ void LevelLoadDefaultSettings()
     LevelDrawBSDShowcase = ConfigGet("LevelDrawBSDShowcase");
     LevelEnableFrustumCulling = ConfigGet("LevelEnableFrustumCulling");
     LevelEnableAmbientLight = ConfigGet("LevelEnableAmbientLight");
+    LevelEnableFog = ConfigGet("LevelEnableFog");
     LevelEnableSemiTransparency = ConfigGet("LevelEnableSemiTransparency");
     LevelEnableAnimatedLights = ConfigGet("LevelEnableAnimatedLights");
     LevelEnableAnimatedSurfaces = ConfigGet("LevelEnableAnimatedSurfaces");

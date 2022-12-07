@@ -339,9 +339,10 @@ typedef struct BSDSky_s {
 } BSDSky_t;
 
 typedef struct BSDSceneInfo_s {
-    char Unknown[62];
-    Color3b_t ClearColor;
-    char Unknown2[7];
+    char        Unknown[60];
+    short       FogNear;
+    Color3b_t   ClearColor;
+    char        Unknown2[7];
 } BSDSceneInfo_t;
 typedef struct BSD_s {
     BSDHeader_t                 Header;

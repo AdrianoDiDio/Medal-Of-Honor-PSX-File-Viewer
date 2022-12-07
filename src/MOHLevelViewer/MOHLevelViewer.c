@@ -242,6 +242,7 @@ void RegisterDefaultSettings()
     ConfigRegister("LevelEnableFrustumCulling","1","When enabled helps to skip non visibile nodes from the BSP tree improving the rendering speed");
     ConfigRegister("LevelEnableAmbientLight","1","When enabled the texture color is interpolated with the surface color to simulate lights on \n"
                                                     "surfaces");
+    ConfigRegister("LevelEnableFog","1","When enabled it will draw a fog based on the camera distance and level parameters.");
     ConfigRegister("LevelEnableSemiTransparency","1","When enabled draw transparent surfaces as non-opaque");
     ConfigRegister("LevelEnableAnimatedLights","1","When enabled some surfaces will interpolate their color to simulate an animated surface.\n"
                                        "NOTE that this will only work if \"LevelEnableAmbientLight\" is enabled");

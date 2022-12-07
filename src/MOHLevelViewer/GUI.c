@@ -223,6 +223,9 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                 if( GUICheckBoxWithTooltip("Ambient Light",(bool *) &LevelEnableAmbientLight->IValue,LevelEnableAmbientLight->Description) ) {
                     ConfigSetNumber("LevelEnableAmbientLight",LevelEnableAmbientLight->IValue);
                 }
+                if( GUICheckBoxWithTooltip("Fog",(bool *) &LevelEnableFog->IValue,LevelEnableFog->Description ) ){
+                    ConfigSetNumber("LevelEnableFog",LevelEnableFog->IValue);
+                }
                 if( GUICheckBoxWithTooltip("Semi-Transparency",(bool *) &LevelEnableSemiTransparency->IValue,
                     LevelEnableSemiTransparency->Description) ) {
                     ConfigSetNumber("LevelEnableSemiTransparency",LevelEnableSemiTransparency->IValue);
