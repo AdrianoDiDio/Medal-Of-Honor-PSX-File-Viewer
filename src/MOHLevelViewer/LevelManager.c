@@ -948,6 +948,7 @@ int LevelManagerInitRenderObjectShader(LevelManager_t *LevelManager)
     glUniform1f(LevelManager->RenderObjectShader->FogNearId, 0);
     glGetFloatv(GL_COLOR_CLEAR_VALUE, ClearColor);
     glUniform3fv(LevelManager->RenderObjectShader->FogColorId, 1, ClearColor);
+    glUseProgram(0);
     return 1;
 }
 void LevelManagerUpdateRenderObjectShaderFog(LevelManager_t *LevelManager)
@@ -961,7 +962,9 @@ void LevelManagerUpdateRenderObjectShaderFog(LevelManager_t *LevelManager)
     }
     glUseProgram(LevelManager->RenderObjectShader->Shader->ProgramId);
     glUniform1f(LevelManager->RenderObjectShader->FogNearId, LevelManager->CurrentLevel->BSD->SceneInfo.FogNear);
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, ClearColor);
+    ClearColor[0] = LevelManager->CurrentLevel->BSD->SceneInfo.ClearColor.r / 255.f;
+    ClearColor[1] = LevelManager->CurrentLevel->BSD->SceneInfo.ClearColor.g / 255.f;
+    ClearColor[2] = LevelManager->CurrentLevel->BSD->SceneInfo.ClearColor.b / 255.f;
     glUniform3fv(LevelManager->RenderObjectShader->FogColorId, 1, ClearColor);
     glUseProgram(0);
 }
@@ -983,6 +986,7 @@ LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem)
         return NULL;
     }
     LevelManager->RenderObjectShader = NULL;
+    DPrintf("LevelManagerInit:Init RenderObjectShader\n");
     if( !LevelManagerInitRenderObjectShader(LevelManager) ) {
         DPrintf("LevelManagerInit:Couldn't load RenderObjectShader\n");
         SoundSystemCleanUp(LevelManager->SoundSystem);

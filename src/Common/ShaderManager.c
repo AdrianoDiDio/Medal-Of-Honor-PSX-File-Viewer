@@ -71,10 +71,30 @@ Shader_t *ShaderCache(const char *ShaderName,const char *VertexShaderFile,const 
     int ShaderTaskResult;
     char *ShaderSource;
     
+    Result = NULL;
+    ShaderInfoLog = NULL;
+    ShaderSource = NULL;
+    
+    if( !ShaderName ) {
+        DPrintf("ShaderCache:Invalid name\n");
+        goto Failure;
+    }
+    
+    if( !VertexShaderFile ) {
+        DPrintf("ShaderCache:Invalid Vertex Shader\n");
+        goto Failure;
+    }
+    
+    if( !FragmentShaderFile ) {
+        DPrintf("ShaderCache:Invalid Fragment Shader\n");
+        goto Failure;
+    }
+    
     if( (Result = ShaderGet(ShaderName)) != NULL ) {
         return Result;
     }
-        
+    
+    DPrintf("ShaderCache:Caching shader %s\n",ShaderName);
     VertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     FragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     
@@ -82,7 +102,7 @@ Shader_t *ShaderCache(const char *ShaderName,const char *VertexShaderFile,const 
     ShaderSource = ShaderRead(VertexShaderFile);
     if( !ShaderSource ) {
         printf("Failed to open vertex shader %s\n",VertexShaderFile);
-        return NULL;
+        goto Failure;
     }
     glShaderSource(VertexShaderId, 1, (const GLchar**) &ShaderSource, NULL);
     glCompileShader(VertexShaderId);
@@ -97,6 +117,7 @@ Shader_t *ShaderCache(const char *ShaderName,const char *VertexShaderFile,const 
             ShaderInfoLog[InfoLogLength] = '\0';
             DPrintf("Compile Error:%s\n", ShaderInfoLog);
             free(ShaderInfoLog);
+            goto Failure;
         }
     }
     free(ShaderSource);
@@ -104,7 +125,7 @@ Shader_t *ShaderCache(const char *ShaderName,const char *VertexShaderFile,const 
     ShaderSource = ShaderRead(FragmentShaderFile);
     if( !ShaderSource ) {
         printf("Failed to open fragment shader %s\n",FragmentShaderFile);
-        return NULL;
+        goto Failure;
     }
     glShaderSource(FragmentShaderId, 1, (const GLchar**) &ShaderSource, NULL);
     glCompileShader(FragmentShaderId);
@@ -119,6 +140,7 @@ Shader_t *ShaderCache(const char *ShaderName,const char *VertexShaderFile,const 
             ShaderInfoLog[InfoLogLength] = '\0';
             DPrintf("Compile Error:%s\n", ShaderInfoLog);
             free(ShaderInfoLog);
+            goto Failure;
         }
     }
     
@@ -139,14 +161,14 @@ Shader_t *ShaderCache(const char *ShaderName,const char *VertexShaderFile,const 
             ShaderInfoLog[InfoLogLength] = '\0';
             DPrintf("Linking Error:%s\n", ShaderInfoLog);
             free(ShaderInfoLog);
+            goto Failure;
         }
     }
-    
     Result = malloc(sizeof(Shader_t));
     
     if( !Result ) {
         DPrintf("ShaderCache:Failed to allocate struct\n");
-        return NULL;
+        goto Failure;
     }
     Result->Name = StringCopy(ShaderName);
     Result->ProgramId = ProgramId;
@@ -161,7 +183,14 @@ Shader_t *ShaderCache(const char *ShaderName,const char *VertexShaderFile,const 
     glDeleteShader(VertexShaderId);
     glDeleteShader(FragmentShaderId);
     return Result;
-
+Failure:
+    if( ShaderSource ) {
+        free(ShaderSource);
+    }
+    if( Result ) {
+        free(Result);
+    }
+    return NULL;
 }
 
 void ShaderManagerInit()
