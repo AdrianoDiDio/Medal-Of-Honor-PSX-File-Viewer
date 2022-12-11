@@ -916,7 +916,7 @@ void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
 int LevelManagerInitRenderObjectShader(LevelManager_t *LevelManager)
 {
     Shader_t *Shader;
-    vec3 ClearColor;
+    vec4 ClearColor;
     if( !LevelManager ) {
         DPrintf("LevelManagerInitRenderObjectShader:Invalid LevelManager\n");
         return 0;
@@ -986,7 +986,6 @@ LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem)
         return NULL;
     }
     LevelManager->RenderObjectShader = NULL;
-    DPrintf("LevelManagerInit:Init RenderObjectShader\n");
     if( !LevelManagerInitRenderObjectShader(LevelManager) ) {
         DPrintf("LevelManagerInit:Couldn't load RenderObjectShader\n");
         SoundSystemCleanUp(LevelManager->SoundSystem);
