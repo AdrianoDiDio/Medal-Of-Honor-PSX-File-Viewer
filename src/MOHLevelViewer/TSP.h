@@ -133,7 +133,6 @@ typedef struct TSPNode_s {
     TSPRenderingFace_t *OpaqueFaceList;
     int    NumTransparentFaces;
     struct TSPNode_s *Child[3];
-//     struct TSPNode_s *Next;
 } TSPNode_t;
 
 

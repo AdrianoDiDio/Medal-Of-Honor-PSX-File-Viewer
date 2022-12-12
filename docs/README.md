@@ -351,12 +351,11 @@ Otherwise, in version 3, two new fields are added:
 
 **Note that all the offset starts from the beginning of the file.**  
 Thanks to this format we can read each chunk separately by moving the file
-
 pointer position to the required offset.
 
 #### TSP Nodes
 
-The game uses a ternary tree for rendering all the level data.
+The game uses a ternary tree for rendering all the level data.  
 Each TSP node contains the following data:
 
 ##### Vector3
@@ -382,7 +381,7 @@ Each TSP node contains the following data:
 | int                   | 4 bytes  | Number of Faces |
 | int                   | 4 bytes  | Unknown         |
 | int                   | 4 bytes  | Unknown         |
-| int                   | 4 bytes  | Offset          |
+| int                   | 4 bytes  | Face Offset or Child3 Offset          |
 | int                   | 4 bytes  | Child1 Offset   |
 | int                   | 4 bytes  | Child2 Offset   |
 
@@ -397,7 +396,7 @@ the face array that goes from
 
 > [Offset;Offset + (NumFaces * sizeof(Face))]
 
-Otherwise it represents the third child offset in the array that needs to
+Otherwise it represents the third child offset that needs to
 be loaded.
 
 **Note that this is valid only in TSP version 2, TSP version 3 uses a
@@ -474,7 +473,7 @@ Starting from Version 3 a different type of face format is used:
 | unsigned short | 2 bytes | V2 Third vertex and color index in array                                                        |
 | unsigned short | 2 bytes | Texture Index in texture array (see [Texture Info](#texture-info) section for more information) |
 
-this format is not meant to be loaded directly but rather the [BSP Node struct](#bsp-node) must be used to load it.  
+this format is not meant to be loaded directly but rather the [TSP Node struct](#tsp-node) must be used to load it.  
 The way it works is based on the offset found in the Node data that
 signals the beginning of the face definition.  
 After reading the data and storing it into an array, we need to iterate and
