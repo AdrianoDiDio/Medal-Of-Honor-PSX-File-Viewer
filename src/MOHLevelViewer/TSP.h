@@ -132,8 +132,8 @@ typedef struct TSPNode_s {
     VAO_t *LeafCollisionFaceListVAO;
     TSPRenderingFace_t *OpaqueFaceList;
     int    NumTransparentFaces;
-    struct TSPNode_s *Child[2];
-    struct TSPNode_s *Next;
+    struct TSPNode_s *Child[3];
+//     struct TSPNode_s *Next;
 } TSPNode_t;
 
 

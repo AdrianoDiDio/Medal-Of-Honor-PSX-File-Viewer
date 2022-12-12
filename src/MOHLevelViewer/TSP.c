@@ -48,7 +48,7 @@ void TSPFree(TSP_t *TSP)
             //Don't bother traversing the tree since we can walk the whole array and free all the pointers...
             TSP->Node[i].Child[0] = NULL;
             TSP->Node[i].Child[1] = NULL;
-            TSP->Node[i].Next = NULL;
+            TSP->Node[i].Child[2] = NULL;
         }
         free(TSP->Node);
     }
@@ -1108,7 +1108,7 @@ void TSPDrawNode(TSPNode_t *Node,RenderObjectShader_t *RenderObjectShader,VRAM_t
         }
     } else {
         TSPDrawNode(Node->Child[1],RenderObjectShader,VRAM,MVPMatrix);
-        TSPDrawNode(Node->Next,RenderObjectShader,VRAM,MVPMatrix);
+        TSPDrawNode(Node->Child[2],RenderObjectShader,VRAM,MVPMatrix);
         TSPDrawNode(Node->Child[0],RenderObjectShader,VRAM,MVPMatrix);
 
     }
@@ -1233,7 +1233,7 @@ void TSPUpdateDynamicFaceNodes(TSP_t *TSP,TSPNode_t *Node,TSPDynamicData_t *Dyna
 
     } else {
         TSPUpdateDynamicFaceNodes(TSP,Node->Child[1],DynamicData,Camera);
-        TSPUpdateDynamicFaceNodes(TSP,Node->Next,DynamicData,Camera);
+        TSPUpdateDynamicFaceNodes(TSP,Node->Child[2],DynamicData,Camera);
         TSPUpdateDynamicFaceNodes(TSP,Node->Child[0],DynamicData,Camera);
     }
 }
@@ -1369,7 +1369,7 @@ void TSPUpdateAnimatedFaceNodes(TSPNode_t *Node,BSD_t *BSD,Camera_t *Camera,int 
 
     } else {
         TSPUpdateAnimatedFaceNodes(Node->Child[1],BSD,Camera,Reset);
-        TSPUpdateAnimatedFaceNodes(Node->Next,BSD,Camera,Reset);
+        TSPUpdateAnimatedFaceNodes(Node->Child[2],BSD,Camera,Reset);
         TSPUpdateAnimatedFaceNodes(Node->Child[0],BSD,Camera,Reset);
     }
 }
@@ -1524,9 +1524,9 @@ void TSPLookUpChildNode(TSP_t *TSP,FILE *InFile)
             Offset = TSP->Node[i].BaseData + TSP->Header.NodeOffset;
             Index = TSPGetNodeByChildOffset(TSP,Offset);
             assert(Index != -1);
-            TSP->Node[i].Next = &TSP->Node[Index];
+            TSP->Node[i].Child[2] = &TSP->Node[Index];
         } else {
-            TSP->Node[i].Next = NULL;
+            TSP->Node[i].Child[2] = NULL;
         }
     }
 }

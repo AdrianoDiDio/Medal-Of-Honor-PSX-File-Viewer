@@ -26,10 +26,10 @@ Table of contents
   + [Common Formats](#common-formats)
     - [TSB](#tsb)
   + [TSP Files](#tsp-files)
-    - [BSP Nodes](#bsp-nodes)
+    - [TSP Nodes](#tsp-nodes)
       * [Vector3](#vector3)
       * [Bounding Box](#bounding-box)
-      * [BSP Node](#bsp-node)
+      * [TSP Node](#tsp-node)
     - [Vertex](#vertex)
     - [Color](#color)
     - [Faces](#faces)
@@ -309,8 +309,8 @@ If Version is 2:
 | ----- | ------- | ---------------------- |
 | short | 2 bytes | ID                     |
 | short | 2 bytes | Version                |
-| int   | 4 bytes | Number of BSP Nodes    |
-| int   | 4 bytes | BSP Nodes Data Offset  |
+| int   | 4 bytes | Number of TSP Nodes    |
+| int   | 4 bytes | TSP Nodes Data Offset  |
 | int   | 4 bytes | Number of Faces        |
 | int   | 4 bytes | Faces Data Offset      |
 | int   | 4 bytes | Number of Vertices     |
@@ -331,8 +331,8 @@ Otherwise, in version 3, two new fields are added:
 | ----- | ------- | ---------------------- |
 | short | 2 bytes | ID                     |
 | short | 2 bytes | Version                |
-| int   | 4 bytes | Number of BSP Nodes    |
-| int   | 4 bytes | BSP Nodes Data Offset  |
+| int   | 4 bytes | Number of TSP Nodes    |
+| int   | 4 bytes | TSP Nodes Data Offset  |
 | int   | 4 bytes | Number of Faces        |
 | int   | 4 bytes | Faces Data Offset      |
 | int   | 4 bytes | Number of Vertices     |
@@ -354,10 +354,10 @@ Thanks to this format we can read each chunk separately by moving the file
 
 pointer position to the required offset.
 
-#### BSP Nodes
+#### TSP Nodes
 
-The game uses a BSP tree for rendering all the level data.
-Each BSP node contains the following data:
+The game uses a ternary tree for rendering all the level data.
+Each TSP node contains the following data:
 
 ##### Vector3
 
@@ -397,8 +397,8 @@ the face array that goes from
 
 > [Offset;Offset + (NumFaces * sizeof(Face))]
 
-Otherwise it represents the next node offset in the array that needs to be
-loaded.
+Otherwise it represents the third child offset in the array that needs to
+be loaded.
 
 **Note that this is valid only in TSP version 2, TSP version 3 uses a
 different algorithm based on what is described on
