@@ -2,7 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 /*
 ===========================================================================
-    Copyright (C) 2018-2022 Adriano Di Dio.
+    Copyright (C) 2018-2023 Adriano Di Dio.
     
     Medal-Of-Honor-PSX-File-Viewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -226,7 +226,7 @@ void ConfigUpdateValue(Config_t *Config,const char *Value)
 }
 /*
  Sets the Value of a config by Name.
- If the config was found, it's value is updated and persisted inside
+ If the config was found, its value is updated and persisted inside
  the default config file.
  Returns 1 if operation succeeded 0 otherwise.
  */

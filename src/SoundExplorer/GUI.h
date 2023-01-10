@@ -1,6 +1,6 @@
 /*
 ===========================================================================
-    Copyright (C) 2018-2022 Adriano Di Dio.
+    Copyright (C) 2018-2023 Adriano Di Dio.
     
     SoundExplorer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
