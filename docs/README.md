@@ -140,7 +140,7 @@ tims inside the TAF file contained in Medal Of Honor Mission 1 Level 3*
 
 Before building make sure to fetch all the submodules by typing:  
 
-> git submodule --init --recursive  
+> git submodule update --init --recursive
 
 then type:  
 
