@@ -64,9 +64,12 @@ void ConfigTokenizeSettings(const char *String)
         }
 
         if( !*Temp ) {
-            ConfigBuffer[i++] = '\0';
-            ConfigLine[NumArgs++] = StringCopy(ConfigBuffer);
-            i = 0;
+            //NOTE(Adriano):Make sure to finalize the string only when we have something in the buffer.
+            if( i > 0 ) {
+                ConfigBuffer[i++] = '\0';
+                ConfigLine[NumArgs++] = StringCopy(ConfigBuffer);
+                i = 0;
+            }
             break;
         }
         

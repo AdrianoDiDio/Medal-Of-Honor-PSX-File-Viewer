@@ -486,7 +486,7 @@ bool TSPBoxInFrustum(TSPBBox_t BBox,mat4 MVPMatrix)
 {
     vec4 BoxCornerList[8];
     vec4 FrustumPlaneList[6];
-    int BoxOutsideCount;
+    bool IsBoxInsideFrustum;
     int i;
     int j;
     
@@ -502,13 +502,14 @@ bool TSPBoxInFrustum(TSPBBox_t BBox,mat4 MVPMatrix)
     TSPvec4FromXYZ(BBox.Max.x,BBox.Max.y,BBox.Max.z,BoxCornerList[7]);
 
     for( i = 0; i < 6; i++ ) {
-        BoxOutsideCount = 0;
+        IsBoxInsideFrustum = 0;
         for( j = 0; j < 8; j++ ) {
-            if( glm_vec4_dot(FrustumPlaneList[i],BoxCornerList[j]) < 0.f ) {
-                BoxOutsideCount++;
+            if( glm_vec4_dot(FrustumPlaneList[i],BoxCornerList[j]) > 0.f ) {
+                IsBoxInsideFrustum = 1;
+                break;
             }
         }
-        if( BoxOutsideCount == 8 ) {
+        if( !IsBoxInsideFrustum ) {
             return false;
         }
     }
@@ -1350,27 +1351,30 @@ void TSPUpdateAnimatedRenderingFace(TSPRenderingFace_t *Face,VAO_t *VAO,BSD_t *B
     }
 }
 
-void TSPUpdateAnimatedFaceNodes(TSPNode_t *Node,BSD_t *BSD,Camera_t *Camera,int Reset)
+void TSPUpdateAnimatedFaceNodes(TSPNode_t *Node,BSD_t *BSD,mat4 MVPMatrix,int Reset)
 {
     TSPRenderingFace_t *Iterator;
 
     if( !Node ) {
         return;
     }
-    
-//     if( !TSPBoxInFrustum(Camera,Node->BBox) ) {
-//         return;
-//     }
+    //NOTE(Adriano):Make sure we don't want to reset all the faces to the default state...
+    if( !Reset ) {
+        assert(MVPMatrix != NULL);
+        //NOTE(Adriano):Always enable culling regardless of 'LevelEnableFrustumCulling' settings.
+        if( !TSPBoxInFrustum(Node->BBox,MVPMatrix) ) {
+            return;
+        }
+    }
     
     if( Node->NumFaces != 0 ) {
         for( Iterator = Node->OpaqueFaceList; Iterator; Iterator = Iterator->Next ) {
            TSPUpdateAnimatedRenderingFace(Iterator,Node->OpaqueFacesVAO,BSD,Reset);
         }
-
     } else {
-        TSPUpdateAnimatedFaceNodes(Node->Child[1],BSD,Camera,Reset);
-        TSPUpdateAnimatedFaceNodes(Node->Child[2],BSD,Camera,Reset);
-        TSPUpdateAnimatedFaceNodes(Node->Child[0],BSD,Camera,Reset);
+        TSPUpdateAnimatedFaceNodes(Node->Child[1],BSD,MVPMatrix,Reset);
+        TSPUpdateAnimatedFaceNodes(Node->Child[2],BSD,MVPMatrix,Reset);
+        TSPUpdateAnimatedFaceNodes(Node->Child[0],BSD,MVPMatrix,Reset);
     }
 }
 void TSPUpdateTransparentAnimatedFaces(TSP_t *TSP,BSD_t *BSD,int Reset)
@@ -1381,11 +1385,25 @@ void TSPUpdateTransparentAnimatedFaces(TSP_t *TSP,BSD_t *BSD,int Reset)
         TSPUpdateAnimatedRenderingFace(Iterator,TSP->TransparentVAO,BSD,Reset);
     }
 }
-void TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,Camera_t *Camera,int Reset)
+/*
+ * Updates all the animated faces inside each loaded TSP file.
+ * When ProjectionMatrix is not NULL, it attempts to cull invisible faces that lies outside the view frustum.
+ * NOTE that frustum culling only applies to the faces belonging to the TSP tree and not to the transparent one.
+ * NOTE that when Reset is 1 then the ProjectionMatrix parameter is ignored when performing frustum culling...
+ * this means that all the faces will be reset.
+*/
+void TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,Camera_t *Camera,mat4 ProjectionMatrix,int Reset)
 {
     TSP_t *Iterator;
+    mat4 MVPMatrix;
+    
+    if( ProjectionMatrix ) {
+        glm_mat4_mul(ProjectionMatrix,Camera->ViewMatrix,MVPMatrix);
+        //Emulate PSX Coordinate system...
+        glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+    }
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
-        TSPUpdateAnimatedFaceNodes(&Iterator->Node[0],BSD,Camera,Reset);
+        TSPUpdateAnimatedFaceNodes(&Iterator->Node[0],BSD,MVPMatrix,Reset);
         TSPUpdateTransparentAnimatedFaces(Iterator,BSD,Reset);
     }
 }
@@ -1467,7 +1485,6 @@ void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader
         TSPDrawNode(&Iterator->Node[0],RenderObjectShader,VRAM,MVPMatrix);
         glDisable(GL_CULL_FACE);
     }
-
     // Alpha pass.
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
         TSPDrawTransparentFaces(Iterator,VRAM);

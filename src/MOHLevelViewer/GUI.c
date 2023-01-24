@@ -233,7 +233,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                 if ( GUICheckBoxWithTooltip("Animated Lights",(bool *) &LevelEnableAnimatedLights->IValue,
                     LevelEnableAnimatedLights->Description) ) {
                     if( !LevelEnableAnimatedLights->IValue ) {
-                        TSPUpdateAnimatedFaces(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->BSD,Camera,1);
+                        TSPUpdateAnimatedFaces(LevelManager->CurrentLevel->TSPList,LevelManager->CurrentLevel->BSD,Camera,NULL,1);
                     }
                     ConfigSetNumber("LevelEnableAnimatedLights",LevelEnableAnimatedLights->IValue);
                 }

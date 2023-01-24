@@ -172,7 +172,7 @@ void LevelUpdate(Level_t *Level,Camera_t *Camera)
     }
     if( LevelEnableAnimatedLights->IValue ) {
         BSDUpdateAnimatedLights(Level->BSD);
-        TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,Camera,0);
+//         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,Camera,0);
     }
 }
 void LevelDraw(Level_t *Level,Camera_t *Camera,RenderObjectShader_t *RenderObjectShader,mat4 ProjectionMatrix)
@@ -180,6 +180,9 @@ void LevelDraw(Level_t *Level,Camera_t *Camera,RenderObjectShader_t *RenderObjec
     if( !Level ) {
         DPrintf("LevelDraw:Invalid Level\n");
         return;
+    }
+    if( LevelEnableAnimatedLights->IValue ) {
+        TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,Camera,ProjectionMatrix,0);
     }
     BSDDrawSky(Level->BSD,Level->VRAM,Camera,ProjectionMatrix);
     BSDDraw(Level->BSD,Level->VRAM,Camera,RenderObjectShader,ProjectionMatrix);
