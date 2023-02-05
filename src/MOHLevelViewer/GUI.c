@@ -193,8 +193,8 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                 if( GUICheckBoxWithTooltip("Draw Collision Data",(bool *) &LevelDrawCollisionData->IValue,LevelDrawCollisionData->Description) ) {
                     ConfigSetNumber("LevelDrawCollisionData",LevelDrawCollisionData->IValue);
                 }
-                if( GUICheckBoxWithTooltip("Draw BSP Tree",(bool *) &LevelDrawBSPTree->IValue,LevelDrawBSPTree->Description) ) {
-                    ConfigSetNumber("LevelDrawBSPTree",LevelDrawBSPTree->IValue);
+                if( GUICheckBoxWithTooltip("Draw TSP Tree",(bool *) &LevelDrawTSPTree->IValue,LevelDrawTSPTree->Description) ) {
+                    ConfigSetNumber("LevelDrawTSPTree",LevelDrawTSPTree->IValue);
                 }
                 if( GUICheckBoxWithTooltip("Draw BSD nodes as Points",(bool *) &LevelDrawBSDNodesAsPoints->IValue,
                     LevelDrawBSDNodesAsPoints->Description) ) {

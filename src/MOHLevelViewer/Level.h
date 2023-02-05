@@ -64,7 +64,7 @@ void    LevelCleanUp(Level_t *Level);
 
 extern Config_t *LevelEnableWireFrameMode;
 extern Config_t *LevelDrawCollisionData;
-extern Config_t *LevelDrawBSPTree;
+extern Config_t *LevelDrawTSPTree;
 extern Config_t *LevelDrawSurfaces;
 extern Config_t *LevelDrawBSDNodesAsPoints;
 extern Config_t *LevelDrawBSDNodesCollisionVolumes;

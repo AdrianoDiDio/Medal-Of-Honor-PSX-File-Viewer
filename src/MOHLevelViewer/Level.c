@@ -24,7 +24,7 @@
 
 Config_t *LevelEnableWireFrameMode;
 Config_t *LevelDrawCollisionData;
-Config_t *LevelDrawBSPTree;
+Config_t *LevelDrawTSPTree;
 Config_t *LevelDrawSurfaces;
 Config_t *LevelDrawBSDNodesAsPoints;
 Config_t *LevelDrawBSDNodesCollisionVolumes;
@@ -197,7 +197,7 @@ void LevelLoadDefaultSettings()
 {
     LevelEnableWireFrameMode = ConfigGet("LevelEnableWireFrameMode");
     LevelDrawCollisionData = ConfigGet("LevelDrawCollisionData");
-    LevelDrawBSPTree = ConfigGet("LevelDrawBSPTree");
+    LevelDrawTSPTree = ConfigGet("LevelDrawTSPTree");
     LevelDrawSurfaces = ConfigGet("LevelDrawSurfaces");
     LevelDrawBSDNodesAsPoints = ConfigGet("LevelDrawBSDNodesAsPoints");
     LevelDrawBSDNodesCollisionVolumes = ConfigGet("LevelDrawBSDNodesCollisionVolumes");

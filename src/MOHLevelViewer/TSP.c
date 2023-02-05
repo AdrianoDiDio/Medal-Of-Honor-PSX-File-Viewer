@@ -1076,7 +1076,7 @@ void TSPDrawNode(TSPNode_t *Node,RenderObjectShader_t *RenderObjectShader,VRAM_t
         return;
     }
     
-    if( LevelDrawBSPTree->IValue ) {
+    if( LevelDrawTSPTree->IValue ) {
         TSPDrawNodeBBox(Node,MVPMatrix);
     }
 

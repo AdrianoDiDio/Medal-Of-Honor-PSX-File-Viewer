@@ -231,7 +231,7 @@ void RegisterDefaultSettings()
 
     ConfigRegister("LevelEnableWireFrameMode","0","Draw the level surfaces as lines");
     ConfigRegister("LevelDrawCollisionData","0","Draw the level collision data");
-    ConfigRegister("LevelDrawBSPTree","0","When enabled draws the BSP tree for the current level.Red box represents a splitter while \n"
+    ConfigRegister("LevelDrawTSPTree","0","When enabled draws the TSP tree for the current level.Red box represents a splitter while \n"
                                         "a yellow one a leaf (containing actual level data).");
     ConfigRegister("LevelDrawSurfaces","1","Draw the level surfaces");
     ConfigRegister("LevelDrawBSDNodesAsPoints","1","When enabled draws all the BSD nodes as points.");
@@ -239,7 +239,7 @@ void RegisterDefaultSettings()
     ConfigRegister("LevelDrawBSDRenderObjectsAsPoints","1","When enabled draws all the BSD RenderObjects as Points");
     ConfigRegister("LevelDrawBSDRenderObjects","1","When enabled draws all the supported render objects");
     ConfigRegister("LevelDrawBSDShowcase","0","When enabled draws all the loaded RenderObjects near the player spawn.");
-    ConfigRegister("LevelEnableFrustumCulling","1","When enabled helps to skip non visibile nodes from the BSP tree improving the rendering speed");
+    ConfigRegister("LevelEnableFrustumCulling","1","When enabled helps to skip non visibile nodes from the TSP tree improving the rendering speed");
     ConfigRegister("LevelEnableAmbientLight","1","When enabled the texture color is interpolated with the surface color to simulate lights on \n"
                                                     "surfaces");
     ConfigRegister("LevelEnableFog","1","When enabled it will draw a fog based on the camera distance and level parameters.");

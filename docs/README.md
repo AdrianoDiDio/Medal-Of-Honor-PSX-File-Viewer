@@ -373,7 +373,7 @@ Each TSP node contains the following data:
 | [Vector3](#Vector3) | 6 bytes | Min         |
 | [Vector3](#Vector3) | 6 bytes | Max         |
 
-##### BSP Node
+##### TSP Node
 
 | Type                  | Size     | Description     |
 | --------------------- | -------- | --------------- |
