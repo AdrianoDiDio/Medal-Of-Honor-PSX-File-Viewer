@@ -1,6 +1,3 @@
-[submodule "libs/cimgui"]
-	path = libs/cimgui
-	url = https://github.com/cimgui/cimgui
 [submodule "libs/glew-cmake"]
 	path = libs/glew-cmake
 	url = https://github.com/Perlmint/glew-cmake.git
@@ -23,3 +20,6 @@
 [submodule "libs/cglm"]
 	path = libs/cglm
 	url = https://github.com/recp/cglm
+[submodule "libs/cimgui"]
+	path = libs/cimgui
+	url = https://github.com/cimgui/cimgui

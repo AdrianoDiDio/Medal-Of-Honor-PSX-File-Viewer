@@ -178,8 +178,8 @@ void GUIDrawVRAMWindow(GUI_t *GUI,ImageManager_t *ImageManager)
 
     igBeginChild_Str("VRAM Viewer",ZeroSize,false, ImGuiWindowFlags_HorizontalScrollbar);
     
-    igSetItemUsingMouseWheel();
-    if (igIsWindowHovered(0) && ( igIsKeyDown(ImGuiKey_LeftCtrl) || igIsKeyDown(ImGuiKey_RightCtrl) ) ) {
+    igSetItemKeyOwner(ImGuiKey_MouseWheelY,0);
+    if (igIsWindowHovered(0) && ( igIsKeyDown_Nil(ImGuiKey_LeftCtrl) || igIsKeyDown_Nil(ImGuiKey_RightCtrl) ) ) {
         WheelFactor = IO->MouseWheel;
         if( WheelFactor ) {
             Zoom += WheelFactor;
@@ -217,7 +217,7 @@ void GUIDrawVRAMWindow(GUI_t *GUI,ImageManager_t *ImageManager)
     TextPosition.x = CursorPosition.x;
     TextPosition.y = CursorPosition.y + (Size.y / 2);
     ImDrawList_AddText_Vec2(DrawList,TextPosition,0xFFFFFFFF,"8-BPP And No CLUT textures",NULL);
-    if( igIsItemHovered(0) && igIsMouseClicked(ImGuiMouseButton_Left,false) ) {
+    if( igIsItemHovered(0) && igIsMouseClicked_Bool(ImGuiMouseButton_Left,false) ) {
         igGetMousePos(&MousePosition);
         for( Image = ImageManager->ImageList; Image; Image = Image->Next ) {
             VRAMPage = Image->TexturePage;

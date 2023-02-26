@@ -29,7 +29,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/zlib)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../libs/libpng)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../../libs/libpng)
-target_compile_definitions(${PROJECT_NAME} PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLEW CIMGUI_USE_OPENGL3 CIMGUI_USE_SDL)
+target_compile_definitions(${PROJECT_NAME} PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLEW CIMGUI_USE_OPENGL3 CIMGUI_USE_SDL2)
 target_compile_definitions(${PROJECT_NAME}
     PUBLIC
     $<$<CONFIG:Debug>:_DEBUG>
