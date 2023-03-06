@@ -358,7 +358,6 @@ VBMusic_t *SoundSystemLoadVBFile(FILE *VBFile,int Length,const char *VBFileName,
 
     if( !ConvertedData) {
         free(PCMData);
-        free(ConvertedData);
         return NULL;
     }
     Music = malloc(sizeof(VBMusic_t));

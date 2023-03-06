@@ -50,6 +50,7 @@ void ApplicationShutDown(Application_t *Application)
     if( Application->SoundManager ) {
         SoundManagerCleanUp(Application->SoundManager);
     }
+    CommonShutdown();
     free(Application);
 }
 void Quit(Application_t *Application)
@@ -137,7 +138,6 @@ int main(int argc,char **argv)
     
     if( !Application ) {
         printf("Failed to initialize application...\n");
-        ApplicationShutDown(Application);
         return -1;
     }
 

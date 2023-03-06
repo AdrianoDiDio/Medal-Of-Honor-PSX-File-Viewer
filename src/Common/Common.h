@@ -84,6 +84,7 @@ typedef enum
 } MOHGame_t;
 
 void        CommonInit(const char *ApplicationName);
+void        CommonShutdown();
 void        DPrintf(const char *Fmt, ...) Attribute((format(printf,1,2)));
 int         asprintf(char **Strp, const char *Fmt, ...);
 char        *StringCopy(const char *From);

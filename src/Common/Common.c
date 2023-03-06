@@ -21,7 +21,7 @@
 #include "Common.h"
 #include "Config.c"
 
-const char *AppName = NULL;
+char *AppName = NULL;
 
 Byte HighNibble(Byte In)
 {
@@ -327,6 +327,12 @@ void CommonRegisterSettings()
     
     ConfigRegister("SoundVolume","128","Sets the sound volume, the value must be in range 0-128, values outside that range will be clamped.");
 
+}
+void CommonShutdown()
+{
+    if( AppName ) {
+        free(AppName);
+    }
 }
 void CommonInit(const char *ApplicationName)
 {

@@ -357,6 +357,7 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     GUI->ErrorMessageDialog = ErrorMessageDialogInit();
     if( !GUI->ErrorMessageDialog ) {
         DPrintf("GUIInit:Failed to initialize error message dialog\n");
+        free(GUI);
         return NULL;
     }
     GUI->ImageSelectionChanged = 0;

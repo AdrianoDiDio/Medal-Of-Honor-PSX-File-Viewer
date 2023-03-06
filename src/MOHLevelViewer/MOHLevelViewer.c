@@ -184,6 +184,7 @@ void ApplicationShutDown(Application_t *Application)
     if( Application->Engine ) {
         EngineShutDown(Application->Engine);
     }
+    CommonShutdown();
     free(Application);
 }
 
@@ -327,7 +328,6 @@ int main(int argc,char **argv)
     
     if( !Application ) {
         printf("Failed to initialize Application...\n");
-        ApplicationShutDown(Application);
         return -1;
     }
     
