@@ -140,13 +140,13 @@ VBMusic_t *SoundManagerLoadVBFile(const char *File,GUI_t *GUI,VideoSystem_t *Vid
     return VBFile;
 
 }
-int SoundManagerLoadVABFile(VBMusic_t **SoundList,FILE *VABFile,int VABOffset,int VABNumber)
+int SoundManagerLoadVAB(VBMusic_t **SoundList,FILE *VABFile,int VABOffset,int VABNumber)
 {
     VBMusic_t *VAGList;
 
     if( !SoundList || !VABFile ) {
         bool InvalidFile = (VABFile == NULL ? true : false);
-        printf("SoundManagerLoadVABFile: Invalid %s\n",InvalidFile ? "file" : "SoundList");
+        printf("SoundManagerLoadVAB: Invalid %s\n",InvalidFile ? "file" : "SoundList");
         return 0;
     }
     
@@ -177,7 +177,7 @@ VBMusic_t *SoundManagerLoadTAFFile(const char *File,GUI_t *GUI,VideoSystem_t *Vi
         return NULL;
     }
     NumImages = 0;
-    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,10.f,"Loading all TIM Images");
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,15.f,"Loading all TIM Images");
     while( 1 ) {
         Image = TIMLoadImage(TAFFile,NULL,NumImages);
         if( Image == NULL ) {
@@ -207,11 +207,29 @@ VBMusic_t *SoundManagerLoadTAFFile(const char *File,GUI_t *GUI,VideoSystem_t *Vi
     }
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,70.f,"Loading sound files");
     for( i = 0; i < NumVAB; i++ ) {
-        SoundManagerLoadVABFile(&MusicList,TAFFile,VABOffsetList[i],i + 1);
+        SoundManagerLoadVAB(&MusicList,TAFFile,VABOffsetList[i],i + 1);
     }
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100.f,"Done");
     free(VABOffsetList);
     fclose(TAFFile);
+    return MusicList;
+}
+VBMusic_t *SoundManagerLoadVABFile(const char *File,GUI_t *GUI,VideoSystem_t *VideoSystem)
+{
+    FILE *VABFile;
+    VBMusic_t *MusicList;
+    
+    VABFile = fopen(File,"rb");
+    MusicList = NULL;
+    
+    if( !VABFile ) {
+        DPrintf("SoundManagerLoadVABFile:Error opening file %s!\n",File);
+        return NULL;
+    }
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,50.f,"Loading sound files");
+    SoundManagerLoadVAB(&MusicList,VABFile,0,1);
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100.f,"Done");
+    fclose(VABFile);
     return MusicList;
 }
 void SoundManagerLoadAudioFile(SoundManager_t *SoundManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *File)
@@ -239,6 +257,10 @@ void SoundManagerLoadAudioFile(SoundManager_t *SoundManager,GUI_t *GUI,VideoSyst
             DPrintf("SoundManagerLoadAudioFile:Loading VB file\n");
             ProgressBarIncrement(GUI->ProgressBar,VideoSystem,10.f,"Loading VB file");
             VBMusicList = SoundManagerLoadVBFile(File,GUI,VideoSystem);
+        } else if( !strcasecmp(Extension,"VAB") ) {
+            DPrintf("SoundManagerLoadAudioFile:Loading VAB file\n");
+            ProgressBarIncrement(GUI->ProgressBar,VideoSystem,10.f,"Loading VAB file");
+            VBMusicList = SoundManagerLoadVABFile(File,GUI,VideoSystem);
         }
     }
     ProgressBarEnd(GUI->ProgressBar,VideoSystem);
@@ -390,7 +412,7 @@ SoundManager_t *SoundManagerInit(GUI_t *GUI)
         return NULL;
     }
     SoundManager->SoundFileDialog = FileDialogRegister("Open Audio File",
-                                                               "Audio files (*.VB *.TAF){.VB,.TAF}",
+                                                               "Audio files (*.VB *.VAB *.TAF){.VB,.VAB,.TAF}",
                                                                SoundManagerOnAudioFileDialogSelect,
                                                                SoundManagerOnAudioFileDialogCancel);
     SoundManager->ExportFileDialog = FileDialogRegister("Export Audio File",
