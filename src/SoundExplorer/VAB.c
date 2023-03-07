@@ -25,6 +25,9 @@ void VABFree(VAB_t *VAB)
     if( !VAB ) {
         return;
     }
+    if( VAB->ToneAttributeTable ) {
+        free(VAB->ToneAttributeTable);
+    }
     free(VAB);
 }
 
@@ -145,7 +148,7 @@ void VABReadToneAttributeTable(VAB_t *VAB,FILE *InFile)
     }
     Size = VAB_MAX_TONE_NUMBER * VAB->Header.NumPrograms * sizeof(VABToneAttribute_t);
     VAB->ToneAttributeTable = malloc(Size);
-    Result = fread(&VAB->ToneAttributeTable,Size,1,InFile);
+    Result = fread(VAB->ToneAttributeTable,Size,1,InFile);
     if( Result != 1 ) {
         DPrintf("VABReadToneAttributeTable:Error when reading tone attribute table.\n");
         return;
@@ -248,7 +251,7 @@ VBMusic_t *VABLoadAllVAGs(FILE *VABFile,int VABNumber,int VABOffset)
         DPrintf("VABLoadFile:Failed to allocate memory for VAB struct\n");
         return NULL;
     }
-
+    VAB->ToneAttributeTable = NULL;
     VABReadHeader(VAB,VABFile);
     VABReadProgramAttributeTable(VAB,VABFile);
     VABReadToneAttributeTable(VAB,VABFile);
