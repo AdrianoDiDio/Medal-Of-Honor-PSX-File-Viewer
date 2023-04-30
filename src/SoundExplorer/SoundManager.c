@@ -227,7 +227,7 @@ VBMusic_t *SoundManagerLoadVABFile(const char *File,GUI_t *GUI,VideoSystem_t *Vi
         return NULL;
     }
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,50.f,"Loading sound files");
-    SoundManagerLoadVAB(&MusicList,VABFile,0,1);
+    SoundManagerLoadVAB(&MusicList,VABFile,-1,1);
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100.f,"Done");
     fclose(VABFile);
     return MusicList;
@@ -363,7 +363,7 @@ void SoundManagerExport(SoundManager_t *SoundManager,VBMusic_t *FirstSound,VBMus
     Exporter->OutputFormat = SOUND_MANAGER_EXPORT_FORMAT_WAV;
 
     FileDialogSetTitle(SoundManager->ExportFileDialog,"Export");
-    FileDialogOpenWithUserData(SoundManager->ExportFileDialog,Exporter);
+    FileDialogOpenWithUserData(SoundManager->ExportFileDialog,NULL,Exporter);
 }
 void SoundManagerExportAll(SoundManager_t *SoundManager,GUI_t *GUI,VideoSystem_t  *VideoSystem)
 {
@@ -385,7 +385,7 @@ void SoundManagerOpenFileDialog(SoundManager_t *SoundManager,GUI_t *GUI,VideoSys
     DialogData->VideoSystem = VideoSystem;
     DialogData->GUI = GUI;
 
-    FileDialogOpenWithUserData(SoundManager->SoundFileDialog,DialogData);
+    FileDialogOpenWithUserData(SoundManager->SoundFileDialog,NULL,DialogData);
 }
 SoundManager_t *SoundManagerInit(GUI_t *GUI)
 {

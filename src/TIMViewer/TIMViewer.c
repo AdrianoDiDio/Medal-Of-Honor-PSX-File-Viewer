@@ -94,7 +94,7 @@ Application_t *ApplicationInit(int argc,char **argv)
     Application->Engine = NULL;
 
     CommonInit("TIMViewer");
-
+        
     ConfigInit();
     
     Application->Engine = EngineInit("TIM Viewer");

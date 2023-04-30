@@ -447,7 +447,7 @@ void *FileDialogGetUserData(FileDialog_t *FileDialog)
     } 
     return IGFD_GetUserDatas(FileDialog->Window);
 }
-void FileDialogOpenWithUserData(FileDialog_t *FileDialog,void *UserData)
+void FileDialogOpenWithUserData(FileDialog_t *FileDialog,const char *Path,void *UserData)
 {
     if( !FileDialog ) {
         DPrintf("FileDialogOpenWithUserData:Invalid dialog data\n");
@@ -457,12 +457,18 @@ void FileDialogOpenWithUserData(FileDialog_t *FileDialog,void *UserData)
     if( IGFD_IsOpened(FileDialog->Window) ) {
         return;
     }
-    IGFD_OpenDialog2(FileDialog->Window,FileDialog->Key,FileDialog->WindowTitle,FileDialog->Filters,".",1,
-                     UserData,ImGuiFileDialogFlags_DontShowHiddenFiles | ImGuiFileDialogFlags_CaseInsensitiveExtention);
+    IGFD_OpenDialog(FileDialog->Window,FileDialog->Key,FileDialog->WindowTitle,FileDialog->Filters,
+                    Path == NULL ? FILE_DIALOG_DEFAULT_OPEN_DIR : Path,"",1,
+                    UserData,ImGuiFileDialogFlags_DontShowHiddenFiles | ImGuiFileDialogFlags_CaseInsensitiveExtention);
 }
 void FileDialogOpen(FileDialog_t *FileDialog)
 {
-    FileDialogOpenWithUserData(FileDialog,NULL);
+    FileDialogOpenWithUserData(FileDialog,".",NULL);
+}
+
+void FileDialogOpenAtPath(FileDialog_t *FileDialog,const char *Path)
+{
+    FileDialogOpenWithUserData(FileDialog,Path,NULL);
 }
 
 void FileDialogClose(FileDialog_t *FileDialog)

@@ -23,6 +23,7 @@
 #include "Common.h"
 #include "Video.h"
 
+#define FILE_DIALOG_DEFAULT_OPEN_DIR "."
 typedef struct FileDialog_s FileDialog_t;
 
 typedef void (*FileDialogSelectCallback_t)(FileDialog_t *FileDialog,const char *Directory,const char *File,void *UserData);
@@ -90,7 +91,8 @@ void                    FileDialogSetOnElementSelectedCallback(FileDialog_t *Fil
 void                    FileDialogSetOnDialogCancelledCallback(FileDialog_t *FileDialog,FileDialogCancelCallback_t OnDialogCancelled);
 int                     FileDialogIsOpen(FileDialog_t *FileDialog);
 void                    FileDialogOpen(FileDialog_t *FileDialog);
-void                    FileDialogOpenWithUserData(FileDialog_t *FileDialog,void *UserData);
+void                    FileDialogOpenAtPath(FileDialog_t *FileDialog,const char *Path);
+void                    FileDialogOpenWithUserData(FileDialog_t *FileDialog,const char *Path,void *UserData);
 void                    *FileDialogGetUserData(FileDialog_t *FileDialog);
 void                    FileDialogRenderList();
 void                    FileDialogClose(FileDialog_t *FileDialog);

@@ -768,7 +768,7 @@ void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t *V
     Exporter->OutputFormat = OutputFormat;
 
     FileDialogSetTitle(LevelManager->ExportFileDialog,"Export");
-    FileDialogOpenWithUserData(LevelManager->ExportFileDialog,Exporter);
+    FileDialogOpenWithUserData(LevelManager->ExportFileDialog,NULL,Exporter);
     GUIPushWindow(GUI);
 }
 
@@ -909,7 +909,7 @@ void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
         DialogData->LevelManager = LevelManager;
         DialogData->GUI = GUI;
         DialogData->VideoSystem = VideoSystem;
-        FileDialogOpenWithUserData(LevelManager->FileDialog,DialogData);
+        FileDialogOpenWithUserData(LevelManager->FileDialog,LevelManager->BasePath,DialogData);
         GUIPushWindow(GUI);
     }
 }

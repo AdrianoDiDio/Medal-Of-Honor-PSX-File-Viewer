@@ -49,10 +49,10 @@ typedef struct ImageManagerDialogData_s {
 ImageManager_t          *ImageManagerInit(GUI_t *GUI);
 void                    ImageManagerAudioUpdate(void *UserData,Byte *Stream,int Length);
 int                     ImageManagerLoadTIMFile(ImageManager_t *ImageManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *File);
-void                    ImageManagerExportAll(ImageManager_t *ImageManager,GUI_t *GUI,VideoSystem_t  *VideoSystem);
 void                    ImageManagerExport(ImageManager_t *ImageManager,TIMImage_t *FirstImage,TIMImage_t *LastImage,
                                            GUI_t *GUI,VideoSystem_t  *VideoSystem);
 void                    ImageManagerOpenFileDialog(ImageManager_t *ImageManager,GUI_t *GUI,VideoSystem_t *VideoSystem);
 void                    ImageManagerCleanUp(ImageManager_t *ImageManager);
+
 #endif//__IMAGE_MANAGER_H_
  

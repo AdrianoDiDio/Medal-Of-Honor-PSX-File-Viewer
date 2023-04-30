@@ -230,12 +230,9 @@ void ImageManagerExport(ImageManager_t *ImageManager,TIMImage_t *FirstImage,TIMI
     Exporter->OutputFormat = IMAGE_MANAGER_EXPORT_FORMAT_PNG;
 
     FileDialogSetTitle(ImageManager->ExportFileDialog,"Export");
-    FileDialogOpenWithUserData(ImageManager->ExportFileDialog,Exporter);
+    FileDialogOpenWithUserData(ImageManager->ExportFileDialog,NULL,Exporter);
 }
-void ImageManagerExportAll(ImageManager_t *ImageManager,GUI_t *GUI,VideoSystem_t  *VideoSystem)
-{
-//     ImageManagerExport(ImageManager,ImageManager->SoundList,NULL,GUI,VideoSystem);
-}
+
 void ImageManagerOpenFileDialog(ImageManager_t *ImageManager,GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
     ImageManagerDialogData_t *DialogData;
@@ -252,7 +249,7 @@ void ImageManagerOpenFileDialog(ImageManager_t *ImageManager,GUI_t *GUI,VideoSys
     DialogData->VideoSystem = VideoSystem;
     DialogData->GUI = GUI;
 
-    FileDialogOpenWithUserData(ImageManager->ImageFileDialog,DialogData);
+    FileDialogOpenWithUserData(ImageManager->ImageFileDialog,NULL,DialogData);
 }
 ImageManager_t *ImageManagerInit(GUI_t *GUI)
 {
@@ -278,6 +275,6 @@ ImageManager_t *ImageManagerInit(GUI_t *GUI)
     ImageManager->ExportFileDialog = FileDialogRegister("Export Audio File",
                                                                NULL,
                                                                ImageManagerOnExportImageFileDialogSelect,
-                                                               ImageManagerOnExportImageFileDialogCancel);
+                                                               ImageManagerOnExportImageFileDialogCancel);    
     return ImageManager;
 }
