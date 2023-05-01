@@ -30,13 +30,14 @@ typedef void (*FileDialogSelectCallback_t)(FileDialog_t *FileDialog,const char *
 typedef void (*FileDialogCancelCallback_t)(FileDialog_t *FileDialog);
 
 typedef struct FileDialog_s {
-    char *WindowTitle;
-    char *Key;
-    char *Filters;
-    ImGuiFileDialog *Window;
-    FileDialogSelectCallback_t OnElementSelected;
-    FileDialogCancelCallback_t OnDialogCancelled;    
-    struct FileDialog_s *Next;
+    char                        *WindowTitle;
+    char                        *Key;
+    char                        *Filters;
+    ImGuiFileDialog             *Window;
+    char                        *PreviousFolder;
+    FileDialogSelectCallback_t  OnElementSelected;
+    FileDialogCancelCallback_t  OnDialogCancelled;    
+    struct FileDialog_s         *Next;
 } FileDialog_t;
 
 typedef struct ProgressBar_s {
@@ -90,9 +91,8 @@ void                    FileDialogSetTitle(FileDialog_t *FileDialog,const char *
 void                    FileDialogSetOnElementSelectedCallback(FileDialog_t *FileDialog,FileDialogSelectCallback_t OnElementSelected);
 void                    FileDialogSetOnDialogCancelledCallback(FileDialog_t *FileDialog,FileDialogCancelCallback_t OnDialogCancelled);
 int                     FileDialogIsOpen(FileDialog_t *FileDialog);
-void                    FileDialogOpen(FileDialog_t *FileDialog);
-void                    FileDialogOpenAtPath(FileDialog_t *FileDialog,const char *Path);
 void                    FileDialogOpenWithUserData(FileDialog_t *FileDialog,const char *Path,void *UserData);
+void                    FileDialogOpen(FileDialog_t *FileDialog,void *UserData);
 void                    *FileDialogGetUserData(FileDialog_t *FileDialog);
 void                    FileDialogRenderList();
 void                    FileDialogClose(FileDialog_t *FileDialog);

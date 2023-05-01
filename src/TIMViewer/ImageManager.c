@@ -230,7 +230,7 @@ void ImageManagerExport(ImageManager_t *ImageManager,TIMImage_t *FirstImage,TIMI
     Exporter->OutputFormat = IMAGE_MANAGER_EXPORT_FORMAT_PNG;
 
     FileDialogSetTitle(ImageManager->ExportFileDialog,"Export");
-    FileDialogOpenWithUserData(ImageManager->ExportFileDialog,NULL,Exporter);
+    FileDialogOpen(ImageManager->ExportFileDialog,Exporter);
 }
 
 void ImageManagerOpenFileDialog(ImageManager_t *ImageManager,GUI_t *GUI,VideoSystem_t *VideoSystem)
@@ -249,7 +249,7 @@ void ImageManagerOpenFileDialog(ImageManager_t *ImageManager,GUI_t *GUI,VideoSys
     DialogData->VideoSystem = VideoSystem;
     DialogData->GUI = GUI;
 
-    FileDialogOpenWithUserData(ImageManager->ImageFileDialog,NULL,DialogData);
+    FileDialogOpen(ImageManager->ImageFileDialog,DialogData);
 }
 ImageManager_t *ImageManagerInit(GUI_t *GUI)
 {

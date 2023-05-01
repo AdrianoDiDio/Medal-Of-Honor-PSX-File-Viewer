@@ -362,6 +362,9 @@ void FileDialogListFree()
         if( FileDialogList->Filters ) {
             free(FileDialogList->Filters);
         }
+        if( FileDialogList->PreviousFolder ) {
+            free(FileDialogList->PreviousFolder);
+        }
         IGFD_Destroy(FileDialogList->Window);
         Temp = FileDialogList;
         FileDialogList = FileDialogList->Next;
@@ -404,6 +407,10 @@ void FileDialogRender(FileDialog_t *FileDialog)
                 FileName = IGFD_GetFilePathName(FileDialog->Window);
                 DirectoryPath = IGFD_GetCurrentPath(FileDialog->Window);
                 UserData = IGFD_GetUserDatas(FileDialog->Window);
+                if( FileDialog->PreviousFolder ) {
+                    free(FileDialog->PreviousFolder);
+                }
+                FileDialog->PreviousFolder = StringCopy(DirectoryPath);
                 if( FileDialog->OnElementSelected ) {
                     FileDialog->OnElementSelected(FileDialog,DirectoryPath,FileName,UserData);
                 }
@@ -447,8 +454,15 @@ void *FileDialogGetUserData(FileDialog_t *FileDialog)
     } 
     return IGFD_GetUserDatas(FileDialog->Window);
 }
+/*
+ * Main function to open a file dialog.
+ * Path can be NULL to specify that we want to open the last directory or the current working one if not set.
+ * Overriding it will simply tell it to start at a specific point.
+ * UserData can contain any information we want to carry when calling the callback function on selection. 
+*/
 void FileDialogOpenWithUserData(FileDialog_t *FileDialog,const char *Path,void *UserData)
 {
+    const char *StartingPath;
     if( !FileDialog ) {
         DPrintf("FileDialogOpenWithUserData:Invalid dialog data\n");
         return;
@@ -457,19 +471,23 @@ void FileDialogOpenWithUserData(FileDialog_t *FileDialog,const char *Path,void *
     if( IGFD_IsOpened(FileDialog->Window) ) {
         return;
     }
+    if( Path ) {
+        StartingPath = Path;
+    } else {
+        StartingPath = FileDialog->PreviousFolder == NULL ? FILE_DIALOG_DEFAULT_OPEN_DIR : FileDialog->PreviousFolder;
+    }
     IGFD_OpenDialog(FileDialog->Window,FileDialog->Key,FileDialog->WindowTitle,FileDialog->Filters,
-                    Path == NULL ? FILE_DIALOG_DEFAULT_OPEN_DIR : Path,"",1,
+                    StartingPath,"",1,
                     UserData,ImGuiFileDialogFlags_DontShowHiddenFiles | ImGuiFileDialogFlags_CaseInsensitiveExtention);
 }
-void FileDialogOpen(FileDialog_t *FileDialog)
+/*
+ * Opens a new file dialog starting from the previous folder if set or from the current one if NULL.
+*/
+void FileDialogOpen(FileDialog_t *FileDialog,void *UserData)
 {
-    FileDialogOpenWithUserData(FileDialog,".",NULL);
+    FileDialogOpenWithUserData(FileDialog,NULL,UserData);
 }
 
-void FileDialogOpenAtPath(FileDialog_t *FileDialog,const char *Path)
-{
-    FileDialogOpenWithUserData(FileDialog,Path,NULL);
-}
 
 void FileDialogClose(FileDialog_t *FileDialog)
 {
@@ -514,6 +532,7 @@ FileDialog_t *FileDialogRegister(const char *WindowTitle,const char *Filters,Fil
         FileDialog->Filters = NULL;
     }
     FileDialog->Window = IGFD_Create();
+    FileDialog->PreviousFolder = NULL;
     FileDialog->OnElementSelected = OnElementSelected;
     FileDialog->OnDialogCancelled = OnDialogCancelled;
     FileDialog->Next = FileDialogList;

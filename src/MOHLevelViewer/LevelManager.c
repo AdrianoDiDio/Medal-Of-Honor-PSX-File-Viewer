@@ -768,7 +768,7 @@ void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t *V
     Exporter->OutputFormat = OutputFormat;
 
     FileDialogSetTitle(LevelManager->ExportFileDialog,"Export");
-    FileDialogOpenWithUserData(LevelManager->ExportFileDialog,NULL,Exporter);
+    FileDialogOpen(LevelManager->ExportFileDialog,Exporter);
     GUIPushWindow(GUI);
 }
 

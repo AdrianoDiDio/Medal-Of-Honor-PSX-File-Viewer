@@ -174,7 +174,7 @@ void RenderObjectManagerExportCurrentPose(RenderObjectManager_t *RenderObjectMan
     Exporter->OutputFormat = OutputFormat;
 
     FileDialogSetTitle(RenderObjectManager->ExportFileDialog,"Export Current Pose");
-    FileDialogOpenWithUserData(RenderObjectManager->ExportFileDialog,NULL,Exporter);
+    FileDialogOpen(RenderObjectManager->ExportFileDialog,Exporter);
 
 }
 
@@ -479,7 +479,7 @@ void RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManage
     DialogData->VideoSystem = VideoSystem;
     DialogData->GUI = GUI;
 
-    FileDialogOpenWithUserData(RenderObjectManager->BSDFileDialog,NULL,DialogData);
+    FileDialogOpen(RenderObjectManager->BSDFileDialog,DialogData);
 }
 void RenderObjectManagerUpdate(RenderObjectManager_t *RenderObjectManager)
 {

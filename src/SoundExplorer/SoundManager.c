@@ -363,7 +363,7 @@ void SoundManagerExport(SoundManager_t *SoundManager,VBMusic_t *FirstSound,VBMus
     Exporter->OutputFormat = SOUND_MANAGER_EXPORT_FORMAT_WAV;
 
     FileDialogSetTitle(SoundManager->ExportFileDialog,"Export");
-    FileDialogOpenWithUserData(SoundManager->ExportFileDialog,NULL,Exporter);
+    FileDialogOpen(SoundManager->ExportFileDialog,Exporter);
 }
 void SoundManagerExportAll(SoundManager_t *SoundManager,GUI_t *GUI,VideoSystem_t  *VideoSystem)
 {
@@ -385,7 +385,7 @@ void SoundManagerOpenFileDialog(SoundManager_t *SoundManager,GUI_t *GUI,VideoSys
     DialogData->VideoSystem = VideoSystem;
     DialogData->GUI = GUI;
 
-    FileDialogOpenWithUserData(SoundManager->SoundFileDialog,NULL,DialogData);
+    FileDialogOpen(SoundManager->SoundFileDialog,DialogData);
 }
 SoundManager_t *SoundManagerInit(GUI_t *GUI)
 {
