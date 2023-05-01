@@ -1,0 +1,13 @@
+{
+    "version": 2,
+    "warnings": [
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 1489276301,
+            "ErrorCode": "V1042",
+            "FileName": "RSCExtractor.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        }
+    ]
+}

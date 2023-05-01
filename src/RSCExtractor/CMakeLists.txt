@@ -13,6 +13,7 @@ if( ENABLE_PVS_STUDIO_ANALYZER )
     pvs_studio_add_target(TARGET ${PROJECT_NAME}.Analyze
                         LOG FORMAT fullhtml
                         LOG ${PROJECT_NAME}-Report
+                        SUPPRESS_BASE suppress_base.json
                         ANALYZE ${PROJECT_NAME}
                         MODE GA:1,2)
 endif()
