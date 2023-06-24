@@ -2045,64 +2045,53 @@ void BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     }
     glDepthMask(1);
 }
-int BSDParseRenderObjectVertexData(BSD_t *BSD,FILE *BSDFile)
+
+int BSDParseRenderObjectVertexAndColorData(BSDRenderObject_t *RenderObject,BSD_t *BSD,FILE *BSDFile)
 {
-    int Size;
     int i;
-    int j;
+    int Size;
     
-    BSD->RenderObjectList = malloc(BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObject_t));
-    if( !BSD->RenderObjectList ) {
-        DPrintf("BSDParseRenderObjectVertexData:Failed to allocate memory for RenderObjectList\n");
-        return 0;
-    }
-    memset(BSD->RenderObjectList,0,BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObject_t));
-    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        BSD->RenderObjectList[i].Vertex = NULL;
-        BSD->RenderObjectList[i].Color = NULL;
-        BSD->RenderObjectList[i].Data = &BSD->RenderObjectTable.RenderObject[i];
-        if( BSD->RenderObjectList[i].Data->VertOffset != 0 ) {
-            Size = BSD->RenderObjectList[i].Data->NumVertex * sizeof(BSDPosition_t);
-            BSD->RenderObjectList[i].Vertex = malloc(Size);
-            if( !BSD->RenderObjectList[i].Vertex ) {
-                DPrintf("BSDParseRenderObjectVertexData:Failed to allocate memory for VertexData\n");
-                return 0;
-            } 
-            memset(BSD->RenderObjectList[i].Vertex,0,Size);
-            fseek(BSDFile,BSD->RenderObjectList[i].Data->VertOffset + 2048,SEEK_SET);
-            DPrintf("Reading Vertex definition at %i (Current:%i)\n",
-                    BSD->RenderObjectList[i].Data->VertOffset + 2048,GetCurrentFilePosition(BSDFile)); 
-            for( j = 0; j < BSD->RenderObjectList[i].Data->NumVertex; j++ ) {
-                DPrintf("Reading Vertex at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
-                fread(&BSD->RenderObjectList[i].Vertex[j],sizeof(BSDPosition_t),1,BSDFile);
-                DPrintf("Vertex %i;%i;%i %i\n",BSD->RenderObjectList[i].Vertex[j].x,
-                        BSD->RenderObjectList[i].Vertex[j].y,BSD->RenderObjectList[i].Vertex[j].z,
-                        BSD->RenderObjectList[i].Vertex[j].Pad
-                );
-                
-            }
+    RenderObject->Vertex = NULL;
+    RenderObject->Color = NULL;
+    if( RenderObject->Data->VertOffset != 0 ) {
+        Size = RenderObject->Data->NumVertex * sizeof(BSDPosition_t);
+        RenderObject->Vertex = malloc(Size);
+        if( !RenderObject->Vertex ) {
+            DPrintf("BSDParseRenderObjectVertexData:Failed to allocate memory for VertexData\n");
+            return 0;
+        } 
+        memset(RenderObject->Vertex,0,Size);
+        fseek(BSDFile,RenderObject->Data->VertOffset + 2048,SEEK_SET);
+        DPrintf("Reading Vertex definition at %i (Current:%i)\n",
+                RenderObject->Data->VertOffset + 2048,GetCurrentFilePosition(BSDFile)); 
+        for( i = 0; i < RenderObject->Data->NumVertex; i++ ) {
+            DPrintf("Reading Vertex at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+            fread(&RenderObject->Vertex[i],sizeof(BSDPosition_t),1,BSDFile);
+            DPrintf("Vertex %i;%i;%i %i\n",RenderObject->Vertex[i].x,
+                    RenderObject->Vertex[i].y,RenderObject->Vertex[i].z,
+                    RenderObject->Vertex[i].Pad
+            );
         }
-        if( BSD->RenderObjectList[i].Data->ColorOffset != 0 ) {
-            Size = BSD->RenderObjectList[i].Data->NumVertex * sizeof(Color1i_t);
-            BSD->RenderObjectList[i].Color = malloc(Size);
-            if( !BSD->RenderObjectList[i].Color ) {
-                DPrintf("BSDParseRenderObjectVertexData:Failed to allocate memory for ColorData\n");
-                return 0;
-            } 
-            memset(BSD->RenderObjectList[i].Color,0,Size);
-            fseek(BSDFile,BSD->RenderObjectList[i].Data->ColorOffset + 2048,SEEK_SET);
-            DPrintf("Reading Color definition at %i (Current:%i)\n",
-                    BSD->RenderObjectList[i].Data->ColorOffset + 2048,GetCurrentFilePosition(BSDFile)); 
-            for( j = 0; j < BSD->RenderObjectList[i].Data->NumVertex; j++ ) {
-                DPrintf("Reading Color at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
-                fread(&BSD->RenderObjectList[i].Color[j],sizeof(Color1i_t),1,BSDFile);
-                DPrintf("Color %i => %i;%i;%i;%i\n",BSD->RenderObjectList[i].Color[j].c,
-                        BSD->RenderObjectList[i].Color[j].rgba[0],BSD->RenderObjectList[i].Color[j].rgba[1],
-                        BSD->RenderObjectList[i].Color[j].rgba[2],
-                        BSD->RenderObjectList[i].Color[j].rgba[3]
-                );
-                
-            }
+    }
+    if( RenderObject->Data->ColorOffset != 0 ) {
+        Size = RenderObject->Data->NumVertex * sizeof(Color1i_t);
+        RenderObject->Color = malloc(Size);
+        if( !RenderObject->Color ) {
+            DPrintf("BSDParseRenderObjectVertexData:Failed to allocate memory for ColorData\n");
+            return 0;
+        } 
+        memset(RenderObject->Color,0,Size);
+        fseek(BSDFile,RenderObject->Data->ColorOffset + 2048,SEEK_SET);
+        DPrintf("Reading Color definition at %i (Current:%i)\n",
+                RenderObject->Data->ColorOffset + 2048,GetCurrentFilePosition(BSDFile)); 
+        for( i = 0; i < RenderObject->Data->NumVertex; i++ ) {
+            DPrintf("Reading Color at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+            fread(&RenderObject->Color[i],sizeof(Color1i_t),1,BSDFile);
+            DPrintf("Color %i => %i;%i;%i;%i\n",RenderObject->Color[i].c,
+                    RenderObject->Color[i].rgba[0],RenderObject->Color[i].rgba[1],
+                    RenderObject->Color[i].rgba[2],
+                    RenderObject->Color[i].rgba[3]
+            );
         }
     }
     return 1;
@@ -2288,36 +2277,53 @@ int BSDParseRenderObjectFaceDataV2(BSDRenderObject_t *RenderObject,int FaceOffse
     }
     return 1;
 }
-int BSDLoadRenderObjectsFaceData(BSD_t *BSD,int RenderObjectDataOffset,int GameEngine,FILE *BSDFile)
+int BSDLoadRenderObjectFaceData(BSDRenderObject_t *RenderObject,BSD_t *BSD,int RenderObjectIndex,int RenderObjectDataOffset,int GameEngine,FILE *BSDFile)
 {
     int FaceOffset;
-    int i;
-    if( !BSD->RenderObjectList ) {
-        DPrintf("BSDLoadRenderObjectsFaceData:Object list is empty...\n");
-        return 0;
-    }
+
     assert(sizeof(BSDFace_t) == 24);
 
-    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        if( BSD->RenderObjectList[i].Data->FaceOffset == 0 ) {
-            continue;
+    if( RenderObject->Data->FaceOffset == 0 ) {
+        return 0;
+    }
+    DPrintf("BSDLoadRenderObjectFaceData:RenderObject Id %u\n",RenderObject->Data->Id);
+    RenderObject->Face = NULL;
+    if( GameEngine == MOH_GAME_UNDERGROUND ) {
+        FaceOffset = ( RenderObjectDataOffset + (RenderObjectIndex * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) ) + 260;
+        if( !BSDParseRenderObjectFaceDataV2(RenderObject,FaceOffset,BSDFile) ) {
+            return 0;
         }
-        DPrintf("BSDLoadRenderObjectsFaceData:RenderObject Id %u\n",BSD->RenderObjectList[i].Data->Id);
-        BSD->RenderObjectList[i].Face = NULL;
-        if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            FaceOffset = ( RenderObjectDataOffset + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) ) + 260;
-            if( !BSDParseRenderObjectFaceDataV2(&BSD->RenderObjectList[i],FaceOffset,BSDFile) ) {
-                return 0;
-            }
-        } else {
-            if( !BSDParseRenderObjectFaceData(&BSD->RenderObjectList[i],BSDFile) ) {
-                return 0;
-            }
+    } else {
+        if( !BSDParseRenderObjectFaceData(RenderObject,BSDFile) ) {
+            return 0;
+            
         }
     }
     return 1;
 }
+int BSDParseRenderObjectData(BSD_t *BSD,FILE *BSDFile,int FirstRenderObjectFilePosition,int GameEngine)
+{
+    int i;
+    BSD->RenderObjectList = malloc(BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObject_t));
+    if( !BSD->RenderObjectList ) {
+        DPrintf("BSDParseRenderObjectData:Failed to allocate memory for RenderObjectList\n");
+        return 0;
+    }
+    memset(BSD->RenderObjectList,0,BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObject_t));
+    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
+        BSD->RenderObjectList[i].Data = &BSD->RenderObjectTable.RenderObject[i];
+        if( !BSDParseRenderObjectVertexAndColorData(&BSD->RenderObjectList[i],BSD,BSDFile) ) {
+            DPrintf("BSDParseRenderObjectData:Failed to parse Vertex and Color data for RenderObject %u\n",BSD->RenderObjectTable.RenderObject[i].Id);
+            continue;
+        }
 
+        if( !BSDLoadRenderObjectFaceData(&BSD->RenderObjectList[i],BSD,i,FirstRenderObjectFilePosition,GameEngine,BSDFile) ) {
+            DPrintf("BSDParseRenderObjectData:Failed to parse Face data for RenderObject %u\n",BSD->RenderObjectTable.RenderObject[i].Id);
+            continue;
+        }
+    }
+    return 1;
+}
 /*
     NOTE(Adriano): 
     BSD File can roughly be divided in 2 sections:
@@ -2506,7 +2512,7 @@ int BSDReadSkyChunk(BSD_t *BSD,FILE *BSDFile)
 
 int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
 {
-    int FirstRenderObjectPosition;
+    int FirstRenderObjectFilePosition;
     int PreviousFilePosition;
     int i;
     
@@ -2517,7 +2523,7 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
     }
     
     fread(&BSD->RenderObjectTable.NumRenderObject,sizeof(BSD->RenderObjectTable.NumRenderObject),1,BSDFile);
-    FirstRenderObjectPosition = GetCurrentFilePosition(BSDFile);
+    FirstRenderObjectFilePosition = GetCurrentFilePosition(BSDFile);
     
     DPrintf("BSDReadRenderObjectChunk:Reading %i RenderObject Elements...\n",BSD->RenderObjectTable.NumRenderObject);
     
@@ -2530,9 +2536,9 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
     }
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
         if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectPosition + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE));
+            assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectFilePosition + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE));
         } else {
-            assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectPosition + (i * MOH_RENDER_OBJECT_SIZE));
+            assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectFilePosition + (i * MOH_RENDER_OBJECT_SIZE));
         }
         DPrintf("Reading RenderObject %i at %i\n",i,GetCurrentFilePosition(BSDFile));
         fread(&BSD->RenderObjectTable.RenderObject[i],sizeof(BSD->RenderObjectTable.RenderObject[i]),1,BSDFile);
@@ -2576,10 +2582,7 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
     }
     // Prepare vertices to be rendered!
     PreviousFilePosition = ftell(BSDFile);
-    if( !BSDParseRenderObjectVertexData(BSD,BSDFile) ) {
-        return 0;
-    }
-    if( !BSDLoadRenderObjectsFaceData(BSD,FirstRenderObjectPosition,GameEngine,BSDFile) ) {
+    if( !BSDParseRenderObjectData(BSD,BSDFile,FirstRenderObjectFilePosition,GameEngine) ) {
         return 0;
     }
     fseek(BSDFile,PreviousFilePosition,SEEK_SET);
