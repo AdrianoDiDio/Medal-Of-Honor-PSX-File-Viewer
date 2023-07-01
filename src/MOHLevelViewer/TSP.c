@@ -1480,10 +1480,7 @@ void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader
     glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
     glUniformMatrix4fv(RenderObjectShader->MVMatrixId,1,false,&MVMatrix[0][0]);
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);  
         TSPDrawNode(&Iterator->Node[0],RenderObjectShader,VRAM,MVPMatrix);
-        glDisable(GL_CULL_FACE);
     }
     // Alpha pass.
     for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {

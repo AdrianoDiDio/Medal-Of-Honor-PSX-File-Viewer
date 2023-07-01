@@ -34,8 +34,12 @@ void VideoSystemShutdown(VideoSystem_t *VideoSystem)
     }
     free(VideoSystem->WindowTitle);
     free(VideoSystem->VideoModeList);
-    SDL_GL_DeleteContext(VideoSystem->GLContext);
-    SDL_DestroyWindow(VideoSystem->Window);
+    if( VideoSystem->GLContext ) {
+        SDL_GL_DeleteContext(VideoSystem->GLContext);
+    }
+    if( VideoSystem->Window) {
+        SDL_DestroyWindow(VideoSystem->Window);
+    }
     free(VideoSystem);
 }
 
@@ -266,6 +270,10 @@ VideoSystem_t *VideoSystemInit(const char *WindowTitle)
         printf("VideoSystemInit:Failed to allocate memory for VideoSystem struct\n");
         return NULL;
     }
+    VideoSystem->WindowTitle = NULL;
+    VideoSystem->VideoModeList = NULL;
+    VideoSystem->GLContext = NULL;
+    VideoSystem->Window = NULL;
     if( WindowTitle ) {
         VideoSystem->WindowTitle = StringCopy(WindowTitle);
     } else {
@@ -275,14 +283,16 @@ VideoSystem_t *VideoSystemInit(const char *WindowTitle)
     VideoSystemGetAvailableVideoModes(VideoSystem);
     if( !VideoSystemOpenWindow(VideoSystem) ) {
         printf("VideoSystemInit:Failed to open window\n");
-        return NULL;
+        goto Error;
     }
     glewExperimental = GL_TRUE;
     GlewError = glewInit();
     if (GlewError != GLEW_OK) {
         DPrintf("VideoSystemInit:Failed to init GLEW\n");
-        return NULL;
+        goto Error;
     }
     SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
     return VideoSystem;
+Error:
+    VideoSystemShutdown(VideoSystem);
 }
