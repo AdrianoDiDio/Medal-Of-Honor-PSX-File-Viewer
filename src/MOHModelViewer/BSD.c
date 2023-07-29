@@ -264,7 +264,7 @@ void BSDRenderObjectExportCurrentAnimationToPly(BSDRenderObject_t *RenderObject,
         }
         //Apply the animation
         BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,
-                                        RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[i].CurrentQuaternionList,
+                                        RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[i].QuaternionList,
                                         TempVertexTable,TransformMatrix);
         //Export it
         BSDRenderObjectExportPoseToPly(RenderObject,TempVertexTable,VRAM,OutFile);
