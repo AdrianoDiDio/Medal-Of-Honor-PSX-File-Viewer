@@ -352,9 +352,13 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                 RenderObjectManagerSetAnimationPlay(RenderObjectManager,0);
             }
             igSeparator();
-            igText("Export current pose");
-            if( igButton("Export to Ply",ZeroSize) ) {
-                RenderObjectManagerExportCurrentPose(RenderObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY);
+            igText("Export selected model");
+            if( igButton("Export current pose to Ply",ZeroSize) ) {
+                RenderObjectManagerExportSelectedModel(RenderObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY,false);
+            }
+            igSameLine(0.f,10.f);
+            if( igButton("Export current animation to Ply",ZeroSize) ) {
+                RenderObjectManagerExportSelectedModel(RenderObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY,true);
             }
         }
     }

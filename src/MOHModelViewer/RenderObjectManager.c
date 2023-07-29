@@ -94,8 +94,8 @@ void RenderObjectManagerCloseDialog(FileDialog_t *FileDialog)
     FileDialogClose(FileDialog);
 
 }
-void RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager_t *RenderObjectManager,ProgressBar_t *ProgressBar,VideoSystem_t *VideoSystem,
-                                               const char *Directory)
+void RenderObjectManagerExportSelectedModelToPly(RenderObjectManager_t *RenderObjectManager,ProgressBar_t *ProgressBar,VideoSystem_t *VideoSystem,
+                                               const char *Directory,bool ExportCurrentAnimation)
 {
     char *EngineName;
     char *PlyFile;
@@ -125,16 +125,20 @@ void RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager_t *RenderObje
     asprintf(&PlyFile,"%s%c%s",Directory,PATH_SEPARATOR,FileName);
     BSDName = SwitchExt(CurrentBSDPack->Name,"");
     asprintf(&TextureFile,"%s%cvram-%s.png",Directory,PATH_SEPARATOR,BSDName);
-
-    DPrintf("RenderObjectManagerExportCurrentPoseToPly:Dumping it...%s\n",PlyFile);
-    OutFile = fopen(PlyFile,"w");
-    if( !OutFile ) {
-        DPrintf("RenderObjectManagerExportCurrentPoseToPly:Failed to open %s for writing\n",PlyFile);
-        return;
-    }
     ProgressBarSetDialogTitle(ProgressBar,"Exporting Current Pose to Ply...");
     ProgressBarIncrement(ProgressBar,VideoSystem,10,"Writing BSD data.");
-    BSDRenderObjectExportCurrentPoseToPly(CurrentRenderObject,CurrentBSDPack->VRAM,OutFile);
+    if( ExportCurrentAnimation ) {
+        BSDRenderObjectExportCurrentAnimationToPly(CurrentRenderObject,CurrentBSDPack->VRAM,Directory,EngineName);
+    } else {
+        DPrintf("RenderObjectManagerExportCurrentPoseToPly:Dumping it...%s\n",PlyFile);
+        OutFile = fopen(PlyFile,"w");
+        if( !OutFile ) {
+            DPrintf("RenderObjectManagerExportCurrentPoseToPly:Failed to open %s for writing\n",PlyFile);
+            return;
+        }
+        BSDRenderObjectExportCurrentPoseToPly(CurrentRenderObject,CurrentBSDPack->VRAM,OutFile);
+        fclose(OutFile);
+    }
     ProgressBarIncrement(ProgressBar,VideoSystem,95,"Exporting VRAM.");
     VRAMSave(CurrentBSDPack->VRAM,TextureFile);
     ProgressBarIncrement(ProgressBar,VideoSystem,100,"Done.");
@@ -143,11 +147,11 @@ void RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager_t *RenderObje
     free(PlyFile);
     free(TextureFile);
     free(BSDName);
-    fclose(OutFile);
     return;
 }
 
-void RenderObjectManagerExportCurrentPose(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem,int OutputFormat)
+void RenderObjectManagerExportSelectedModel(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem,int OutputFormat,
+                                            bool ExportCurrentAnimation)
 {
     RenderObjectManagerDialogData_t *Exporter;
     
@@ -172,6 +176,7 @@ void RenderObjectManagerExportCurrentPose(RenderObjectManager_t *RenderObjectMan
     Exporter->VideoSystem = VideoSystem;
     Exporter->GUI = GUI;
     Exporter->OutputFormat = OutputFormat;
+    Exporter->ExportCurrentAnimation = ExportCurrentAnimation;
 
     FileDialogSetTitle(RenderObjectManager->ExportFileDialog,"Export Current Pose");
     FileDialogOpen(RenderObjectManager->ExportFileDialog,Exporter);
@@ -422,7 +427,8 @@ void RenderObjectManagerOnExportDirSelect(FileDialog_t *FileDialog,const char *D
 
     switch( Exporter->OutputFormat ) {
         case RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY:
-            RenderObjectManagerExportCurrentPoseToPly(RenderObjectManager,Exporter->GUI->ProgressBar,Exporter->VideoSystem,Directory);
+            RenderObjectManagerExportSelectedModelToPly(RenderObjectManager,Exporter->GUI->ProgressBar,Exporter->VideoSystem,Directory,
+                                                        Exporter->ExportCurrentAnimation);
             break;
         default:
             DPrintf("RenderObjectManagerOnExportDirSelect:Invalid output format\n");

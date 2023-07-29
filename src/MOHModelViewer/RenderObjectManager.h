@@ -69,6 +69,7 @@ typedef struct RenderObjectManagerDialogData_s {
     VideoSystem_t                   *VideoSystem;
     GUI_t                           *GUI;
     int                             OutputFormat;
+    bool                            ExportCurrentAnimation; // If not true, it will export only the current pose
 } RenderObjectManagerDialogData_t;
 
 extern Config_t *EnableWireFrameMode;
@@ -77,8 +78,8 @@ extern Config_t *EnableAmbientLight;
 RenderObjectManager_t   *RenderObjectManagerInit(GUI_t *GUI);
 int                     RenderObjectManagerDeleteBSDPack(RenderObjectManager_t *RenderObjectManager,const char *BSDPackName,int GameVersion);
 void                    RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem);
-void                    RenderObjectManagerExportCurrentPose(RenderObjectManager_t *RenderObjectManager,
-                                                             GUI_t *GUI,VideoSystem_t *VideoSystem,int OutputFormat);
+void                    RenderObjectManagerExportSelectedModel(RenderObjectManager_t *RenderObjectManager,
+                                                             GUI_t *GUI,VideoSystem_t *VideoSystem,int OutputFormat,bool ExportCurrentAnimation);
 void                    RenderObjectManagerUpdate(RenderObjectManager_t *RenderObjectManager);
 void                    RenderObjectManagerDraw(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera);
 void                    RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager);

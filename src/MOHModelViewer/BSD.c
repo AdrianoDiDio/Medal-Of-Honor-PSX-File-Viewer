@@ -97,7 +97,8 @@ void BSDFree(BSD_t *BSD)
     free(BSD);
 }
 
-void BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile)
+
+void BSDRenderObjectExportPoseToPly(BSDRenderObject_t *RenderObject,BSDVertexTable_t *VertexTable,VRAM_t *VRAM,FILE *OutFile)
 {
     char Buffer[256];
     float TextureWidth;
@@ -172,27 +173,27 @@ void BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_
         V2 = /*255 -*/1.f - (((float)CurrentFace->UV2.v + 
                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
         
-        VertPos[0] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0].x;
-        VertPos[1] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0].y;
-        VertPos[2] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0].z;
+        VertPos[0] = VertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0].x;
+        VertPos[1] = VertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0].y;
+        VertPos[2] = VertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
         sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",OutVector[0] / 4096.f, 
                 OutVector[1] / 4096.f, OutVector[2] / 4096.f,
                 CurrentFace->RGB0.r / 255.f,CurrentFace->RGB0.g / 255.f,CurrentFace->RGB0.b / 255.f,U0,V0);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
         
-        VertPos[0] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1].x;
-        VertPos[1] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1].y;
-        VertPos[2] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1].z;
+        VertPos[0] = VertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1].x;
+        VertPos[1] = VertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1].y;
+        VertPos[2] = VertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
         sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",OutVector[0] / 4096.f, 
                 OutVector[1] / 4096.f, OutVector[2] / 4096.f,
                 CurrentFace->RGB1.r / 255.f,CurrentFace->RGB1.g / 255.f,CurrentFace->RGB1.b / 255.f,U1,V1);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
 
-        VertPos[0] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2].x;
-        VertPos[1] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2].y;
-        VertPos[2] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2].z;
+        VertPos[0] = VertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2].x;
+        VertPos[1] = VertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2].y;
+        VertPos[2] = VertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2].z;
         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
         sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",OutVector[0] / 4096.f, 
                 OutVector[1] / 4096.f, OutVector[2] / 4096.f,
@@ -206,6 +207,77 @@ void BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_
         sprintf(Buffer,"3 %i %i %i\n",Vert0,Vert1,Vert2);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
     }
+}
+void BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile)
+{    
+    if( !RenderObject || !OutFile ) {
+        bool InvalidFile = (OutFile == NULL ? true : false);
+        DPrintf("BSDRenderObjectExportPoseToObj: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
+        return;
+    }
+    
+    if( !VRAM ) {
+        DPrintf("BSDRenderObjectExportPoseToObj:Invalid VRAM data\n");
+        return;
+    }
+    BSDRenderObjectExportPoseToPly(RenderObject,RenderObject->CurrentVertexTable,VRAM,OutFile);
+}
+void BSDRenderObjectExportCurrentAnimationToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,const char *Directory,const char *EngineName)
+{
+    BSDVertexTable_t *TempVertexTable;
+    FILE *OutFile;
+    mat4 TransformMatrix;
+    vec3 Translation;
+    int i;
+    int j;
+    char *PlyFile;
+    int VertexTableSize;
+    
+    if(RenderObject->CurrentAnimationIndex == -1 ) {
+        DPrintf("BSDRenderObjectExportCurrentAnimationToPly:Invalid animation index\n");
+        return;
+    }
+    VertexTableSize = RenderObject->NumVertexTables * sizeof(BSDVertexTable_t);
+    TempVertexTable = malloc(VertexTableSize);
+    //Prepare the copy of the vertex table that will be use by the exporter
+    for( i = 0; i < RenderObject->NumVertexTables; i++ ) {
+        TempVertexTable[i].NumVertex = RenderObject->VertexTable[i].NumVertex;
+        if( RenderObject->VertexTable[i].Offset == -1 ) {
+            TempVertexTable[i].VertexList = NULL;
+        } else {
+            TempVertexTable[i].VertexList = malloc(RenderObject->VertexTable[i].NumVertex * sizeof(BSDVertex_t));
+        }
+    }
+    for( i = 0; i < RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].NumFrames; i++ ) {
+        asprintf(&PlyFile,"%s%cRenderObject-%u-%i-%i-%s.ply",Directory,PATH_SEPARATOR,RenderObject->Id,
+                 RenderObject->CurrentAnimationIndex,i,EngineName);
+        OutFile = fopen(PlyFile,"w");
+        glm_mat4_identity(TransformMatrix);
+        Translation[0] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[i].Vector.x / 4096.f;
+        Translation[1] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[i].Vector.y / 4096.f;
+        Translation[2] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[i].Vector.z / 4096.f;
+        glm_translate_make(TransformMatrix,Translation);
+        //Copy the vertices for the current frame
+        for( j = 0; j < RenderObject->NumVertexTables; j++ ) {
+            memcpy(TempVertexTable[j].VertexList,
+                RenderObject->VertexTable[j].VertexList,sizeof(BSDVertex_t) * RenderObject->VertexTable[j].NumVertex);
+        }
+        //Apply the animation
+        BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,
+                                        RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[i].CurrentQuaternionList,
+                                        TempVertexTable,TransformMatrix);
+        //Export it
+        BSDRenderObjectExportPoseToPly(RenderObject,TempVertexTable,VRAM,OutFile);
+        fclose(OutFile);
+        free(PlyFile);
+    }
+    for( i = 0; i < RenderObject->NumVertexTables; i++ ) {
+        if( TempVertexTable[i].VertexList ) {
+            free(TempVertexTable[i].VertexList);
+        }
+    }
+    //BSDRenderObjectExportCurrentPoseToPly(RenderObject,VRAM,OutFile);
+    free(TempVertexTable);
 }
 void BSDFillFaceVertexBuffer(int *Buffer,int *BufferSize,BSDVertex_t Vertex,int U0,int V0,BSDColor_t Color,int CLUTX,int CLUTY,int ColorMode)
 {
