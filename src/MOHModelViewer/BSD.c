@@ -239,7 +239,7 @@ void BSDRenderObjectExportCurrentAnimationToPly(BSDRenderObject_t *RenderObject,
     }
     VertexTableSize = RenderObject->NumVertexTables * sizeof(BSDVertexTable_t);
     TempVertexTable = malloc(VertexTableSize);
-    //Prepare the copy of the vertex table that will be use by the exporter
+    //Prepare the copy of the vertex table that will be used by the exporter
     for( i = 0; i < RenderObject->NumVertexTables; i++ ) {
         TempVertexTable[i].NumVertex = RenderObject->VertexTable[i].NumVertex;
         if( RenderObject->VertexTable[i].Offset == -1 ) {
@@ -276,7 +276,6 @@ void BSDRenderObjectExportCurrentAnimationToPly(BSDRenderObject_t *RenderObject,
             free(TempVertexTable[i].VertexList);
         }
     }
-    //BSDRenderObjectExportCurrentPoseToPly(RenderObject,VRAM,OutFile);
     free(TempVertexTable);
 }
 void BSDFillFaceVertexBuffer(int *Buffer,int *BufferSize,BSDVertex_t Vertex,int U0,int V0,BSDColor_t Color,int CLUTX,int CLUTY,int ColorMode)
