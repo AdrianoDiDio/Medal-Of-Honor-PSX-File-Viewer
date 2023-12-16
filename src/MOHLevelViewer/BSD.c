@@ -2515,6 +2515,7 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
 {
     int FirstRenderObjectFilePosition;
     int PreviousFilePosition;
+    int Result;
     int i;
     
     if( !BSD || !BSDFile ) {
@@ -2583,10 +2584,11 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
     }
     // Prepare vertices to be rendered!
     PreviousFilePosition = ftell(BSDFile);
-    if( !BSDParseRenderObjectData(BSD,BSDFile,FirstRenderObjectFilePosition,GameEngine) ) {
+    Result = BSDParseRenderObjectData(BSD,BSDFile,FirstRenderObjectFilePosition,GameEngine);
+    fseek(BSDFile,PreviousFilePosition,SEEK_SET);
+    if( !Result ) {
         return 0;
     }
-    fseek(BSDFile,PreviousFilePosition,SEEK_SET);
     return 1;
 }
 
