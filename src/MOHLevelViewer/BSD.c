@@ -319,7 +319,8 @@ void BSDFixRenderObjectPosition(Level_t *Level)
             continue;
         }
         Delta = abs(RenderObjectIterator->Position[1] - OutY);
-        DPrintf("Delta is %i (Limit 55) PropertySetIndex:%i\n",Delta,PropertySetIndex);
+        DPrintf("Delta is %i (Limit 55) PropertySetIndex:%i Original Position:%f OutY:%i\n",Delta,PropertySetIndex,
+                RenderObjectIterator->Position[1],OutY);
         BSDDumpProperty(Level->BSD,PropertySetIndex);
         if( Delta < 55 ) {
             RenderObjectIterator->Position[1] = OutY;

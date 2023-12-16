@@ -38,12 +38,7 @@ void main()
         CLUTTexel = texelFetch(ourPaletteTexture, ivec2(CLUTX,CLUTY), 0);
     }
     if( InternalToPsxColor(CLUTTexel) == 0x0000u) {
-        //Some models are placeholders that do not map to a correct location
-        //in the CLUT table,by not skipping it we make sure that we can see
-        //them when rendering the model.
-        //This should not cause any issue with transparency, since models are pretty
-        //much colored.
-        CLUTTexel = vec4(ourColor.r,ourColor.g,ourColor.b,1);
+        discard;
     }
 
     if( LightingEnabled > 0.5 ) {
