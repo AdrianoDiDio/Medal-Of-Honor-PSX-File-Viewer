@@ -107,20 +107,18 @@ Some sample screenshot taken from MOHLevelViewer:
 
 <img src="Images/MOH_MSN9LVL4_Screen1.png" width="600" />
 
-*Screenshot taken from the last Mission of Medal Of Honor
-using MOHLevelViewer.*
+*Screenshot taken from MOHLevelViewer showing the last Mission of Medal Of Honor.*
 
 <img src="Images/MOHU_MSN2LVL1_Screen2.png" width="600" />
 
-*Screenshot taken from the first Mission of Medal Of
-Honor:Underground using MOHLevelViewer.*
+*Screenshot taken from MOHLevelViewer showing the first Mission of Medal Of
+Honor:Underground*
 
 Some sample screenshot taken from MOHModelViewer:  
 
 <img src="Images/MOHModelViewer_Jimmy_P1_MOHU.gif" width="600" />
 
-*GIF taken from Medal Of Honor:Underground showing JIMMY_P1.BSD Model
-using MOHModelViewer.*
+*GIF taken from MOHModelViewer showing JIMMY_P1.BSD Model from Medal Of Honor:Underground.*
 
 Some sample screenshot taken from SoundExplorer:  
 
