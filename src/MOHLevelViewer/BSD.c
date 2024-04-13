@@ -2,7 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 /*
 ===========================================================================
-    Copyright (C) 2018-2023 Adriano Di Dio.
+    Copyright (C) 2018-2024 Adriano Di Dio.
     
     MOHLevelViewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -2147,6 +2147,7 @@ int BSDParseRenderObjectFaceData(BSDRenderObject_t *RenderObject,FILE *BSDFile)
         DPrintf("UV1:(%i;%i)\n",RenderObject->Face[i].UV1.u,RenderObject->Face[i].UV1.v);
         DPrintf("UV2:(%i;%i)\n",RenderObject->Face[i].UV2.u,RenderObject->Face[i].UV2.v);
         DPrintf("Pad is %i\n",RenderObject->Face[i].Pad);
+        DPrintf("Packed Vertex Data is %i\n",PackedVertexData);
 
         Vert0 = (PackedVertexData & 0xFF);
         Vert1 = (PackedVertexData & 0x3fc00) >> 10;

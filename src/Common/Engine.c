@@ -2,7 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 /*
 ===========================================================================
-    Copyright (C) 2018-2023 Adriano Di Dio.
+    Copyright (C) 2018-2024 Adriano Di Dio.
     
     Medal-Of-Honor-PSX-File-Viewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
