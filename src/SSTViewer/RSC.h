@@ -1,0 +1,49 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+/*
+===========================================================================
+    Copyright (C) 2018-2024 Adriano Di Dio.
+    
+    SSTViewer is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SSTViewer is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with SSTViewer.  If not, see <http://www.gnu.org/licenses/>.
+===========================================================================
+*/
+#ifndef __RSC_H_
+#define __RSC_H_
+
+typedef enum
+{
+    RSC_OK = 0,
+    RSC_INVALID_DATA = -1,
+    RSC_FILE_NOT_FOUND = -2, 
+} RSCError_t;
+typedef struct RSCHeader_s {
+    char DirName[64];
+    long long NumEntry;
+} RSCHeader_t;
+typedef struct RSCEntry_s {
+    char Name[68];
+    int  Length;
+    long long Offset;
+    void *Data;
+} RSCEntry_t;
+
+typedef struct RSC_s {
+    RSCHeader_t Header;
+    RSCEntry_t *EntryList;
+} RSC_t;
+
+RSC_t *RSCLoad(char *FileName);
+int RSCOpen(RSC_t *RSC,char *FileName,RSCEntry_t *OutEntry);
+int RSCFree(RSC_t *RSC);
+#endif//__RSC_H_

@@ -57,7 +57,11 @@ typedef struct TIMImage_s {
 } TIMImage_t;
 
 TIMImage_t  *TIMLoadImage(FILE *TIMImage,const char *FileName,int NumImages);
+TIMImage_t  *TIMLoadImageFromBuffer(void **TIMImageBuffer,int NumImages);
+
 TIMImage_t  *TIMLoadAllImages(const char *File,int *NumImages);
+TIMImage_t *TIMLoadAllImagesFromBuffer(void *TIMImageBuffer);
+
 void        TIMWritePNGImage(TIMImage_t *Image,char *OutName);
 const char  *TIMGetBPPFromImage(TIMImage_t *Image);
 Byte        *TIMExpandCLUTImageData(TIMImage_t *Image);
