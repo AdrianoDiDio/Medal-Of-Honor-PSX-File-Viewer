@@ -24,12 +24,12 @@
 #include "../Common/Video.h"
 #include "../Common/Engine.h"
 #include "Camera.h"
-#include "LevelManager.h"
+#include "SSTManager.h"
 #include "GUI.h"
 
 typedef struct Application_s {
     Engine_t                    *Engine;
-    LevelManager_t              *LevelManager;
+    SSTManager_t                *SSTManager;
     Camera_t                    *Camera;
     GUI_t                       *GUI;
 } Application_t;

@@ -40,7 +40,7 @@ void ApplicationCheckEvents(Application_t *Application)
             GUIToggleLevelSelectWindow(Application->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
-            LevelManagerToggleFileDialog(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem);
+            SSTManagerToggleFileDialog(Application->SSTManager,Application->GUI,Application->Engine->VideoSystem);
         }
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit(Application);
@@ -162,8 +162,8 @@ void ApplicationShutDown(Application_t *Application)
     if( !Application ) {
         return;
     }
-    if( Application->LevelManager ) {
-        LevelManagerCleanUp(Application->LevelManager);
+    if( Application->SSTManager ) {
+        SSTManagerCleanUp(Application->SSTManager);
     }
     if( Application->Camera ) {
         CameraCleanUp(Application->Camera);
@@ -190,9 +190,9 @@ void ApplicationDraw(Application_t *Application)
         DPrintf("ApplicationDraw:Called without a valid engine\n");
         return;
     }
-    LevelManagerDraw(Application->LevelManager,Application->Camera);
+    SSTManagerDraw(Application->SSTManager,Application->Camera);
     glDisable (GL_DEPTH_TEST);
-    GUIDraw(Application->GUI,Application->LevelManager,Application->Camera,
+    GUIDraw(Application->GUI,Application->SSTManager,Application->Camera,
             Application->Engine->VideoSystem,Application->Engine->TimeInfo);
     glEnable(GL_DEPTH_TEST);
 }
@@ -204,7 +204,7 @@ void ApplicationFrame(Application_t *Application)
     }
     EngineBeginFrame(Application->Engine);
     ApplicationCheckEvents(Application);
-    LevelManagerUpdate(Application->LevelManager,Application->Camera);
+    SSTManagerUpdate(Application->SSTManager,Application->Camera);
     ApplicationDraw(Application);
     EngineEndFrame(Application->Engine);
 }
@@ -232,7 +232,7 @@ Application_t *ApplicationInit(int argc,char **argv)
     Application->Engine = NULL;
     Application->GUI = NULL;
     Application->Camera = NULL;
-    Application->LevelManager = NULL;
+    Application->SSTManager = NULL;
         
     CommonInit("SSTViewer");
 
@@ -267,10 +267,10 @@ Application_t *ApplicationInit(int argc,char **argv)
         goto Failure;
     }
     
-    Application->LevelManager = LevelManagerInit(Application->GUI,Application->Engine->VideoSystem);
+    Application->SSTManager = SSTManagerInit(Application->GUI,Application->Engine->VideoSystem);
     
-    if( !Application->LevelManager ) {
-        printf("ApplicationInit:Failed to initialize LevelManager\n");
+    if( !Application->SSTManager ) {
+        printf("ApplicationInit:Failed to initialize SSTManager\n");
         goto Failure;
     }
     GLSetDefaultState();

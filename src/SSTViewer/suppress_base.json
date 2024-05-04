@@ -14,7 +14,7 @@
             "CodeNext": 3317402508,
             "CodePrev": 2668662155,
             "ErrorCode": "V1042",
-            "FileName": "LevelManager.c",
+            "FileName": "SSTManager.c",
             "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
         },
         {

@@ -36,7 +36,7 @@ typedef struct GUI_s {
 
 } GUI_t;
 
-typedef struct LevelManager_s LevelManager_t;
+typedef struct SSTManager_s SSTManager_t;
 typedef struct Camera_s Camera_t;
 typedef struct ComTimeInfo_s ComTimeInfo_t;
 typedef struct SoundSystem_s SoundSystem_t;
@@ -49,6 +49,6 @@ void            GUIToggleDebugWindow(GUI_t *GUI);
 void            GUIToggleVideoSettingsWindow(GUI_t *GUI);
 void            GUIToggleLevelSelectWindow(GUI_t *GUI);
 int             GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
-void            GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo);
+void            GUIDraw(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo);
 void            GUIFree(GUI_t *GUI);
 #endif//__GUI_H_

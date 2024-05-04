@@ -111,7 +111,7 @@ void GUIToggleLevelSelectWindow(GUI_t *GUI)
     GUIUpdateWindowStack(GUI,GUI->LevelSelectWindowHandle);
 }
 
-void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem)
+void GUIDrawDebugWindow(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,VideoSystem_t *VideoSystem)
 {
     ImVec2 ZeroSize;
     SDL_version LinkedVersion;
@@ -129,9 +129,9 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
     ZeroSize.x = 0.f;
     ZeroSize.y = 0.f;
     if( igBegin("Debug Settings",&GUI->DebugWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
-        if( LevelManagerIsLevelLoaded(LevelManager) ) {
-            igText("Game:%s",LevelManager->EngineName);
-            igText("Current Path:%s",LevelManager->BasePath);
+        if( SSTManagerIsLevelLoaded(SSTManager) ) {
+            igText("Game:%s",SSTManager->EngineName);
+            igText("Current Path:%s",SSTManager->BasePath);
             igSeparator();
             if( igCollapsingHeader_TreeNodeFlags("Settings",0) ) {
                 if( GUICheckBoxWithTooltip("Show FPS",(bool *) &GUIShowFPS->IValue,GUIShowFPS->Description) ) {
@@ -200,7 +200,7 @@ void GUIDrawHelpOverlay()
     igEnd();
 }
 
-void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t *LevelManager)
+void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,SSTManager_t *SSTManager)
 {
     ImGuiViewport *Viewport;
     ImVec2 WorkPosition;
@@ -230,7 +230,7 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
     igEnd(); 
 }
 
-void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem,const Mission_t *Missions,int NumMissions)
+void GUIDrawLevelTree(GUI_t *GUI,SSTManager_t *SSTManager,VideoSystem_t *VideoSystem,const Mission_t *Missions,int NumMissions)
 {
     static int FailedMissionNumber = -1;
     static int FailedLevelNumber = -1;
@@ -247,7 +247,7 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *Vid
     CurrentMission = -1;
     CurrentLevel = -1;
     
-    if( LevelManagerIsLevelLoaded(LevelManager) ) {
+    if( SSTManagerIsLevelLoaded(SSTManager) ) {
         CurrentMission = 0;
         CurrentLevel = 0;
     }
@@ -296,22 +296,22 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *Vid
 //         }
 //     }
 }
-void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem)
+void GUIDrawLevelSelectWindow(GUI_t *GUI,SSTManager_t *SSTManager,VideoSystem_t *VideoSystem)
 {
     if( !GUI->LevelSelectWindowHandle ) {
         return;
     }
 
     if( igBegin("Level Select",&GUI->LevelSelectWindowHandle,0) ) {
-        if( !LevelManagerIsLevelLoaded(LevelManager) ) {
+        if( !SSTManagerIsLevelLoaded(SSTManager) ) {
             igText("Level has not been loaded yet!");
         } else {
-            igText(LevelManager->EngineName);
+            igText(SSTManager->EngineName);
             igSeparator();
-            if( LevelManagerGetGameEngine(LevelManager) == MOH_GAME_STANDARD ) {
-//                 GUIDrawLevelTree(GUI,LevelManager,VideoSystem,MOHMissionsList,NumMOHMissions);
+            if( SSTManagerGetGameEngine(SSTManager) == MOH_GAME_STANDARD ) {
+//                 GUIDrawLevelTree(GUI,SSTManager,VideoSystem,MOHMissionsList,NumMOHMissions);
             } else {
-//                 GUIDrawLevelTree(GUI,LevelManager,VideoSystem,MOHUMissionsList,NumMOHUMissions);
+//                 GUIDrawLevelTree(GUI,SSTManager,VideoSystem,MOHUMissionsList,NumMOHUMissions);
             }
         }
     }
@@ -321,13 +321,13 @@ void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager,VideoSyste
     }
 }
 
-void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo)
+void GUIDraw(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo)
 {
     int PreviousHandleValue;
     
     GUIBeginFrame();
     
-    GUIDrawDebugOverlay(TimeInfo,Camera,LevelManager);
+    GUIDrawDebugOverlay(TimeInfo,Camera,SSTManager);
     
     if( !GUI->NumActiveWindows ) {
         GUIDrawHelpOverlay();
@@ -337,14 +337,14 @@ void GUIDraw(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera,VideoSyste
     
     FileDialogRenderList();
     ErrorMessageDialogDraw(GUI->ErrorMessageDialog);
-    GUIDrawDebugWindow(GUI,LevelManager,Camera,VideoSystem);
+    GUIDrawDebugWindow(GUI,SSTManager,Camera,VideoSystem);
     
     PreviousHandleValue = GUI->VideoSettingsWindowHandle;
     GUIDrawVideoSettingsWindow(&GUI->VideoSettingsWindowHandle,VideoSystem);
     if( GUI->VideoSettingsWindowHandle != PreviousHandleValue ) {
         GUIUpdateWindowStack(GUI,GUI->VideoSettingsWindowHandle);
     }
-    GUIDrawLevelSelectWindow(GUI,LevelManager,VideoSystem);
+    GUIDrawLevelSelectWindow(GUI,SSTManager,VideoSystem);
 //     igShowDemoWindow(NULL);
     GUIEndFrame();
 }

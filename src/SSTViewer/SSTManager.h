@@ -17,8 +17,8 @@
 ===========================================================================
 */
 
-#ifndef __LEVELMANAGER_H_
-#define __LEVELMANAGER_H_
+#ifndef __SSTMANAGER_H_
+#define __SSTMANAGER_H_
 
 #include "GUI.h"
 #include "../Common/Sound.h"
@@ -30,7 +30,7 @@ typedef enum {
     LEVEL_MANAGER_EXPORT_FORMAT_PLY,
     LEVEL_MANAGER_EXPORT_FORMAT_WAV,
     LEVEL_MANAGER_EXPORT_FORMAT_UNKNOWN
-} LevelManagerExportFormats_t;
+} SSTManagerExportFormats_t;
 
 typedef struct MissionLevel_s {
     char *LevelName;
@@ -56,7 +56,7 @@ typedef struct RenderObjectShader_s {
     Shader_t        *Shader;
 } RenderObjectShader_t;
 
-typedef struct LevelManager_s {
+typedef struct SSTManager_s {
     char                    *BasePath;
     char                    MissionPath[256];
     char                    EngineName[256];
@@ -67,35 +67,35 @@ typedef struct LevelManager_s {
     SoundSystem_t           *SoundSystem;
     RenderObjectShader_t    *RenderObjectShader;
 
-} LevelManager_t;
+} SSTManager_t;
 
-typedef struct LevelManagerDialogData_s {
-    LevelManager_t *LevelManager;
+typedef struct SSTManagerDialogData_s {
+    SSTManager_t *SSTManager;
     VideoSystem_t  *VideoSystem;
     GUI_t          *GUI;
     int             OutputFormat;
-} LevelManagerDialogData_t;
+} SSTManagerDialogData_t;
 
-LevelManager_t *LevelManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem);
-int             LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
+SSTManager_t    *SSTManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem);
+int             SSTManagerLoadLevel(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
                                       int MissionNumber,int LevelNumber);
-void            LevelManagerDrawString(const LevelManager_t *LevelManager,const char *String,float x,float y,Color4f_t Color);
-void            LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,int SoundValue);
-int             LevelManagerIsLevelLoaded(const LevelManager_t *LevelManager);
-int             LevelManagerGetGameEngine(LevelManager_t *LevelManager);
-int             LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
+void            SSTManagerDrawString(const SSTManager_t *SSTManager,const char *String,float x,float y,Color4f_t Color);
+void            SSTManagerUpdateSoundSettings(SSTManager_t *SSTManager,int SoundValue);
+int             SSTManagerIsLevelLoaded(const SSTManager_t *SSTManager);
+int             SSTManagerGetGameEngine(SSTManager_t *SSTManager);
+int             SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
                                          const char *Path);
-void            LevelManagerUpdateRenderObjectShaderFog(LevelManager_t *LevelManager);
-void            LevelManagerUpdate(LevelManager_t *LevelManager,Camera_t *Camera);
-void            LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera);
-void            LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem);
-void            LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t  *VideoSystem,int OutputFormat);
-void            LevelManagerCleanUp(LevelManager_t *LevelManager);
+void            SSTManagerUpdateRenderObjectShaderFog(SSTManager_t *SSTManager);
+void            SSTManagerUpdate(SSTManager_t *SSTManager,Camera_t *Camera);
+void            SSTManagerDraw(SSTManager_t *SSTManager,Camera_t *Camera);
+void            SSTManagerToggleFileDialog(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *VideoSystem);
+void            SSTManagerExport(SSTManager_t* SSTManager,GUI_t *GUI,VideoSystem_t  *VideoSystem,int OutputFormat);
+void            SSTManagerCleanUp(SSTManager_t *SSTManager);
 
 extern const Mission_t MOHMissionsList[];
 extern int NumMOHMissions;
 extern const Mission_t MOHUMissionsList[];
 extern int NumMOHUMissions;
 
-extern Config_t *LevelManagerBasePath;
-#endif//__LEVELMANAGER_H_
+extern Config_t *SSTManagerBasePath;
+#endif//__SSTMANAGER_H_
