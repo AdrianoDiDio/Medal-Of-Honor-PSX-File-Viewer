@@ -80,7 +80,7 @@ int RSCOpen(RSC_t *RSC,char *FileName,RSCEntry_t *OutEntry) {
     for( Iterator = RSC; Iterator; Iterator = Iterator->Next ) {
         EntryIndex = RSCSearch(Iterator,FileName);
         if( EntryIndex >= 0 ) {
-            *OutEntry = RSC->EntryList[EntryIndex];
+            *OutEntry = Iterator->EntryList[EntryIndex];
             return RSC_OK;
         }
     }
