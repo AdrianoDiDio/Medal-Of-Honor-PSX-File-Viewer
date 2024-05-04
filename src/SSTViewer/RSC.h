@@ -29,21 +29,26 @@ typedef enum
 } RSCError_t;
 typedef struct RSCHeader_s {
     char DirName[64];
-    long long NumEntry;
+    int  NumEntry;
+    int  Unknown;
 } RSCHeader_t;
 typedef struct RSCEntry_s {
-    char Name[68];
-    int  Length;
-    long long Offset;
-    void *Data;
+    char    Name[64];
+    int     Index;
+    int     Length;
+    int     Offset;
+    int     Pad;
+    void    *Data;
 } RSCEntry_t;
 
 typedef struct RSC_s {
-    RSCHeader_t Header;
-    RSCEntry_t *EntryList;
+    RSCHeader_t         Header;
+    RSCEntry_t          *EntryList;
+    struct RSC_s        *Next;
 } RSC_t;
 
-RSC_t *RSCLoad(char *FileName);
-int RSCOpen(RSC_t *RSC,char *FileName,RSCEntry_t *OutEntry);
-int RSCFree(RSC_t *RSC);
+RSC_t       *RSCLoad(char *FileName);
+void        RSCAppend(RSC_t **List,RSC_t *RSC);
+int         RSCOpen(RSC_t *RSC,char *FileName,RSCEntry_t *OutEntry);
+int         RSCFree(RSC_t *RSC);
 #endif//__RSC_H_

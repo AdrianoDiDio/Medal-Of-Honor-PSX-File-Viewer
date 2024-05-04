@@ -24,6 +24,7 @@
 #include "../Common/Sound.h"
 #include "../Common/Config.h"
 #include "../Common/ShaderManager.h"
+#include "RSC.h"
 
 typedef enum {
     LEVEL_MANAGER_EXPORT_FORMAT_OBJ,
@@ -66,6 +67,7 @@ typedef struct SSTManager_s {
     int                     GameEngine;
     SoundSystem_t           *SoundSystem;
     RenderObjectShader_t    *RenderObjectShader;
+    RSC_t                   *GlobalRSCList;
 
 } SSTManager_t;
 

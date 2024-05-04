@@ -35,25 +35,28 @@ char *RSCGetErrorString(RSCError_t RSCError)
 
 int RSCFree(RSC_t *RSC)
 {
+    RSC_t *Temp;
     int i;
     
     if( !RSC ) {
         printf("RSCOpen:Invalid RSC data\n");
         return RSC_INVALID_DATA; 
     }
-    
-    for( i = 0; i < (int) RSC->Header.NumEntry; i++ ) {
-        free(RSC->EntryList[i].Data);
+    while( RSC ) {
+        for( i = 0; i < (int) RSC->Header.NumEntry; i++ ) {
+            free(RSC->EntryList[i].Data);
+        }
+        free(RSC->EntryList);
+        Temp = RSC;
+        RSC = RSC->Next;
+        free(Temp);
     }
-    free(RSC->EntryList);
-    free(RSC);
     return RSC_OK;
 }
 int RSCSearch(RSC_t *RSC,char *FileName)
 {
     int i;
     for( i = 0; i < (int) RSC->Header.NumEntry; i++ ) {
-//         DPrintf("Comparing %s\n",RSC->EntryList[i].Name);
         if( !strcmp(RSC->EntryList[i].Name,FileName) ) {
             DPrintf("Found Entry %s in list\n",FileName);
             return i;
@@ -62,6 +65,7 @@ int RSCSearch(RSC_t *RSC,char *FileName)
     return RSC_FILE_NOT_FOUND;
 }
 int RSCOpen(RSC_t *RSC,char *FileName,RSCEntry_t *OutEntry) {
+    RSC_t *Iterator;
     int EntryIndex;
     
     if( !RSC ) {
@@ -74,18 +78,29 @@ int RSCOpen(RSC_t *RSC,char *FileName,RSCEntry_t *OutEntry) {
         return RSC_INVALID_DATA;
     }
     
-    EntryIndex = RSCSearch(RSC,FileName);
-    
-    if( EntryIndex < 0 ) {
-        DPrintf("An error has occurred:%s\n",RSCGetErrorString(EntryIndex));
-        return RSC_FILE_NOT_FOUND;
+    for( Iterator = RSC; Iterator; Iterator = Iterator->Next ) {
+        EntryIndex = RSCSearch(Iterator,FileName);
+        if( EntryIndex >= 0 ) {
+            *OutEntry = RSC->EntryList[EntryIndex];
+            return RSC_OK;
+        }
     }
-    
-    *OutEntry = RSC->EntryList[EntryIndex];
-    
-    return RSC_OK;
+    DPrintf("An error has occurred:%s\n",RSCGetErrorString(EntryIndex));
+    return RSC_FILE_NOT_FOUND;
 }
-
+void RSCAppend(RSC_t **RSCList,RSC_t *RSC)
+{
+    RSC_t *LastNode;
+    if( !*RSCList ) {
+        *RSCList = RSC;
+    } else {
+        LastNode = *RSCList;
+        while( LastNode->Next ) {
+            LastNode = LastNode->Next;
+        }
+        LastNode->Next = RSC;
+    }
+}
 RSC_t *RSCLoad(char *FileName)
 {
     FILE *RSCFile;
@@ -109,27 +124,31 @@ RSC_t *RSCLoad(char *FileName)
     }
     
     RSC = malloc(sizeof(RSC_t));
+    RSC->Next = NULL;
     
     DPrintf("Scanning elements...\n");
     fread(&RSC->Header, sizeof(RSC->Header), 1, RSCFile);
     
-    printf("Dir Name: %s\n",RSC->Header.DirName);
-    printf("Dir Contains %i entries\n",(int)RSC->Header.NumEntry);
-    EntryListSize = (int)RSC->Header.NumEntry * sizeof(RSCEntry_t);
+    DPrintf("Dir Name: %s\n",RSC->Header.DirName);
+    DPrintf("Dir Contains %i entries\n",RSC->Header.NumEntry);
+    DPrintf("Dir Unknown:%i\n",RSC->Header.Unknown);
+    EntryListSize = RSC->Header.NumEntry * sizeof(RSCEntry_t);
     RSC->EntryList = malloc(EntryListSize);
     memset(RSC->EntryList,0,EntryListSize);
     
-    for( i = 0; i < (int) RSC->Header.NumEntry; i++ ) {
+    for( i = 0; i < RSC->Header.NumEntry; i++ ) {
         fread(&RSC->EntryList[i].Name, sizeof(RSC->EntryList[i].Name), 1, RSCFile);
+        fread(&RSC->EntryList[i].Index, sizeof(RSC->EntryList[i].Index), 1, RSCFile);
         fread(&RSC->EntryList[i].Length, sizeof(RSC->EntryList[i].Length), 1, RSCFile);
         fread(&RSC->EntryList[i].Offset, sizeof(RSC->EntryList[i].Offset), 1, RSCFile);
+        fread(&RSC->EntryList[i].Pad, sizeof(RSC->EntryList[i].Pad), 1, RSCFile);
         RSC->EntryList[i].Data = malloc(RSC->EntryList[i].Length);
         PreviousFilePosition = ftell(RSCFile);
         fseek(RSCFile,RSC->EntryList[i].Offset,SEEK_SET);
         fread(RSC->EntryList[i].Data,RSC->EntryList[i].Length,1,RSCFile);
         fseek(RSCFile,PreviousFilePosition,SEEK_SET);
-        printf("Reading entry %i....got %s with length %i and offset %i\n",i,RSC->EntryList[i].Name,RSC->EntryList[i].Length,
-               (int)RSC->EntryList[i].Offset);
+        DPrintf("Reading entry %i....got %s with length %i, index %i, pad %i and offset %i\n",i,RSC->EntryList[i].Name,RSC->EntryList[i].Length,
+               RSC->EntryList[i].Index,RSC->EntryList[i].Pad,RSC->EntryList[i].Offset);
 //         DumpChunk(PackFile,&Entries[i]);
     }
     fclose(RSCFile);

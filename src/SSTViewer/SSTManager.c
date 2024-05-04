@@ -61,6 +61,9 @@ void SSTManagerCleanUp(SSTManager_t *SSTManager)
     if( SSTManager->BasePath ) {
         free(SSTManager->BasePath);
     }
+    if( SSTManager->GlobalRSCList ) {
+        RSCFree(SSTManager->GlobalRSCList);
+    }
     if( FileDialogIsOpen(SSTManager->FileDialog) ) {
         SSTManagerFreeDialogData(SSTManager->FileDialog);
     }
@@ -196,10 +199,9 @@ void SSTManagerDraw(SSTManager_t *SSTManager,Camera_t *Camera)
 
 int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *Path)
 {
-//     Level_t *Level;
-    int Loaded;
-    int GameEngine;
     char *Buffer;
+    char *RSCBuffer;
+    RSC_t *RSC;
     
     if( !SSTManager ) {
         DPrintf("SSTManagerInitWithPath:Called without a valid struct\n");
@@ -209,9 +211,41 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
         DPrintf("SSTManagerInitWithPath:Called without a valid path\n");
         return 0;
     }
-    ProgressBarBegin(GUI->ProgressBar,"Loading Mission 1 Level 1");
-    Loaded = 0;
-
+    if( SSTManager->GlobalRSCList ) {
+        RSCFree(SSTManager->GlobalRSCList);
+        SSTManager->GlobalRSCList = NULL;
+    }
+    ProgressBarBegin(GUI->ProgressBar,"Loading Global RSC files");
+    
+    //First step, load the global and global2 files
+    asprintf(&RSCBuffer,"%s%cDATA%cGLOBAL.RSC",Path,PATH_SEPARATOR,PATH_SEPARATOR);
+    SSTManager->GlobalRSCList = RSCLoad(RSCBuffer);
+    
+    if( !SSTManager->GlobalRSCList ) {
+        DPrintf("Failed to load global rsc file\n");
+        goto Failure;
+    }
+    free(RSCBuffer);
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20,"Loading Global2 RSC file");
+    asprintf(&RSCBuffer,"%s%cDATA%cGLOBAL2.RSC",Path,PATH_SEPARATOR,PATH_SEPARATOR);
+    RSC = RSCLoad(RSCBuffer);
+    
+    if( !RSC ) {
+        DPrintf("Failed to load global2 rsc file\n");
+        goto Failure;
+    }
+    //NOTE(Adriano):MOH Underground has an empty global2 file
+    DPrintf("SSTManagerInitWithPath:Global2 has %i files\n",RSC->Header.NumEntry);
+    if( RSC->Header.NumEntry > 0 ) {
+        SSTManager->GameEngine = MOH_GAME_STANDARD;
+        RSCAppend(&SSTManager->GlobalRSCList,RSC);
+    } else {
+        DPrintf("SSTManagerInitWithPath:Underground!\n");
+        SSTManager->GameEngine = MOH_GAME_UNDERGROUND;
+        RSCFree(RSC);
+    }
+    sprintf(SSTManager->EngineName,"%s",SSTManager->GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
+    DPrintf("SSTManagerInitWithPath:Detected game engine %s\n",SSTManager->EngineName);
 //     for( int i = 1; i <= 2; i++ ) {
 //         asprintf(&Buffer,"Loading Mission %i Level 1",i);
 //         ProgressBarSetDialogTitle(GUI->ProgressBar,Buffer);
@@ -231,8 +265,13 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
 //             break;
 //         }
 //     }
+    free(RSCBuffer);
     ProgressBarEnd(GUI->ProgressBar,VideoSystem);
-    return Loaded;
+    return 1;
+Failure:
+    ProgressBarEnd(GUI->ProgressBar,VideoSystem);
+    free(RSCBuffer);
+    return 0;
 }
 int SSTManagerLoadLevel(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *VideoSystem,int MissionNumber,int LevelNumber)
 {
@@ -313,6 +352,7 @@ SSTManager_t *SSTManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem)
     SSTManager->HasToSpawnCamera = 0;
     SSTManager->FileDialog = FileDialogRegister("Select Directory",NULL,
                                                      SSTManagerOnDirSelected,SSTManagerOnDirSelectionCancelled);
+    SSTManager->GlobalRSCList = NULL;
     SSTManager->BasePath = NULL;
     //No path has been provided to it yet.
     SSTManager->IsPathSet = 0;

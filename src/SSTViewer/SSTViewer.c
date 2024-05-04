@@ -45,7 +45,8 @@ void ApplicationCheckEvents(Application_t *Application)
         if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit(Application);
         }
-        
+        if( !GUIProcessEvent(Application->GUI,&Event) ) {
+        }
     }
 }
 
