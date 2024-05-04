@@ -4,22 +4,21 @@
 ===========================================================================
     Copyright (C) 2018-2024 Adriano Di Dio.
     
-    SSTViewer is free software: you can redistribute it and/or modify
+    Medal-Of-Honor-PSX-File-Viewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    SSTViewer is distributed in the hope that it will be useful,
+    Medal-Of-Honor-PSX-File-Viewer is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with SSTViewer.  If not, see <http://www.gnu.org/licenses/>.
+    along with Medal-Of-Honor-PSX-File-Viewer.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */
 #include "RSC.h"
-#include "SSTViewer.h"
 
 char *RSCGetErrorString(RSCError_t RSCError)
 {
@@ -124,6 +123,11 @@ RSC_t *RSCLoad(char *FileName)
     }
     
     RSC = malloc(sizeof(RSC_t));
+    if( !RSC ) {
+        DPrintf("RSCLoad:Failed allocate memory for RSC file.\n");
+        fclose(RSCFile);
+        return NULL;
+    }
     RSC->Next = NULL;
     
     DPrintf("Scanning elements...\n");
@@ -134,6 +138,12 @@ RSC_t *RSCLoad(char *FileName)
     DPrintf("Dir Unknown:%i\n",RSC->Header.Unknown);
     EntryListSize = RSC->Header.NumEntry * sizeof(RSCEntry_t);
     RSC->EntryList = malloc(EntryListSize);
+    
+    if( !RSC->EntryList ) {
+        fclose(RSCFile);
+        RSCFree(RSC);
+        return NULL;
+    }
     memset(RSC->EntryList,0,EntryListSize);
     
     for( i = 0; i < RSC->Header.NumEntry; i++ ) {
@@ -149,7 +159,6 @@ RSC_t *RSCLoad(char *FileName)
         fseek(RSCFile,PreviousFilePosition,SEEK_SET);
         DPrintf("Reading entry %i....got %s with length %i, index %i, pad %i and offset %i\n",i,RSC->EntryList[i].Name,RSC->EntryList[i].Length,
                RSC->EntryList[i].Index,RSC->EntryList[i].Pad,RSC->EntryList[i].Offset);
-//         DumpChunk(PackFile,&Entries[i]);
     }
     fclose(RSCFile);
     return RSC;

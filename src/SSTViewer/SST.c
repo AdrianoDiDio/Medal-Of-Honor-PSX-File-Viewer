@@ -19,7 +19,7 @@
 ===========================================================================
 */
 #include "SST.h"
-#include "RSC.h"
+#include "../Common/RSC.h"
 #include "../Common/TIM.h"
 #include "SSTViewer.h" 
 

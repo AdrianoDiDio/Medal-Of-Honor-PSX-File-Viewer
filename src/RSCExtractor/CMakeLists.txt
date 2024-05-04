@@ -36,5 +36,6 @@ target_compile_definitions(${PROJECT_NAME}
     $<$<CONFIG:Debug>:_DEBUG>
 )
 
+
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:-g>")
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:-O3>")

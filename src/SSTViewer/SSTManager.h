@@ -24,7 +24,7 @@
 #include "../Common/Sound.h"
 #include "../Common/Config.h"
 #include "../Common/ShaderManager.h"
-#include "RSC.h"
+#include "../Common/RSC.h"
 
 typedef enum {
     LEVEL_MANAGER_EXPORT_FORMAT_OBJ,

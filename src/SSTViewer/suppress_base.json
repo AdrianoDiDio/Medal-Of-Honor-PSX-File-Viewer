@@ -4,7 +4,7 @@
         {
             "CodeCurrent": 3969359160,
             "CodeNext": 3317402508,
-            "CodePrev": 2668662155,
+            "CodePrev": 4061171084,
             "ErrorCode": "V1042",
             "FileName": "SSTViewer.c",
             "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
@@ -12,7 +12,7 @@
         {
             "CodeCurrent": 3969359160,
             "CodeNext": 3317402508,
-            "CodePrev": 2668662155,
+            "CodePrev": 4061171084,
             "ErrorCode": "V1042",
             "FileName": "SSTManager.c",
             "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
@@ -20,23 +20,7 @@
         {
             "CodeCurrent": 3969359160,
             "CodeNext": 3317402508,
-            "CodePrev": 2668662155,
-            "ErrorCode": "V1042",
-            "FileName": "Level.c",
-            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
-        },
-        {
-            "CodeCurrent": 3969359160,
-            "CodeNext": 3317402508,
-            "CodePrev": 2668662155,
-            "ErrorCode": "V1042",
-            "FileName": "GUI.c",
-            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
-        },
-        {
-            "CodeCurrent": 3969359160,
-            "CodeNext": 3317402508,
-            "CodePrev": 2668662155,
+            "CodePrev": 4061171084,
             "ErrorCode": "V1042",
             "FileName": "Font.c",
             "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
@@ -44,7 +28,15 @@
         {
             "CodeCurrent": 3969359160,
             "CodeNext": 3317402508,
-            "CodePrev": 2668662155,
+            "CodePrev": 4061171084,
+            "ErrorCode": "V1042",
+            "FileName": "GUI.c",
+            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
+        },
+        {
+            "CodeCurrent": 3969359160,
+            "CodeNext": 3317402508,
+            "CodePrev": 4061171084,
             "ErrorCode": "V1042",
             "FileName": "Camera.c",
             "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
@@ -52,81 +44,17 @@
         {
             "CodeCurrent": 3969359160,
             "CodeNext": 3317402508,
-            "CodePrev": 238437292,
+            "CodePrev": 4061171084,
             "ErrorCode": "V1042",
-            "FileName": "TIM.c",
+            "FileName": "GFX.c",
             "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
         },
         {
             "CodeCurrent": 3969359160,
             "CodeNext": 3317402508,
-            "CodePrev": 238437292,
+            "CodePrev": 4061171084,
             "ErrorCode": "V1042",
-            "FileName": "VRAM.c",
-            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
-        },
-        {
-            "CodeCurrent": 3969359160,
-            "CodeNext": 3317402508,
-            "CodePrev": 238437292,
-            "ErrorCode": "V1042",
-            "FileName": "Common.c",
-            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
-        },
-        {
-            "CodeCurrent": 3969359160,
-            "CodeNext": 3317402508,
-            "CodePrev": 238437292,
-            "ErrorCode": "V1042",
-            "FileName": "Sound.c",
-            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
-        },
-        {
-            "CodeCurrent": 3969359160,
-            "CodeNext": 3317402508,
-            "CodePrev": 238437292,
-            "ErrorCode": "V1042",
-            "FileName": "ShaderManager.c",
-            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
-        },
-        {
-            "CodeCurrent": 3969359160,
-            "CodeNext": 3317402508,
-            "CodePrev": 238437292,
-            "ErrorCode": "V1042",
-            "FileName": "Video.c",
-            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
-        },
-        {
-            "CodeCurrent": 3969359160,
-            "CodeNext": 3317402508,
-            "CodePrev": 238437292,
-            "ErrorCode": "V1042",
-            "FileName": "Engine.c",
-            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
-        },
-        {
-            "CodeCurrent": 3969359160,
-            "CodeNext": 3317402508,
-            "CodePrev": 238437292,
-            "ErrorCode": "V1042",
-            "FileName": "Config.c",
-            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
-        },
-        {
-            "CodeCurrent": 3969359160,
-            "CodeNext": 3317402508,
-            "CodePrev": 238437292,
-            "ErrorCode": "V1042",
-            "FileName": "VAO.c",
-            "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
-        },
-        {
-            "CodeCurrent": 3969359160,
-            "CodeNext": 3317402508,
-            "CodePrev": 238437292,
-            "ErrorCode": "V1042",
-            "FileName": "IMGUIUtils.c",
+            "FileName": "SST.c",
             "Message": "This file is marked with copyleft license, which requires you to open the derived source code."
         }
     ]

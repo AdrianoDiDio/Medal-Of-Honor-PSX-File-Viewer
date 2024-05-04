@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(Common)
 
-set(COMMON_SOURCE_FILES Common.c Config.c Video.c Sound.c Engine.c
+set(COMMON_SOURCE_FILES Common.c Config.c Video.c RSC.c Sound.c Engine.c
                     ShaderManager.c VAO.c IMGUIUtils.c 
                     TIM.c VRAM.c
 )
