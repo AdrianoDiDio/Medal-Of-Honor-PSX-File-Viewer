@@ -1294,15 +1294,18 @@ Each RSC files starts with an header containing the following data:
 | Type      | Size     | Description     |
 | --------- | -------- | --------------- |
 | char      | 64 bytes | Directory Name  |
-| long long | 8 bytes  | Number of Entry |
+| int       | 4 bytes  | Number of Entry |
+| int       | 4 bytes  | Unknown         |
 
 ###### RSC Entry
 
 | Type      | Size     | Description |
 | --------- | -------- | ----------- |
-| char      | 68 bytes | File Name   |
+| char      | 64 bytes | File Name   |
+| int       | 4 bytes  | File Index  |
 | int       | 4 bytes  | File Length |
-| long long | 8 bytes  | Offset      |
+| int       | 4 bytes  | Offset      |
+| int       | 4 bytes  | Pad         |
 
 ### TAF Files
 
