@@ -251,50 +251,50 @@ void GUIDrawLevelTree(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *Vid
         CurrentMission = 0;
         CurrentLevel = 0;
     }
-    for( i = 0; i < NumMissions; i++ ) {
-        TreeNodeFlags = ImGuiTreeNodeFlags_None;
-        if(  CurrentMission == Missions[i].MissionNumber ) {
-            TreeNodeFlags |= ImGuiTreeNodeFlags_DefaultOpen;
-        }
-        if( igTreeNodeEx_Str(Missions[i].MissionName,TreeNodeFlags) ) {
-            for( j = 0; j < Missions[i].NumLevels; j++ ) {
-                DisableNode = 0;
-                TreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
-                if( CurrentMission == Missions[i].MissionNumber && CurrentLevel == Missions[i].Levels[j].LevelNumber ) {
-                    TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
-                    DisableNode = 1;
-                }
-                if( DisableNode ) {
-                    igBeginDisabled(1);
-                }
-                if( igTreeNodeEx_Str(Missions[i].Levels[j].LevelName,TreeNodeFlags) ) {
-                    if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
-                        if( LevelManagerLoadLevel(LevelManager,GUI,VideoSystem,Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber) ) {
-                            //Close it if we selected a level and it was loaded properly.
-                            GUI->LevelSelectWindowHandle = 0;
-                        } else {
-                            FailedMissionNumber = i;
-                            FailedLevelNumber = j;
-                            igOpenPopup_Str("Load Level Error",0);
-                        }
-                    }
-                }
-                if( DisableNode ) {
-                    igEndDisabled();
-                }
-            }
-            GUIPrepareModalWindow();
-            if( igBeginPopupModal("Load Level Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
-                assert(FailedMissionNumber != -1 && FailedLevelNumber != -1 );
-                igText("Failed to load level \"%s\"",Missions[FailedMissionNumber].Levels[FailedLevelNumber].LevelName);
-                if (igButton("OK", ButtonSize) ) {
-                    igCloseCurrentPopup(); 
-                }
-                igEndPopup();
-            }
-            igTreePop();
-        }
-    }
+//     for( i = 0; i < NumMissions; i++ ) {
+//         TreeNodeFlags = ImGuiTreeNodeFlags_None;
+//         if(  CurrentMission == Missions[i].MissionNumber ) {
+//             TreeNodeFlags |= ImGuiTreeNodeFlags_DefaultOpen;
+//         }
+//         if( igTreeNodeEx_Str(Missions[i].MissionName,TreeNodeFlags) ) {
+//             for( j = 0; j < Missions[i].NumLevels; j++ ) {
+//                 DisableNode = 0;
+//                 TreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
+//                 if( CurrentMission == Missions[i].MissionNumber && CurrentLevel == Missions[i].Levels[j].LevelNumber ) {
+//                     TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
+//                     DisableNode = 1;
+//                 }
+//                 if( DisableNode ) {
+//                     igBeginDisabled(1);
+//                 }
+//                 if( igTreeNodeEx_Str(Missions[i].Levels[j].LevelName,TreeNodeFlags) ) {
+//                     if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+//                         if( LevelManagerLoadLevel(LevelManager,GUI,VideoSystem,Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber) ) {
+//                             //Close it if we selected a level and it was loaded properly.
+//                             GUI->LevelSelectWindowHandle = 0;
+//                         } else {
+//                             FailedMissionNumber = i;
+//                             FailedLevelNumber = j;
+//                             igOpenPopup_Str("Load Level Error",0);
+//                         }
+//                     }
+//                 }
+//                 if( DisableNode ) {
+//                     igEndDisabled();
+//                 }
+//             }
+//             GUIPrepareModalWindow();
+//             if( igBeginPopupModal("Load Level Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
+//                 assert(FailedMissionNumber != -1 && FailedLevelNumber != -1 );
+//                 igText("Failed to load level \"%s\"",Missions[FailedMissionNumber].Levels[FailedLevelNumber].LevelName);
+//                 if (igButton("OK", ButtonSize) ) {
+//                     igCloseCurrentPopup(); 
+//                 }
+//                 igEndPopup();
+//             }
+//             igTreePop();
+//         }
+//     }
 }
 void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager,VideoSystem_t *VideoSystem)
 {
@@ -309,9 +309,9 @@ void GUIDrawLevelSelectWindow(GUI_t *GUI,LevelManager_t *LevelManager,VideoSyste
             igText(LevelManager->EngineName);
             igSeparator();
             if( LevelManagerGetGameEngine(LevelManager) == MOH_GAME_STANDARD ) {
-                GUIDrawLevelTree(GUI,LevelManager,VideoSystem,MOHMissionsList,NumMOHMissions);
+//                 GUIDrawLevelTree(GUI,LevelManager,VideoSystem,MOHMissionsList,NumMOHMissions);
             } else {
-                GUIDrawLevelTree(GUI,LevelManager,VideoSystem,MOHUMissionsList,NumMOHUMissions);
+//                 GUIDrawLevelTree(GUI,LevelManager,VideoSystem,MOHUMissionsList,NumMOHUMissions);
             }
         }
     }

@@ -64,7 +64,9 @@ typedef struct GFXFace_s {
     unsigned char  V2;
     unsigned char  U3;
     unsigned char  V3;
-    unsigned char Matrix[12];
+    Color1i_t      RGB0;
+    Color1i_t      RGB1;
+    Color1i_t      RGB2;
     unsigned short TextureInfo;
     short Clut;
 } GFXFace_t;

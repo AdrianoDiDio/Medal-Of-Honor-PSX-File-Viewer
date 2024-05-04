@@ -25,18 +25,18 @@ void GFXReadHeaderChunk(GFX_t *GFX,void **GFXFileBuffer)
 {    
     if( !GFX || !GFXFileBuffer ) {
         bool InvalidFileBuffer = (GFXFileBuffer == NULL ? true : false);
-        printf("GFXReadHeaderChunk: Invalid %s\n",InvalidFileBuffer ? "file buffer" : "gfx struct");
+        DPrintf("GFXReadHeaderChunk: Invalid %s\n",InvalidFileBuffer ? "file buffer" : "gfx struct");
         return;
     }
     memcpy(&GFX->Header,*GFXFileBuffer,sizeof(GFX->Header));
     *GFXFileBuffer += sizeof(GFX->Header);
-    printf(" -- GFX Header --\n");
-    printf("NumVertices:%i\n",GFX->Header.NumVertices);
-    printf("NumNormals:%i\n",GFX->Header.NumNormals);
-    printf("NumFaces:%i\n",GFX->Header.NumFaces);
-    printf("NumUnk3:%i\n",GFX->Header.NumUnk3);
-    printf("NumUnk4:%i\n",GFX->Header.NumUnk4);
-    printf("Pad:%i\n",GFX->Header.Pad);
+    DPrintf(" -- GFX Header --\n");
+    DPrintf("NumVertices:%i\n",GFX->Header.NumVertices);
+    DPrintf("NumNormals:%i\n",GFX->Header.NumNormals);
+    DPrintf("NumFaces:%i\n",GFX->Header.NumFaces);
+    DPrintf("NumUnk3:%i\n",GFX->Header.NumUnk3);
+    DPrintf("NumUnk4:%i\n",GFX->Header.NumUnk4);
+    DPrintf("Pad:%i\n",GFX->Header.Pad);
     assert(GFX->Header.Pad == 0);
 }
 
@@ -44,19 +44,19 @@ void GFXReadOffsetTableChunk(GFX_t *GFX,void **GFXFileBuffer)
 {    
     if( !GFX || !GFXFileBuffer ) {
         bool InvalidFileBuffer = (GFXFileBuffer == NULL ? true : false);
-        printf("GFXReadOffsetTableChunk: Invalid %s\n",InvalidFileBuffer ? "file buffer" : "gfx struct");
+        DPrintf("GFXReadOffsetTableChunk: Invalid %s\n",InvalidFileBuffer ? "file buffer" : "gfx struct");
         return;
     }
     memcpy(&GFX->OffsetTable,*GFXFileBuffer,sizeof(GFX->OffsetTable));
     *GFXFileBuffer += sizeof(GFX->OffsetTable);
-    printf(" -- GFX Offset Table --\n");
-    printf("Offset0:%i\n",GFX->OffsetTable.Offset0);
-    printf("Pad0:%i\n",GFX->OffsetTable.Pad0);
-    printf("Offset1:%i\n",GFX->OffsetTable.Offset1);
-    printf("Pad1:%i\n",GFX->OffsetTable.Pad1);
-    printf("Offset2:%i\n",GFX->OffsetTable.Offset2);
-    printf("Pad2:%i\n",GFX->OffsetTable.Pad2);
-    printf("Pad3:%i\n",GFX->OffsetTable.Pad3);
+    DPrintf(" -- GFX Offset Table --\n");
+    DPrintf("Offset0:%i\n",GFX->OffsetTable.Offset0);
+    DPrintf("Pad0:%i\n",GFX->OffsetTable.Pad0);
+    DPrintf("Offset1:%i\n",GFX->OffsetTable.Offset1);
+    DPrintf("Pad1:%i\n",GFX->OffsetTable.Pad1);
+    DPrintf("Offset2:%i\n",GFX->OffsetTable.Offset2);
+    DPrintf("Pad2:%i\n",GFX->OffsetTable.Pad2);
+    DPrintf("Pad3:%i\n",GFX->OffsetTable.Pad3);
     assert(GFX->OffsetTable.Pad3 == 0);
 }
 
@@ -66,22 +66,22 @@ void GFXReadVertexChunk(GFX_t *GFX,void **GFXFileBuffer)
     
     if( !GFX || !GFXFileBuffer ) {
         bool InvalidFileBuffer = (GFXFileBuffer == NULL ? true : false);
-        printf("GFXReadVertexChunk: Invalid %s\n",InvalidFileBuffer ? "file buffer" : "gfx struct");
+        DPrintf("GFXReadVertexChunk: Invalid %s\n",InvalidFileBuffer ? "file buffer" : "gfx struct");
         return;
     }
     if( GFX->Header.NumVertices == 0 ) {
-        printf("GFXReadVertexChunk:0 vertex in header...skipping\n");
+        DPrintf("GFXReadVertexChunk:0 vertex in header...skipping\n");
         return;
     }
     
     GFX->Vertex = malloc(GFX->Header.NumVertices * sizeof(GFXVertex_t));
-//     printf("Reading Vertex chunk at offset %i\n",*GFXFileBuffer - GFXFileBuffer);
+//     DPrintf("Reading Vertex chunk at offset %i\n",*GFXFileBuffer - GFXFileBuffer);
     for( i = 0; i < GFX->Header.NumVertices; i++ ) {
         memcpy(&GFX->Vertex[i],*GFXFileBuffer,sizeof(GFX->Vertex[i]));
         *GFXFileBuffer += sizeof(GFX->Vertex[i]);
-        printf(" -- VERTEX %i --\n",i);
-        printf("Position:(%i;%i;%i)\n",GFX->Vertex[i].x,GFX->Vertex[i].y,GFX->Vertex[i].z);
-        printf("Pad:%i\n",GFX->Vertex[i].Pad);
+        DPrintf(" -- VERTEX %i --\n",i);
+        DPrintf("Position:(%i;%i;%i)\n",GFX->Vertex[i].x,GFX->Vertex[i].y,GFX->Vertex[i].z);
+        DPrintf("Pad:%i\n",GFX->Vertex[i].Pad);
 //         assert(GFX->Vertex[i].Pad == 123);
     }
 }
@@ -92,12 +92,12 @@ void GFXReadNormalChunk(GFX_t *GFX,void **GFXFileBuffer)
     
     if( !GFX || !GFXFileBuffer ) {
         bool InvalidFileBuffer = (GFXFileBuffer == NULL ? true : false);
-        printf("GFXReadNormalChunk: Invalid %s\n",InvalidFileBuffer ? "file buffer" : "gfx struct");
+        DPrintf("GFXReadNormalChunk: Invalid %s\n",InvalidFileBuffer ? "file buffer" : "gfx struct");
         return;
     }
     
     if( GFX->Header.NumNormals == 0 ) {
-        printf("GFXReadNormalChunk:0 normal in header...skipping\n");
+        DPrintf("GFXReadNormalChunk:0 normal in header...skipping\n");
         return;
     }
     
@@ -106,9 +106,9 @@ void GFXReadNormalChunk(GFX_t *GFX,void **GFXFileBuffer)
     for( i = 0; i < GFX->Header.NumNormals; i++ ) {
         memcpy(&GFX->Normal[i],*GFXFileBuffer,sizeof(GFX->Normal[i]));
         *GFXFileBuffer += sizeof(GFX->Normal[i]);
-        printf(" -- Normal %i --\n",i);
-        printf("Position:(%i;%i;%i)\n",GFX->Normal[i].x,GFX->Normal[i].y,GFX->Normal[i].z);
-        printf("Pad:%i\n",GFX->Normal[i].Pad);
+        DPrintf(" -- Normal %i --\n",i);
+        DPrintf("Position:(%i;%i;%i)\n",GFX->Normal[i].x,GFX->Normal[i].y,GFX->Normal[i].z);
+        DPrintf("Pad:%i\n",GFX->Normal[i].Pad);
 //         assert(GFX->Normal[i].Pad == 123);
     }
 }
@@ -119,12 +119,12 @@ void GFXReadFaceChunk(GFX_t *GFX,void **GFXFileBuffer)
     
     if( !GFX || !GFXFileBuffer ) {
         bool InvalidFileBuffer = (GFXFileBuffer == NULL ? true : false);
-        printf("GFXReadFaceChunk: Invalid %s\n",InvalidFileBuffer ? "file buffer" : "gfx struct");
+        DPrintf("GFXReadFaceChunk: Invalid %s\n",InvalidFileBuffer ? "file buffer" : "gfx struct");
         return;
     }
     
     if( GFX->Header.NumFaces == 0 ) {
-        printf("GFXReadFaceChunk:0 face in header...skipping\n");
+        DPrintf("GFXReadFaceChunk:0 face in header...skipping\n");
         return;
     }
     
@@ -135,29 +135,29 @@ void GFXReadFaceChunk(GFX_t *GFX,void **GFXFileBuffer)
     GFX->Face = malloc((GFX->Header.NumFaces) * sizeof(GFXFace_t));
     
     for( i = 0; i < GFX->Header.NumFaces; i++ ) {
-        printf(" -- FACE %i --\n",i);
+        DPrintf(" -- FACE %i --\n",i);
         memcpy(&GFX->Face[i],*GFXFileBuffer,sizeof(GFX->Face[i]));
         *GFXFileBuffer += sizeof(GFX->Face[i]);
-        printf("Texture Page:%i\n",GFX->Face[i].TextureInfo);
-        printf("U1V1:(%i;%i)\n",GFX->Face[i].U1, GFX->Face[i].V1);
-        printf("U2V2:(%i;%i)\n",GFX->Face[i].U2, GFX->Face[i].V2);
-        printf("U3V3:(%i;%i)\n",GFX->Face[i].U3, GFX->Face[i].V3);
-        printf("Vertex0:%i\n",GFX->Face[i].Vert0);
-        printf("Vertex0:%i\n",GFX->Face[i].Vert1);
-        printf("Vertex0:%i\n",GFX->Face[i].Vert2);
-        printf("Norm0:%i\n",GFX->Face[i].Norm0);
-        printf("Norm1:%i\n",GFX->Face[i].Norm1);
-        printf("Norm2:%i\n",GFX->Face[i].Norm2);
-        printf("Clut:%i\n",GFX->Face[i].Clut);
-        printf("Unk0:%i\n",GFX->Face[i].Unk0);
-        printf("Color0:%i;%i;%i;%i\n",GFX->Face[i].Matrix[0],GFX->Face[i].Matrix[1],
-            GFX->Face[i].Matrix[2],GFX->Face[i].Matrix[3]
+        DPrintf("Texture Page:%i\n",GFX->Face[i].TextureInfo);
+        DPrintf("U1V1:(%i;%i)\n",GFX->Face[i].U1, GFX->Face[i].V1);
+        DPrintf("U2V2:(%i;%i)\n",GFX->Face[i].U2, GFX->Face[i].V2);
+        DPrintf("U3V3:(%i;%i)\n",GFX->Face[i].U3, GFX->Face[i].V3);
+        DPrintf("Vertex0:%i\n",GFX->Face[i].Vert0);
+        DPrintf("Vertex0:%i\n",GFX->Face[i].Vert1);
+        DPrintf("Vertex0:%i\n",GFX->Face[i].Vert2);
+        DPrintf("Norm0:%i\n",GFX->Face[i].Norm0);
+        DPrintf("Norm1:%i\n",GFX->Face[i].Norm1);
+        DPrintf("Norm2:%i\n",GFX->Face[i].Norm2);
+        DPrintf("Clut:%i\n",GFX->Face[i].Clut);
+        DPrintf("Unk0:%i\n",GFX->Face[i].Unk0);
+        DPrintf("Color0:%i;%i;%i;%i\n",GFX->Face[i].RGB0.rgba[0],GFX->Face[i].RGB0.rgba[1],
+            GFX->Face[i].RGB0.rgba[2],GFX->Face[i].RGB0.rgba[3]
         );
-        printf("Color1:%i;%i;%i;%i\n",GFX->Face[i].Matrix[4],GFX->Face[i].Matrix[5],
-            GFX->Face[i].Matrix[6],GFX->Face[i].Matrix[7]
+        DPrintf("Color1:%i;%i;%i;%i\n",GFX->Face[i].RGB1.rgba[0],GFX->Face[i].RGB1.rgba[1],
+            GFX->Face[i].RGB1.rgba[2],GFX->Face[i].RGB1.rgba[3]
         );
-        printf("Color2:%i;%i;%i;%i\n",GFX->Face[i].Matrix[8],GFX->Face[i].Matrix[9],
-            GFX->Face[i].Matrix[10],GFX->Face[i].Matrix[11]
+        DPrintf("Color2:%i;%i;%i;%i\n",GFX->Face[i].RGB2.rgba[0],GFX->Face[i].RGB2.rgba[1],
+            GFX->Face[i].RGB2.rgba[2],GFX->Face[i].RGB2.rgba[3]
         );
     }
 }
@@ -171,7 +171,7 @@ void GFXReadAnimationChunk(GFX_t *GFX,FILE *InFile)
 //     
 //     if( !GFX || !InFile ) {
 //         bool InvalidFile = (InFile == NULL ? true : false);
-//         printf("GFXReadFaceChunk: Invalid %s\n",InvalidFile ? "file" : "gfx struct");
+//         DPrintf("GFXReadFaceChunk: Invalid %s\n",InvalidFile ? "file" : "gfx struct");
 //         return;
 //     }
 //     GFX->NumAnimations = 0;
@@ -179,18 +179,18 @@ void GFXReadAnimationChunk(GFX_t *GFX,FILE *InFile)
 //     GFX->AnimationData = malloc(NumClerkbAnimationVertices * sizeof(GFXVertex_t));
 //     
 //     for( i = 0; i < NumClerkbAnimationVertices; i++ ) {
-//         printf(" -- ANIMATION %i --\n",i);
-//         printf("Offset:%li\n",ftell(InFile));
+//         DPrintf(" -- ANIMATION %i --\n",i);
+//         DPrintf("Offset:%li\n",ftell(InFile));
 //         Ret = fread(&GFX->AnimationData[i],sizeof(GFX->AnimationData[i]),1,InFile);
 //         if( Ret != 1 ) {
-//             printf("GFXReadAnimationChunk:Early failure when reading animation data\n");
+//             DPrintf("GFXReadAnimationChunk:Early failure when reading animation data\n");
 //             return;
 //         }
-//         printf("Pad:%i\n",GFX->AnimationData[i].Pad);
+//         DPrintf("Pad:%i\n",GFX->AnimationData[i].Pad);
 //         assert(GFX->AnimationData[i].Pad == 0 || GFX->AnimationData[i].Pad == 101);
 //         GFX->NumAnimations++;
 //     }
-//     printf("Read %i animation vertex\n",GFX->NumAnimations);
+//     DPrintf("Read %i animation vertex\n",GFX->NumAnimations);
 }
 
 void GFXRender(GFX_t *GFX,VRAM_t *VRAM)
@@ -277,9 +277,9 @@ void GFXPrepareVAO(GFX_t *GFX)
         VertexData[VertexPointer+2] = GFX->Vertex[Vert0].z;
         VertexData[VertexPointer+3] = U0;
         VertexData[VertexPointer+4] = V0;
-        VertexData[VertexPointer+5] = GFX->Face[i].Matrix[0] / 255.f;
-        VertexData[VertexPointer+6] = GFX->Face[i].Matrix[1] / 255.f;
-        VertexData[VertexPointer+7] = GFX->Face[i].Matrix[2] / 255.f;
+        VertexData[VertexPointer+5] = GFX->Face[i].RGB0.rgba[0] / 255.f;
+        VertexData[VertexPointer+6] = GFX->Face[i].RGB0.rgba[1] / 255.f;
+        VertexData[VertexPointer+7] = GFX->Face[i].RGB0.rgba[2] / 255.f;
         VertexPointer += 8;
             
         VertexData[VertexPointer] =   GFX->Vertex[Vert1].x;
@@ -287,9 +287,9 @@ void GFXPrepareVAO(GFX_t *GFX)
         VertexData[VertexPointer+2] = GFX->Vertex[Vert1].z;
         VertexData[VertexPointer+3] = U1;
         VertexData[VertexPointer+4] = V1;
-        VertexData[VertexPointer+5] = GFX->Face[i].Matrix[4] / 255.f;
-        VertexData[VertexPointer+6] = GFX->Face[i].Matrix[5] / 255.f;
-        VertexData[VertexPointer+7] = GFX->Face[i].Matrix[6] / 255.f;
+        VertexData[VertexPointer+5] = GFX->Face[i].RGB1.rgba[0] / 255.f;
+        VertexData[VertexPointer+6] = GFX->Face[i].RGB1.rgba[1] / 255.f;
+        VertexData[VertexPointer+7] = GFX->Face[i].RGB1.rgba[2] / 255.f;
         VertexPointer += 8;
             
         VertexData[VertexPointer] =   GFX->Vertex[Vert2].x;
@@ -297,9 +297,9 @@ void GFXPrepareVAO(GFX_t *GFX)
         VertexData[VertexPointer+2] = GFX->Vertex[Vert2].z;
         VertexData[VertexPointer+3] = U2;
         VertexData[VertexPointer+4] = V2;
-        VertexData[VertexPointer+5] = GFX->Face[i].Matrix[8] / 255.f;
-        VertexData[VertexPointer+6] = GFX->Face[i].Matrix[9] / 255.f;
-        VertexData[VertexPointer+7] = GFX->Face[i].Matrix[10] / 255.f;
+        VertexData[VertexPointer+5] = GFX->Face[i].RGB2.rgba[0] / 255.f;
+        VertexData[VertexPointer+6] = GFX->Face[i].RGB2.rgba[1] / 255.f;
+        VertexData[VertexPointer+7] = GFX->Face[i].RGB2.rgba[2] / 255.f;
         VertexPointer += 8;
             
 //         VAO = VAOInitXYZUVXYZ(VertexData,VertexSize * 3,Stride,VertexOffset,TextureOffset,NormalOffset,GFX->Face[i].TextureInfo);
@@ -314,7 +314,7 @@ GFX_t *GFXRead(void* GFXFileBuffer)
     GFX_t *GFXData;
     
     if( !GFXFileBuffer ) {
-        printf("GFXRead: Invalid buffer.\n");
+        DPrintf("GFXRead: Invalid buffer.\n");
         return NULL;
     }
     
