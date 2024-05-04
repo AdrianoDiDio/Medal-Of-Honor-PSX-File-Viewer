@@ -100,6 +100,32 @@ void RSCAppend(RSC_t **RSCList,RSC_t *RSC)
         LastNode->Next = RSC;
     }
 }
+
+int RSCGetDirectoryFileCount(const RSC_t *RSC,const char *Directory)
+{
+    const RSC_t *Iterator;
+    int NumFiles;
+    int i;
+    if( !RSC ) {
+        printf("RSCOpen:Invalid RSC data\n");
+        return RSC_INVALID_DATA; 
+    }
+    
+    if( !Directory ) {
+        DPrintf("RSCOpen:Invalid Directory\n");
+        return RSC_INVALID_DATA;
+    }
+    NumFiles = 0;
+    //NOTE(Adriano):This should not be a problem since every RSC file has his own directories that are not shared
+    for( Iterator = RSC; Iterator; Iterator = Iterator->Next ) {
+        for(i = 0; i < Iterator->Header.NumEntry; i++ ) {
+            if( StringStartsWith(Iterator->EntryList[i].Name,Directory) ) {
+                NumFiles++;
+            }
+        }
+    }
+    return NumFiles;
+}
 RSC_t *RSCLoad(char *FileName)
 {
     FILE *RSCFile;

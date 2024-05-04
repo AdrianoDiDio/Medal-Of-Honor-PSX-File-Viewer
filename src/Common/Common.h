@@ -89,6 +89,7 @@ void        DPrintf(const char *Fmt, ...) Attribute((format(printf,1,2)));
 int         asprintf(char **Strp, const char *Fmt, ...);
 char        *StringCopy(const char *From);
 char        *StringAppend(const char *FirstString,const char *SecondString);
+bool        StringStartsWith(const char *String,const char *Pattern);
 int         StringToInt(const char *String);
 int         GetFileLength(FILE *Fp);
 char        *GetFileExtension(const char *FileName);

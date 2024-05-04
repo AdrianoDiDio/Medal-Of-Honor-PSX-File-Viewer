@@ -52,5 +52,6 @@ typedef struct RSC_s {
 RSC_t       *RSCLoad(char *FileName);
 void        RSCAppend(RSC_t **List,RSC_t *RSC);
 int         RSCOpen(RSC_t *RSC,char *FileName,RSCEntry_t *OutEntry);
+int         RSCGetDirectoryFileCount(const RSC_t *RSC,const char *Directory);
 int         RSCFree(RSC_t *RSC);
 #endif//__RSC_H_

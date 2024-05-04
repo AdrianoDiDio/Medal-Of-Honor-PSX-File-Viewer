@@ -246,6 +246,7 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
     }
     sprintf(SSTManager->EngineName,"%s",SSTManager->GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
     DPrintf("SSTManagerInitWithPath:Detected game engine %s\n",SSTManager->EngineName);
+    DPrintf("Found %i scripts\n",RSCGetDirectoryFileCount(SSTManager->GlobalRSCList,"global\\script\\"));
 //     for( int i = 1; i <= 2; i++ ) {
 //         asprintf(&Buffer,"Loading Mission %i Level 1",i);
 //         ProgressBarSetDialogTitle(GUI->ProgressBar,Buffer);

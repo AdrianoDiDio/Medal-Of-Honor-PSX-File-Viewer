@@ -152,6 +152,14 @@ int StringToInt(const char *String)
     return Value;
 }
 
+bool StringStartsWith(const char *String,const char *Pattern)
+{
+   if(strncmp(String, Pattern, strlen(Pattern)) == 0) {
+       return 1;
+   }
+   return 0;
+}
+
 char *GetBaseName(const char *Path)
 {
     char *Out;
