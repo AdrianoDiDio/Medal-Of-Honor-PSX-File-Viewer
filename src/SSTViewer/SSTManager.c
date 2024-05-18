@@ -202,6 +202,10 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
     char *Buffer;
     char *RSCBuffer;
     RSC_t *RSC;
+    RSCEntry_t *EntryList;
+    SST_t *Script;
+    int  NumScripts;
+    int i;
     
     if( !SSTManager ) {
         DPrintf("SSTManagerInitWithPath:Called without a valid struct\n");
@@ -246,26 +250,27 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
     }
     sprintf(SSTManager->EngineName,"%s",SSTManager->GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
     DPrintf("SSTManagerInitWithPath:Detected game engine %s\n",SSTManager->EngineName);
-    DPrintf("Found %i scripts\n",RSCGetDirectoryFileCount(SSTManager->GlobalRSCList,"global\\script\\"));
-//     for( int i = 1; i <= 2; i++ ) {
-//         asprintf(&Buffer,"Loading Mission %i Level 1",i);
-//         ProgressBarSetDialogTitle(GUI->ProgressBar,Buffer);
-//         Level = LevelInit(GUI,VideoSystem,SSTManager->SoundSystem,Path,i,1,&GameEngine);
-//         free(Buffer);
-//         if( Level ) {
-//             if( SSTManager->BasePath ) {
-//                 free(SSTManager->BasePath);
-//             }
-//             SSTManagerSwitchLevel(SSTManager,Level);
-//             Loaded = 1;
-//             SSTManager->IsPathSet = Loaded;
-//             SSTManager->BasePath = StringCopy(Path);
-//             SSTManager->GameEngine = GameEngine;
-//             sprintf(SSTManager->EngineName,"%s",GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
-//             SSTManager->HasToSpawnCamera = 1;
-//             break;
-//         }
-//     }
+
+    EntryList = RSCGetDirectoryEntries(SSTManager->GlobalRSCList,"global\\script\\",&NumScripts);
+    
+    if( !EntryList || !NumScripts ) {
+        DPrintf("SSTManagerInitWithPath:No scripts found in global RSC file\n");
+        goto Failure;
+    }
+    
+    DPrintf("SSTManagerInitWithPath:Found %i scripts\n",NumScripts);
+
+    for( i = 0; i < NumScripts; i++ ) {
+        DPrintf("SSTManagerInitWithPath: Loading script %s\n",EntryList[i].Name);
+        //Script = SSTLoad(
+    }
+    free(EntryList);
+    if( SSTManager->BasePath ) {
+        free(SSTManager->BasePath);
+    }
+    
+    SSTManager->IsPathSet = 1;
+    SSTManager->BasePath = StringCopy(Path);
     free(RSCBuffer);
     ProgressBarEnd(GUI->ProgressBar,VideoSystem);
     return 1;

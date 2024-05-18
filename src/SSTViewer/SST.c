@@ -285,8 +285,14 @@ SST_t *SSTLoad(FILE *SSTFile)
     DPrintf("Loading it\n");
     
     SST = malloc(sizeof(SST_t));
+    
+    if( !SST ) {
+        DPrintf("SSTLoad:Failed to allocate memory for struct\n");
+        return NULL;
+    }
     NumLabels = 0;
     NumModels = 0;
+    SST->Next = NULL;
     SST->ImageList = NULL;
     RSCData = RSCLoad("SSTScripts/mdev.rsc");
     RSCData2 = RSCLoad("SSTScripts/mdev2.rsc");

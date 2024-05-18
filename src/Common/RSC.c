@@ -107,12 +107,12 @@ int RSCGetDirectoryFileCount(const RSC_t *RSC,const char *Directory)
     int NumFiles;
     int i;
     if( !RSC ) {
-        printf("RSCOpen:Invalid RSC data\n");
+        printf("RSCGetDirectoryFileCount:Invalid RSC data\n");
         return RSC_INVALID_DATA; 
     }
     
     if( !Directory ) {
-        DPrintf("RSCOpen:Invalid Directory\n");
+        DPrintf("RSCGetDirectoryFileCount:Invalid Directory\n");
         return RSC_INVALID_DATA;
     }
     NumFiles = 0;
@@ -125,6 +125,57 @@ int RSCGetDirectoryFileCount(const RSC_t *RSC,const char *Directory)
         }
     }
     return NumFiles;
+}
+RSCEntry_t *RSCGetDirectoryEntries(const RSC_t *RSC,const char *Directory,int *NumEntry)
+{
+    const RSC_t *Iterator;
+    RSCEntry_t *EntryList;
+    int i;
+    int NumEntries;
+    int CurrentEntry;
+    if( !RSC ) {
+        printf("RSCGetDirectoryEntries:Invalid RSC data\n");
+        return NULL; 
+    }
+    
+    if( !Directory ) {
+        DPrintf("RSCGetDirectoryEntries:Invalid Directory\n");
+        return NULL;
+    }
+    NumEntries = RSCGetDirectoryFileCount(RSC,Directory);
+    if( NumEntries < 0 ) {
+        DPrintf("RSCGetDirectoryEntries:Error %s\n",RSCGetErrorString(NumEntries));
+        return NULL;
+    }
+    if( NumEntries == 0 ) {
+        DPrintf("RSCGetDirectoryEntries:No entries found for directory %s\n",Directory);
+        return NULL;
+    }
+    CurrentEntry = 0;
+    EntryList = malloc(NumEntries * sizeof(RSCEntry_t));
+    if( !EntryList ) {
+        DPrintf("RSCGetDirectoryEntries:Failed to allocate memory for entry list\n");
+        return NULL;
+
+    }
+    //NOTE(Adriano):This should not be a problem since every RSC file has his own directories that are not shared
+    for( Iterator = RSC; Iterator; Iterator = Iterator->Next ) {
+        for(i = 0; i < Iterator->Header.NumEntry; i++ ) {
+            if( CurrentEntry >= NumEntries ) {
+                DPrintf("RSCGetDirectoryEntries:Buffer overrun...expected %i entries but found %i\n",NumEntries,CurrentEntry);
+                free(EntryList);
+                return NULL;
+            }
+            if( StringStartsWith(Iterator->EntryList[i].Name,Directory) ) {
+                EntryList[CurrentEntry] = Iterator->EntryList[i];
+                CurrentEntry++;
+            }
+        }
+    }
+    if( NumEntry ) {
+        *NumEntry = CurrentEntry;
+    }
+    return EntryList;
 }
 RSC_t *RSCLoad(char *FileName)
 {

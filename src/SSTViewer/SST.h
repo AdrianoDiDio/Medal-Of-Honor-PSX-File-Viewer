@@ -80,6 +80,7 @@ typedef struct SSTGFX_s {
 typedef struct SST_s {
     SSTHeader_t Header;
     TIMImage_t *ImageList;
+    struct SST_s *Next;
 } SST_t;
 
 SST_t *SSTLoad(FILE *SSTFile);
