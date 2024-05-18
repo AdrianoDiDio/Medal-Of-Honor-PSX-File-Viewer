@@ -513,7 +513,7 @@ void TIMGetPalette(FILE *TIMIMage,TIMImage_t *Image)
         fread(&Image->CLUT[i],sizeof(Image->CLUT[i]),1,TIMIMage);
     }
 }
-void TIMGetPaletteFromBuffer(void **TIMImageBuffer,TIMImage_t *Image)
+void TIMGetPaletteFromBuffer(Byte **TIMImageBuffer,TIMImage_t *Image)
 {
     unsigned short i;
     
@@ -678,7 +678,7 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,const char *FileName,int NumImages)
     return ResultImage;
 }
 
-TIMImage_t *TIMLoadImageFromBuffer(void **TIMImageBuffer,int NumImages)
+TIMImage_t *TIMLoadImageFromBuffer(Byte **TIMImageBuffer,int NumImages)
 {
     TIMImage_t *ResultImage;
     char *BaseName;
@@ -781,7 +781,7 @@ TIMImage_t *TIMLoadImageFromBuffer(void **TIMImageBuffer,int NumImages)
     }
     return ResultImage;
 }
-TIMImage_t *TIMLoadAllImagesFromBuffer(void *TIMImageBuffer)
+TIMImage_t *TIMLoadAllImagesFromBuffer(Byte *TIMImageBuffer)
 {
     TIMImage_t *List;
     int NumImages;

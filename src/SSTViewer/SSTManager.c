@@ -262,9 +262,11 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
 
     for( i = 0; i < NumScripts; i++ ) {
         DPrintf("SSTManagerInitWithPath: Loading script %s\n",EntryList[i].Name);
-        //Script = SSTLoad(
+        Script = SSTLoad(EntryList[i].Data);
+        break;
     }
     free(EntryList);
+    
     if( SSTManager->BasePath ) {
         free(SSTManager->BasePath);
     }

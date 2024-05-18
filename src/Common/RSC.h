@@ -40,7 +40,7 @@ typedef struct RSCEntry_s {
     int     Length;
     int     Offset;
     int     Pad;
-    void    *Data;
+    Byte    *Data;
 } RSCEntry_t;
 
 typedef struct RSC_s {

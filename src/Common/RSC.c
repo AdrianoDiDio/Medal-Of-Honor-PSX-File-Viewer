@@ -229,10 +229,11 @@ RSC_t *RSCLoad(char *FileName)
         fread(&RSC->EntryList[i].Length, sizeof(RSC->EntryList[i].Length), 1, RSCFile);
         fread(&RSC->EntryList[i].Offset, sizeof(RSC->EntryList[i].Offset), 1, RSCFile);
         fread(&RSC->EntryList[i].Pad, sizeof(RSC->EntryList[i].Pad), 1, RSCFile);
-        RSC->EntryList[i].Data = malloc(RSC->EntryList[i].Length);
+        RSC->EntryList[i].Data = malloc(RSC->EntryList[i].Length + 1);
         PreviousFilePosition = ftell(RSCFile);
         fseek(RSCFile,RSC->EntryList[i].Offset,SEEK_SET);
         fread(RSC->EntryList[i].Data,RSC->EntryList[i].Length,1,RSCFile);
+        RSC->EntryList[i].Data[RSC->EntryList[i].Length] = 0;
         fseek(RSCFile,PreviousFilePosition,SEEK_SET);
         DPrintf("Reading entry %i....got %s with length %i, index %i, pad %i and offset %i\n",i,RSC->EntryList[i].Name,RSC->EntryList[i].Length,
                RSC->EntryList[i].Index,RSC->EntryList[i].Pad,RSC->EntryList[i].Offset);

@@ -263,7 +263,7 @@ void SSTLateInit(VRAM_t* VRAM)
         GFXPrepareVAO(Models[i].Model);
     }
 }
-SST_t *SSTLoad(FILE *SSTFile)
+SST_t *SSTLoad(Byte *SSTBuffer)
 {
     SST_t *SST;
     SSTCallback_t SSTCallback;
@@ -278,8 +278,8 @@ SST_t *SSTLoad(FILE *SSTFile)
     int Ret;
     int StoreLabel;
     
-    if( !SSTFile ) {
-        DPrintf("SSTLoad:Invalid file.\n");
+    if( !SSTBuffer ) {
+        DPrintf("SSTLoad:Invalid data.\n");
         return NULL;
     }
     DPrintf("Loading it\n");
@@ -298,27 +298,31 @@ SST_t *SSTLoad(FILE *SSTFile)
     RSCData2 = RSCLoad("SSTScripts/mdev2.rsc");
 
     StoreLabel = 0;
-    int Begin,End;
+
     while( 1 ) {
-        Ret = fread(&Token,sizeof(Token),1,SSTFile);
-        if( Ret != 1 ) {
+        if( !*SSTBuffer ) {
             DPrintf("SSTLoad:EOF reached or an error occurred...\n");
             break;
         }
+        Token = *(int *) SSTBuffer;
+        SSTBuffer += 4;
         DPrintf("SSTLoad:Got token %i\n",Token);
         switch( Token ) {
             case 1:
-                fread(&SST->Header.Name,sizeof(SST->Header.Name),1,SSTFile);
-                DPrintf("SSTLoad:Class Name is %s\n",SST->Header.Name);
+                memcpy(&Name,SSTBuffer,sizeof(Name));
+                SSTBuffer += sizeof(Name);
+                DPrintf("SSTLoad:Class Name is %s\n",Name);
                 break;
             case 2:
-                fread(&SSTCallback,sizeof(SSTCallback),1,SSTFile);
+                memcpy(&SSTCallback,SSTBuffer,sizeof(SSTCallback));
+                SSTBuffer += sizeof(SSTCallback);
                 DPrintf("SSTLoad:Callback SrcEvent:%s DestEvent:%s Unknown: %i\n",SSTCallback.SrcEvent,SSTCallback.DestEvent,SSTCallback.Unknown);
                 StoreLabel = 0;
                 break;
             case 3:
                 if( !StoreLabel ) {
-                    fread(&TempLabel,sizeof(TempLabel) - sizeof(SSTImageInfo_t),1,SSTFile);
+                    memcpy(&TempLabel,SSTBuffer,sizeof(TempLabel) - sizeof(SSTImageInfo_t));
+                    SSTBuffer += sizeof(TempLabel) - sizeof(SSTImageInfo_t);
                     DPrintf("SSTLoad:Label Texture:%s Unknown1:%i X:%i Y:%i Width:%i Height:%i Depth:%i %i %i %i %i\n",TempLabel.TextureFile,
                         TempLabel.Unknown,TempLabel.x,
                         TempLabel.y,TempLabel.Width,TempLabel.Height,TempLabel.Depth,TempLabel.Unknown2,
@@ -332,7 +336,8 @@ SST_t *SSTLoad(FILE *SSTFile)
                     break;
                 }
                 DPrintf("Storing it\n");
-                fread(&Label[NumLabels],sizeof(Label[NumLabels]) - sizeof(SSTImageInfo_t),1,SSTFile);
+                memcpy(&Label[NumLabels],SSTBuffer,sizeof(Label[NumLabels]) - sizeof(SSTImageInfo_t));
+                SSTBuffer += sizeof(Label[NumLabels]) - sizeof(SSTImageInfo_t);
                 SSTLabel = &Label[NumLabels];
                 if( !strcmp(SSTLabel->TextureFile,"NULL") ) {
                     break;
@@ -379,17 +384,23 @@ SST_t *SSTLoad(FILE *SSTFile)
                 DPrintf("BackDrop declaration started.\n");
                 StoreLabel = 1;
                 break;
+            case 7:
+                DPrintf("STR file declaration\n");
+                //TODO
+                SSTBuffer += 36;
+                break;
             case 8:
-                SkipFileSection(276,SSTFile);
+                SSTBuffer += 276;
                 break;
             case 9:
-                fread(&Size,sizeof(Size),1,SSTFile);
-                SkipFileSection((4*Size) + 4,SSTFile);
+                memcpy(&Size,SSTBuffer,sizeof(Size));
+                SSTBuffer += sizeof(Size);
+                SSTBuffer += (4*Size) + 4;
                 break;
             case 10:
                 //GFX Model
-                Begin = ftell(SSTFile);
-                fread(&Name,sizeof(Name),1,SSTFile);
+                memcpy(&Name,SSTBuffer,sizeof(Name));
+                SSTBuffer += sizeof(Name);
 //                 if( !strcmp(Name,"global2\\model\\clerkb.gfx") ) {
 //                     SkipFileSection(SSTFile,84);
 //                     break;
@@ -404,7 +415,8 @@ SST_t *SSTLoad(FILE *SSTFile)
                     }
                 }
                 Models[NumModels].Model = GFXRead(Entry.Data);
-                fread(&Name,sizeof(Name),1,SSTFile);
+                memcpy(&Name,SSTBuffer,sizeof(Name));
+                SSTBuffer += sizeof(Name);
                 DPrintf("Loading texture %s\n",Name);
                 Ret = RSCOpen(RSCData,Name,&Entry);
                 if( Ret < 0 ) {
@@ -425,15 +437,13 @@ SST_t *SSTLoad(FILE *SSTFile)
                     SST->ImageList = Models[NumModels].Image;
                     NumImages++;
                 }
-                SkipFileSection(56,SSTFile);
-                End = ftell(SSTFile);
-                DPrintf("Begin-End:%i\n",End-Begin);
+                SSTBuffer += 56;
 //                 exit(0);
                 NumModels++;
                 break;
             case 11:
                 //After a GFX Model we have this token.
-                SkipFileSection(288,SSTFile);
+                SSTBuffer += 288;
                 break;
             default:
                 DPrintf("SSTLoad:Unknown token %i\n",Token);

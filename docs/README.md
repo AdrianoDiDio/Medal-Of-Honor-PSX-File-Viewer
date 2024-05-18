@@ -1434,6 +1434,20 @@ contains all the data required to render a particular screen.
 Token 5 is used to declare that all the elements declared afterwards do
 not respond to any events since they are put in background.
 
+##### Token Type 7
+
+Token 7 is used to declare a STR file that can be
+played  
+(Mainly used for in-game gallery)
+
+
+| Type           | Size     | Description                              |
+| -------------- | -------- | ---------------------------------------- |
+| char           | 28 bytes | STR File (found inside the movie folder) |
+| int            | 4 bytes  | Unknown                                  |
+| int            | 4 bytes  | Unknown                                  |
+
+
 ##### Token Type 8
 
 Unknown
