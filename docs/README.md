@@ -87,6 +87,7 @@ Table of contents
       * [Token Type 2](#token-type-2)
       * [Token Type 3](#token-type-3)
       * [Token Type 5](#token-type-5)
+      * [Token Type 7](#token-type-7)
       * [Token Type 8](#token-type-8)
       * [Token Type 9](#token-type-9)
       * [Token Type 10](#token-type-10)
