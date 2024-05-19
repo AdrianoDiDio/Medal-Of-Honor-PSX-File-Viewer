@@ -78,21 +78,29 @@ typedef struct SSTCallbackData_s {
     struct SSTCallbackData_s *Next;
 } SSTCallbackData_t;
 
+typedef struct SSTClass_s {
+    char                Name[28];
+    SSTCallback_t       *Callback;
+    SSTVideoInfo_t      *VideoInfo;
+    struct SSTClass_s   *Next;
+} SSTClass_t;
 typedef struct SSTGFX_s {
     GFX_t *Model;
     TIMImage_t *Image;
 } SSTGFX_t;
 
 typedef struct SST_s {
-    SSTHeader_t Header;
-    TIMImage_t *ImageList;
-    struct SST_s *Next;
+    SSTHeader_t     Header;
+    TIMImage_t      *ImageList;
+    SSTClass_t      *ClassList;
+    struct SST_s    *Next;
 } SST_t;
 
 SST_t *SSTLoad(Byte *SSTBuffer);
 void SSTLateInit(VRAM_t* VRam);
 void SSTRender(VRAM_t *VRam);
 void SSTModelRender(VRAM_t *VRam);
+void SSTFree(SST_t *SST);
 
 #endif//__SST_H_
  

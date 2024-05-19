@@ -57,6 +57,7 @@ void SSTManagerCloseDialog(GUI_t *GUI,FileDialog_t *FileDialog)
 
 void SSTManagerCleanUp(SSTManager_t *SSTManager)
 {
+    SST_t *Temp;
     SoundSystemPause(SSTManager->SoundSystem);
     if( SSTManager->BasePath ) {
         free(SSTManager->BasePath);
@@ -73,6 +74,13 @@ void SSTManagerCleanUp(SSTManager_t *SSTManager)
     if( SSTManager->RenderObjectShader ) {
         free(SSTManager->RenderObjectShader);
     }
+    
+    while( SSTManager->ScriptList ) {
+        Temp = SSTManager->ScriptList;
+        SSTManager->ScriptList = SSTManager->ScriptList->Next;
+        SSTFree(Temp);
+    }
+
     free(SSTManager);
 }
 
@@ -263,6 +271,8 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
     for( i = 0; i < NumScripts; i++ ) {
         DPrintf("SSTManagerInitWithPath: Loading script %s\n",EntryList[i].Name);
         Script = SSTLoad(EntryList[i].Data);
+        Script->Next = SSTManager->ScriptList;
+        SSTManager->ScriptList = Script;
         break;
     }
     free(EntryList);
@@ -351,6 +361,7 @@ SSTManager_t *SSTManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem)
         return NULL;
     }
     SSTManager->RenderObjectShader = NULL;
+    SSTManager->ScriptList = NULL;
 //     if( !SSTManagerInitRenderObjectShader(SSTManager) ) {
 //         DPrintf("SSTManagerInit:Couldn't load RenderObjectShader\n");
 //         SoundSystemCleanUp(SSTManager->SoundSystem);

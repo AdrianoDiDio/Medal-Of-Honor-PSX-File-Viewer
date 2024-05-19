@@ -51,6 +51,23 @@ VAO_t  *LabelsVao[512];
 int NumLabels;
 int NumModels;
 
+void SSTFree(SST_t *SST)
+{
+    SSTClass_t *Temp;
+    
+    while( SST->ClassList ) {
+        Temp = SST->ClassList;
+        if( Temp->Callback ) {
+            free(Temp->Callback);
+        }
+        if( Temp->VideoInfo ) {
+            free(Temp->VideoInfo);
+        }
+        SST->ClassList = SST->ClassList->Next;
+        free(Temp);
+    }
+    free(SST);
+}
 int SSTCompare( const void *a, const void *b)
 {
     SSTLabel_t *LabelA = (SSTLabel_t*) a;
@@ -266,6 +283,7 @@ void SSTLateInit(VRAM_t* VRAM)
 SST_t *SSTLoad(Byte *SSTBuffer)
 {
     SST_t *SST;
+    SSTClass_t *CurrrentClass;
     SSTCallback_t SSTCallback;
     SSTLabel_t *SSTLabel;
     SSTLabel_t TempLabel;
@@ -294,6 +312,7 @@ SST_t *SSTLoad(Byte *SSTBuffer)
     NumModels = 0;
     SST->Next = NULL;
     SST->ImageList = NULL;
+    SST->ClassList = NULL;
     RSCData = RSCLoad("SSTScripts/mdev.rsc");
     RSCData2 = RSCLoad("SSTScripts/mdev2.rsc");
 
@@ -309,14 +328,23 @@ SST_t *SSTLoad(Byte *SSTBuffer)
         DPrintf("SSTLoad:Got token %i\n",Token);
         switch( Token ) {
             case 1:
-                memcpy(&Name,SSTBuffer,sizeof(Name));
+                CurrrentClass = malloc(sizeof(SSTClass_t));
+                CurrrentClass->VideoInfo = NULL;
+                CurrrentClass->Callback = NULL;
+                CurrrentClass->Next = NULL;
+                memcpy(&CurrrentClass->Name,SSTBuffer,sizeof(CurrrentClass->Name));
                 SSTBuffer += sizeof(Name);
-                DPrintf("SSTLoad:Class Name is %s\n",Name);
+                //Link it in!
+                CurrrentClass->Next = SST->ClassList;
+                SST->ClassList = CurrrentClass;
+                DPrintf("SSTLoad:Class Name is %s\n",CurrrentClass->Name);
                 break;
             case 2:
-                memcpy(&SSTCallback,SSTBuffer,sizeof(SSTCallback));
-                SSTBuffer += sizeof(SSTCallback);
-                DPrintf("SSTLoad:Callback SrcEvent:%s DestEvent:%s Unknown: %i\n",SSTCallback.SrcEvent,SSTCallback.DestEvent,SSTCallback.Unknown);
+                CurrrentClass->Callback = malloc(sizeof(SSTCallback_t));
+                memcpy(CurrrentClass->Callback,SSTBuffer,sizeof(SSTCallback_t));
+                SSTBuffer += sizeof(SSTCallback_t);
+                DPrintf("SSTLoad:Callback SrcEvent:%s DestEvent:%s Unknown: %i\n",CurrrentClass->Callback->SrcEvent,
+                        CurrrentClass->Callback->DestEvent,CurrrentClass->Callback->Unknown);
                 StoreLabel = 0;
                 break;
             case 3:
@@ -386,8 +414,11 @@ SST_t *SSTLoad(Byte *SSTBuffer)
                 break;
             case 7:
                 DPrintf("STR file declaration\n");
-                //TODO
-                SSTBuffer += 36;
+                CurrrentClass->VideoInfo = malloc(sizeof(SSTVideoInfo_t));
+                memcpy(CurrrentClass->VideoInfo,SSTBuffer,sizeof(SSTVideoInfo_t));
+                SSTBuffer += sizeof(SSTVideoInfo_t);
+                DPrintf("SSTLoad:Callback STR file:%s Unknown:%i Unknown2: %i\n",CurrrentClass->VideoInfo->STRFile,
+                        CurrrentClass->VideoInfo->Unknown,CurrrentClass->VideoInfo->Unknown2);
                 break;
             case 8:
                 SSTBuffer += 276;
