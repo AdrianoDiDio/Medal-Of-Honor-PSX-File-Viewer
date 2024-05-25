@@ -24,6 +24,12 @@
 #include "../Common/VRAM.h"
 #include "GFX.h"
 
+typedef struct SSTRSCMap_s {
+    const char *ClassName;
+    int NumRSC;
+    const char **RSCList;
+} SSTRSCMap_t;
+
 typedef struct SSTHeader_s {
     char Name[28];
 } SSTHeader_t;
@@ -100,7 +106,7 @@ typedef struct SST_s {
     struct SST_s    *Next;
 } SST_t;
 
-SST_t *SSTLoad(Byte *SSTBuffer);
+SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine);
 void SSTLateInit(VRAM_t* VRam);
 void SSTRender(VRAM_t *VRam);
 void SSTModelRender(VRAM_t *VRam);

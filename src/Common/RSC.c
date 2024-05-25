@@ -161,7 +161,7 @@ RSCEntry_t *RSCGetDirectoryEntries(const RSC_t *RSC,const char *Directory,int *N
     //NOTE(Adriano):This should not be a problem since every RSC file has his own directories that are not shared
     for( Iterator = RSC; Iterator; Iterator = Iterator->Next ) {
         for(i = 0; i < Iterator->Header.NumEntry; i++ ) {
-            if( CurrentEntry >= NumEntries ) {
+            if( CurrentEntry > NumEntries ) {
                 DPrintf("RSCGetDirectoryEntries:Buffer overrun...expected %i entries but found %i\n",NumEntries,CurrentEntry);
                 free(EntryList);
                 return NULL;

@@ -23,7 +23,630 @@
 #include "../Common/TIM.h"
 #include "SSTViewer.h" 
 
+const SSTRSCMap_t MOHSSTRSCMap[] = {
+    {
+        "m_brief",
+        28,
+        (char*[]) {
+            "SCR2/MBRIEF/M1/1.RSC",
+            "SCR2/MBRIEF/M1/2.RSC",
+            "SCR2/MBRIEF/M1/3.RSC",
+            "SCR2/MBRIEF/M2/1.RSC",
+            "SCR2/MBRIEF/M2/2.RSC",
+            "SCR2/MBRIEF/M2/3.RSC",
+            "SCR2/MBRIEF/M2/4.RSC",
+            "SCR2/MBRIEF/M3/1.RSC",
+            "SCR2/MBRIEF/M3/2.RSC",
+            "SCR2/MBRIEF/M3/3.RSC",
+            "SCR2/MBRIEF/M3/4.RSC",
+            "SCR2/MBRIEF/M4/1.RSC",
+            "SCR2/MBRIEF/M4/2.RSC",
+            "SCR2/MBRIEF/M4/3.RSC",
+            "SCR2/MBRIEF/M5/1.RSC",
+            "SCR2/MBRIEF/M5/2.RSC",
+            "SCR2/MBRIEF/M5/3.RSC",
+            "SCR2/MBRIEF/M5/4.RSC",
+            "SCR2/MBRIEF/M6/1.RSC",
+            "SCR2/MBRIEF/M6/2.RSC",
+            "SCR2/MBRIEF/M6/3.RSC",
+            "SCR2/MBRIEF/M7/1.RSC",
+            "SCR2/MBRIEF/M7/2.RSC",
+            "SCR2/MBRIEF/M7/3.RSC",
+            "SCR2/MBRIEF/M8/1.RSC",
+            "SCR2/MBRIEF/M8/2.RSC",
+            "SCR2/MBRIEF/M8/3.RSC",
+            "SCR2/MBRIEF/M8/4.RSC",
+        }
+    },
+    {
+        "m_calib",
+        1,
+        (char*[]) {
+            "SCR1/MCALIB.RSC"
+        }
+    },
+    {
+        "m_config",
+        1,
+        (char*[]) {
+            "SCR1/MCONFIG.RSC"
+        }
+    },
+    {
+        "m_ctrl",
+        1,
+        (char*[]) {
+        "SCR1/MCTRL.RSC"
+        }
+    },
+    {
+        "m_dev",
+        1,
+        (char*[]) {
+        "SCR1/MDEV.RSC"
+        }
+    },
+    {
+        "m_gallery",
+        1,
+        (char*[]) {
+            "SCR1/MGAL.RSC"
+        }
+    },
+    {
+        "m_legal",
+        1,
+        (char*[]) {
+            "SCR1/MLEGAL.RSC"
+        }
+    },
+    {
+        "m_load",
+        1,
+        (char*[]) {
+            "SCR1/MLOAD.RSC"
+        }
+    },
+    {
+        "m_mission",
+                1,
+        (char*[]) {
+        "SCR1/MMISSION.RSC"
+        }
+    },
+    {
+        "m_option",
+        1,
+        (char*[]) {
+            "SCR1/MOPTION.RSC"
+        }
+    },
+    {
+        "m_play",
+        1,
+        (char*[]) {
+            "SCR1/MPLAY.RSC"
+        }
+    },
+    {
+        "m_save",
+        1,
+        (char*[]) {
+            "SCR1/MSAVE.RSC"
+        }
+    },
+    {
+        "m_slide",
+        80,
+        (char*[]) {
+            "SCR3/MSLIDE/M1/1.RSC",
+            "SCR3/MSLIDE/M1/2.RSC",
+            "SCR3/MSLIDE/M1/3.RSC",
+            "SCR3/MSLIDE/M1/4.RSC",
+            "SCR3/MSLIDE/M1/5.RSC",
+            "SCR3/MSLIDE/M1/6.RSC",
+            "SCR3/MSLIDE/M1/7.RSC",
+            "SCR3/MSLIDE/M1/8.RSC",
+            "SCR3/MSLIDE/M1/9.RSC",
+            "SCR3/MSLIDE/M1/10.RSC",
+            "SCR3/MSLIDE/M2/1.RSC",
+            "SCR3/MSLIDE/M2/2.RSC",
+            "SCR3/MSLIDE/M2/3.RSC",
+            "SCR3/MSLIDE/M2/4.RSC",
+            "SCR3/MSLIDE/M2/5.RSC",
+            "SCR3/MSLIDE/M2/6.RSC",
+            "SCR3/MSLIDE/M2/7.RSC",
+            "SCR3/MSLIDE/M2/8.RSC",
+            "SCR3/MSLIDE/M2/9.RSC",
+            "SCR3/MSLIDE/M2/10.RSC",
+            "SCR3/MSLIDE/M3/1.RSC",
+            "SCR3/MSLIDE/M3/2.RSC",
+            "SCR3/MSLIDE/M3/3.RSC",
+            "SCR3/MSLIDE/M3/4.RSC",
+            "SCR3/MSLIDE/M3/5.RSC",
+            "SCR3/MSLIDE/M3/6.RSC",
+            "SCR3/MSLIDE/M3/7.RSC",
+            "SCR3/MSLIDE/M3/8.RSC",
+            "SCR3/MSLIDE/M3/9.RSC",
+            "SCR3/MSLIDE/M3/10.RSC",
+            "SCR3/MSLIDE/M4/1.RSC",
+            "SCR3/MSLIDE/M4/2.RSC",
+            "SCR3/MSLIDE/M4/3.RSC",
+            "SCR3/MSLIDE/M4/4.RSC",
+            "SCR3/MSLIDE/M4/5.RSC",
+            "SCR3/MSLIDE/M4/6.RSC",
+            "SCR3/MSLIDE/M4/7.RSC",
+            "SCR3/MSLIDE/M4/8.RSC",
+            "SCR3/MSLIDE/M4/9.RSC",
+            "SCR3/MSLIDE/M4/10.RSC",
+            "SCR3/MSLIDE/M5/1.RSC",
+            "SCR3/MSLIDE/M5/2.RSC",
+            "SCR3/MSLIDE/M5/3.RSC",
+            "SCR3/MSLIDE/M5/4.RSC",
+            "SCR3/MSLIDE/M5/5.RSC",
+            "SCR3/MSLIDE/M5/6.RSC",
+            "SCR3/MSLIDE/M5/7.RSC",
+            "SCR3/MSLIDE/M5/8.RSC",
+            "SCR3/MSLIDE/M5/9.RSC",
+            "SCR3/MSLIDE/M5/10.RSC",
+            "SCR3/MSLIDE/M6/1.RSC",
+            "SCR3/MSLIDE/M6/2.RSC",
+            "SCR3/MSLIDE/M6/3.RSC",
+            "SCR3/MSLIDE/M6/4.RSC",
+            "SCR3/MSLIDE/M6/5.RSC",
+            "SCR3/MSLIDE/M6/6.RSC",
+            "SCR3/MSLIDE/M6/7.RSC",
+            "SCR3/MSLIDE/M6/8.RSC",
+            "SCR3/MSLIDE/M6/9.RSC",
+            "SCR3/MSLIDE/M6/10.RSC",
+            "SCR3/MSLIDE/M7/1.RSC",
+            "SCR3/MSLIDE/M7/2.RSC",
+            "SCR3/MSLIDE/M7/3.RSC",
+            "SCR3/MSLIDE/M7/4.RSC",
+            "SCR3/MSLIDE/M7/5.RSC",
+            "SCR3/MSLIDE/M7/6.RSC",
+            "SCR3/MSLIDE/M7/7.RSC",
+            "SCR3/MSLIDE/M7/8.RSC",
+            "SCR3/MSLIDE/M7/9.RSC",
+            "SCR3/MSLIDE/M7/10.RSC",
+            "SCR3/MSLIDE/M8/1.RSC",
+            "SCR3/MSLIDE/M8/2.RSC",
+            "SCR3/MSLIDE/M8/3.RSC",
+            "SCR3/MSLIDE/M8/4.RSC",
+            "SCR3/MSLIDE/M8/5.RSC",
+            "SCR3/MSLIDE/M8/6.RSC",
+            "SCR3/MSLIDE/M8/7.RSC",
+            "SCR3/MSLIDE/M8/8.RSC",
+            "SCR3/MSLIDE/M8/9.RSC",
+            "SCR3/MSLIDE/M8/10.RSC",
+        }
+    },
+    {
+        "m_title",
+        2,
+        (char*[]) {
+            "SCR1/MTITLE1.RSC",
+            "SCR1/MTITLE2.RSC"
+        }
+    },
+    {
+        "m_war",
+        1,
+        (char*[]) {
+            "SCR1/MWAR.RSC"
+        }
+    },
+    {
+        "m_audio",
+        1,
+        (char*[]) {
+            "SCR2/MAUDIO.RSC"
+        }
+    },
+    {
+        "m_commend",
+        1,
+        (char*[]) {
+            "SCR2/MCOMMEND.RSC"
+        }
+    },
+    {
+        "m_dev2",
+        1,
+        (char*[]) {
+            "SCR2/MDEV.RSC"
+        }
+    },
+    {
+        "m_enigma",
+        1,
+        (char*[]) {
+            "SCR2/MENIGMA.RSC"
+        }
+    },
+    {
+        "m_eval",
+        1,
+        (char*[]) {
+            "SCR2/MEVAL.RSC"
+        }
+    },
+    {
+        "m_medals",
+        1,
+        (char*[]) {
+            "SCR2/MMEDALS.RSC"
+        }
+    },
+    {
+        "m_multopt",
+        1,
+        (char*[]) {
+            "SCR2/MMULTOPT.RSC"
+        }
+    },
+    {
+        "m_pmeval",                
+        1,
+        (char*[]) {
+            "SCR2/MPMEVAL.RSC"
+        }
+    },
+    {
+        "m_pmeval2",
+        1,
+        (char*[]) {
+            "SCR2/MPMEVAL2.RSC"
+        }
+    },
+    {
+        "m_pname",
+        1,
+        (char*[]) {
+            "SCR2/MPNAME.RSC"
+        }
+    },
+    {
+        "m_postmis",
+        1,
+        (char*[]) {
+            "SCR2/MPOSTMIS.RSC"
+        }
+    },
+    {
+        "m_secret",
+        1,
+        (char*[]) {
+            "SCR2/MSECRET.RSC"
+        }
+    },
+    {
+        "m_uniform",
+        1,
+        (char*[]) {
+            "SCR2/MUNIF.RSC"
+        }
+    },
+    {
+        "m_video",
+        1,
+        (char*[]) {
+            "SCR2/MVIDEO.RSC"
+        }
+    }
+};
+int NumMOHSSTRSCMapEntry = sizeof(MOHSSTRSCMap) / sizeof(MOHSSTRSCMap[0]);
 
+const SSTRSCMap_t MOHUndergroundSSTRSCMap[] = {
+    {
+        "m_brief",
+        28,
+        (char*[]) {
+            "SCR2/MBRIEF/M1/1.RSC",
+            "SCR2/MBRIEF/M1/2.RSC",
+            "SCR2/MBRIEF/M1/3.RSC",
+            "SCR2/MBRIEF/M2/1.RSC",
+            "SCR2/MBRIEF/M2/2.RSC",
+            "SCR2/MBRIEF/M2/3.RSC",
+            "SCR2/MBRIEF/M2/4.RSC",
+            "SCR2/MBRIEF/M3/1.RSC",
+            "SCR2/MBRIEF/M3/2.RSC",
+            "SCR2/MBRIEF/M3/3.RSC",
+            "SCR2/MBRIEF/M3/4.RSC",
+            "SCR2/MBRIEF/M4/1.RSC",
+            "SCR2/MBRIEF/M4/2.RSC",
+            "SCR2/MBRIEF/M4/3.RSC",
+            "SCR2/MBRIEF/M5/1.RSC",
+            "SCR2/MBRIEF/M5/2.RSC",
+            "SCR2/MBRIEF/M5/3.RSC",
+            "SCR2/MBRIEF/M5/4.RSC",
+            "SCR2/MBRIEF/M6/1.RSC",
+            "SCR2/MBRIEF/M6/2.RSC",
+            "SCR2/MBRIEF/M6/3.RSC",
+            "SCR2/MBRIEF/M7/1.RSC",
+            "SCR2/MBRIEF/M7/2.RSC",
+            "SCR2/MBRIEF/M7/3.RSC",
+            "SCR2/MBRIEF/M7/4.RSC",
+            "SCR2/MBRIEF/M8/1.RSC",
+            "SCR2/MBRIEF/M8/2.RSC",
+            "SCR2/MBRIEF/M8/3.RSC",
+        }
+    },
+    {
+        "m_calib",
+        1,
+        (char*[]) {
+            "SCR1/MCALIB.RSC"
+        }
+    },
+    {
+        "m_config",
+        1,
+        (char*[]) {
+            "SCR1/MCONFIG.RSC"
+        }
+    },
+    {
+        "m_ctrl",
+        1,
+        (char*[]) {
+        "SCR1/MCTRL.RSC"
+        }
+    },
+    {
+        "m_dev",
+        1,
+        (char*[]) {
+        "SCR1/MDEV.RSC"
+        }
+    },
+    {
+        "m_diff",
+        1,
+        (char*[]) {
+        "SCR1/MDIFF.RSC"
+        }
+    },
+    {
+        "m_gallery",
+        1,
+        (char*[]) {
+            "SCR1/MGAL.RSC"
+        }
+    },
+    {
+        "m_legal",
+        1,
+        (char*[]) {
+            "SCR1/MLEGAL.RSC"
+        }
+    },
+    {
+        "m_load",
+        1,
+        (char*[]) {
+            "SCR1/MLOAD.RSC"
+        }
+    },
+    {
+        "m_mission",
+                1,
+        (char*[]) {
+        "SCR1/MMISSION.RSC"
+        }
+    },
+    {
+        "m_option",
+        1,
+        (char*[]) {
+            "SCR1/MOPTION.RSC"
+        }
+    },
+    {
+        "m_play",
+        1,
+        (char*[]) {
+            "SCR1/MPLAY.RSC"
+        }
+    },
+    {
+        "m_save",
+        1,
+        (char*[]) {
+            "SCR1/MSAVE.RSC"
+        }
+    },
+    {
+        "m_slide",
+        70,
+        (char*[]) {
+            "SCR3/MSLIDE/M1/F01.RSC",
+            "SCR3/MSLIDE/M1/F02.RSC",
+            "SCR3/MSLIDE/M1/F03.RSC",
+            "SCR3/MSLIDE/M1/F04.RSC",
+            "SCR3/MSLIDE/M1/F05.RSC",
+            "SCR3/MSLIDE/M1/F06.RSC",
+            "SCR3/MSLIDE/M1/F07.RSC",
+            "SCR3/MSLIDE/M1/F08.RSC",
+            "SCR3/MSLIDE/M1/F09.RSC",
+            "SCR3/MSLIDE/M1/F10.RSC",
+            "SCR3/MSLIDE/M2/F01.RSC",
+            "SCR3/MSLIDE/M2/F02.RSC",
+            "SCR3/MSLIDE/M2/F03.RSC",
+            "SCR3/MSLIDE/M2/F04.RSC",
+            "SCR3/MSLIDE/M2/F05.RSC",
+            "SCR3/MSLIDE/M2/F06.RSC",
+            "SCR3/MSLIDE/M2/F07.RSC",
+            "SCR3/MSLIDE/M2/F08.RSC",
+            "SCR3/MSLIDE/M2/F09.RSC",
+            "SCR3/MSLIDE/M2/F10.RSC",
+            "SCR3/MSLIDE/M3/F01.RSC",
+            "SCR3/MSLIDE/M3/F02.RSC",
+            "SCR3/MSLIDE/M3/F03.RSC",
+            "SCR3/MSLIDE/M3/F04.RSC",
+            "SCR3/MSLIDE/M3/F05.RSC",
+            "SCR3/MSLIDE/M3/F06.RSC",
+            "SCR3/MSLIDE/M3/F07.RSC",
+            "SCR3/MSLIDE/M3/F08.RSC",
+            "SCR3/MSLIDE/M3/F09.RSC",
+            "SCR3/MSLIDE/M3/F10.RSC",
+            "SCR3/MSLIDE/M4/F01.RSC",
+            "SCR3/MSLIDE/M4/F02.RSC",
+            "SCR3/MSLIDE/M4/F03.RSC",
+            "SCR3/MSLIDE/M4/F04.RSC",
+            "SCR3/MSLIDE/M4/F05.RSC",
+            "SCR3/MSLIDE/M4/F06.RSC",
+            "SCR3/MSLIDE/M4/F07.RSC",
+            "SCR3/MSLIDE/M4/F08.RSC",
+            "SCR3/MSLIDE/M4/F09.RSC",
+            "SCR3/MSLIDE/M4/F10.RSC",
+            "SCR3/MSLIDE/M5/F01.RSC",
+            "SCR3/MSLIDE/M5/F02.RSC",
+            "SCR3/MSLIDE/M5/F03.RSC",
+            "SCR3/MSLIDE/M5/F04.RSC",
+            "SCR3/MSLIDE/M5/F05.RSC",
+            "SCR3/MSLIDE/M5/F06.RSC",
+            "SCR3/MSLIDE/M5/F07.RSC",
+            "SCR3/MSLIDE/M5/F08.RSC",
+            "SCR3/MSLIDE/M5/F09.RSC",
+            "SCR3/MSLIDE/M5/F10.RSC",
+            "SCR3/MSLIDE/M6/F01.RSC",
+            "SCR3/MSLIDE/M6/F02.RSC",
+            "SCR3/MSLIDE/M6/F03.RSC",
+            "SCR3/MSLIDE/M6/F04.RSC",
+            "SCR3/MSLIDE/M6/F05.RSC",
+            "SCR3/MSLIDE/M6/F06.RSC",
+            "SCR3/MSLIDE/M6/F07.RSC",
+            "SCR3/MSLIDE/M6/F08.RSC",
+            "SCR3/MSLIDE/M6/F09.RSC",
+            "SCR3/MSLIDE/M6/F10.RSC",
+            "SCR3/MSLIDE/M7/F01.RSC",
+            "SCR3/MSLIDE/M7/F02.RSC",
+            "SCR3/MSLIDE/M7/F03.RSC",
+            "SCR3/MSLIDE/M7/F04.RSC",
+            "SCR3/MSLIDE/M7/F05.RSC",
+            "SCR3/MSLIDE/M7/F06.RSC",
+            "SCR3/MSLIDE/M7/F07.RSC",
+            "SCR3/MSLIDE/M7/F08.RSC",
+            "SCR3/MSLIDE/M7/F09.RSC",
+            "SCR3/MSLIDE/M7/F10.RSC",
+        }
+    },
+    {
+        "m_title",
+        2,
+        (char *[]) {
+            "SCR1/MTITLE1.RSC",
+            "SCR1/MTITLE2.RSC"
+        }
+    },
+    {
+        "m_war",
+        1,
+        (char*[]) {
+            "SCR1/MWAR.RSC"
+        }
+    },
+    {
+        "m_audio",
+        1,
+        (char*[]) {
+            "SCR2/MAUDIO.RSC"
+        }
+    },
+    {
+        "m_commend",
+        1,
+        (char*[]) {
+            "SCR2/MCOMMEND.RSC"
+        }
+    },
+    {
+        "m_dev2",
+        1,
+        (char*[]) {
+            "SCR2/MDEV.RSC"
+        }
+    },
+    {
+        "m_enigma",
+        1,
+        (char*[]) {
+            "SCR2/MENIGMA.RSC"
+        }
+    },
+    {
+        "m_eval",
+        1,
+        (char*[]) {
+            "SCR2/MEVAL.RSC"
+        }
+    },
+    {
+        "m_medals",
+        1,
+        (char*[]) {
+            "SCR2/MMEDALS.RSC"
+        }
+    },
+    {
+        "m_multopt",
+        1,
+        (char*[]) {
+            "SCR2/MMULTOPT.RSC"
+        }
+    },
+    {
+        "m_pmeval",                
+        1,
+        (char*[]) {
+            "SCR2/MPMEVAL.RSC"
+        }
+    },
+    {
+        "m_pmeval2",
+        1,
+        (char*[]) {
+            "SCR2/MPMEVAL2.RSC"
+        }
+    },
+    {
+        "m_pname",
+        1,
+        (char*[]) {
+            "SCR2/MPNAME.RSC"
+        }
+    },
+    {
+        "m_postmis",
+        1,
+        (char*[]) {
+            "SCR2/MPOSTMIS.RSC"
+        }
+    },
+    {
+        "m_secret",
+        1,
+        (char*[]) {
+            "SCR2/MSECRET.RSC"
+        }
+    },
+    {
+        "m_uniform",
+        1,
+        (char*[]) {
+            "SCR2/MUNIF.RSC"
+        }
+    },
+    {
+        "m_video",
+        1,
+        (char*[]) {
+            "SCR2/MVIDEO.RSC"
+        }
+    }
+};
+int NumMOHUndergroundSSTRSCMapEntry = sizeof(MOHUndergroundSSTRSCMap) / sizeof(MOHUndergroundSSTRSCMap[0]);
 /*
  Every SST File starts with a type 1 section containing the name of the script.
  Basic Idea to begin loading it is to read and link section 2 and 3.
@@ -302,11 +925,42 @@ void SSTLateInit(VRAM_t* VRAM)
     }
 }
 
-void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer)
+const char **SSTGetRSCPathListFromClassName(SSTClass_t *Class, int GameEngine, int *NumRSCFile)
+{
+    SSTRSCMap_t *Map;
+    int NumEntry;
+    int i;
+    
+    if( !Class ) {
+        DPrintf("SSTGetRSCPathFromClassName: Invalid class\n");
+        return NULL;
+    }
+    
+    if( GameEngine == MOH_GAME_STANDARD ) {
+        Map = &MOHSSTRSCMap;
+        NumEntry = NumMOHSSTRSCMapEntry;
+    } else {
+        Map = &MOHUndergroundSSTRSCMap;
+        NumEntry = NumMOHUndergroundSSTRSCMapEntry;
+    }
+    
+    for( i = 0; i < NumEntry; i++ ) {
+        if( !strcmp(Class->Name,Map[i].ClassName) ) {
+            if( NumRSCFile ) {
+                *NumRSCFile = Map[i].NumRSC;
+            }
+            return Map[i].RSCList;
+        }
+    }
+    return NULL;
+}
+void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer,int GameEngine)
 {
     SSTLabel_t *Label;
     TIMImage_t *Image;
     RSCEntry_t Entry;
+    char **RSCPathList;
+    int NumRSCPath;
     int Ret;
     
     if( !SST ) {
@@ -371,7 +1025,16 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer)
     for( int i = 0; i < 12 ; i++ ) {
         DPrintf(" %i ",Label->Unknown6[i]);
     }
-    DPrintf("\n");    
+    DPrintf("\n");
+    RSCPathList = SSTGetRSCPathListFromClassName(Class, GameEngine, &NumRSCPath);
+    if( RSCPathList != NULL ) {
+        for (int i = 0; i < NumRSCPath; i++ ) {
+            DPrintf("SSTLoadLabel: Assets should be loaded from %s\n",RSCPathList[i] );
+        }
+    } else {
+        DPrintf("SSTLoadLabel: Missing map for class %s\n",Class->Name);
+        assert(1!=1);
+    }
     //Link it in!
     //TODO(Adriano): This probably needs to be sorted according to the depth of the label otherwise they
     //will overlap during rendering
@@ -437,7 +1100,7 @@ void SSTLoadCallback(SST_t *SST, SSTClass_t *Class,Byte **SSTBuffer)
     Class->CallbackList = Callback;
     return;
 }
-SST_t *SSTLoad(Byte *SSTBuffer)
+SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine)
 {
     SST_t *SST;
     SSTClass_t *CurrrentClass;
@@ -502,7 +1165,7 @@ SST_t *SSTLoad(Byte *SSTBuffer)
                 //StoreLabel = 0;
                 break;
             case 3:
-                SSTLoadLabel(SST,CurrrentClass,RSCData,&SSTBuffer);
+                SSTLoadLabel(SST,CurrrentClass,RSCData,&SSTBuffer,GameEngine);
                 break;
             case 5:
                 DPrintf("BackDrop declaration started.\n");
