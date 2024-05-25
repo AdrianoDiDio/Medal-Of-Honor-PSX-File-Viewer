@@ -1002,8 +1002,6 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer,int 
     SSTLabel_t *Label;
     TIMImage_t *Image;
     RSCEntry_t Entry;
-    char **RSCPathList;
-    int NumRSCPath;
     int Ret;
     
     if( !SST ) {
@@ -1069,15 +1067,6 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer,int 
         DPrintf(" %i ",Label->Unknown6[i]);
     }
     DPrintf("\n");
-    RSCPathList = SSTGetRSCPathListFromClassName(Class, GameEngine, &NumRSCPath);
-    if( RSCPathList != NULL ) {
-        for (int i = 0; i < NumRSCPath; i++ ) {
-            DPrintf("SSTLoadLabel: Assets should be loaded from %s\n",RSCPathList[i] );
-        }
-    } else {
-        DPrintf("SSTLoadLabel: Missing map for class %s\n",Class->Name);
-        assert(1!=1);
-    }
     //Link it in!
     //TODO(Adriano): This probably needs to be sorted according to the depth of the label otherwise they
     //will overlap during rendering
@@ -1146,7 +1135,7 @@ void SSTLoadCallback(SST_t *SST, SSTClass_t *Class,Byte **SSTBuffer)
 SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine)
 {
     SST_t *SST;
-    SSTClass_t *CurrrentClass;
+    SSTClass_t *CurrentClass;
     SSTCallback_t *SSTCallback;
     SSTVideoInfo_t *SSTVideoInfo;
     SSTLabel_t *SSTLabel;
@@ -1154,6 +1143,8 @@ SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine)
     RSC_t *RSCData;
     RSC_t *RSCData2;
     RSCEntry_t Entry;
+    char **RSCPathList;
+    int NumRSCPath;
     char Name[28];
     int Size;
     int Token;
@@ -1191,24 +1182,39 @@ SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine)
         DPrintf("SSTLoad:Got token %i\n",Token);
         switch( Token ) {
             case 1:
-                CurrrentClass = malloc(sizeof(SSTClass_t));
-                CurrrentClass->LabelList = NULL;
-                CurrrentClass->CallbackList = NULL;
-                CurrrentClass->VideoInfo = NULL;
-                CurrrentClass->Next = NULL;
-                memcpy(&CurrrentClass->Name,SSTBuffer,sizeof(CurrrentClass->Name));
-                SSTBuffer += sizeof(CurrrentClass->Name);
+                CurrentClass = malloc(sizeof(SSTClass_t));
+                CurrentClass->LabelList = NULL;
+                CurrentClass->CallbackList = NULL;
+                CurrentClass->VideoInfo = NULL;
+                CurrentClass->Next = NULL;
+                memcpy(&CurrentClass->Name,SSTBuffer,sizeof(CurrentClass->Name));
+                SSTBuffer += sizeof(CurrentClass->Name);
+                //TODO(Adriano):Move this code to his own function...CurrentClass will have an
+                //RSC list that will be used to load all the assets (when not found fallback to global!)
+                RSCPathList = SSTGetRSCPathListFromClassName(CurrentClass, GameEngine, &NumRSCPath);
+                if( RSCPathList != NULL ) {
+                    for (int i = 0; i < NumRSCPath; i++ ) {
+                        DPrintf("SSTLoad: Assets should be loaded from %s\n",RSCPathList[i] );
+                    }
+                } else {
+                    //NOTE(Adriano): Movies file are the only exception since they always use the CD path
+                    //movie/*/*.STR and are not inside any RSC file...
+                    if( !StringStartsWith(CurrentClass->Name, "m_movie" )) {
+                        DPrintf("SSTLoad: Missing map for class %s\n",CurrentClass->Name);
+                        assert(1!=1);
+                    }
+                }
                 //Link it in!
-                CurrrentClass->Next = SST->ClassList;
-                SST->ClassList = CurrrentClass;
-                DPrintf("SSTLoad:Class Name is %s\n",CurrrentClass->Name);
+                CurrentClass->Next = SST->ClassList;
+                SST->ClassList = CurrentClass;
+                DPrintf("SSTLoad:Class Name is %s\n",CurrentClass->Name);
                 break;
             case 2:
-                SSTLoadCallback(SST,CurrrentClass,&SSTBuffer);
+                SSTLoadCallback(SST,CurrentClass,&SSTBuffer);
                 //StoreLabel = 0;
                 break;
             case 3:
-                SSTLoadLabel(SST,CurrrentClass,RSCData,&SSTBuffer,GameEngine);
+                SSTLoadLabel(SST,CurrentClass,RSCData,&SSTBuffer,GameEngine);
                 break;
             case 5:
                 DPrintf("BackDrop declaration started.\n");
@@ -1216,11 +1222,11 @@ SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine)
                 break;
             case 7:
                 DPrintf("STR file declaration\n");
-                CurrrentClass->VideoInfo = malloc(sizeof(SSTVideoInfo_t));
-                memcpy(CurrrentClass->VideoInfo,SSTBuffer,sizeof(SSTVideoInfo_t));
+                CurrentClass->VideoInfo = malloc(sizeof(SSTVideoInfo_t));
+                memcpy(CurrentClass->VideoInfo,SSTBuffer,sizeof(SSTVideoInfo_t));
                 SSTBuffer += sizeof(SSTVideoInfo_t);
-                DPrintf("SSTLoad:Callback STR file:%s Unknown:%i Unknown2: %i\n",CurrrentClass->VideoInfo->STRFile,
-                        CurrrentClass->VideoInfo->Unknown,CurrrentClass->VideoInfo->Unknown2);
+                DPrintf("SSTLoad:Callback STR file:%s Unknown:%i Unknown2: %i\n",CurrentClass->VideoInfo->STRFile,
+                        CurrentClass->VideoInfo->Unknown,CurrentClass->VideoInfo->Unknown2);
                 break;
             case 8:
                 SSTBuffer += 276;
