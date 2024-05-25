@@ -49,14 +49,37 @@ VAO_t  *LabelsVao[512];
 
 int NumModels;
 
+void SSTFreeLabelList(SSTLabel_t *LabelList)
+{
+    SSTLabel_t *Temp;
+    
+    while( LabelList ) {
+        Temp = LabelList;
+        LabelList = LabelList->Next;
+        free(Temp);
+    }
+}
+void SSTFreeCallbackList(SSTCallback_t *CallbackList)
+{
+    SSTCallback_t *Temp;
+    
+    while( CallbackList ) {
+        Temp = CallbackList;
+        CallbackList = CallbackList->Next;
+        free(Temp);
+    }
+}
 void SSTFree(SST_t *SST)
 {
     SSTClass_t *Temp;
     
     while( SST->ClassList ) {
         Temp = SST->ClassList;
-        if( Temp->Callback ) {
-            free(Temp->Callback);
+        if( Temp->LabelList ) {
+            SSTFreeLabelList(Temp->LabelList);
+        }
+        if( Temp->CallbackList ) {
+            SSTFreeCallbackList(Temp->CallbackList);
         }
         if( Temp->VideoInfo ) {
             free(Temp->VideoInfo);
@@ -286,65 +309,83 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer)
     RSCEntry_t Entry;
     int Ret;
     
+    if( !SST ) {
+        DPrintf("SSTLoadLabel: Invalid SST\n");
+        return;
+    }
+    if( !Class ) {
+        DPrintf("SSTLoadLabel: Invalid class\n");
+        return;
+    }
+//     if( !RSC ) {
+//         DPrintf("SSTLoadLabel: Invalid RSC\n");
+//         return;
+//     }
+    if( !SSTBuffer ) {
+        DPrintf("SSTLoadLabel: Invalid Buffer\n");
+        return;
+    }
     Label = malloc(sizeof(SSTLabel_t));
     if( !Label ) {
         DPrintf("SSTLoadLabel: Failed to load label for class %s\n",Class->Name);
         return;
     }
     Label->Next = NULL;
-    memcpy(&Label->TextureFile,SSTBuffer,sizeof(Label->TextureFile));
-    SSTBuffer += sizeof(Label->TextureFile);
-    Label->Unknown = *(int *) SSTBuffer;
-    SSTBuffer += 4;
-    Label->x = *(short *) SSTBuffer;
-    SSTBuffer += 2;
-    Label->Pad1 = *(short *) SSTBuffer;
-    SSTBuffer += 2;
-    Label->y = *(short *) SSTBuffer;
-    SSTBuffer += 2;
-    Label->Pad2 = *(short *) SSTBuffer;
-    SSTBuffer += 2;
-    Label->Width = *(short *) SSTBuffer;
-    SSTBuffer += 2;
-    Label->Pad3 = *(short *) SSTBuffer;
-    SSTBuffer += 2;
-    Label->Height = *(short *) SSTBuffer;
-    SSTBuffer += 2;
-    Label->Pad4 = *(short *) SSTBuffer;
-    SSTBuffer += 2;
-    Label->Unknown2 = *(Byte *) SSTBuffer;
-    SSTBuffer += 1;
-    Label->Unknown3 = *(Byte *) SSTBuffer;
-    SSTBuffer += 1;
-    Label->Unknown4 = *(Byte *) SSTBuffer;
-    SSTBuffer += 1;
-    Label->Unknown5 = *(Byte *) SSTBuffer;
-    SSTBuffer += 1;
-    Label->Depth = *(int *) SSTBuffer;
-    SSTBuffer += 4;
-    memcpy(&Label->Unknown6,SSTBuffer,sizeof(Label->Unknown6));
-    SSTBuffer += sizeof(Label->Unknown6);
+    memcpy(&Label->TextureFile,*SSTBuffer,sizeof(Label->TextureFile));
+    *SSTBuffer += sizeof(Label->TextureFile);
+    Label->Unknown = **(int **) SSTBuffer;
+    *SSTBuffer += 4;
+    Label->x = **(short **) SSTBuffer;
+    *SSTBuffer += 2;
+    Label->Pad1 = **(short **) SSTBuffer;
+    *SSTBuffer += 2;
+    Label->y = **(short **) SSTBuffer;
+    *SSTBuffer += 2;
+    Label->Pad2 = **(short **) SSTBuffer;
+    *SSTBuffer += 2;
+    Label->Width = **(short **) SSTBuffer;
+    *SSTBuffer += 2;
+    Label->Pad3 = **(short **) SSTBuffer;
+    *SSTBuffer += 2;
+    Label->Height = **(short **) SSTBuffer;
+    *SSTBuffer += 2;
+    Label->Pad4 = **(short **) SSTBuffer;
+    *SSTBuffer += 2;
+    Label->Unknown2 = **(Byte **) SSTBuffer;
+    *SSTBuffer += 1;
+    Label->Unknown3 = **(Byte **) SSTBuffer;
+    *SSTBuffer += 1;
+    Label->Unknown4 = **(Byte **) SSTBuffer;
+    *SSTBuffer += 1;
+    Label->Unknown5 = **(Byte **) SSTBuffer;
+    *SSTBuffer += 1;
+    Label->Depth = **(int **) SSTBuffer;
+    *SSTBuffer += 4;
+    memcpy(&Label->Unknown6,*SSTBuffer,sizeof(Label->Unknown6));
+    *SSTBuffer += sizeof(Label->Unknown6);
+    DPrintf("SSTLoadLabel:Label Texture:%s Unknown1:%i X:%i Y:%i Width:%i Height:%i Depth:%i %i %i %i %i\n",Label->TextureFile,
+            Label->Unknown,Label->x,
+            Label->y,Label->Width,Label->Height,Label->Depth,Label->Unknown2,
+            Label->Unknown3,Label->Unknown4,Label->Unknown5);
+    DPrintf("SSTLoadLabel: Unk6 is");
+    for( int i = 0; i < 12 ; i++ ) {
+        DPrintf(" %i ",Label->Unknown6[i]);
+    }
+    DPrintf("\n");    
     //Link it in!
+    //TODO(Adriano): This probably needs to be sorted according to the depth of the label otherwise they
+    //will overlap during rendering
     Label->Next = Class->LabelList;
     Class->LabelList = Label;
-    if( strcmp(Label->TextureFile,"NULL") != 0 ) {
+    //TODO(Adriano): Figure out what RSC file we need before loading the texture
+    if( /*strcmp(Label->TextureFile,"NULL") != 0*/ 0 ) {
         if( Label->y > 512 ) {
             //Clamp to Height
             Label->y = 0;
         }
-        DPrintf("SSTLoad:Label Texture:%s Unknown1:%i X:%i Y:%i Width:%i Height:%i Depth:%i %i %i %i %i\n",Label->TextureFile,
-                Label->Unknown,Label->x,
-                Label->y,Label->Width,Label->Height,Label->Depth,Label->Unknown2,
-                Label->Unknown3,Label->Unknown4,Label->Unknown5
-        );
-        DPrintf("Unk6:");
-        for( int i = 0; i < 12 ; i++ ) {
-            DPrintf(" %i ",Label->Unknown6[i]);
-        }
-        DPrintf("\n");    
         Ret = RSCOpen(RSC,Label->TextureFile,&Entry);
         if( Ret > 0 ) {
-            DPrintf("Texture is %s\n",Entry.Name);
+            DPrintf("SSTLoadLabel:Texture is %s\n",Entry.Name);
             Image = TIMLoadAllImagesFromBuffer(Entry.Data);
             Label->ImageInfo.TexturePage = Image->TexturePage;
             Label->ImageInfo.FrameBufferX = Image->FrameBufferX;
@@ -358,12 +399,49 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer)
     }
     return;
 }
+void SSTLoadCallback(SST_t *SST, SSTClass_t *Class,Byte **SSTBuffer)
+{
+    SSTCallback_t *Callback;
+    TIMImage_t *Image;
+    RSCEntry_t Entry;
+    int Ret;
+    
+    if( !SST ) {
+        DPrintf("SSTLoadCallback: Invalid SST\n");
+        return;
+    }
+    if( !Class ) {
+        DPrintf("SSTLoadCallback: Invalid class\n");
+        return;
+    }
+    if( !SSTBuffer ) {
+        DPrintf("SSTLoadCallback: Invalid Buffer\n");
+        return;
+    }
+    Callback = malloc(sizeof(SSTCallback_t));
+    if( !Callback ) {
+        DPrintf("SSTLoadCallback: Failed to load callback for class %s\n",Class->Name);
+        return;
+    }
 
+    Callback->Next = NULL;
+    memcpy(&Callback->SrcEvent,*SSTBuffer,sizeof(Callback->SrcEvent));
+    *SSTBuffer += sizeof(Callback->SrcEvent);
+    memcpy(&Callback->DestEvent,*SSTBuffer,sizeof(Callback->DestEvent));
+    *SSTBuffer += sizeof(Callback->DestEvent);
+    Callback->Unknown = **(int **) SSTBuffer;
+    *SSTBuffer += 4;
+    DPrintf("SSTLoadCallback: SrcEvent:%s DestEvent:%s Unknown: %i\n",Callback->SrcEvent,Callback->DestEvent,Callback->Unknown);
+    //Link it in!
+    Callback->Next = Class->CallbackList;
+    Class->CallbackList = Callback;
+    return;
+}
 SST_t *SSTLoad(Byte *SSTBuffer)
 {
     SST_t *SST;
     SSTClass_t *CurrrentClass;
-    SSTCallback_t SSTCallback;
+    SSTCallback_t *SSTCallback;
     SSTVideoInfo_t *SSTVideoInfo;
     SSTLabel_t *SSTLabel;
     SSTLabel_t *TempLabel;
@@ -409,7 +487,8 @@ SST_t *SSTLoad(Byte *SSTBuffer)
             case 1:
                 CurrrentClass = malloc(sizeof(SSTClass_t));
                 CurrrentClass->LabelList = NULL;
-                CurrrentClass->Callback = NULL;
+                CurrrentClass->CallbackList = NULL;
+                CurrrentClass->VideoInfo = NULL;
                 CurrrentClass->Next = NULL;
                 memcpy(&CurrrentClass->Name,SSTBuffer,sizeof(CurrrentClass->Name));
                 SSTBuffer += sizeof(CurrrentClass->Name);
@@ -419,16 +498,7 @@ SST_t *SSTLoad(Byte *SSTBuffer)
                 DPrintf("SSTLoad:Class Name is %s\n",CurrrentClass->Name);
                 break;
             case 2:
-                if( CurrrentClass->Callback ) {
-                    DPrintf("SSTLoad: Main class should only have one callback...\n");
-                    assert(1!=1);
-                    break;
-                }
-                CurrrentClass->Callback = malloc(sizeof(SSTCallback_t));
-                memcpy(CurrrentClass->Callback,SSTBuffer,sizeof(SSTCallback_t));
-                SSTBuffer += sizeof(SSTCallback_t);
-                DPrintf("SSTLoad:Callback SrcEvent:%s DestEvent:%s Unknown: %i\n",CurrrentClass->Callback->SrcEvent,
-                        CurrrentClass->Callback->DestEvent,CurrrentClass->Callback->Unknown);
+                SSTLoadCallback(SST,CurrrentClass,&SSTBuffer);
                 //StoreLabel = 0;
                 break;
             case 3:
@@ -456,6 +526,8 @@ SST_t *SSTLoad(Byte *SSTBuffer)
                 break;
             case 10:
                 //GFX Model
+                //TODO(Adriano): As for the labels we need to understand what RSC file
+                //we need to know where to load data
                 memcpy(&Name,SSTBuffer,sizeof(Name));
                 SSTBuffer += sizeof(Name);
 //                 if( !strcmp(Name,"global2\\model\\clerkb.gfx") ) {
@@ -463,37 +535,37 @@ SST_t *SSTLoad(Byte *SSTBuffer)
 //                     break;
 //                 }
                 DPrintf("Loading model %s\n",Name);
-                Ret = RSCOpen(RSCData,Name,&Entry);
-                if( Ret < 0 ) {
-                    Ret = RSCOpen(RSCData2,Name,&Entry);
-                    if( Ret < 0 ) {
-                        DPrintf("File was not found inside RSC...%s\n",Name);
-                        break;
-                    }
-                }
-                Models[NumModels].Model = GFXRead(Entry.Data);
+//                 Ret = RSCOpen(RSCData,Name,&Entry);
+//                 if( Ret < 0 ) {
+//                     Ret = RSCOpen(RSCData2,Name,&Entry);
+//                     if( Ret < 0 ) {
+//                         DPrintf("File was not found inside RSC...%s\n",Name);
+//                         break;
+//                     }
+//                 }
+//                 Models[NumModels].Model = GFXRead(Entry.Data);
                 memcpy(&Name,SSTBuffer,sizeof(Name));
                 SSTBuffer += sizeof(Name);
                 DPrintf("Loading texture %s\n",Name);
-                Ret = RSCOpen(RSCData,Name,&Entry);
-                if( Ret < 0 ) {
-                    Ret = RSCOpen(RSCData2,Name,&Entry);
-                    if( Ret < 0 ) {
-                        DPrintf("File was not found inside RSC...%s\n",Name);
-                        break;
-                    }
-                }
-                int NumImages = 0;
-                while( Entry.Data ) {
-                    Models[NumModels].Image = TIMLoadImageFromBuffer(&Entry.Data,NumImages);
-                    if( Models[NumModels].Image == NULL ) {
-                        DPrintf("Image is NULL skippin\n");
-                        break;
-                    }
-                    Models[NumModels].Image->Next = SST->ImageList;
-                    SST->ImageList = Models[NumModels].Image;
-                    NumImages++;
-                }
+//                 Ret = RSCOpen(RSCData,Name,&Entry);
+//                 if( Ret < 0 ) {
+//                     Ret = RSCOpen(RSCData2,Name,&Entry);
+//                     if( Ret < 0 ) {
+//                         DPrintf("File was not found inside RSC...%s\n",Name);
+//                         break;
+//                     }
+//                 }
+//                 int NumImages = 0;
+//                 while( Entry.Data ) {
+//                     Models[NumModels].Image = TIMLoadImageFromBuffer(&Entry.Data,NumImages);
+//                     if( Models[NumModels].Image == NULL ) {
+//                         DPrintf("Image is NULL skippin\n");
+//                         break;
+//                     }
+//                     Models[NumModels].Image->Next = SST->ImageList;
+//                     SST->ImageList = Models[NumModels].Image;
+//                     NumImages++;
+//                 }
                 SSTBuffer += 56;
 //                 exit(0);
                 NumModels++;

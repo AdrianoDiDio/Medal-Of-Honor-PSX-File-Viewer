@@ -213,6 +213,8 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
     RSCEntry_t *EntryList;
     SST_t *Script;
     int  NumScripts;
+    int BasePercentage;
+    int ScriptIncrement;
     int i;
     
     if( !SSTManager ) {
@@ -228,7 +230,7 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
         SSTManager->GlobalRSCList = NULL;
     }
     ProgressBarBegin(GUI->ProgressBar,"Loading Global RSC files");
-    
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,10,"Loading Global1 RSC file");
     //First step, load the global and global2 files
     asprintf(&RSCBuffer,"%s%cDATA%cGLOBAL.RSC",Path,PATH_SEPARATOR,PATH_SEPARATOR);
     SSTManager->GlobalRSCList = RSCLoad(RSCBuffer);
@@ -238,8 +240,8 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
         goto Failure;
     }
     free(RSCBuffer);
-    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20,"Loading Global2 RSC file");
     asprintf(&RSCBuffer,"%s%cDATA%cGLOBAL2.RSC",Path,PATH_SEPARATOR,PATH_SEPARATOR);
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20,"Loading Global2.rsc");
     RSC = RSCLoad(RSCBuffer);
     
     if( !RSC ) {
@@ -248,6 +250,7 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
     }
     //NOTE(Adriano):MOH Underground has an empty global2 file
     DPrintf("SSTManagerInitWithPath:Global2 has %i files\n",RSC->Header.NumEntry);
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,30,"Detecting Game Engine.");
     if( RSC->Header.NumEntry > 0 ) {
         SSTManager->GameEngine = MOH_GAME_STANDARD;
         RSCAppend(&SSTManager->GlobalRSCList,RSC);
@@ -259,6 +262,7 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
     sprintf(SSTManager->EngineName,"%s",SSTManager->GameEngine == MOH_GAME_STANDARD ? "Medal Of Honor" : "Medal of Honor:Underground");
     DPrintf("SSTManagerInitWithPath:Detected game engine %s\n",SSTManager->EngineName);
 
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,40,"Retrieving script list");
     EntryList = RSCGetDirectoryEntries(SSTManager->GlobalRSCList,"global\\script\\",&NumScripts);
     
     if( !EntryList || !NumScripts ) {
@@ -267,13 +271,18 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
     }
     
     DPrintf("SSTManagerInitWithPath:Found %i scripts\n",NumScripts);
-
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,50,"Loading all scripts");
+    BasePercentage = 50;
+    ScriptIncrement = (100 - BasePercentage) / NumScripts;
     for( i = 0; i < NumScripts; i++ ) {
+        asprintf(&Buffer,"Loading Script %s...",EntryList[i].Name);
+        ProgressBarIncrement(GUI->ProgressBar,VideoSystem,BasePercentage,Buffer);
         DPrintf("SSTManagerInitWithPath: Loading script %s\n",EntryList[i].Name);
         Script = SSTLoad(EntryList[i].Data);
         Script->Next = SSTManager->ScriptList;
         SSTManager->ScriptList = Script;
-        break;
+        BasePercentage += ScriptIncrement;
+        free(Buffer);
     }
     free(EntryList);
     

@@ -32,6 +32,8 @@ typedef struct SSTCallback_s {
     char SrcEvent[28];
     char DestEvent[28];
     int  Unknown;
+    
+    struct SSTCallback_s *Next;
 } SSTCallback_t;
 
 typedef struct SSTImageInfo_s {
@@ -81,7 +83,7 @@ typedef struct SSTCallbackData_s {
 
 typedef struct SSTClass_s {
     char                Name[28];
-    SSTCallback_t       *Callback;
+    SSTCallback_t       *CallbackList;
     SSTLabel_t          *LabelList;
     SSTVideoInfo_t      *VideoInfo;
     struct SSTClass_s   *Next;
