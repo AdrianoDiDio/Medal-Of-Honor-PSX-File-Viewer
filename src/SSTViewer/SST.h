@@ -69,6 +69,7 @@ typedef struct SSTLabel_s {
     
     //Additional Data
     SSTImageInfo_t ImageInfo;
+    struct SSTLabel_s *Next;
 } SSTLabel_t;
 
 typedef struct SSTCallbackData_s {
@@ -81,6 +82,7 @@ typedef struct SSTCallbackData_s {
 typedef struct SSTClass_s {
     char                Name[28];
     SSTCallback_t       *Callback;
+    SSTLabel_t          *LabelList;
     SSTVideoInfo_t      *VideoInfo;
     struct SSTClass_s   *Next;
 } SSTClass_t;

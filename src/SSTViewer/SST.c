@@ -44,11 +44,9 @@
  }
  
  */
-SSTLabel_t Label[512];
 SSTGFX_t Models[5];
 VAO_t  *LabelsVao[512];
 
-int NumLabels;
 int NumModels;
 
 void SSTFree(SST_t *SST)
@@ -273,20 +271,102 @@ void SSTRender(VRAM_t *VRAM)
 void SSTLateInit(VRAM_t* VRAM)
 {
     int i;
-    for( i = 0; i < NumLabels; i++ ) {
+    /*for( i = 0; i < NumLabels; i++ ) {
         SSTPrepareLabelVAO(&Label[i],VRAM,i);
-    }
+    }*/
     for( i = 0; i < NumModels; i++ ) {
         GFXPrepareVAO(Models[i].Model);
     }
 }
+
+void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer)
+{
+    SSTLabel_t *Label;
+    TIMImage_t *Image;
+    RSCEntry_t Entry;
+    int Ret;
+    
+    Label = malloc(sizeof(SSTLabel_t));
+    if( !Label ) {
+        DPrintf("SSTLoadLabel: Failed to load label for class %s\n",Class->Name);
+        return;
+    }
+    Label->Next = NULL;
+    memcpy(&Label->TextureFile,SSTBuffer,sizeof(Label->TextureFile));
+    SSTBuffer += sizeof(Label->TextureFile);
+    Label->Unknown = *(int *) SSTBuffer;
+    SSTBuffer += 4;
+    Label->x = *(short *) SSTBuffer;
+    SSTBuffer += 2;
+    Label->Pad1 = *(short *) SSTBuffer;
+    SSTBuffer += 2;
+    Label->y = *(short *) SSTBuffer;
+    SSTBuffer += 2;
+    Label->Pad2 = *(short *) SSTBuffer;
+    SSTBuffer += 2;
+    Label->Width = *(short *) SSTBuffer;
+    SSTBuffer += 2;
+    Label->Pad3 = *(short *) SSTBuffer;
+    SSTBuffer += 2;
+    Label->Height = *(short *) SSTBuffer;
+    SSTBuffer += 2;
+    Label->Pad4 = *(short *) SSTBuffer;
+    SSTBuffer += 2;
+    Label->Unknown2 = *(Byte *) SSTBuffer;
+    SSTBuffer += 1;
+    Label->Unknown3 = *(Byte *) SSTBuffer;
+    SSTBuffer += 1;
+    Label->Unknown4 = *(Byte *) SSTBuffer;
+    SSTBuffer += 1;
+    Label->Unknown5 = *(Byte *) SSTBuffer;
+    SSTBuffer += 1;
+    Label->Depth = *(int *) SSTBuffer;
+    SSTBuffer += 4;
+    memcpy(&Label->Unknown6,SSTBuffer,sizeof(Label->Unknown6));
+    SSTBuffer += sizeof(Label->Unknown6);
+    //Link it in!
+    Label->Next = Class->LabelList;
+    Class->LabelList = Label;
+    if( strcmp(Label->TextureFile,"NULL") != 0 ) {
+        if( Label->y > 512 ) {
+            //Clamp to Height
+            Label->y = 0;
+        }
+        DPrintf("SSTLoad:Label Texture:%s Unknown1:%i X:%i Y:%i Width:%i Height:%i Depth:%i %i %i %i %i\n",Label->TextureFile,
+                Label->Unknown,Label->x,
+                Label->y,Label->Width,Label->Height,Label->Depth,Label->Unknown2,
+                Label->Unknown3,Label->Unknown4,Label->Unknown5
+        );
+        DPrintf("Unk6:");
+        for( int i = 0; i < 12 ; i++ ) {
+            DPrintf(" %i ",Label->Unknown6[i]);
+        }
+        DPrintf("\n");    
+        Ret = RSCOpen(RSC,Label->TextureFile,&Entry);
+        if( Ret > 0 ) {
+            DPrintf("Texture is %s\n",Entry.Name);
+            Image = TIMLoadAllImagesFromBuffer(Entry.Data);
+            Label->ImageInfo.TexturePage = Image->TexturePage;
+            Label->ImageInfo.FrameBufferX = Image->FrameBufferX;
+            Label->ImageInfo.FrameBufferY = Image->FrameBufferY;
+            Label->ImageInfo.Width = Image->Width;
+            Label->ImageInfo.Height = Image->Height;
+            Label->ImageInfo.ColorMode = Image->Header.BPP;
+            Image->Next = SST->ImageList;
+            SST->ImageList = Image;
+        }
+    }
+    return;
+}
+
 SST_t *SSTLoad(Byte *SSTBuffer)
 {
     SST_t *SST;
     SSTClass_t *CurrrentClass;
     SSTCallback_t SSTCallback;
+    SSTVideoInfo_t *SSTVideoInfo;
     SSTLabel_t *SSTLabel;
-    SSTLabel_t TempLabel;
+    SSTLabel_t *TempLabel;
     RSC_t *RSCData;
     RSC_t *RSCData2;
     RSCEntry_t Entry;
@@ -308,7 +388,6 @@ SST_t *SSTLoad(Byte *SSTBuffer)
         DPrintf("SSTLoad:Failed to allocate memory for struct\n");
         return NULL;
     }
-    NumLabels = 0;
     NumModels = 0;
     SST->Next = NULL;
     SST->ImageList = NULL;
@@ -329,88 +408,35 @@ SST_t *SSTLoad(Byte *SSTBuffer)
         switch( Token ) {
             case 1:
                 CurrrentClass = malloc(sizeof(SSTClass_t));
-                CurrrentClass->VideoInfo = NULL;
+                CurrrentClass->LabelList = NULL;
                 CurrrentClass->Callback = NULL;
                 CurrrentClass->Next = NULL;
                 memcpy(&CurrrentClass->Name,SSTBuffer,sizeof(CurrrentClass->Name));
-                SSTBuffer += sizeof(Name);
+                SSTBuffer += sizeof(CurrrentClass->Name);
                 //Link it in!
                 CurrrentClass->Next = SST->ClassList;
                 SST->ClassList = CurrrentClass;
                 DPrintf("SSTLoad:Class Name is %s\n",CurrrentClass->Name);
                 break;
             case 2:
+                if( CurrrentClass->Callback ) {
+                    DPrintf("SSTLoad: Main class should only have one callback...\n");
+                    assert(1!=1);
+                    break;
+                }
                 CurrrentClass->Callback = malloc(sizeof(SSTCallback_t));
                 memcpy(CurrrentClass->Callback,SSTBuffer,sizeof(SSTCallback_t));
                 SSTBuffer += sizeof(SSTCallback_t);
                 DPrintf("SSTLoad:Callback SrcEvent:%s DestEvent:%s Unknown: %i\n",CurrrentClass->Callback->SrcEvent,
                         CurrrentClass->Callback->DestEvent,CurrrentClass->Callback->Unknown);
-                StoreLabel = 0;
+                //StoreLabel = 0;
                 break;
             case 3:
-                if( !StoreLabel ) {
-                    memcpy(&TempLabel,SSTBuffer,sizeof(TempLabel) - sizeof(SSTImageInfo_t));
-                    SSTBuffer += sizeof(TempLabel) - sizeof(SSTImageInfo_t);
-                    DPrintf("SSTLoad:Label Texture:%s Unknown1:%i X:%i Y:%i Width:%i Height:%i Depth:%i %i %i %i %i\n",TempLabel.TextureFile,
-                        TempLabel.Unknown,TempLabel.x,
-                        TempLabel.y,TempLabel.Width,TempLabel.Height,TempLabel.Depth,TempLabel.Unknown2,
-                        TempLabel.Unknown3,TempLabel.Unknown4,TempLabel.Unknown5
-                       );
-                    DPrintf("Unk6:");
-                    for( int i = 0; i < 12 ; i++ ) {
-                        DPrintf(" %i ",TempLabel.Unknown6[i]);
-                    }
-                    DPrintf("\n");
-                    break;
-                }
-                DPrintf("Storing it\n");
-                memcpy(&Label[NumLabels],SSTBuffer,sizeof(Label[NumLabels]) - sizeof(SSTImageInfo_t));
-                SSTBuffer += sizeof(Label[NumLabels]) - sizeof(SSTImageInfo_t);
-                SSTLabel = &Label[NumLabels];
-                if( !strcmp(SSTLabel->TextureFile,"NULL") ) {
-                    break;
-                }
-                if( SSTLabel->y > 512 ) {
-                    //Clamp to Height
-                    SSTLabel->y = 0;
-                }
-                DPrintf("SSTLoad:Label Texture:%s Unknown1:%i X:%i Y:%i Width:%i Height:%i Depth:%i %i %i %i %i\n",SSTLabel->TextureFile,
-                        SSTLabel->Unknown,SSTLabel->x,
-                        SSTLabel->y,SSTLabel->Width,SSTLabel->Height,SSTLabel->Depth,SSTLabel->Unknown2,
-                        SSTLabel->Unknown3,SSTLabel->Unknown4,SSTLabel->Unknown5
-                       );
-                DPrintf("Unk6:");
-                for( int i = 0; i < 12 ; i++ ) {
-                    DPrintf(" %i ",SSTLabel->Unknown6[i]);
-                }
-                DPrintf("\n");
-//                 DPrintf("SSTLoad:Label Coordinates %i;%i %i;%i %i;%i %i;%i\n",SSTLabel.x,SSTLabel.y + 8,
-//                         SSTLabel.x + SSTLabel.Width - 1,SSTLabel.y + 8,SSTLabel.x,SSTLabel.y + SSTLabel.Height + 7,
-//                         SSTLabel.x + SSTLabel.Width -1, SSTLabel.y + SSTLabel.Height);
-  
-                Ret = RSCOpen(RSCData,SSTLabel->TextureFile,&Entry);
-                if( Ret < 0 ) {
-                    Ret = RSCOpen(RSCData2,SSTLabel->TextureFile,&Entry);
-                    if( Ret < 0 ) {
-                        DPrintf("File was not found inside RSC...%s\n",Name);
-                        break;
-                    }
-                }
-                DPrintf("Texture is %s\n",Entry.Name);
-                TIMImage_t *Image = TIMLoadAllImagesFromBuffer(Entry.Data);
-                SSTLabel->ImageInfo.TexturePage = Image->TexturePage;
-                SSTLabel->ImageInfo.FrameBufferX = Image->FrameBufferX;
-                SSTLabel->ImageInfo.FrameBufferY = Image->FrameBufferY;
-                SSTLabel->ImageInfo.Width = Image->Width;
-                SSTLabel->ImageInfo.Height = Image->Height;
-                SSTLabel->ImageInfo.ColorMode = Image->Header.BPP;
-                Image->Next = SST->ImageList;
-                SST->ImageList = Image;
-                NumLabels++;
+                SSTLoadLabel(SST,CurrrentClass,RSCData,&SSTBuffer);
                 break;
             case 5:
                 DPrintf("BackDrop declaration started.\n");
-                StoreLabel = 1;
+                //StoreLabel = 1;
                 break;
             case 7:
                 DPrintf("STR file declaration\n");
@@ -482,7 +508,7 @@ SST_t *SSTLoad(Byte *SSTBuffer)
                 break;
         }
     }
-    qsort( &Label, NumLabels, sizeof(SSTLabel_t), SSTCompare );
+    //qsort( &Label, NumLabels, sizeof(SSTLabel_t), SSTCompare );
     RSCFree(RSCData);
     return SST;
     // Test
