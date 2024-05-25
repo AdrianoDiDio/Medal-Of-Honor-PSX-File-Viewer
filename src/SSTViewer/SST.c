@@ -87,6 +87,31 @@ const SSTRSCMap_t MOHSSTRSCMap[] = {
         }
     },
     {
+        "m_dwiemp",
+        19,
+        (char*[]) {
+            "SCR3/MDWIEMP/1/1.RSC",
+            "SCR3/MDWIEMP/1/2.RSC",
+            "SCR3/MDWIEMP/1/3.RSC",
+            "SCR3/MDWIEMP/1/4.RSC",
+            "SCR3/MDWIEMP/1/5.RSC",
+            "SCR3/MDWIEMP/1/6.RSC",
+            "SCR3/MDWIEMP/1/7.RSC",
+            "SCR3/MDWIEMP/1/8.RSC",
+            "SCR3/MDWIEMP/1/9.RSC",
+            "SCR3/MDWIEMP/1/10.RSC",
+            "SCR3/MDWIEMP/2/1.RSC",
+            "SCR3/MDWIEMP/2/2.RSC",
+            "SCR3/MDWIEMP/2/3.RSC",
+            "SCR3/MDWIEMP/2/4.RSC",
+            "SCR3/MDWIEMP/2/5.RSC",
+            "SCR3/MDWIEMP/2/6.RSC",
+            "SCR3/MDWIEMP/2/7.RSC",
+            "SCR3/MDWIEMP/15/1.RSC",
+            "SCR3/MDWIEMP/15/2.RSC",
+        }
+    },
+    {
         "m_gallery",
         1,
         (char*[]) {
@@ -398,6 +423,24 @@ const SSTRSCMap_t MOHUndergroundSSTRSCMap[] = {
         1,
         (char*[]) {
         "SCR1/MDEV.RSC"
+        }
+    },
+    {
+        "m_dwiemp",
+        12,
+        (char*[]) {
+            "SCR3/MDWIEMP/1/1.RSC",
+            "SCR3/MDWIEMP/1/2.RSC",
+            "SCR3/MDWIEMP/1/3.RSC",
+            "SCR3/MDWIEMP/1/4.RSC",
+            "SCR3/MDWIEMP/1/5.RSC",
+            "SCR3/MDWIEMP/1/6.RSC",
+            "SCR3/MDWIEMP/1/7.RSC",
+            "SCR3/MDWIEMP/1/8.RSC",
+            "SCR3/MDWIEMP/1/9.RSC",
+            "SCR3/MDWIEMP/1/10.RSC",
+            "SCR3/MDWIEMP/2/1.RSC",
+            "SCR3/MDWIEMP/2/2.RSC"
         }
     },
     {
