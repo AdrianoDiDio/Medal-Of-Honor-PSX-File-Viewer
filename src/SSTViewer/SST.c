@@ -1056,17 +1056,19 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer,int 
     *SSTBuffer += 1;
     Label->Depth = **(int **) SSTBuffer;
     *SSTBuffer += 4;
-    memcpy(&Label->Unknown6,*SSTBuffer,sizeof(Label->Unknown6));
-    *SSTBuffer += sizeof(Label->Unknown6);
+    memcpy(&Label->Color0,*SSTBuffer,sizeof(Label->Color0));
+    *SSTBuffer += sizeof(Label->Color0);
+    memcpy(&Label->Color1,*SSTBuffer,sizeof(Label->Color1));
+    *SSTBuffer += sizeof(Label->Color1);
+    memcpy(&Label->Color2,*SSTBuffer,sizeof(Label->Color2));
+    *SSTBuffer += sizeof(Label->Color2);
     DPrintf("SSTLoadLabel:Label Texture:%s Unknown1:%i X:%i Y:%i Width:%i Height:%i Depth:%i %i %i %i %i\n",Label->TextureFile,
             Label->Unknown,Label->x,
             Label->y,Label->Width,Label->Height,Label->Depth,Label->Unknown2,
             Label->Unknown3,Label->Unknown4,Label->Unknown5);
-    DPrintf("SSTLoadLabel: Unk6 is");
-    for( int i = 0; i < 12 ; i++ ) {
-        DPrintf(" %i ",Label->Unknown6[i]);
-    }
-    DPrintf("\n");
+    DPrintf("SSTLoadLabel: Color0: %i;%i;%i;%i Color1: %i;%i;%i;%i Color2:%i;%i;%i;%i\n",Label->Color0.rgba[0],Label->Color0.rgba[1],
+            Label->Color0.rgba[2],Label->Color0.rgba[3],Label->Color1.rgba[0],Label->Color1.rgba[1],Label->Color1.rgba[2],Label->Color2.rgba[3],
+            Label->Color2.rgba[0],Label->Color2.rgba[1],Label->Color2.rgba[2],Label->Color2.rgba[3]);
     //Link it in!
     //TODO(Adriano): This probably needs to be sorted according to the depth of the label otherwise they
     //will overlap during rendering
@@ -1181,7 +1183,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine)
         SSTBuffer += 4;
         DPrintf("SSTLoad:Got token %i\n",Token);
         switch( Token ) {
-            case 1:
+            case SST_CLASS_TOKEN:
                 CurrentClass = malloc(sizeof(SSTClass_t));
                 CurrentClass->LabelList = NULL;
                 CurrentClass->CallbackList = NULL;
@@ -1209,18 +1211,18 @@ SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine)
                 SST->ClassList = CurrentClass;
                 DPrintf("SSTLoad:Class Name is %s\n",CurrentClass->Name);
                 break;
-            case 2:
+            case SST_CALLBACK_TOKEN:
                 SSTLoadCallback(SST,CurrentClass,&SSTBuffer);
                 //StoreLabel = 0;
                 break;
-            case 3:
+            case SST_LABEL_TOKEN:
                 SSTLoadLabel(SST,CurrentClass,RSCData,&SSTBuffer,GameEngine);
                 break;
-            case 5:
+            case SST_BACKDROP_TOKEN:
                 DPrintf("BackDrop declaration started.\n");
                 //StoreLabel = 1;
                 break;
-            case 7:
+            case SST_STR_FILE_TOKEN:
                 DPrintf("STR file declaration\n");
                 CurrentClass->VideoInfo = malloc(sizeof(SSTVideoInfo_t));
                 memcpy(CurrentClass->VideoInfo,SSTBuffer,sizeof(SSTVideoInfo_t));
@@ -1228,15 +1230,15 @@ SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine)
                 DPrintf("SSTLoad:Callback STR file:%s Unknown:%i Unknown2: %i\n",CurrentClass->VideoInfo->STRFile,
                         CurrentClass->VideoInfo->Unknown,CurrentClass->VideoInfo->Unknown2);
                 break;
-            case 8:
+            case SST_UNKNOWN_1_TOKEN:
                 SSTBuffer += 276;
                 break;
-            case 9:
+            case SST_UNKNOWN_2_TOKEN:
                 memcpy(&Size,SSTBuffer,sizeof(Size));
                 SSTBuffer += sizeof(Size);
                 SSTBuffer += (4*Size) + 4;
                 break;
-            case 10:
+            case SST_GFX_TOKEN:
                 //GFX Model
                 //TODO(Adriano): As for the labels we need to understand what RSC file
                 //we need to know where to load data
@@ -1282,7 +1284,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine)
 //                 exit(0);
                 NumModels++;
                 break;
-            case 11:
+            case SST_UNKNOWN_3_TOKEN:
                 //After a GFX Model we have this token.
                 SSTBuffer += 288;
                 break;

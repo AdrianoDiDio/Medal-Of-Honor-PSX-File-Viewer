@@ -24,6 +24,18 @@
 #include "../Common/VRAM.h"
 #include "GFX.h"
 
+typedef enum 
+{
+    SST_CLASS_TOKEN = 1,
+    SST_CALLBACK_TOKEN = 2,
+    SST_LABEL_TOKEN = 3,
+    SST_BACKDROP_TOKEN = 5,
+    SST_STR_FILE_TOKEN = 7,
+    SST_UNKNOWN_1_TOKEN = 8,
+    SST_UNKNOWN_2_TOKEN = 9,
+    SST_GFX_TOKEN = 10,
+    SST_UNKNOWN_3_TOKEN = 11,
+} SSTToken_t;
 typedef struct SSTRSCMap_s {
     const char *ClassName;
     int NumRSC;
@@ -58,26 +70,28 @@ typedef struct SSTVideoInfo_s {
 } SSTVideoInfo_t;
 
 typedef struct SSTLabel_s {
-    char TextureFile[28];
-    int  Unknown;
-    unsigned short  x;
-    short Pad1;
-    unsigned short  y;
-    short Pad2;
-    unsigned short Width;
-    short Pad3;
-    unsigned short Height;
-    short Pad4;
-    Byte  Unknown2;
-    Byte  Unknown3;
-    Byte  Unknown4;
-    Byte  Unknown5;
-    int  Depth; // Z-Value
-    char Unknown6[12];
+    char                TextureFile[28];
+    int                 Unknown;
+    unsigned short      x;
+    short               Pad1;
+    unsigned short      y;
+    short               Pad2;
+    unsigned short      Width;
+    short               Pad3;
+    unsigned short      Height;
+    short               Pad4;
+    Byte                Unknown2;
+    Byte                Unknown3;
+    Byte                Unknown4;
+    Byte                Unknown5;
+    int                 Depth; // Z-Value
+    Color1i_t           Color0;
+    Color1i_t           Color1;
+    Color1i_t           Color2;
     
     //Additional Data
-    SSTImageInfo_t ImageInfo;
-    struct SSTLabel_s *Next;
+    SSTImageInfo_t      ImageInfo;
+    struct SSTLabel_s   *Next;
 } SSTLabel_t;
 
 typedef struct SSTCallbackData_s {

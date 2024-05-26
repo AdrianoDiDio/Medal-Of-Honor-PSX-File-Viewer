@@ -1426,9 +1426,9 @@ contains all the data required to render a particular screen.
 | Byte           | 1 byte   | Unknown                                  |
 | Byte           | 1 byte   | Unknown                                  |
 | int            | 4 bytes  | Depth                                    |
-| int            | 4 bytes  | Unknown                                  |
-| int            | 4 bytes  | Unknown                                  |
-| int            | 4 bytes  | Unknown                                  |
+| [Color](#Color) | 4 bytes | RGB Color of Vertex 0                    |
+| [Color](#Color) | 4 bytes | RGB Color of Vertex 1                    |
+| [Color](#Color) | 4 bytes | RGB Color of Vertex 2                    |
 
 ##### Token Type 5
 
