@@ -249,8 +249,11 @@ VAO_t *VAOInitXYZUV(float *Data,int DataSize,int Stride,int VertexOffset,int Tex
     glVertexAttribPointer(1,2,GL_FLOAT,false,Stride,BUFFER_OFFSET(TextureOffset));
     glEnableVertexAttribArray(1);
 
-    VAO->Count = Count;
     VAO->Next = NULL;
+    VAO->CurrentSize = 0;
+    VAO->Stride = Stride;
+    VAO->Size = DataSize;
+    VAO->Count = Count;    
     
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);

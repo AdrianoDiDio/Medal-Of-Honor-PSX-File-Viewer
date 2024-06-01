@@ -758,6 +758,9 @@ void SSTFree(SST_t *SST)
         if( Temp->VRAM ) {
             VRAMFree(Temp->VRAM);
         }
+        if( Temp->LabelsVAO ) {
+            VAOFree(Temp->LabelsVAO);
+        }
         SST->ClassList = SST->ClassList->Next;
         free(Temp);
     }
@@ -779,7 +782,7 @@ int SSTCompare( const void *a, const void *b)
 }
 
 
-void SSTPrepareLabelVAO(SSTLabel_t *Label,VRAM_t* VRAM,int Index)
+void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
 {
     float x0,y0;
     float u0,v0;
@@ -799,21 +802,28 @@ void SSTPrepareLabelVAO(SSTLabel_t *Label,VRAM_t* VRAM,int Index)
     int DataSize;
     int VertexPointer;
     int TextureID;
+    
+    if( !Label ) {
+        DPrintf("SSTFillLabelVAO: Invalid label data\n");
+        return;
+    }
+    
+    if( !VRAM ) {
+        DPrintf("SSTFillLabelVAO: Invalid VRAM data\n");
+        return;
+    }
+    
+    if( !LabelsVAO ) {
+        DPrintf("SSTFillLabelVAO: Invalid VAO data\n");
+        return;
+    }
     //        XYZ  UV
     Stride = (3 + 2) * sizeof(float);
     //We need 6 vertices to describe a quad...
     DataSize = Stride * 6;
     
-    VertexData = malloc(Stride * 6/** sizeof(float)*/);
+    VertexData = malloc(Stride * 6);
     VertexPointer = 0;
-        
-//     if( Label->ImageInfo.ColorMode == BPP_4 ) {
-//         ColorModeOffset = 4;
-// //         TextureID = VRam->Page4Bit[Label->ImageInfo.TexturePage].TextureID;
-//     } else {
-//         ColorModeOffset = 2;
-// //         TextureID = VRam->Page8Bit[Label->ImageInfo.TexturePage].TextureID;
-//     }
         
     if( Label->ImageInfo.FrameBufferY >= 256 ) {
         BaseTextureX = (Label->ImageInfo.FrameBufferX - ((Label->ImageInfo.TexturePage - 16) * 64)) * ColorModeOffset;
@@ -928,7 +938,7 @@ void SSTPrepareLabelVAO(SSTLabel_t *Label,VRAM_t* VRAM,int Index)
     VertexData[VertexPointer+4] = v3;
     VertexPointer += 5;
 
-//     LabelsVao[Index] = VaoInitXYZUV(VertexData,DataSize,Stride,0,3,-1,TextureID);
+    VAOUpdate(LabelsVAO,VertexData,DataSize,6);
     free(VertexData);
 }
 void SSTModelRender(VRAM_t *VRAM)
@@ -967,9 +977,63 @@ void SSTRender(VRAM_t *VRAM)
 //     }
 //     SSTModelRender(VRam);
 }
-
+int SSTCreateLabelsVAO(SSTClass_t *Class)
+{
+    VAO_t *Result;
+    int DataSize;
+    int Stride;
+    
+    if( !Class->LabelList || Class->NumLabels == 0 ) {
+        DPrintf("SSTCreateLabelsVAO: Invalid label list\n");
+        return 0;
+    }    
+    //        XYZ  UV
+    Stride = (3 + 2) * sizeof(float);
+    //NOTE(Adriano): We need 6 vertices to describe a quad
+    DataSize = 6 * Stride * Class->NumLabels;
+    Result = VAOInitXYZUV(NULL,DataSize,Stride,0,3,Class->NumLabels * 6);
+    if( !Result ) {
+        DPrintf("SSTCreateLabelsVAO: Failed to initialize Label VAO\n");
+        return 0;
+    }
+    Class->LabelsVAO = Result;
+    return 1;
+}
+void SSTGenerateClassVAOs(SSTClass_t *Class)
+{
+    SSTLabel_t *Label;
+    int Ret;
+    
+    if( !Class ) {
+        DPrintf("SSTGenerateClassVAOs: Invalid class\n");
+        return;
+    }
+    if( !Class->ImageList ) { 
+        DPrintf("SSTGenerateClassVAOs: Failed to generate VAOs for class %s...no images were loaded...\n",Class->Name);
+        return;
+    }
+    if( Class->VRAM ) {
+        DPrintf("SSTGenerateClassVAOs: Class %s has already a VRAM structure allocated...freeing it\n",Class->Name);
+        VRAMFree(Class->VRAM);
+    }
+    Class->VRAM = VRAMInit(Class->ImageList);
+    if( !Class->VRAM ) {
+        DPrintf("SSTGenerateClassVAOs: Failed to create VRAM for class %s\n",Class->Name);
+        return;
+    }
+    Ret = SSTCreateLabelsVAO(Class);
+    if( !Ret ) {
+        DPrintf("SSTGenerateClassVAOs: Failed to create label VAO for class %s\n",Class->Name);
+        VRAMFree(Class->VRAM);
+        return;
+    }
+    for( Label = Class->LabelList; Label; Label = Label->Next ) {
+        SSTFillLabelsVAO(Label, Class->VRAM, Class->LabelsVAO);
+    }
+}
 void SSTGenerateVAOs(SST_t *SST)
 {
+    SSTClass_t *Class;
     int i;
     
     if( !SST ) {
@@ -979,12 +1043,11 @@ void SSTGenerateVAOs(SST_t *SST)
         return;
     }
     
-    if( SST->ClassList->ImageList ) {
-        if( SST->ClassList->VRAM ) {
-            VRAMFree(SST->ClassList->VRAM);
-        }
-        SST->ClassList->VRAM = VRAMInit(SST->ClassList->ImageList);
+    for( Class = SST->ClassList; Class; Class = Class->Next ) {
+        SSTGenerateClassVAOs(Class);
     }
+    
+   
     /*for( i = 0; i < NumLabels; i++ ) {
         SSTPrepareLabelVAO(&Label[i],VRAM,i);
     }*/
@@ -1037,6 +1100,40 @@ int SSTLoadAssetFromRSCList(const char *FileName,RSC_t *ClassRSCList,RSC_t *Glob
     }
     return 1;
 }
+void SSTAppendLabelToList(SSTLabel_t *Label,SSTLabel_t **LabelList)
+{
+    SSTLabel_t *Iterator;
+    SSTLabel_t *Prev;
+    
+    //Base case - List is empty...just append it
+    if (*LabelList == NULL) {
+        Label->Next = *LabelList;
+        *LabelList = Label;
+        return;
+    }
+    
+    Iterator = *LabelList;
+    Prev = NULL;
+    
+    while( 1 ) {
+        if( !Iterator ) {
+            break;
+        }
+        //Found insertion point
+        if( Iterator->Depth > Label->Depth ) {
+            break;
+        }
+        Prev = Iterator;
+        Iterator = Iterator->Next;
+    }
+    //Insert it
+    Label->Next = Iterator;
+    if( Prev != NULL ) {
+        Prev->Next = Label;
+    } else {
+        *LabelList = Label;
+    }
+}
 void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte **SSTBuffer,int GameEngine)
 {
     SSTLabel_t *Label;
@@ -1052,10 +1149,10 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte 
         DPrintf("SSTLoadLabel: Invalid class\n");
         return;
     }
-//     if( !RSC ) {
-//         DPrintf("SSTLoadLabel: Invalid RSC\n");
-//         return;
-//     }
+    if( !GlobalRSCList ) {
+        DPrintf("SSTLoadLabel: Invalid global RSC list\n");
+        return;
+    }
     if( !SSTBuffer ) {
         DPrintf("SSTLoadLabel: Invalid Buffer\n");
         return;
@@ -1109,11 +1206,10 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte 
     DPrintf("SSTLoadLabel: Color0: %i;%i;%i;%i Color1: %i;%i;%i;%i Color2:%i;%i;%i;%i\n",Label->Color0.rgba[0],Label->Color0.rgba[1],
             Label->Color0.rgba[2],Label->Color0.rgba[3],Label->Color1.rgba[0],Label->Color1.rgba[1],Label->Color1.rgba[2],Label->Color2.rgba[3],
             Label->Color2.rgba[0],Label->Color2.rgba[1],Label->Color2.rgba[2],Label->Color2.rgba[3]);
+    
     //Link it in!
-    //TODO(Adriano): This probably needs to be sorted according to the depth of the label otherwise they
-    //will overlap during rendering
-    Label->Next = Class->LabelList;
-    Class->LabelList = Label;
+    SSTAppendLabelToList(Label,&Class->LabelList);
+    Class->NumLabels++;
 
     if( strcmp(Label->TextureFile,"NULL") != 0 ) {
         if( Label->y > 512 ) {
@@ -1236,6 +1332,8 @@ SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int Ga
     Class->ImageList = NULL;
     Class->VRAM = NULL;
     Class->Next = NULL;
+    Class->LabelsVAO = NULL;
+    Class->NumLabels = 0;
     memcpy(&Class->Name,*SSTBuffer,sizeof(Class->Name));
     *SSTBuffer += sizeof(Class->Name);
     DPrintf("SSTLoadClass:Class Name is %s\n",Class->Name);
@@ -1277,6 +1375,7 @@ SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int Ga
     SST->ClassList = Class;
     return Class;
 }
+
 SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const RSC_t *GlobalRSCList,int GameEngine)
 {
     SST_t *SST;

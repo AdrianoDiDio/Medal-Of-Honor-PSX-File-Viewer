@@ -110,6 +110,8 @@ typedef struct SSTClass_s {
     RSC_t               *RSCList;
     TIMImage_t          *ImageList;
     VRAM_t              *VRAM;
+    VAO_t               *LabelsVAO;
+    int                 NumLabels;
     struct SSTClass_s   *Next;
 } SSTClass_t;
 typedef struct SSTGFX_s {
