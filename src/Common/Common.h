@@ -97,6 +97,7 @@ char        *ReadTextFile(const char *File,int Length);
 int         GetCurrentFilePosition(FILE *Fp);
 void        SkipFileSection(int SectionSize,FILE *InFile);
 void        CreateDirIfNotExists(const char *DirName);
+char        *NormalizePathSeparators(const char *Path);
 char        *SwitchExt(const char *In, const char *Ext);
 char        *GetBaseName(const char *Path);
 float       Rand01();

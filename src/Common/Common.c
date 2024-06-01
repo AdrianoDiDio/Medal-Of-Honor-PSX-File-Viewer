@@ -121,6 +121,25 @@ char *StringAppend(const char *FirstString,const char *SecondString)
     return Result;
 }
 
+char *NormalizePathSeparators(const char *Path)
+{
+    char	*Result;
+    char    *Temp;
+    
+    if( !Path ) {
+        return NULL;
+    }
+    
+    Result = StringCopy(Path);
+    
+    for ( Temp = Result; *Temp; Temp++ ) {
+        if ( *Temp == '/' || *Temp == '\\' ) {
+            *Temp = PATH_SEPARATOR;
+        }
+    }
+    return Result;
+}
+
 char *StringToUpper(const char *In)
 {
     char *Result;

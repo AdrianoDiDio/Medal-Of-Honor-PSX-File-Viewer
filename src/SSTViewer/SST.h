@@ -21,6 +21,7 @@
 #ifndef __SST_H_
 #define __SST_H_
 
+#include "../Common/RSC.h"
 #include "../Common/VRAM.h"
 #include "GFX.h"
 
@@ -106,6 +107,7 @@ typedef struct SSTClass_s {
     SSTCallback_t       *CallbackList;
     SSTLabel_t          *LabelList;
     SSTVideoInfo_t      *VideoInfo;
+    RSC_t               *RSCList;
     struct SSTClass_s   *Next;
 } SSTClass_t;
 typedef struct SSTGFX_s {
@@ -120,7 +122,7 @@ typedef struct SST_s {
     struct SST_s    *Next;
 } SST_t;
 
-SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine);
+SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,int GameEngine);
 void SSTLateInit(VRAM_t* VRam);
 void SSTRender(VRAM_t *VRam);
 void SSTModelRender(VRAM_t *VRam);

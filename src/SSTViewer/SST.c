@@ -19,7 +19,6 @@
 ===========================================================================
 */
 #include "SST.h"
-#include "../Common/RSC.h"
 #include "../Common/TIM.h"
 #include "SSTViewer.h" 
 
@@ -27,7 +26,7 @@ const SSTRSCMap_t MOHSSTRSCMap[] = {
     {
         "m_brief",
         28,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MBRIEF/M1/1.RSC",
             "SCR2/MBRIEF/M1/2.RSC",
             "SCR2/MBRIEF/M1/3.RSC",
@@ -61,35 +60,35 @@ const SSTRSCMap_t MOHSSTRSCMap[] = {
     {
         "m_calib",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MCALIB.RSC"
         }
     },
     {
         "m_config",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MCONFIG.RSC"
         }
     },
     {
         "m_ctrl",
         1,
-        (char*[]) {
+        (const char*[]) {
         "SCR1/MCTRL.RSC"
         }
     },
     {
         "m_dev",
         1,
-        (char*[]) {
+        (const char*[]) {
         "SCR1/MDEV.RSC"
         }
     },
     {
         "m_dwiemp",
         19,
-        (char*[]) {
+        (const char*[]) {
             "SCR3/MDWIEMP/1/1.RSC",
             "SCR3/MDWIEMP/1/2.RSC",
             "SCR3/MDWIEMP/1/3.RSC",
@@ -114,56 +113,56 @@ const SSTRSCMap_t MOHSSTRSCMap[] = {
     {
         "m_gallery",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MGAL.RSC"
         }
     },
     {
         "m_legal",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MLEGAL.RSC"
         }
     },
     {
         "m_load",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MLOAD.RSC"
         }
     },
     {
         "m_mission",
                 1,
-        (char*[]) {
+        (const char*[]) {
         "SCR1/MMISSION.RSC"
         }
     },
     {
         "m_option",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MOPTION.RSC"
         }
     },
     {
         "m_play",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MPLAY.RSC"
         }
     },
     {
         "m_save",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MSAVE.RSC"
         }
     },
     {
         "m_slide",
         80,
-        (char*[]) {
+        (const char*[]) {
             "SCR3/MSLIDE/M1/1.RSC",
             "SCR3/MSLIDE/M1/2.RSC",
             "SCR3/MSLIDE/M1/3.RSC",
@@ -249,7 +248,7 @@ const SSTRSCMap_t MOHSSTRSCMap[] = {
     {
         "m_title",
         2,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MTITLE1.RSC",
             "SCR1/MTITLE2.RSC"
         }
@@ -257,105 +256,105 @@ const SSTRSCMap_t MOHSSTRSCMap[] = {
     {
         "m_war",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MWAR.RSC"
         }
     },
     {
         "m_audio",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MAUDIO.RSC"
         }
     },
     {
         "m_commend",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MCOMMEND.RSC"
         }
     },
     {
         "m_dev2",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MDEV.RSC"
         }
     },
     {
         "m_enigma",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MENIGMA.RSC"
         }
     },
     {
         "m_eval",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MEVAL.RSC"
         }
     },
     {
         "m_medals",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MMEDALS.RSC"
         }
     },
     {
         "m_multopt",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MMULTOPT.RSC"
         }
     },
     {
         "m_pmeval",                
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MPMEVAL.RSC"
         }
     },
     {
         "m_pmeval2",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MPMEVAL2.RSC"
         }
     },
     {
         "m_pname",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MPNAME.RSC"
         }
     },
     {
         "m_postmis",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MPOSTMIS.RSC"
         }
     },
     {
         "m_secret",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MSECRET.RSC"
         }
     },
     {
         "m_uniform",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MUNIF.RSC"
         }
     },
     {
         "m_video",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MVIDEO.RSC"
         }
     }
@@ -366,7 +365,7 @@ const SSTRSCMap_t MOHUndergroundSSTRSCMap[] = {
     {
         "m_brief",
         28,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MBRIEF/M1/1.RSC",
             "SCR2/MBRIEF/M1/2.RSC",
             "SCR2/MBRIEF/M1/3.RSC",
@@ -400,35 +399,35 @@ const SSTRSCMap_t MOHUndergroundSSTRSCMap[] = {
     {
         "m_calib",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MCALIB.RSC"
         }
     },
     {
         "m_config",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MCONFIG.RSC"
         }
     },
     {
         "m_ctrl",
         1,
-        (char*[]) {
+        (const char*[]) {
         "SCR1/MCTRL.RSC"
         }
     },
     {
         "m_dev",
         1,
-        (char*[]) {
+        (const char*[]) {
         "SCR1/MDEV.RSC"
         }
     },
     {
         "m_dwiemp",
         12,
-        (char*[]) {
+        (const char*[]) {
             "SCR3/MDWIEMP/1/1.RSC",
             "SCR3/MDWIEMP/1/2.RSC",
             "SCR3/MDWIEMP/1/3.RSC",
@@ -446,63 +445,63 @@ const SSTRSCMap_t MOHUndergroundSSTRSCMap[] = {
     {
         "m_diff",
         1,
-        (char*[]) {
+        (const char*[]) {
         "SCR1/MDIFF.RSC"
         }
     },
     {
         "m_gallery",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MGAL.RSC"
         }
     },
     {
         "m_legal",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MLEGAL.RSC"
         }
     },
     {
         "m_load",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MLOAD.RSC"
         }
     },
     {
         "m_mission",
                 1,
-        (char*[]) {
+        (const char*[]) {
         "SCR1/MMISSION.RSC"
         }
     },
     {
         "m_option",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MOPTION.RSC"
         }
     },
     {
         "m_play",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MPLAY.RSC"
         }
     },
     {
         "m_save",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MSAVE.RSC"
         }
     },
     {
         "m_slide",
         70,
-        (char*[]) {
+        (const char*[]) {
             "SCR3/MSLIDE/M1/F01.RSC",
             "SCR3/MSLIDE/M1/F02.RSC",
             "SCR3/MSLIDE/M1/F03.RSC",
@@ -578,7 +577,7 @@ const SSTRSCMap_t MOHUndergroundSSTRSCMap[] = {
     {
         "m_title",
         2,
-        (char *[]) {
+        (const char *[]) {
             "SCR1/MTITLE1.RSC",
             "SCR1/MTITLE2.RSC"
         }
@@ -586,105 +585,105 @@ const SSTRSCMap_t MOHUndergroundSSTRSCMap[] = {
     {
         "m_war",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR1/MWAR.RSC"
         }
     },
     {
         "m_audio",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MAUDIO.RSC"
         }
     },
     {
         "m_commend",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MCOMMEND.RSC"
         }
     },
     {
         "m_dev2",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MDEV.RSC"
         }
     },
     {
         "m_enigma",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MENIGMA.RSC"
         }
     },
     {
         "m_eval",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MEVAL.RSC"
         }
     },
     {
         "m_medals",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MMEDALS.RSC"
         }
     },
     {
         "m_multopt",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MMULTOPT.RSC"
         }
     },
     {
         "m_pmeval",                
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MPMEVAL.RSC"
         }
     },
     {
         "m_pmeval2",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MPMEVAL2.RSC"
         }
     },
     {
         "m_pname",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MPNAME.RSC"
         }
     },
     {
         "m_postmis",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MPOSTMIS.RSC"
         }
     },
     {
         "m_secret",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MSECRET.RSC"
         }
     },
     {
         "m_uniform",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MUNIF.RSC"
         }
     },
     {
         "m_video",
         1,
-        (char*[]) {
+        (const char*[]) {
             "SCR2/MVIDEO.RSC"
         }
     }
@@ -967,10 +966,22 @@ void SSTLateInit(VRAM_t* VRAM)
         GFXPrepareVAO(Models[i].Model);
     }
 }
-
+const char **SSTBuildRSCPathListFromClassName(const char *ClassName, const SSTRSCMap_t *Map, int NumMapEntries, int *NumRSCFile)
+{
+    int i;
+    for( i = 0; i < NumMapEntries; i++ ) {
+        if( !strcmp(ClassName,Map[i].ClassName) ) {
+            if( NumRSCFile ) {
+                *NumRSCFile = Map[i].NumRSC;
+            }
+            return Map[i].RSCList;
+        }
+    }
+    return NULL;
+}
 const char **SSTGetRSCPathListFromClassName(SSTClass_t *Class, int GameEngine, int *NumRSCFile)
 {
-    SSTRSCMap_t *Map;
+    const SSTRSCMap_t *Map;
     int NumEntry;
     int i;
     
@@ -980,22 +991,10 @@ const char **SSTGetRSCPathListFromClassName(SSTClass_t *Class, int GameEngine, i
     }
     
     if( GameEngine == MOH_GAME_STANDARD ) {
-        Map = &MOHSSTRSCMap;
-        NumEntry = NumMOHSSTRSCMapEntry;
-    } else {
-        Map = &MOHUndergroundSSTRSCMap;
-        NumEntry = NumMOHUndergroundSSTRSCMapEntry;
+        return SSTBuildRSCPathListFromClassName(Class->Name,MOHSSTRSCMap,NumMOHSSTRSCMapEntry,NumRSCFile);
     }
     
-    for( i = 0; i < NumEntry; i++ ) {
-        if( !strcmp(Class->Name,Map[i].ClassName) ) {
-            if( NumRSCFile ) {
-                *NumRSCFile = Map[i].NumRSC;
-            }
-            return Map[i].RSCList;
-        }
-    }
-    return NULL;
+    return SSTBuildRSCPathListFromClassName(Class->Name,MOHUndergroundSSTRSCMap,NumMOHUndergroundSSTRSCMapEntry,NumRSCFile);
 }
 void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer,int GameEngine)
 {
@@ -1134,7 +1133,67 @@ void SSTLoadCallback(SST_t *SST, SSTClass_t *Class,Byte **SSTBuffer)
     Class->CallbackList = Callback;
     return;
 }
-SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine)
+SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int GameEngine)
+{
+    SSTClass_t *Class;
+    RSC_t *RSC;
+    char *DataPath;
+    char *Temp;
+    const char **RSCPathList;
+    int NumRSCPath;
+    
+    if( !SST ) {
+        DPrintf("SSTLoadClass:Invalid SST script data\n");
+        return NULL;
+    }
+    if( !SSTBuffer ) {
+        DPrintf("SSTLoadClass:Invalid SST Buffer\n");
+        return NULL;
+    }
+    Class = malloc(sizeof(SSTClass_t));
+    if( !Class ) {
+        DPrintf("SSTLoadClass:Failed to allocate memory for class\n");
+        return NULL;
+    }
+    Class->LabelList = NULL;
+    Class->CallbackList = NULL;
+    Class->VideoInfo = NULL;
+    Class->RSCList = NULL;
+    Class->Next = NULL;
+    memcpy(&Class->Name,*SSTBuffer,sizeof(Class->Name));
+    *SSTBuffer += sizeof(Class->Name);
+    DPrintf("SSTLoadClass:Class Name is %s\n",Class->Name);
+
+    //TODO(Adriano):Move this code to his own function...CurrentClass will have an
+    //RSC list that will be used to load all the assets (when not found fallback to global!)
+    RSCPathList = SSTGetRSCPathListFromClassName(Class, GameEngine, &NumRSCPath);
+    if( RSCPathList != NULL ) {
+        for (int i = 0; i < NumRSCPath; i++ ) {
+            Temp = NormalizePathSeparators(RSCPathList[i]);
+            if( !Temp ) {
+                DPrintf("SSTLoadClass: Failed to normalize path %s\n",RSCPathList[i]);
+                continue;
+            }
+            DPrintf("SSTLoadClass: Assets should be loaded from %s\n",Temp );
+            asprintf(&DataPath,"%s%cDATA%c%s",BasePath,PATH_SEPARATOR,PATH_SEPARATOR,Temp);
+            DPrintf("SSTLoadClass:Loading asset file from %s\n",DataPath);
+            free(Temp);
+            free(DataPath);
+        }
+    } else {
+        //NOTE(Adriano): Movies file are the only exception since they always use the CD path
+        //movie/*/*.STR and are not inside any RSC file...
+        if( !StringStartsWith(Class->Name, "m_movie" )) {
+            DPrintf("SSTLoadClass: Missing map for class %s\n",Class->Name);
+            assert(1!=1);
+        }
+    }
+    //Link it in!
+    Class->Next = SST->ClassList;
+    SST->ClassList = Class;
+    return Class;
+}
+SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,int GameEngine)
 {
     SST_t *SST;
     SSTClass_t *CurrentClass;
@@ -1145,8 +1204,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine)
     RSC_t *RSCData;
     RSC_t *RSCData2;
     RSCEntry_t Entry;
-    char **RSCPathList;
-    int NumRSCPath;
+
     char Name[28];
     int Size;
     int Token;
@@ -1184,32 +1242,11 @@ SST_t *SSTLoad(Byte *SSTBuffer,int GameEngine)
         DPrintf("SSTLoad:Got token %i\n",Token);
         switch( Token ) {
             case SST_CLASS_TOKEN:
-                CurrentClass = malloc(sizeof(SSTClass_t));
-                CurrentClass->LabelList = NULL;
-                CurrentClass->CallbackList = NULL;
-                CurrentClass->VideoInfo = NULL;
-                CurrentClass->Next = NULL;
-                memcpy(&CurrentClass->Name,SSTBuffer,sizeof(CurrentClass->Name));
-                SSTBuffer += sizeof(CurrentClass->Name);
-                //TODO(Adriano):Move this code to his own function...CurrentClass will have an
-                //RSC list that will be used to load all the assets (when not found fallback to global!)
-                RSCPathList = SSTGetRSCPathListFromClassName(CurrentClass, GameEngine, &NumRSCPath);
-                if( RSCPathList != NULL ) {
-                    for (int i = 0; i < NumRSCPath; i++ ) {
-                        DPrintf("SSTLoad: Assets should be loaded from %s\n",RSCPathList[i] );
-                    }
-                } else {
-                    //NOTE(Adriano): Movies file are the only exception since they always use the CD path
-                    //movie/*/*.STR and are not inside any RSC file...
-                    if( !StringStartsWith(CurrentClass->Name, "m_movie" )) {
-                        DPrintf("SSTLoad: Missing map for class %s\n",CurrentClass->Name);
-                        assert(1!=1);
-                    }
+                CurrentClass = SSTLoadClass(SST,&SSTBuffer,BasePath,GameEngine);
+                if( !CurrentClass ) {
+                    DPrintf("SSTLoad:Failed to allocate class...\n");
+                    return NULL;
                 }
-                //Link it in!
-                CurrentClass->Next = SST->ClassList;
-                SST->ClassList = CurrentClass;
-                DPrintf("SSTLoad:Class Name is %s\n",CurrentClass->Name);
                 break;
             case SST_CALLBACK_TOKEN:
                 SSTLoadCallback(SST,CurrentClass,&SSTBuffer);
