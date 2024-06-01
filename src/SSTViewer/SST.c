@@ -749,6 +749,12 @@ void SSTFree(SST_t *SST)
         if( Temp->VideoInfo ) {
             free(Temp->VideoInfo);
         }
+        if( Temp->RSCList ) {
+            RSCFree(Temp->RSCList);
+        }
+        if( Temp->ImageList ) {
+            TIMImageListFree(Temp->ImageList);
+        }
         SST->ClassList = SST->ClassList->Next;
         free(Temp);
     }
@@ -996,11 +1002,26 @@ const char **SSTGetRSCPathListFromClassName(SSTClass_t *Class, int GameEngine, i
     
     return SSTBuildRSCPathListFromClassName(Class->Name,MOHUndergroundSSTRSCMap,NumMOHUndergroundSSTRSCMapEntry,NumRSCFile);
 }
-void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer,int GameEngine)
+int SSTLoadAssetFromRSCList(const char *FileName,RSC_t *ClassRSCList,RSC_t *GlobalRSCList,RSCEntry_t *Entry)
+{
+    int Ret;
+    
+    Ret = RSCOpen(ClassRSCList,FileName,Entry);
+    if( Ret < 0 ) {
+        DPrintf("SSTLoadAssetFromRSCList: File %s was not found in the class list...trying the global one...\n",FileName);
+        Ret = RSCOpen(GlobalRSCList,FileName,Entry);
+        if( Ret < 0 ) {
+            DPrintf("SSTLoadAssetFromRSCList: File %s was not found in the global list\n",FileName);
+            return 0;
+        }
+    }
+    return 1;
+}
+void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte **SSTBuffer,int GameEngine)
 {
     SSTLabel_t *Label;
     TIMImage_t *Image;
-    RSCEntry_t Entry;
+    RSCEntry_t  Entry;
     int Ret;
     
     if( !SST ) {
@@ -1073,14 +1094,14 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer,int 
     //will overlap during rendering
     Label->Next = Class->LabelList;
     Class->LabelList = Label;
-    //TODO(Adriano): Figure out what RSC file we need before loading the texture
-    if( /*strcmp(Label->TextureFile,"NULL") != 0*/ 0 ) {
+
+    if( strcmp(Label->TextureFile,"NULL") != 0 ) {
         if( Label->y > 512 ) {
             //Clamp to Height
             Label->y = 0;
         }
-        Ret = RSCOpen(RSC,Label->TextureFile,&Entry);
-        if( Ret > 0 ) {
+        Ret = SSTLoadAssetFromRSCList(Label->TextureFile, Class->RSCList, GlobalRSCList, &Entry);
+        if( Ret ) {
             DPrintf("SSTLoadLabel:Texture is %s\n",Entry.Name);
             Image = TIMLoadAllImagesFromBuffer(Entry.Data);
             Label->ImageInfo.TexturePage = Image->TexturePage;
@@ -1089,8 +1110,10 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,RSC_t *RSC,Byte **SSTBuffer,int 
             Label->ImageInfo.Width = Image->Width;
             Label->ImageInfo.Height = Image->Height;
             Label->ImageInfo.ColorMode = Image->Header.BPP;
-            Image->Next = SST->ImageList;
-            SST->ImageList = Image;
+            Image->Next = Class->ImageList;
+            Class->ImageList = Image;
+        } else {
+            DPrintf("SSTLoadLabel:Failed to locate texture %s\n",Label->TextureFile);
         }
     }
     return;
@@ -1190,13 +1213,12 @@ SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int Ga
     Class->CallbackList = NULL;
     Class->VideoInfo = NULL;
     Class->RSCList = NULL;
+    Class->ImageList = NULL;
     Class->Next = NULL;
     memcpy(&Class->Name,*SSTBuffer,sizeof(Class->Name));
     *SSTBuffer += sizeof(Class->Name);
     DPrintf("SSTLoadClass:Class Name is %s\n",Class->Name);
 
-    //TODO(Adriano):Move this code to his own function...CurrentClass will have an
-    //RSC list that will be used to load all the assets (when not found fallback to global!)
     RSCPathList = SSTGetRSCPathListFromClassName(Class, GameEngine, &NumRSCPath);
     if( RSCPathList != NULL ) {
         for (int i = 0; i < NumRSCPath; i++ ) {
@@ -1208,6 +1230,13 @@ SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int Ga
             DPrintf("SSTLoadClass: Assets should be loaded from %s\n",Temp );
             asprintf(&DataPath,"%s%cDATA%c%s",BasePath,PATH_SEPARATOR,PATH_SEPARATOR,Temp);
             DPrintf("SSTLoadClass:Loading asset file from %s\n",DataPath);
+            RSC = RSCLoad(DataPath);
+            if( RSC ) {
+                //Link it in!
+                RSCAppend(&Class->RSCList,RSC);
+            } else {
+                DPrintf("SSTLoadClass:Failed to load RSC file %s\n",DataPath);
+            }
             free(Temp);
             free(DataPath);
         }
@@ -1224,7 +1253,7 @@ SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int Ga
     SST->ClassList = Class;
     return Class;
 }
-SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,int GameEngine)
+SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,const RSC_t *GlobalRSCList,int GameEngine)
 {
     SST_t *SST;
     SSTClass_t *CurrentClass;
@@ -1232,8 +1261,6 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,int GameEngine)
     SSTVideoInfo_t *SSTVideoInfo;
     SSTLabel_t *SSTLabel;
     SSTLabel_t *TempLabel;
-    RSC_t *RSCData;
-    RSC_t *RSCData2;
     RSCEntry_t Entry;
 
     char Name[28];
@@ -1256,12 +1283,8 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,int GameEngine)
     }
     NumModels = 0;
     SST->Next = NULL;
-    SST->ImageList = NULL;
     SST->ClassList = NULL;
     CurrentClass = NULL;
-    RSCData = RSCLoad("SSTScripts/mdev.rsc");
-    RSCData2 = RSCLoad("SSTScripts/mdev2.rsc");
-
     StoreLabel = 0;
 
     while( 1 ) {
@@ -1285,7 +1308,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,int GameEngine)
                 //StoreLabel = 0;
                 break;
             case SST_LABEL_TOKEN:
-                SSTLoadLabel(SST,CurrentClass,RSCData,&SSTBuffer,GameEngine);
+                SSTLoadLabel(SST,CurrentClass,GlobalRSCList,&SSTBuffer,GameEngine);
                 break;
             case SST_BACKDROP_TOKEN:
                 DPrintf("BackDrop declaration started.\n");
@@ -1360,7 +1383,5 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,int GameEngine)
         }
     }
     //qsort( &Label, NumLabels, sizeof(SSTLabel_t), SSTCompare );
-    RSCFree(RSCData);
     return SST;
-    // Test
 }

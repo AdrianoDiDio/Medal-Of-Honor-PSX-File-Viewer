@@ -108,6 +108,7 @@ typedef struct SSTClass_s {
     SSTLabel_t          *LabelList;
     SSTVideoInfo_t      *VideoInfo;
     RSC_t               *RSCList;
+    TIMImage_t          *ImageList;
     struct SSTClass_s   *Next;
 } SSTClass_t;
 typedef struct SSTGFX_s {
@@ -117,12 +118,11 @@ typedef struct SSTGFX_s {
 
 typedef struct SST_s {
     SSTHeader_t     Header;
-    TIMImage_t      *ImageList;
     SSTClass_t      *ClassList;
     struct SST_s    *Next;
 } SST_t;
 
-SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,int GameEngine);
+SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,const RSC_t *GlobalRSCList,int GameEngine);
 void SSTLateInit(VRAM_t* VRam);
 void SSTRender(VRAM_t *VRam);
 void SSTModelRender(VRAM_t *VRam);
