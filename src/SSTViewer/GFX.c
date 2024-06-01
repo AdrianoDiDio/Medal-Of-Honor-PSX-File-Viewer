@@ -21,6 +21,28 @@
 #include "GFX.h"
 #include "SSTViewer.h"
 
+void GFXFree(GFX_t *GFX)
+{
+    GFX_t *Temp;
+    if( !GFX ) {
+        return;
+    }
+    
+    while( GFX ) {
+        if( GFX->Vertex ) {
+            free(GFX->Vertex);
+        }
+        if( GFX->Normal ) {
+            free(GFX->Normal);
+        }
+        if( GFX->Face ) {
+            free(GFX->Face);
+        }
+        Temp = GFX;
+        GFX = GFX->Next;
+        free(Temp);
+    }
+}
 void GFXReadHeaderChunk(GFX_t *GFX,void **GFXFileBuffer)
 {    
     if( !GFX || !GFXFileBuffer ) {
@@ -319,6 +341,14 @@ GFX_t *GFXRead(void* GFXFileBuffer)
     }
     
     GFXData = malloc(sizeof(GFX_t));
+    if( !GFXData ) {
+        DPrintf("GFXRead: Failed to allocate memory for GFX model\n");
+        return NULL;
+    }
+    GFXData->Vertex = NULL;
+    GFXData->Normal = NULL;
+    GFXData->Face = NULL;
+    GFXData->Next = NULL;
     GFXData->VAOList = NULL;
     GFXReadHeaderChunk(GFXData,&GFXFileBuffer);
     GFXReadOffsetTableChunk(GFXData,&GFXFileBuffer);

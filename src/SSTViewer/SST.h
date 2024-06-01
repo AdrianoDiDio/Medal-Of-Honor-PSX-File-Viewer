@@ -107,6 +107,7 @@ typedef struct SSTClass_s {
     SSTCallback_t       *CallbackList;
     SSTLabel_t          *LabelList;
     SSTVideoInfo_t      *VideoInfo;
+    GFX_t               *GFXModelList;
     RSC_t               *RSCList;
     TIMImage_t          *ImageList;
     VRAM_t              *VRAM;

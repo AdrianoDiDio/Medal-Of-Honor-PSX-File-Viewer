@@ -80,9 +80,12 @@ typedef struct GFX_s {
     GFXVertex_t *AnimationData;
     int NumAnimations;
     VAO_t *VAOList;
+    
+    struct GFX_s *Next;
 } GFX_t;
 
 GFX_t *GFXRead(void* GFXFileBuffer);
+void GFXFree(GFX_t *GFX);
 void GFXPrepareVAO(GFX_t *GFX);
 void GFXRender(GFX_t *GFX,VRAM_t *VRAM);
 #endif //__GFX_H_

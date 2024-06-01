@@ -755,6 +755,9 @@ void SSTFree(SST_t *SST)
         if( Temp->ImageList ) {
             TIMImageListFree(Temp->ImageList);
         }
+        if( Temp->GFXModelList ) {
+            GFXFree(Temp->GFXModelList);
+        }
         if( Temp->VRAM ) {
             VRAMFree(Temp->VRAM);
         }
@@ -1046,13 +1049,22 @@ void SSTGenerateVAOs(SST_t *SST)
     for( Class = SST->ClassList; Class; Class = Class->Next ) {
         SSTGenerateClassVAOs(Class);
     }
-    
-   
-    /*for( i = 0; i < NumLabels; i++ ) {
-        SSTPrepareLabelVAO(&Label[i],VRAM,i);
-    }*/
+
     for( i = 0; i < NumModels; i++ ) {
         GFXPrepareVAO(Models[i].Model);
+    }
+}
+void SSTAppendImageList(TIMImage_t **OriginalImageList,TIMImage_t *ImageList)
+{
+    TIMImage_t *LastNode;
+    if( !*OriginalImageList ) {
+        *OriginalImageList = ImageList;
+    } else {
+        LastNode = *OriginalImageList;
+        while( LastNode->Next ) {
+            LastNode = LastNode->Next;
+        }
+        LastNode->Next = ImageList;
     }
 }
 const char **SSTBuildRSCPathListFromClassName(const char *ClassName, const SSTRSCMap_t *Map, int NumMapEntries, int *NumRSCFile)
@@ -1226,8 +1238,7 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte 
             Label->ImageInfo.Width = Image->Width;
             Label->ImageInfo.Height = Image->Height;
             Label->ImageInfo.ColorMode = Image->Header.BPP;
-            Image->Next = Class->ImageList;
-            Class->ImageList = Image;
+            SSTAppendImageList(&Class->ImageList,Image);
         } else {
             DPrintf("SSTLoadLabel:Failed to locate texture %s\n",Label->TextureFile);
         }
@@ -1303,6 +1314,61 @@ void SSTLoadVideoInfo(SST_t *SST,SSTClass_t *Class,Byte **SSTBuffer)
     VideoInfo->Unknown,VideoInfo->Unknown2);
     Class->VideoInfo = VideoInfo;
 }
+void SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte **SSTBuffer)
+{
+    GFX_t *GFX;
+    RSCEntry_t Entry;
+    TIMImage_t *Image;
+    char FileName[28];
+    int Ret;
+    
+    if( !SST ) {
+        DPrintf("SSTLoadGFXModel:Invalid SST data\n");
+        return;
+    }
+    if( !Class ) {
+        DPrintf("SSTLoadGFXModel:Invalid class\n");
+        return;
+    }
+    if( !GlobalRSCList ) {
+        DPrintf("SSTLoadGFXModel: Invalid global RSC list\n");
+        return;
+    }
+    if( !SSTBuffer ) {
+        DPrintf("SSTLoadGFXModel:Invalid buffer\n");
+        return;
+    }
+    
+    memcpy(&FileName,*SSTBuffer,sizeof(FileName));
+    *SSTBuffer += sizeof(FileName);
+    Ret = SSTLoadAssetFromRSCList(FileName, Class->RSCList, GlobalRSCList, &Entry);
+    if( Ret ) {
+        DPrintf("SSTLoadGFXModel:Model is %s\n",Entry.Name);
+        GFX = GFXRead(Entry.Data);
+    } else {
+        DPrintf("SSTLoadGFXModel:Failed to locate model %s\n",FileName);
+    }
+    
+    memcpy(&FileName,*SSTBuffer,sizeof(FileName));
+    *SSTBuffer += sizeof(FileName);
+    
+    if( strcmp(FileName,"NULL") != 0 ) {
+        Ret = SSTLoadAssetFromRSCList(FileName, Class->RSCList, GlobalRSCList, &Entry);
+        if( Ret ) {
+            DPrintf("SSTLoadGFXModel:Texture is %s\n",Entry.Name);
+            Image = TIMLoadAllImagesFromBuffer(Entry.Data);
+            SSTAppendImageList(&Class->ImageList,Image);
+        } else {
+            DPrintf("SSTLoadGFXModel:Failed to locate texture %s\n",FileName);
+        }
+    } else {
+        DPrintf("SSTLoadGFXModel: NULL texture...\n");
+    }
+    *SSTBuffer += 56;
+    //Link it in!
+    GFX->Next = Class->GFXModelList;
+    Class->GFXModelList = GFX;
+}
 SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int GameEngine)
 {
     SSTClass_t *Class;
@@ -1330,6 +1396,7 @@ SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int Ga
     Class->VideoInfo = NULL;
     Class->RSCList = NULL;
     Class->ImageList = NULL;
+    Class->GFXModelList = NULL;
     Class->VRAM = NULL;
     Class->Next = NULL;
     Class->LabelsVAO = NULL;
@@ -1452,50 +1519,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
                 SSTBuffer += (4*Size) + 4;
                 break;
             case SST_GFX_TOKEN:
-                //GFX Model
-                //TODO(Adriano): As for the labels we need to understand what RSC file
-                //we need to know where to load data
-                memcpy(&Name,SSTBuffer,sizeof(Name));
-                SSTBuffer += sizeof(Name);
-//                 if( !strcmp(Name,"global2\\model\\clerkb.gfx") ) {
-//                     SkipFileSection(SSTFile,84);
-//                     break;
-//                 }
-                DPrintf("Loading model %s\n",Name);
-//                 Ret = RSCOpen(RSCData,Name,&Entry);
-//                 if( Ret < 0 ) {
-//                     Ret = RSCOpen(RSCData2,Name,&Entry);
-//                     if( Ret < 0 ) {
-//                         DPrintf("File was not found inside RSC...%s\n",Name);
-//                         break;
-//                     }
-//                 }
-//                 Models[NumModels].Model = GFXRead(Entry.Data);
-                memcpy(&Name,SSTBuffer,sizeof(Name));
-                SSTBuffer += sizeof(Name);
-                DPrintf("Loading texture %s\n",Name);
-//                 Ret = RSCOpen(RSCData,Name,&Entry);
-//                 if( Ret < 0 ) {
-//                     Ret = RSCOpen(RSCData2,Name,&Entry);
-//                     if( Ret < 0 ) {
-//                         DPrintf("File was not found inside RSC...%s\n",Name);
-//                         break;
-//                     }
-//                 }
-//                 int NumImages = 0;
-//                 while( Entry.Data ) {
-//                     Models[NumModels].Image = TIMLoadImageFromBuffer(&Entry.Data,NumImages);
-//                     if( Models[NumModels].Image == NULL ) {
-//                         DPrintf("Image is NULL skippin\n");
-//                         break;
-//                     }
-//                     Models[NumModels].Image->Next = SST->ImageList;
-//                     SST->ImageList = Models[NumModels].Image;
-//                     NumImages++;
-//                 }
-                SSTBuffer += 56;
-//                 exit(0);
-                NumModels++;
+                SSTLoadGFXModel(SST,CurrentClass,GlobalRSCList,&SSTBuffer);
                 break;
             case SST_UNKNOWN_3_TOKEN:
                 //After a GFX Model we have this token.
