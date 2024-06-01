@@ -205,12 +205,19 @@ void SSTManagerDraw(SSTManager_t *SSTManager,Camera_t *Camera)
     
 }
 
+void SSTManagerActivateScript(SSTManager_t *SSTManager,SST_t *Script)
+{
+    DPrintf("SSTManagerActivateScript:Activating script %s\n",Script->Name);
+    SSTGenerateVAOs(Script);
+    SSTManager->ActiveScript = Script;
+}
 int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *Path)
 {
     char *Buffer;
     char *RSCBuffer;
     RSC_t *RSC;
     RSCEntry_t *EntryList;
+    char *ScriptName;
     SST_t *Script;
     int  NumScripts;
     int BasePercentage;
@@ -275,17 +282,22 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
     BasePercentage = 50;
     ScriptIncrement = (100 - BasePercentage) / NumScripts;
     for( i = 0; i < NumScripts; i++ ) {
-        asprintf(&Buffer,"Loading Script %s...",EntryList[i].Name);
+        ScriptName = RSCGetBaseName(EntryList[i].Name);
+        asprintf(&Buffer,"Loading Script %s...",ScriptName);
         ProgressBarIncrement(GUI->ProgressBar,VideoSystem,BasePercentage,Buffer);
-        DPrintf("SSTManagerInitWithPath: Loading script %s\n",EntryList[i].Name);
-        Script = SSTLoad(EntryList[i].Data,Path,SSTManager->GlobalRSCList,SSTManager->GameEngine);
+        DPrintf("SSTManagerInitWithPath: Loading script %s\n",ScriptName);
+        Script = SSTLoad(EntryList[i].Data,ScriptName,Path,SSTManager->GlobalRSCList,SSTManager->GameEngine);
         if( !Script ) {
-            DPrintf("SSTManagerInitWithPath: Failed to load script %s\n",EntryList[i].Name);
+            DPrintf("SSTManagerInitWithPath: Failed to load script %s\n",ScriptName);
         } else {
+            if( !strcmp(Script->Name,"mtitle1.sst") ) {
+                SSTManagerActivateScript(SSTManager,Script);
+            }
             Script->Next = SSTManager->ScriptList;
             SSTManager->ScriptList = Script;
         }
         BasePercentage += ScriptIncrement;
+        free(ScriptName);
         free(Buffer);
     }
     free(EntryList);

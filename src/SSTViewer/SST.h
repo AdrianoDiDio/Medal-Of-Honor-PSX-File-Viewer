@@ -109,6 +109,7 @@ typedef struct SSTClass_s {
     SSTVideoInfo_t      *VideoInfo;
     RSC_t               *RSCList;
     TIMImage_t          *ImageList;
+    VRAM_t              *VRAM;
     struct SSTClass_s   *Next;
 } SSTClass_t;
 typedef struct SSTGFX_s {
@@ -117,16 +118,16 @@ typedef struct SSTGFX_s {
 } SSTGFX_t;
 
 typedef struct SST_s {
-    SSTHeader_t     Header;
+    char            *Name;
     SSTClass_t      *ClassList;
     struct SST_s    *Next;
 } SST_t;
 
-SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,const RSC_t *GlobalRSCList,int GameEngine);
-void SSTLateInit(VRAM_t* VRam);
-void SSTRender(VRAM_t *VRam);
-void SSTModelRender(VRAM_t *VRam);
-void SSTFree(SST_t *SST);
+SST_t   *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const RSC_t *GlobalRSCList,int GameEngine);
+void    SSTGenerateVAOs(SST_t *SST);
+void    SSTRender(VRAM_t *VRam);
+void    SSTModelRender(VRAM_t *VRam);
+void    SSTFree(SST_t *SST);
 
 #endif//__SST_H_
  

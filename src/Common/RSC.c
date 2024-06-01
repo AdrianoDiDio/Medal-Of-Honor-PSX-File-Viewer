@@ -88,6 +88,20 @@ int RSCOpen(RSC_t *RSC,char *FileName,RSCEntry_t *OutEntry)
     DPrintf("An error has occurred:%s\n",RSCGetErrorString(EntryIndex));
     return RSC_FILE_NOT_FOUND;
 }
+
+char *RSCGetBaseName(const char *RSCPath)
+{
+    char *Out;
+    Out = strrchr(RSCPath, '\\');
+    if (Out == NULL) {
+        return strdup(RSCPath);
+    } else {
+        //Skip remaining dir separator.
+        Out++;
+    }
+    return strdup(Out);
+}
+
 void RSCAppend(RSC_t **RSCList,RSC_t *RSC)
 {
     RSC_t *LastNode;

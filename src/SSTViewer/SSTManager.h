@@ -70,6 +70,7 @@ typedef struct SSTManager_s {
     RenderObjectShader_t    *RenderObjectShader;
     RSC_t                   *GlobalRSCList;
     SST_t                   *ScriptList;
+    SST_t                   *ActiveScript;
 
 } SSTManager_t;
 

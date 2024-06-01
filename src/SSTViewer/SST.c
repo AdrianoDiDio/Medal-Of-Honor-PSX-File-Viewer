@@ -755,8 +755,14 @@ void SSTFree(SST_t *SST)
         if( Temp->ImageList ) {
             TIMImageListFree(Temp->ImageList);
         }
+        if( Temp->VRAM ) {
+            VRAMFree(Temp->VRAM);
+        }
         SST->ClassList = SST->ClassList->Next;
         free(Temp);
+    }
+    if( SST->Name ) {
+        free(SST->Name);
     }
     free(SST);
 }
@@ -962,9 +968,23 @@ void SSTRender(VRAM_t *VRAM)
 //     SSTModelRender(VRam);
 }
 
-void SSTLateInit(VRAM_t* VRAM)
+void SSTGenerateVAOs(SST_t *SST)
 {
     int i;
+    
+    if( !SST ) {
+        return;
+    }
+    if( !SST->ClassList ) {
+        return;
+    }
+    
+    if( SST->ClassList->ImageList ) {
+        if( SST->ClassList->VRAM ) {
+            VRAMFree(SST->ClassList->VRAM);
+        }
+        SST->ClassList->VRAM = VRAMInit(SST->ClassList->ImageList);
+    }
     /*for( i = 0; i < NumLabels; i++ ) {
         SSTPrepareLabelVAO(&Label[i],VRAM,i);
     }*/
@@ -1214,6 +1234,7 @@ SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int Ga
     Class->VideoInfo = NULL;
     Class->RSCList = NULL;
     Class->ImageList = NULL;
+    Class->VRAM = NULL;
     Class->Next = NULL;
     memcpy(&Class->Name,*SSTBuffer,sizeof(Class->Name));
     *SSTBuffer += sizeof(Class->Name);
@@ -1248,12 +1269,15 @@ SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int Ga
             assert(1!=1);
         }
     }
+    if( SST->ClassList != NULL ) {
+        DPrintf("SSTLoadClass: Multiple class detected for script %s...\n",SST->Name);
+    }
     //Link it in!
     Class->Next = SST->ClassList;
     SST->ClassList = Class;
     return Class;
 }
-SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,const RSC_t *GlobalRSCList,int GameEngine)
+SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const RSC_t *GlobalRSCList,int GameEngine)
 {
     SST_t *SST;
     SSTClass_t *CurrentClass;
@@ -1262,7 +1286,6 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,const RSC_t *GlobalRSCList,i
     SSTLabel_t *SSTLabel;
     SSTLabel_t *TempLabel;
     RSCEntry_t Entry;
-
     char Name[28];
     int Size;
     int Token;
@@ -1282,11 +1305,14 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,const RSC_t *GlobalRSCList,i
         return NULL;
     }
     NumModels = 0;
-    SST->Next = NULL;
+    SST->Name = StringCopy(ScriptName);
     SST->ClassList = NULL;
+    SST->Next = NULL;
     CurrentClass = NULL;
     StoreLabel = 0;
 
+    DPrintf("SSTLoad:Loading script %s\n",SST->Name);
+    
     while( 1 ) {
         if( !*SSTBuffer ) {
             DPrintf("SSTLoad:EOF reached or an error occurred...\n");
