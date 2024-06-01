@@ -279,8 +279,12 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
         ProgressBarIncrement(GUI->ProgressBar,VideoSystem,BasePercentage,Buffer);
         DPrintf("SSTManagerInitWithPath: Loading script %s\n",EntryList[i].Name);
         Script = SSTLoad(EntryList[i].Data,Path,SSTManager->GameEngine);
-        Script->Next = SSTManager->ScriptList;
-        SSTManager->ScriptList = Script;
+        if( !Script ) {
+            DPrintf("SSTManagerInitWithPath: Failed to load script %s\n",EntryList[i].Name);
+        } else {
+            Script->Next = SSTManager->ScriptList;
+            SSTManager->ScriptList = Script;
+        }
         BasePercentage += ScriptIncrement;
         free(Buffer);
     }

@@ -1133,6 +1133,37 @@ void SSTLoadCallback(SST_t *SST, SSTClass_t *Class,Byte **SSTBuffer)
     Class->CallbackList = Callback;
     return;
 }
+void SSTLoadVideoInfo(SST_t *SST,SSTClass_t *Class,Byte **SSTBuffer)
+{
+    SSTVideoInfo_t *VideoInfo;
+    
+    if( !SST ) {
+        DPrintf("SSTLoadVideoInfo:Invalid SST data\n");
+        return;
+    }
+    if( !Class ) {
+        DPrintf("SSTLoadVideoInfo:Invalid class\n");
+        return;
+    }
+    if( !SSTBuffer ) {
+        DPrintf("SSTLoadVideoInfo:Invalid buffer\n");
+        return;
+    }
+    if( Class->VideoInfo ) {
+        DPrintf("SSTLoadVideoInfo:Warning, class %s already has video info data allocated\n",Class->Name);
+        return;
+    }
+    VideoInfo = malloc(sizeof(SSTVideoInfo_t));
+    if( !VideoInfo ) {
+        DPrintf("SSTLoadVideoInfo:Failed to allocate memory for video info for class %s\n",Class->Name);
+        return;
+    }
+    memcpy(VideoInfo,*SSTBuffer,sizeof(SSTVideoInfo_t));
+    *SSTBuffer += sizeof(SSTVideoInfo_t);
+    DPrintf("SSTLoad:Callback STR file:%s Unknown:%i Unknown2: %i\n",VideoInfo->STRFile,
+    VideoInfo->Unknown,VideoInfo->Unknown2);
+    Class->VideoInfo = VideoInfo;
+}
 SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int GameEngine)
 {
     SSTClass_t *Class;
@@ -1227,6 +1258,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,int GameEngine)
     SST->Next = NULL;
     SST->ImageList = NULL;
     SST->ClassList = NULL;
+    CurrentClass = NULL;
     RSCData = RSCLoad("SSTScripts/mdev.rsc");
     RSCData2 = RSCLoad("SSTScripts/mdev2.rsc");
 
@@ -1261,11 +1293,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *BasePath,int GameEngine)
                 break;
             case SST_STR_FILE_TOKEN:
                 DPrintf("STR file declaration\n");
-                CurrentClass->VideoInfo = malloc(sizeof(SSTVideoInfo_t));
-                memcpy(CurrentClass->VideoInfo,SSTBuffer,sizeof(SSTVideoInfo_t));
-                SSTBuffer += sizeof(SSTVideoInfo_t);
-                DPrintf("SSTLoad:Callback STR file:%s Unknown:%i Unknown2: %i\n",CurrentClass->VideoInfo->STRFile,
-                        CurrentClass->VideoInfo->Unknown,CurrentClass->VideoInfo->Unknown2);
+                SSTLoadVideoInfo(SST,CurrentClass,&SSTBuffer);
                 break;
             case SST_UNKNOWN_1_TOKEN:
                 SSTBuffer += 276;
