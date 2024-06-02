@@ -784,23 +784,57 @@ int SSTCompare( const void *a, const void *b)
     else return -1;
 }
 
-
+void SSTFillVertexBuffer(int *Buffer,int *BufferSize,int x,int y,int z,Color1i_t Color,int U,int V,int CLUTX,int CLUTY,int ColorMode)
+{
+    if( !Buffer ) {
+        DPrintf("SSTFillVertexBuffer:Invalid Buffer\n");
+        return;
+    }
+    if( !BufferSize ) {
+        DPrintf("SSTFillVertexBuffer:Invalid BufferSize\n");
+        return;
+    }
+    
+    Buffer[*BufferSize] =   x;
+    Buffer[*BufferSize+1] = y;
+    Buffer[*BufferSize+2] = z;
+    Buffer[*BufferSize+3] = U;
+    Buffer[*BufferSize+4] = V;
+    Buffer[*BufferSize+5] = Color.rgba[0];
+    Buffer[*BufferSize+6] = Color.rgba[1];
+    Buffer[*BufferSize+7] = Color.rgba[2];
+    Buffer[*BufferSize+8] = CLUTX;
+    Buffer[*BufferSize+9] = CLUTY;
+    Buffer[*BufferSize+10] = ColorMode;
+    *BufferSize += 11;
+}
+int SSTGetLabelStride()
+{
+    //      XYZ UV  RGB CLUT ColorMode
+    return (3 + 2 + 3 + 2 + 1) * sizeof(int);
+}
 void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
 {
-    float x0,y0;
-    float u0,v0;
-    float x1,y1;
-    float u1,v1;
-    float x2,y2;
-    float u2,v2;
-    float x3,y3;
-    float u3,v3;
-    float TextureWidth = 256.f;
-    float TextureHeight = 256.f;
-    float BaseTextureX;
-    float BaseTextureY;
-    float ColorModeOffset;
-    float *VertexData;
+    int x0,y0;
+    int u0,v0;
+    int x1,y1;
+    int u1,v1;
+    int x2,y2;
+    int u2,v2;
+    int x3,y3;
+    int u3,v3;
+    int CLUTPosX;
+    int CLUTPosY;
+    int CLUTDestX;
+    int CLUTDestY;
+    int CLUTPage;
+    int NumTransparentFaces;
+    int ColorMode;
+    int VRAMPage;
+    int BaseTextureX;
+    int BaseTextureY;
+    int ColorModeOffset;
+    int *VertexData;
     int Stride;
     int DataSize;
     int VertexPointer;
@@ -820,31 +854,34 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
         DPrintf("SSTFillLabelVAO: Invalid VAO data\n");
         return;
     }
-    //        XYZ  UV
-    Stride = (3 + 2) * sizeof(float);
+    Stride = SSTGetLabelStride();
     //We need 6 vertices to describe a quad...
     DataSize = Stride * 6;
     
     VertexData = malloc(Stride * 6);
     VertexPointer = 0;
-        
-    if( Label->ImageInfo.FrameBufferY >= 256 ) {
-        BaseTextureX = (Label->ImageInfo.FrameBufferX - ((Label->ImageInfo.TexturePage - 16) * 64)) * ColorModeOffset;
-        BaseTextureY = Label->ImageInfo.FrameBufferY - 256;
-    } else {
-        BaseTextureX = (Label->ImageInfo.FrameBufferX - (Label->ImageInfo.TexturePage * 64)) * ColorModeOffset;
-        BaseTextureY = Label->ImageInfo.FrameBufferY;
-    }
+    
+    
+    VRAMPage = Label->ImageInfo.TexturePage;
+    CLUTPosX = Label->ImageInfo.FrameBufferX;
+    CLUTPosY = Label->ImageInfo.FrameBufferY;
+    CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
+    CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
+    CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(Label->ImageInfo.ColorMode);
+    CLUTDestX += VRAMGetTexturePageX(CLUTPage);
 
+    BaseTextureX = VRAMGetTexturePageX(VRAMPage);
+    BaseTextureY = VRAMGetTexturePageY(VRAMPage,Label->ImageInfo.ColorMode);
+    
     if( Label->Unknown2 == 0 ) {
-        u0 = BaseTextureX / TextureWidth;
-        v0 = BaseTextureY / TextureHeight;
-        u1 = BaseTextureX / TextureWidth;
-        v1 = (BaseTextureY + Label->ImageInfo.Height) / TextureHeight;
-        u2 = (BaseTextureX + Label->ImageInfo.Width ) / TextureWidth;
-        v2 = (BaseTextureY + Label->ImageInfo.Height) / TextureHeight;
-        u3 = (BaseTextureX + Label->ImageInfo.Width) / TextureWidth;
-        v3 =  BaseTextureY / TextureHeight;
+        u0 = BaseTextureX;
+        v0 = BaseTextureY;
+        u1 = BaseTextureX;
+        v1 = BaseTextureY + Label->ImageInfo.Height;
+        u2 = BaseTextureX + Label->ImageInfo.Width;
+        v2 = BaseTextureY + Label->ImageInfo.Height;
+        u3 = BaseTextureX + Label->ImageInfo.Width;
+        v3 = BaseTextureY;
         //NOTE(Adriano):Rotate the label if necessary...
         if( Label->Unknown3 ) {
             x0 = Label->x;
@@ -867,14 +904,14 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
         }
 
     } else {
-        u0 = BaseTextureX / TextureWidth;
-        v0 = (BaseTextureY + Label->ImageInfo.Height) / TextureHeight;
-        u1 = (BaseTextureX + Label->ImageInfo.Width) / TextureWidth;
-        v1 = (BaseTextureY + Label->ImageInfo.Height) / TextureHeight;
-        u2 = (BaseTextureX + Label->ImageInfo.Width) / TextureWidth;
-        v2 = BaseTextureY / TextureHeight;
-        u3 = BaseTextureX / TextureWidth;
-        v3 = BaseTextureY / TextureHeight;
+        u0 = BaseTextureX;
+        v0 = BaseTextureY + Label->ImageInfo.Height;
+        u1 = BaseTextureX + Label->ImageInfo.Width;
+        v1 = BaseTextureY + Label->ImageInfo.Height;
+        u2 = BaseTextureX + Label->ImageInfo.Width;
+        v2 = BaseTextureY;
+        u3 = BaseTextureX;
+        v3 = BaseTextureY;
         //NOTE(Adriano):Rotate the label if necessary...
         if( Label->Unknown3 ) {
             x0 = Label->x;
@@ -897,49 +934,19 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
         }
     }
     
-
-    VertexData[VertexPointer] =  x1;
-    VertexData[VertexPointer+1] = y1;
-    VertexData[VertexPointer+2] = Label->Depth;
-    VertexData[VertexPointer+3] = u1;
-    VertexData[VertexPointer+4] = v1;
-    VertexPointer += 5;
-            
-    VertexData[VertexPointer] =  x0;
-    VertexData[VertexPointer+1] = y0;
-    VertexData[VertexPointer+2] = Label->Depth;
-    VertexData[VertexPointer+3] = u0;
-    VertexData[VertexPointer+4] = v0;
-    VertexPointer += 5;
-            
-    VertexData[VertexPointer] =  x2;
-    VertexData[VertexPointer+1] = y2;
-    VertexData[VertexPointer+2] = Label->Depth;
-    VertexData[VertexPointer+3] = u2;
-    VertexData[VertexPointer+4] = v2;
-    VertexPointer += 5;
-            
-
-    VertexData[VertexPointer] =  x2;
-    VertexData[VertexPointer+1] = y2;
-    VertexData[VertexPointer+2] = Label->Depth;
-    VertexData[VertexPointer+3] = u2;
-    VertexData[VertexPointer+4] = v2;
-    VertexPointer += 5;
-            
-    VertexData[VertexPointer] =  x0;
-    VertexData[VertexPointer+1] = y0;
-    VertexData[VertexPointer+2] = Label->Depth;
-    VertexData[VertexPointer+3] = u0;
-    VertexData[VertexPointer+4] = v0;
-    VertexPointer += 5;
-            
-    VertexData[VertexPointer] =  x3;
-    VertexData[VertexPointer+1] = y3;
-    VertexData[VertexPointer+2] = Label->Depth;
-    VertexData[VertexPointer+3] = u3;
-    VertexData[VertexPointer+4] = v3;
-    VertexPointer += 5;
+    SSTFillVertexBuffer(VertexData,&VertexPointer,x1,y1,Label->Depth,
+                            Label->Color0,u1,v1,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
+    SSTFillVertexBuffer(VertexData,&VertexPointer,x0,y0,Label->Depth,
+                            Label->Color1,u0,v0,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
+    SSTFillVertexBuffer(VertexData,&VertexPointer,x2,y2,Label->Depth,
+                            Label->Color2,u2,v2,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
+    
+    SSTFillVertexBuffer(VertexData,&VertexPointer,x2,y2,Label->Depth,
+                            Label->Color2,u2,v2,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
+    SSTFillVertexBuffer(VertexData,&VertexPointer,x0,y0,Label->Depth,
+                            Label->Color1,u0,v0,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
+    SSTFillVertexBuffer(VertexData,&VertexPointer,x3,y3,Label->Depth,
+                            Label->Color2,u3,v3,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
 
     VAOUpdate(LabelsVAO,VertexData,DataSize,6);
     free(VertexData);
@@ -951,33 +958,56 @@ void SSTModelRender(VRAM_t *VRAM)
         GFXRender(Models[i].Model,VRAM);
     }
 }
-void SSTRender(VRAM_t *VRAM)
+void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
 {
-//     GL_Shader_t *Shader;
-//     float PsxScreenWidth = 512.f;
-//     float PsxScreenHeight = 256.f;
-//     int OrthoMatrixID;
-//     int i;
-//     
-//     Shader = Shader_Cache("SSTShader","Shaders/SSTVertexShader.glsl","Shaders/SSTFragmentShader.glsl");
-//     
-//     for( i = 0; i < NumLabels; i++ ) {
-//         glUseProgram(Shader->ProgramID);
-//         OrthoMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-// 
-//         glm_mat4_identity(VidConf.ModelViewMatrix);
-//         vec3 v;
-//         v[0] = (VidConf.Width / PsxScreenWidth);
-//         v[1] = (VidConf.Height / PsxScreenHeight);
-//         v[3] = 0;
-//         glm_scale(VidConf.ModelViewMatrix,v);
-//         glm_mat4_mul(VidConf.PMatrixM4,VidConf.ModelViewMatrix,VidConf.MVPMatrix);
-//         glUniformMatrix4fv(OrthoMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-//         glBindTexture(GL_TEXTURE_2D, LabelsVao[i]->TextureID);
-//         glBindVertexArray(LabelsVao[i]->VaoID[0]);
-//         glDrawArrays(GL_TRIANGLES, 0, 6);
-//         glBindVertexArray(0);
-//     }
+    Shader_t *Shader;
+    SSTLabel_t *Iterator;
+    float PsxScreenWidth = 512.f;
+    float PsxScreenHeight = 256.f;
+    int OrthoMatrixID;
+    mat4 ModelViewMatrix;
+    mat4 MVPMatrix;
+    vec3 v;
+    int i;
+    
+    if( !SST ) {
+        DPrintf("SSTRender: Invalid SST script\n");
+        return;
+    }
+
+    
+    Shader = ShaderCache("SSTShader","Shaders/SSTVertexShader.glsl","Shaders/SSTFragmentShader.glsl");
+    
+    if( Shader ) {
+        glUseProgram(Shader->ProgramId);
+        
+        glDepthMask(GL_FALSE);  // disable writes to Z-Buffer
+        glDisable(GL_DEPTH_TEST);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        OrthoMatrixID = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+        glm_mat4_identity(ModelViewMatrix);
+        v[0] = (VidConfigWidth->IValue / PsxScreenWidth);
+        v[1] = (VidConfigHeight->IValue / PsxScreenHeight);
+        v[2] = 0;
+        glm_scale(ModelViewMatrix,v);
+        glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
+        glUniformMatrix4fv(OrthoMatrixID,1,false,&MVPMatrix[0][0]);
+        glActiveTexture(GL_TEXTURE0 + 0);
+        glBindTexture(GL_TEXTURE_2D, SST->ClassList->VRAM->TextureIndexPage.TextureId);
+        glActiveTexture(GL_TEXTURE0 + 1);
+        glBindTexture(GL_TEXTURE_2D, SST->ClassList->VRAM->PalettePage.TextureId);
+        //TODO(Adriano):Ideally we want to activate only a single, specific, class and draw it...
+        glBindVertexArray(SST->ClassList->LabelsVAO->VAOId[0]);
+        glDrawArrays(GL_TRIANGLES, 0, SST->ClassList->LabelsVAO->Count);
+        glBindVertexArray(0);
+        glActiveTexture(GL_TEXTURE0 + 0);
+        glBindTexture(GL_TEXTURE_2D,0);
+        glUseProgram(0);
+        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
+    }
+    
 //     SSTModelRender(VRam);
 }
 int SSTCreateLabelsVAO(SSTClass_t *Class)
@@ -989,12 +1019,11 @@ int SSTCreateLabelsVAO(SSTClass_t *Class)
     if( !Class->LabelList || Class->NumLabels == 0 ) {
         DPrintf("SSTCreateLabelsVAO: Invalid label list\n");
         return 0;
-    }    
-    //        XYZ  UV
-    Stride = (3 + 2) * sizeof(float);
+    }
+    Stride = SSTGetLabelStride();
     //NOTE(Adriano): We need 6 vertices to describe a quad
     DataSize = 6 * Stride * Class->NumLabels;
-    Result = VAOInitXYZUV(NULL,DataSize,Stride,0,3,Class->NumLabels * 6);
+    Result = VAOInitXYZUVRGBCLUTColorModeInteger(NULL,DataSize,Stride,0,3,5,8,10,Class->NumLabels * 6);
     if( !Result ) {
         DPrintf("SSTCreateLabelsVAO: Failed to initialize Label VAO\n");
         return 0;
@@ -1132,7 +1161,7 @@ void SSTAppendLabelToList(SSTLabel_t *Label,SSTLabel_t **LabelList)
             break;
         }
         //Found insertion point
-        if( Iterator->Depth > Label->Depth ) {
+        if( Iterator->Depth <= Label->Depth ) {
             break;
         }
         Prev = Iterator;

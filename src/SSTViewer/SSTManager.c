@@ -201,8 +201,12 @@ void SSTManagerDraw(SSTManager_t *SSTManager,Camera_t *Camera)
         return;
     }
 
-    glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);     
-    
+    if( !SSTManager->ActiveScript ) {
+        return;
+    }
+
+    glm_ortho(0,(float) VidConfigWidth->IValue, (float) VidConfigHeight->IValue,0,-(1<<16),1<<16,ProjectionMatrix);
+    SSTRender(SSTManager->ActiveScript,ProjectionMatrix);
 }
 
 void SSTManagerActivateScript(SSTManager_t *SSTManager,SST_t *Script)

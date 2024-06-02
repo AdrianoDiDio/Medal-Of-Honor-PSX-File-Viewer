@@ -191,8 +191,8 @@ void ApplicationDraw(Application_t *Application)
         DPrintf("ApplicationDraw:Called without a valid engine\n");
         return;
     }
-    SSTManagerDraw(Application->SSTManager,Application->Camera);
     glDisable (GL_DEPTH_TEST);
+    SSTManagerDraw(Application->SSTManager,Application->Camera);
     GUIDraw(Application->GUI,Application->SSTManager,Application->Camera,
             Application->Engine->VideoSystem,Application->Engine->TimeInfo);
     glEnable(GL_DEPTH_TEST);
