@@ -43,6 +43,8 @@ int         VRAMGetTexturePageY(int VRAMPage,int ColorMode);
 int         VRAMGetCLUTPage(int CLUTPosX,int CLUTPosY);
 int         VRAMGetCLUTPositionX(int CLUTX,int CLUTY,int CLUTPage);
 int         VRAMGetCLUTOffsetY(int ColorMode);
+int         VRAMGetTexturePositionX(int FrameBufferX,int BPP);
+int         VRAMGetTexturePositionY(int FrameBufferY);
 void        VRAMGetTIMImageCoordinates(TIMImage_t *Image,int *DestX,int *DestY);
 void        VRAMDumpDataToFile(VRAM_t *VRam,const char *OutBaseDir);
 void        VRAMSave(VRAM_t *VRAM,const char *File);

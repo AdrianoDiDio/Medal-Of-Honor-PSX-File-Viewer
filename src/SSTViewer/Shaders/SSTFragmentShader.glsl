@@ -37,7 +37,7 @@ void main()
         CLUTTexel = texelFetch(ourPaletteTexture, ivec2(CLUTX,CLUTY), 0);
     }
     if( InternalToPsxColor(CLUTTexel) == 0x0000u) {
-//         discard;
+        discard;
     }
 
 //      CLUTTexel.r = clamp(CLUTTexel.r * ourColor.r * 2.f, 0.f, 1.f);

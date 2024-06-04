@@ -166,20 +166,41 @@ int VRAMGetCLUTPositionX(int CLUTX,int CLUTY,int CLUTPage)
     return Offset;
 }
 
+int VRAMGetColorOffsetMultiplier(int BPP)
+{
+    if( BPP == TIM_IMAGE_BPP_4 ) {
+        return 4;
+    }
+    
+    if( BPP == TIM_IMAGE_BPP_8) {
+        return 2;
+    }
+    
+    return 1;
+}
+/*
+ * Utility function to get the relative X position within a texture page
+ * NOTE that each page is 64x256 pixels
+*/
+int VRAMGetTexturePositionX(int FrameBufferX,int BPP)
+{
+    return (FrameBufferX % 64) * VRAMGetColorOffsetMultiplier(BPP);
+}
+/*
+ * Utility function to get the relative Y position within a texture page
+ * NOTE that each page is 64x256 pixels
+*/
+int VRAMGetTexturePositionY(int FrameBufferY)
+{
+    return FrameBufferY % 256;
+}
 void VRAMGetTIMImageCoordinates(TIMImage_t *Image,int *ImageX,int *ImageY)
 {
     int ColorOffsetMultiplier;
     int DestX;
     int DestY;
     
-    if( Image->Header.BPP == TIM_IMAGE_BPP_4 ) {
-        ColorOffsetMultiplier = 4;
-    } else if( Image->Header.BPP == TIM_IMAGE_BPP_8) {
-        ColorOffsetMultiplier = 2;
-    } else {
-        ColorOffsetMultiplier = 1;
-    }
-    
+    ColorOffsetMultiplier = VRAMGetColorOffsetMultiplier(Image->Header.BPP);
     if( Image->FrameBufferY >= 256 ) {
         DestX = (Image->FrameBufferX - ((Image->TexturePage - 16) * 64)) * ColorOffsetMultiplier;
         DestY = Image->FrameBufferY - 256;
