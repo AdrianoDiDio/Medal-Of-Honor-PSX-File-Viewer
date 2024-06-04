@@ -649,6 +649,7 @@ TIMImage_t *TIMLoadImage(FILE *TIMImage,const char *FileName,int NumImages)
     ResultImage->TexturePage = (ResultImage->FrameBufferX / 64);
     ResultImage->CLUTTexturePage = (ResultImage->Header.CLUTOrgX / 64);
 
+    DPrintf("CLUT Coordinates %ix%i page %i\n",ResultImage->Header.CLUTOrgX,ResultImage->Header.CLUTOrgY, ResultImage->CLUTTexturePage);
     DPrintf("FrameBuffer Coordinates %ux%u page %i\n",ResultImage->FrameBufferX,ResultImage->FrameBufferY,ResultImage->TexturePage);
     DPrintf("Image has calculated texture page as %i\n",ResultImage->TexturePage);
     //Texture Page is Zero based.
@@ -753,6 +754,7 @@ TIMImage_t *TIMLoadImageFromBuffer(Byte **TIMImageBuffer,int NumImages)
     ResultImage->TexturePage = (ResultImage->FrameBufferX / 64);
     ResultImage->CLUTTexturePage = (ResultImage->Header.CLUTOrgX / 64);
 
+    DPrintf("CLUT Coordinates %ix%i page %i\n",ResultImage->Header.CLUTOrgX,ResultImage->Header.CLUTOrgY, ResultImage->CLUTTexturePage);
     DPrintf("FrameBuffer Coordinates %ux%u page %i\n",ResultImage->FrameBufferX,ResultImage->FrameBufferY,ResultImage->TexturePage);
     DPrintf("Image has calculated texture page as %i\n",ResultImage->TexturePage);
     //Texture Page is Zero based.

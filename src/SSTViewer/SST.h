@@ -59,6 +59,9 @@ typedef struct SSTImageInfo_s {
     int TexturePage;
     int FrameBufferX;
     int FrameBufferY;
+    int CLUTX;
+    int CLUTY;
+    int CLUTPage;
     int Width;
     int Height;
     int ColorMode;

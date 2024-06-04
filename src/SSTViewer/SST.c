@@ -794,7 +794,7 @@ void SSTFillVertexBuffer(int *Buffer,int *BufferSize,int x,int y,int z,Color1i_t
         DPrintf("SSTFillVertexBuffer:Invalid BufferSize\n");
         return;
     }
-    
+    DPrintf("SSTFillVertexBuffer: %i;%i;%i %i;%i %i;%i %i %i;%i;%i\n",x,y,z,U,V,CLUTX,CLUTY,ColorMode,Color.rgba[0],Color.rgba[1],Color.rgba[2]);
     Buffer[*BufferSize] =   x;
     Buffer[*BufferSize+1] = y;
     Buffer[*BufferSize+2] = z;
@@ -863,8 +863,8 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
     
     
     VRAMPage = Label->ImageInfo.TexturePage;
-    CLUTPosX = Label->ImageInfo.FrameBufferX;
-    CLUTPosY = Label->ImageInfo.FrameBufferY;
+    CLUTPosX = Label->ImageInfo.CLUTX;
+    CLUTPosY = Label->ImageInfo.CLUTY;
     CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
     CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
     CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(Label->ImageInfo.ColorMode);
@@ -940,11 +940,11 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
                             Label->Color1,u0,v0,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
     SSTFillVertexBuffer(VertexData,&VertexPointer,x2,y2,Label->Depth,
                             Label->Color2,u2,v2,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
-    
+
     SSTFillVertexBuffer(VertexData,&VertexPointer,x2,y2,Label->Depth,
-                            Label->Color2,u2,v2,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
+                            Label->Color1,u2,v2,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
     SSTFillVertexBuffer(VertexData,&VertexPointer,x0,y0,Label->Depth,
-                            Label->Color1,u0,v0,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
+                            Label->Color0,u0,v0,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
     SSTFillVertexBuffer(VertexData,&VertexPointer,x3,y3,Label->Depth,
                             Label->Color2,u3,v3,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
 
@@ -964,15 +964,23 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
     SSTLabel_t *Iterator;
     float PsxScreenWidth = 512.f;
     float PsxScreenHeight = 256.f;
+    int PaletteTextureId;
+    int TextureIndexId;
     int OrthoMatrixID;
     mat4 ModelViewMatrix;
     mat4 MVPMatrix;
+    
     vec3 v;
     int i;
-    
+    static int Once = 0;
     if( !SST ) {
         DPrintf("SSTRender: Invalid SST script\n");
         return;
+    }
+    
+    if( !Once ) {
+        VRAMDump(SST->ClassList->VRAM);
+        Once = 1;
     }
 
     
@@ -984,7 +992,6 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
         glDepthMask(GL_FALSE);  // disable writes to Z-Buffer
         glDisable(GL_DEPTH_TEST);
         glClear(GL_DEPTH_BUFFER_BIT);
-
         OrthoMatrixID = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
         glm_mat4_identity(ModelViewMatrix);
         v[0] = (VidConfigWidth->IValue / PsxScreenWidth);
@@ -993,6 +1000,10 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
         glm_scale(ModelViewMatrix,v);
         glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
         glUniformMatrix4fv(OrthoMatrixID,1,false,&MVPMatrix[0][0]);
+        PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
+        TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+        glUniform1i(TextureIndexId, 0);
+        glUniform1i(PaletteTextureId,  1);
         glActiveTexture(GL_TEXTURE0 + 0);
         glBindTexture(GL_TEXTURE_2D, SST->ClassList->VRAM->TextureIndexPage.TextureId);
         glActiveTexture(GL_TEXTURE0 + 1);
@@ -1059,6 +1070,7 @@ void SSTGenerateClassVAOs(SSTClass_t *Class)
         VRAMFree(Class->VRAM);
         return;
     }
+    DPrintf("SSTGenerateClassVAOs: Generating label VAOs for class %s\n",Class->Name);
     for( Label = Class->LabelList; Label; Label = Label->Next ) {
         SSTFillLabelsVAO(Label, Class->VRAM, Class->LabelsVAO);
     }
@@ -1074,8 +1086,12 @@ void SSTGenerateVAOs(SST_t *SST)
     if( !SST->ClassList ) {
         return;
     }
-    
+
     for( Class = SST->ClassList; Class; Class = Class->Next ) {
+        //TODO(Adriano): Remember to also skip the generation for models VAO when implemented
+        if( Class->LabelsVAO ) {
+            return;
+        }
         SSTGenerateClassVAOs(Class);
     }
 
@@ -1262,6 +1278,9 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte 
             DPrintf("SSTLoadLabel:Texture is %s\n",Entry.Name);
             Image = TIMLoadAllImagesFromBuffer(Entry.Data);
             Label->ImageInfo.TexturePage = Image->TexturePage;
+            Label->ImageInfo.CLUTX = Image->Header.CLUTOrgX;
+            Label->ImageInfo.CLUTY = Image->Header.CLUTOrgY;
+            Label->ImageInfo.CLUTPage = Image->CLUTTexturePage;
             Label->ImageInfo.FrameBufferX = Image->FrameBufferX;
             Label->ImageInfo.FrameBufferY = Image->FrameBufferY;
             Label->ImageInfo.Width = Image->Width;
