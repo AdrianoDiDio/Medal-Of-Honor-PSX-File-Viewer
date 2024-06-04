@@ -839,6 +839,7 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
     int DataSize;
     int VertexPointer;
     int TextureID;
+    int ModeOffsetMultiplier;
     
     if( !Label ) {
         DPrintf("SSTFillLabelVAO: Invalid label data\n");
@@ -862,17 +863,21 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
     VertexPointer = 0;
     
     
-    VRAMPage = Label->ImageInfo.TexturePage;
     CLUTPosX = Label->ImageInfo.CLUTX;
     CLUTPosY = Label->ImageInfo.CLUTY;
     CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
     CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
     CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(Label->ImageInfo.ColorMode);
-    CLUTDestX += VRAMGetTexturePageX(CLUTPage);
-
-    BaseTextureX = VRAMGetTexturePageX(VRAMPage);
-    BaseTextureY = VRAMGetTexturePageY(VRAMPage,Label->ImageInfo.ColorMode);
     
+    CLUTDestX += VRAMGetTexturePageX(CLUTPage);
+    VRAMPage = Label->ImageInfo.TexturePage;
+    ModeOffsetMultiplier = TIMGetImageSizeOffset(Label->ImageInfo.ColorMode);
+    
+    BaseTextureX = (Label->ImageInfo.FrameBufferX % 64) * ModeOffsetMultiplier;
+    BaseTextureY = Label->ImageInfo.FrameBufferY % 256;
+    BaseTextureX += VRAMGetTexturePageX(VRAMPage);
+    BaseTextureY += VRAMGetTexturePageY(VRAMPage,Label->ImageInfo.ColorMode);
+
     if( Label->Unknown2 == 0 ) {
         u0 = BaseTextureX;
         v0 = BaseTextureY;

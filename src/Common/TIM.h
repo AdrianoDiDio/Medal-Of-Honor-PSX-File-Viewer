@@ -64,6 +64,7 @@ TIMImage_t *TIMLoadAllImagesFromBuffer(Byte *TIMImageBuffer);
 
 void        TIMWritePNGImage(TIMImage_t *Image,char *OutName);
 const char  *TIMGetBPPFromImage(TIMImage_t *Image);
+float       TIMGetImageSizeOffset(int BPP);
 Byte        *TIMExpandCLUTImageData(TIMImage_t *Image);
 Byte        *TIMToOpenGL24(TIMImage_t *Image);
 Byte        *TIMToOpenGL32(TIMImage_t *Image);
