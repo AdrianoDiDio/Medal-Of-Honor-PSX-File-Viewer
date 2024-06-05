@@ -84,8 +84,8 @@ typedef struct SSTLabel_s {
     short               Pad3;
     unsigned short      Height;
     short               Pad4;
-    Byte                Unknown2;
-    Byte                Unknown3;
+    Byte                FlipTexture;
+    Byte                UseLabelSize;
     Byte                Unknown4;
     Byte                Unknown5;
     int                 Depth; // Z-Value

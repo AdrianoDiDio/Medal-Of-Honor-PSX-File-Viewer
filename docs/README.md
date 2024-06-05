@@ -1421,14 +1421,23 @@ contains all the data required to render a particular screen.
 | unsigned short | 2 bytes  | Pad                                      |
 | unsigned short | 2 bytes  | Height                                   |
 | unsigned short | 2 bytes  | Pad                                      |
-| Byte           | 1 byte   | Unknown                                  |
-| Byte           | 1 byte   | Unknown                                  |
+| Byte           | 1 byte   | Flip Texture                             |
+| Byte           | 1 byte   | Use Label Size                           |
 | Byte           | 1 byte   | Unknown                                  |
 | Byte           | 1 byte   | Unknown                                  |
 | int            | 4 bytes  | Depth                                    |
 | [Color](#Color) | 4 bytes | RGB Color of Vertex 0                    |
 | [Color](#Color) | 4 bytes | RGB Color of Vertex 1                    |
 | [Color](#Color) | 4 bytes | RGB Color of Vertex 2                    |
+
+When FlipTexture bit is set then the texture coordinates
+are calculated so that the label will be flipped
+horizontally (this is probably required to optimize the texture storage
+inside the VRAM).  
+When UseLabelSize bit is set than the width and height will be the one
+stored in the label struct, otherwise the size of the specified texture
+will be used to calculate the label position.    
+
 
 ##### Token Type 5
 

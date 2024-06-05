@@ -839,6 +839,8 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
     int DataSize;
     int VertexPointer;
     int TextureID;
+    int Width;
+    int Height;
     
     if( !Label ) {
         DPrintf("SSTFillLabelVAO: Invalid label data\n");
@@ -876,7 +878,15 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
     BaseTextureX =  VRAMGetTexturePageX(VRAMPage) + VRAMGetTexturePositionX(Label->ImageInfo.FrameBufferX,Label->ImageInfo.ColorMode);
     BaseTextureY = VRAMGetTexturePageY(VRAMPage,Label->ImageInfo.ColorMode) + VRAMGetTexturePositionY(Label->ImageInfo.FrameBufferY);
 
-    if( Label->Unknown2 == 0 ) {
+    //NOTE(Adriano):Rotate the label if necessary...
+    if( Label->UseLabelSize ) {
+        Width = Label->Width;
+        Height = Label->Height;
+    } else {
+        Width = Label->FlipTexture ? Label->ImageInfo.Height : Label->ImageInfo.Width;
+        Height = Label->FlipTexture ?Label->ImageInfo.Width : Label->ImageInfo.Height;
+    }
+    if( Label->FlipTexture == 0 ) {
         u0 = BaseTextureX;
         v0 = BaseTextureY;
         u1 = BaseTextureX;
@@ -885,27 +895,6 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
         v2 = BaseTextureY + Label->ImageInfo.Height;
         u3 = BaseTextureX + Label->ImageInfo.Width;
         v3 = BaseTextureY;
-        //NOTE(Adriano):Rotate the label if necessary...
-        if( Label->Unknown3 ) {
-            x0 = Label->x;
-            y0 = Label->y;
-            x1 = x0;
-            y1 = Label->y + Label->Height;
-            x2 = Label->x  + Label->Width;
-            y2 = y1;
-            x3 = x2;
-            y3 = y0;
-        } else {
-            x0 = Label->x;
-            y0 = Label->y;
-            x1 = x0;
-            y1 = Label->y + Label->ImageInfo.Height;
-            x2 = Label->x  + Label->ImageInfo.Width;
-            y2 = y1;
-            x3 = x2;
-            y3 = y0;
-        }
-
     } else {
         u0 = BaseTextureX;
         v0 = BaseTextureY + Label->ImageInfo.Height;
@@ -915,28 +904,20 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
         v2 = BaseTextureY;
         u3 = BaseTextureX;
         v3 = BaseTextureY;
-        //NOTE(Adriano):Rotate the label if necessary...
-        if( Label->Unknown3 ) {
-            x0 = Label->x;
-            y0 = Label->y;
-            x1 = x0;
-            y1 = Label->y + Label->Height;
-            x2 = Label->x  + Label->Width;
-            y2 = y1;
-            x3 = x2;
-            y3 = y0;
-        } else {
-            x0 = Label->x;
-            y0 = Label->y;
-            x1 = x0;
-            y1 = Label->y + Label->ImageInfo.Width;
-            x2 = Label->x  + Label->ImageInfo.Height;
-            y2 = y1;
-            x3 = x2;
-            y3 = y0;
-        }
     }
     
+    x0 = Label->x;
+    y0 = Label->y;
+    
+    x1 = x0;
+    y1 = Label->y + Height;
+    
+    x2 = Label->x  + Width;
+    y2 = y1;
+    
+    x3 = x2;
+    y3 = y0;
+  
     SSTFillVertexBuffer(VertexData,&VertexPointer,x1,y1,Label->Depth,
                             Label->Color0,u1,v1,CLUTDestX,CLUTDestY,Label->ImageInfo.ColorMode);
     SSTFillVertexBuffer(VertexData,&VertexPointer,x0,y0,Label->Depth,
@@ -1243,9 +1224,9 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte 
     *SSTBuffer += 2;
     Label->Pad4 = **(short **) SSTBuffer;
     *SSTBuffer += 2;
-    Label->Unknown2 = **(Byte **) SSTBuffer;
+    Label->FlipTexture = **(Byte **) SSTBuffer;
     *SSTBuffer += 1;
-    Label->Unknown3 = **(Byte **) SSTBuffer;
+    Label->UseLabelSize = **(Byte **) SSTBuffer;
     *SSTBuffer += 1;
     Label->Unknown4 = **(Byte **) SSTBuffer;
     *SSTBuffer += 1;
@@ -1259,10 +1240,10 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte 
     *SSTBuffer += sizeof(Label->Color1);
     memcpy(&Label->Color2,*SSTBuffer,sizeof(Label->Color2));
     *SSTBuffer += sizeof(Label->Color2);
-    DPrintf("SSTLoadLabel:Label Texture:%s Unknown1:%i X:%i Y:%i Width:%i Height:%i Depth:%i %i %i %i %i\n",Label->TextureFile,
+    DPrintf("SSTLoadLabel:Label Texture:%s Unknown1:%i X:%i Y:%i Width:%i Height:%i Depth:%i FlipTexture:%i UseLabelSize:%i %i %i\n",Label->TextureFile,
             Label->Unknown,Label->x,
-            Label->y,Label->Width,Label->Height,Label->Depth,Label->Unknown2,
-            Label->Unknown3,Label->Unknown4,Label->Unknown5);
+            Label->y,Label->Width,Label->Height,Label->Depth,Label->FlipTexture,
+            Label->UseLabelSize,Label->Unknown4,Label->Unknown5);
     DPrintf("SSTLoadLabel: Color0: %i;%i;%i;%i Color1: %i;%i;%i;%i Color2:%i;%i;%i;%i\n",Label->Color0.rgba[0],Label->Color0.rgba[1],
             Label->Color0.rgba[2],Label->Color0.rgba[3],Label->Color1.rgba[0],Label->Color1.rgba[1],Label->Color1.rgba[2],Label->Color2.rgba[3],
             Label->Color2.rgba[0],Label->Color2.rgba[1],Label->Color2.rgba[2],Label->Color2.rgba[3]);
