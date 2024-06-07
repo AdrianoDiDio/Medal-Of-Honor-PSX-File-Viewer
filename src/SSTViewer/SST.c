@@ -1175,7 +1175,7 @@ void SSTAppendLabelToList(SSTLabel_t *Label,SSTLabel_t **LabelList)
         *LabelList = Label;
     }
 }
-void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte **SSTBuffer,int GameEngine)
+void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,SSTCallback_t *Callback,const RSC_t *GlobalRSCList,Byte **SSTBuffer,int GameEngine)
 {
     SSTLabel_t *Label;
     TIMImage_t *Image;
@@ -1247,7 +1247,14 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte 
     DPrintf("SSTLoadLabel: Color0: %i;%i;%i;%i Color1: %i;%i;%i;%i Color2:%i;%i;%i;%i\n",Label->Color0.rgba[0],Label->Color0.rgba[1],
             Label->Color0.rgba[2],Label->Color0.rgba[3],Label->Color1.rgba[0],Label->Color1.rgba[1],Label->Color1.rgba[2],Label->Color2.rgba[3],
             Label->Color2.rgba[0],Label->Color2.rgba[1],Label->Color2.rgba[2],Label->Color2.rgba[3]);
-    
+    //TODO(Adriano): Do we want to keep a reference to the original callback or we want to memcpy it (and manage the pointer by itself)?
+    Label->Callback = Callback;
+
+    if( Label->Callback ) {
+        DPrintf("SSTLoadLabel: SrcEvent %s DestEvent %s Arg:%i\n",Label->Callback->SrcEvent,Label->Callback->DestEvent,Label->Callback->Unknown);
+    } else {
+        DPrintf("SSTLoadLabel: No callback has been specified\n");
+    }
     //Link it in!
     SSTAppendLabelToList(Label,&Class->LabelList);
     Class->NumLabels++;
@@ -1277,7 +1284,7 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte 
     }
     return;
 }
-void SSTLoadCallback(SST_t *SST, SSTClass_t *Class,Byte **SSTBuffer)
+SSTCallback_t *SSTLoadCallback(SST_t *SST, SSTClass_t *Class,Byte **SSTBuffer)
 {
     SSTCallback_t *Callback;
     TIMImage_t *Image;
@@ -1313,7 +1320,7 @@ void SSTLoadCallback(SST_t *SST, SSTClass_t *Class,Byte **SSTBuffer)
     //Link it in!
     Callback->Next = Class->CallbackList;
     Class->CallbackList = Callback;
-    return;
+    return Callback;
 }
 void SSTLoadVideoInfo(SST_t *SST,SSTClass_t *Class,Byte **SSTBuffer)
 {
@@ -1479,7 +1486,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
 {
     SST_t *SST;
     SSTClass_t *CurrentClass;
-    SSTCallback_t *SSTCallback;
+    SSTClass_t *LastCallback;
     SSTVideoInfo_t *SSTVideoInfo;
     SSTLabel_t *SSTLabel;
     SSTLabel_t *TempLabel;
@@ -1528,18 +1535,15 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
                 }
                 break;
             case SST_CALLBACK_TOKEN:
-                SSTLoadCallback(SST,CurrentClass,&SSTBuffer);
-                //StoreLabel = 0;
+                LastCallback = SSTLoadCallback(SST,CurrentClass,&SSTBuffer);
                 break;
             case SST_LABEL_TOKEN:
-                SSTLoadLabel(SST,CurrentClass,GlobalRSCList,&SSTBuffer,GameEngine);
+                SSTLoadLabel(SST,CurrentClass,LastCallback,GlobalRSCList,&SSTBuffer,GameEngine);
                 break;
             case SST_BACKDROP_TOKEN:
-                DPrintf("BackDrop declaration started.\n");
-                //StoreLabel = 1;
+                LastCallback = NULL;
                 break;
             case SST_STR_FILE_TOKEN:
-                DPrintf("STR file declaration\n");
                 SSTLoadVideoInfo(SST,CurrentClass,&SSTBuffer);
                 break;
             case SST_UNKNOWN_1_TOKEN:

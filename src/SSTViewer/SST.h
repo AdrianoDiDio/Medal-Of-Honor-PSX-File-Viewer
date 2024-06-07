@@ -95,6 +95,7 @@ typedef struct SSTLabel_s {
     
     //Additional Data
     SSTImageInfo_t      ImageInfo;
+    SSTCallback_t       *Callback;
     struct SSTLabel_s   *Next;
 } SSTLabel_t;
 
