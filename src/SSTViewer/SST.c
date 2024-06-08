@@ -738,6 +738,10 @@ void SSTFree(SST_t *SST)
 {
     SSTClass_t *Temp;
     
+    if( !SST ) {
+        return;
+    }
+    
     while( SST->ClassList ) {
         Temp = SST->ClassList;
         if( Temp->LabelList ) {
@@ -794,7 +798,6 @@ void SSTFillVertexBuffer(int *Buffer,int *BufferSize,int x,int y,int z,Color1i_t
         DPrintf("SSTFillVertexBuffer:Invalid BufferSize\n");
         return;
     }
-    DPrintf("SSTFillVertexBuffer: %i;%i;%i %i;%i %i;%i %i %i;%i;%i\n",x,y,z,U,V,CLUTX,CLUTY,ColorMode,Color.rgba[0],Color.rgba[1],Color.rgba[2]);
     Buffer[*BufferSize] =   x;
     Buffer[*BufferSize+1] = y;
     Buffer[*BufferSize+2] = z;
@@ -1082,7 +1085,7 @@ void SSTUnload(SST_t *SST)
     if( !SST->ClassList ) {
         return;
     }
-
+    DPrintf("SSTUnload: Unloading script %s\n",SST->Name);
     for( Class = SST->ClassList; Class; Class = Class->Next ) {
         if( Class->LabelsVAO ) {
             VAOFree(Class->LabelsVAO);
@@ -1093,10 +1096,6 @@ void SSTUnload(SST_t *SST)
             Class->VRAM = NULL;
         }
     }
-
-//     for( i = 0; i < NumModels; i++ ) {
-//         GFXPrepareVAO(Models[i].Model);
-//     }
 }
 void SSTGenerateVAOs(SST_t *SST)
 {

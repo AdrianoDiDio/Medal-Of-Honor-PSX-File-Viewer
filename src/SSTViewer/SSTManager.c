@@ -54,10 +54,21 @@ void SSTManagerCloseDialog(GUI_t *GUI,FileDialog_t *FileDialog)
     FileDialogClose(FileDialog);
     GUIPopWindow(GUI);
 }
-
-void SSTManagerCleanUp(SSTManager_t *SSTManager)
+void SSTManagerFreeScriptList(SST_t *ScriptList)
 {
     SST_t *Temp;
+    if( !ScriptList ) {
+        return;
+    }
+    while( ScriptList ) {
+        Temp = ScriptList;
+        ScriptList = ScriptList->Next;
+        SSTFree(Temp);
+    }
+
+}
+void SSTManagerCleanUp(SSTManager_t *SSTManager)
+{
     SoundSystemPause(SSTManager->SoundSystem);
     if( SSTManager->BasePath ) {
         free(SSTManager->BasePath);
@@ -74,13 +85,7 @@ void SSTManagerCleanUp(SSTManager_t *SSTManager)
     if( SSTManager->RenderObjectShader ) {
         free(SSTManager->RenderObjectShader);
     }
-    
-    while( SSTManager->ScriptList ) {
-        Temp = SSTManager->ScriptList;
-        SSTManager->ScriptList = SSTManager->ScriptList->Next;
-        SSTFree(Temp);
-    }
-
+    SSTManagerFreeScriptList(SSTManager->ScriptList);
     free(SSTManager);
 }
 
@@ -243,6 +248,7 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
         RSCFree(SSTManager->GlobalRSCList);
         SSTManager->GlobalRSCList = NULL;
     }
+    
     ProgressBarBegin(GUI->ProgressBar,"Loading Global RSC files");
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,10,"Loading Global1 RSC file");
     //First step, load the global and global2 files
@@ -283,6 +289,10 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
         DPrintf("SSTManagerInitWithPath:No scripts found in global RSC file\n");
         goto Failure;
     }
+    
+    SSTManager->ActiveScript = NULL;
+    SSTManagerFreeScriptList(SSTManager->ScriptList);
+    SSTManager->ScriptList = NULL;
     
     DPrintf("SSTManagerInitWithPath:Found %i scripts\n",NumScripts);
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,50,"Loading all scripts");
