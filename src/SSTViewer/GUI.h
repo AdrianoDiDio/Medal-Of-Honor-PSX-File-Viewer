@@ -29,7 +29,7 @@ typedef struct GUI_s {
     char                    *ConfigFilePath;
     bool                    DebugWindowHandle;
     bool                    VideoSettingsWindowHandle;
-    bool                    LevelSelectWindowHandle;
+    bool                    ScriptSelectWindowHandle;
     int                     NumActiveWindows;
     ProgressBar_t           *ProgressBar;
     ErrorMessageDialog_t    *ErrorMessageDialog;  
@@ -47,7 +47,7 @@ void            GUIPopWindow(GUI_t *GUI);
 int             GUIIsActive(GUI_t *GUI);
 void            GUIToggleDebugWindow(GUI_t *GUI);
 void            GUIToggleVideoSettingsWindow(GUI_t *GUI);
-void            GUIToggleLevelSelectWindow(GUI_t *GUI);
+void            GUIToggleScriptSelectWindow(GUI_t *GUI);
 int             GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
 void            GUIDraw(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo);
 void            GUIFree(GUI_t *GUI);

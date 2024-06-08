@@ -942,10 +942,30 @@ void SSTModelRender(VRAM_t *VRAM)
         GFXRender(Models[i].Model,VRAM);
     }
 }
+void SSTRenderClass(SSTClass_t *Class)
+{
+    if( !Class->VRAM ) {
+        return;
+    }
+    if( !Class->LabelsVAO ) {
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, Class->VRAM->TextureIndexPage.TextureId);
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, Class->VRAM->PalettePage.TextureId);
+    glBindVertexArray(Class->LabelsVAO->VAOId[0]);
+    glDrawArrays(GL_TRIANGLES, 0, Class->LabelsVAO->Count);
+    glBindVertexArray(0);
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D,0);
+
+}
 void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
 {
     Shader_t *Shader;
     SSTLabel_t *Iterator;
+    SSTClass_t *ClassIterator;
     float PsxScreenWidth = 512.f;
     float PsxScreenHeight = 256.f;
     int PaletteTextureId;
@@ -956,17 +976,16 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
     
     vec3 v;
     int i;
-    static int Once = 0;
+
     if( !SST ) {
         DPrintf("SSTRender: Invalid SST script\n");
         return;
     }
     
-    if( !Once ) {
-        VRAMDump(SST->ClassList->VRAM);
-        Once = 1;
+    if( !SST->ClassList ) {
+        DPrintf("SSTRender: No class list to draw\n");
+        return;
     }
-
     
     Shader = ShaderCache("SSTShader","Shaders/SSTVertexShader.glsl","Shaders/SSTFragmentShader.glsl");
     
@@ -988,19 +1007,13 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
         TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
         glUniform1i(TextureIndexId, 0);
         glUniform1i(PaletteTextureId,  1);
-        glActiveTexture(GL_TEXTURE0 + 0);
-        glBindTexture(GL_TEXTURE_2D, SST->ClassList->VRAM->TextureIndexPage.TextureId);
-        glActiveTexture(GL_TEXTURE0 + 1);
-        glBindTexture(GL_TEXTURE_2D, SST->ClassList->VRAM->PalettePage.TextureId);
-        //TODO(Adriano):Ideally we want to activate only a single, specific, class and draw it...
-        glBindVertexArray(SST->ClassList->LabelsVAO->VAOId[0]);
-        glDrawArrays(GL_TRIANGLES, 0, SST->ClassList->LabelsVAO->Count);
-        glBindVertexArray(0);
-        glActiveTexture(GL_TEXTURE0 + 0);
-        glBindTexture(GL_TEXTURE_2D,0);
-        glUseProgram(0);
+        for( ClassIterator = SST->ClassList; ClassIterator; ClassIterator = ClassIterator->Next ) {
+            SSTRenderClass(ClassIterator);
+        }
         glDepthMask(GL_TRUE);
         glEnable(GL_DEPTH_TEST);
+        glUseProgram(0);
+
     }
     
 //     SSTModelRender(VRam);

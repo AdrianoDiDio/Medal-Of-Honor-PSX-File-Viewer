@@ -24,13 +24,13 @@
 
 Config_t *SSTManagerBasePath;
 
-int SSTManagerIsLevelLoaded(const SSTManager_t *SSTManager)
+int SSTManagerAreScriptsLoaded(const SSTManager_t *SSTManager)
 {
     if( !SSTManager ) {
         DPrintf("SSTManagerIsLevelLoaded:Called without a valid SSTManager\n");
         return 0;
     }
-    return 1;
+    return SSTManager->IsPathSet && SSTManager->ScriptList;
 }
 
 int SSTManagerGetGameEngine(SSTManager_t *SSTManager)
@@ -124,11 +124,11 @@ void SSTManagerOnAudioUpdate(void *UserData,Byte *Stream,int Length)
 void SSTManagerDrawString(const SSTManager_t *SSTManager,const char *String,float x,float y,Color4f_t Color)
 {
     if( !SSTManager ) {
-        DPrintf("SSTManagerDrawString:Called without a valid level manager.\n");
+        DPrintf("SSTManagerDrawString:Called without a valid sst manager.\n");
         return;
     }
-    if( !SSTManagerIsLevelLoaded(SSTManager) ) {
-        DPrintf("SSTManagerDrawString:Called without a valid level\n");
+    if( !SSTManagerAreScriptsLoaded(SSTManager) ) {
+        DPrintf("SSTManagerDrawString:Called without a valid script\n");
         return;
     }
 //     FontDrawString(SSTManager->CurrentLevel->Font,SSTManager->CurrentLevel->VRAM,String,x,y,Color);
@@ -319,35 +319,6 @@ Failure:
     ProgressBarEnd(GUI->ProgressBar,VideoSystem);
     free(RSCBuffer);
     return 0;
-}
-int SSTManagerLoadLevel(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *VideoSystem,int MissionNumber,int LevelNumber)
-{
-//     Level_t *Level;
-    char *Buffer;
-
-    if( !SSTManager->IsPathSet ) {
-        DPrintf("SSTManagerLoadLevel:Called without a valid path set\n");
-        return 0;
-    }
-    if( SSTManagerIsLevelLoaded(SSTManager) ) {
-//         if( SSTManager->CurrentLevel->MissionNumber == MissionNumber && SSTManager->CurrentLevel->LevelNumber == LevelNumber ) {
-//             DPrintf("SSTManagerLoadLevel:Attempted to load the same level...\n");
-//             return 0;
-//         }
-    }
-    asprintf(&Buffer,"Loading Mission %i Level %i...",MissionNumber,LevelNumber);
-//     ProgressBarBegin(GUI->ProgressBar,Buffer);
-//     Level = LevelInit(GUI,VideoSystem,SSTManager->SoundSystem,SSTManager->BasePath,MissionNumber,LevelNumber,NULL);
-//     ProgressBarEnd(GUI->ProgressBar,VideoSystem);
-//     if( !Level ) {
-//         printf("SSTManagerLoadLevel:Couldn't load mission %i level %i...\n",MissionNumber,LevelNumber);
-//         free(Buffer);
-//         return 0;
-//     }
-//     SSTManagerSwitchLevel(SSTManager,Level);
-//     SSTManager->HasToSpawnCamera = 1;
-    free(Buffer);
-    return 1;
 }
 
 void SSTManagerToggleFileDialog(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *VideoSystem)

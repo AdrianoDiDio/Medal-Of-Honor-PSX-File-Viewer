@@ -24,14 +24,6 @@
 #include "SSTViewer.h"
 
 
-const char* LevelMusicOptions[] = { 
-    "Disable",
-    "Music and Ambient Sounds",
-    "Ambient Sounds Only" 
-};
-
-int NumLevelMusicOptions = sizeof(LevelMusicOptions) / sizeof(LevelMusicOptions[0]);
-
 void GUIFree(GUI_t *GUI)
 {
     GUIReleaseContext(GUI->DefaultContext);
@@ -105,10 +97,10 @@ void GUIToggleVideoSettingsWindow(GUI_t *GUI)
     GUIUpdateWindowStack(GUI,GUI->VideoSettingsWindowHandle);
 
 }
-void GUIToggleLevelSelectWindow(GUI_t *GUI)
+void GUIToggleScriptSelectWindow(GUI_t *GUI)
 {
-    GUI->LevelSelectWindowHandle = !GUI->LevelSelectWindowHandle;
-    GUIUpdateWindowStack(GUI,GUI->LevelSelectWindowHandle);
+    GUI->ScriptSelectWindowHandle = !GUI->ScriptSelectWindowHandle;
+    GUIUpdateWindowStack(GUI,GUI->ScriptSelectWindowHandle);
 }
 
 void GUIDrawDebugWindow(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,VideoSystem_t *VideoSystem)
@@ -129,7 +121,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,Vid
     ZeroSize.x = 0.f;
     ZeroSize.y = 0.f;
     if( igBegin("Debug Settings",&GUI->DebugWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
-        if( SSTManagerIsLevelLoaded(SSTManager) ) {
+        if( SSTManagerAreScriptsLoaded(SSTManager) ) {
             igText("Game:%s",SSTManager->EngineName);
             igText("Current Path:%s",SSTManager->BasePath);
             igSeparator();
@@ -230,11 +222,12 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,SSTManager_t *
     igEnd(); 
 }
 
-void GUIDrawLevelTree(GUI_t *GUI,SSTManager_t *SSTManager,VideoSystem_t *VideoSystem,const Mission_t *Missions,int NumMissions)
+void GUIDrawScriptList(GUI_t *GUI,SSTManager_t *SSTManager,VideoSystem_t *VideoSystem)
 {
     static int FailedMissionNumber = -1;
     static int FailedLevelNumber = -1;
     ImGuiTreeNodeFlags TreeNodeFlags;
+    SST_t *ScriptIterator;
     int i;
     int j;
     int DisableNode;
@@ -247,77 +240,39 @@ void GUIDrawLevelTree(GUI_t *GUI,SSTManager_t *SSTManager,VideoSystem_t *VideoSy
     CurrentMission = -1;
     CurrentLevel = -1;
     
-    if( SSTManagerIsLevelLoaded(SSTManager) ) {
-        CurrentMission = 0;
-        CurrentLevel = 0;
-    }
-//     for( i = 0; i < NumMissions; i++ ) {
-//         TreeNodeFlags = ImGuiTreeNodeFlags_None;
-//         if(  CurrentMission == Missions[i].MissionNumber ) {
-//             TreeNodeFlags |= ImGuiTreeNodeFlags_DefaultOpen;
-//         }
-//         if( igTreeNodeEx_Str(Missions[i].MissionName,TreeNodeFlags) ) {
-//             for( j = 0; j < Missions[i].NumLevels; j++ ) {
-//                 DisableNode = 0;
-//                 TreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
-//                 if( CurrentMission == Missions[i].MissionNumber && CurrentLevel == Missions[i].Levels[j].LevelNumber ) {
-//                     TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
-//                     DisableNode = 1;
-//                 }
-//                 if( DisableNode ) {
-//                     igBeginDisabled(1);
-//                 }
-//                 if( igTreeNodeEx_Str(Missions[i].Levels[j].LevelName,TreeNodeFlags) ) {
-//                     if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
-//                         if( LevelManagerLoadLevel(LevelManager,GUI,VideoSystem,Missions[i].MissionNumber,Missions[i].Levels[j].LevelNumber) ) {
-//                             //Close it if we selected a level and it was loaded properly.
-//                             GUI->LevelSelectWindowHandle = 0;
-//                         } else {
-//                             FailedMissionNumber = i;
-//                             FailedLevelNumber = j;
-//                             igOpenPopup_Str("Load Level Error",0);
-//                         }
-//                     }
-//                 }
-//                 if( DisableNode ) {
-//                     igEndDisabled();
-//                 }
-//             }
-//             GUIPrepareModalWindow();
-//             if( igBeginPopupModal("Load Level Error",NULL,ImGuiWindowFlags_AlwaysAutoResize) ) {
-//                 assert(FailedMissionNumber != -1 && FailedLevelNumber != -1 );
-//                 igText("Failed to load level \"%s\"",Missions[FailedMissionNumber].Levels[FailedLevelNumber].LevelName);
-//                 if (igButton("OK", ButtonSize) ) {
-//                     igCloseCurrentPopup(); 
-//                 }
-//                 igEndPopup();
-//             }
-//             igTreePop();
-//         }
-//     }
-}
-void GUIDrawLevelSelectWindow(GUI_t *GUI,SSTManager_t *SSTManager,VideoSystem_t *VideoSystem)
-{
-    if( !GUI->LevelSelectWindowHandle ) {
+    if( !SSTManagerAreScriptsLoaded(SSTManager) ) {
         return;
     }
-
-    if( igBegin("Level Select",&GUI->LevelSelectWindowHandle,0) ) {
-        if( !SSTManagerIsLevelLoaded(SSTManager) ) {
-            igText("Level has not been loaded yet!");
-        } else {
-            igText(SSTManager->EngineName);
-            igSeparator();
-            if( SSTManagerGetGameEngine(SSTManager) == MOH_GAME_STANDARD ) {
-//                 GUIDrawLevelTree(GUI,SSTManager,VideoSystem,MOHMissionsList,NumMOHMissions);
-            } else {
-//                 GUIDrawLevelTree(GUI,SSTManager,VideoSystem,MOHUMissionsList,NumMOHUMissions);
+    for( ScriptIterator = SSTManager->ScriptList; ScriptIterator; ScriptIterator = ScriptIterator->Next ) {
+        TreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
+        if( ScriptIterator == SSTManager->ActiveScript ) {
+            TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
+        }
+        if( igTreeNodeEx_Str(ScriptIterator->Name,TreeNodeFlags) ) {
+            if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+                SSTManagerActivateScript(SSTManager,ScriptIterator);
             }
         }
     }
+}
+void GUIDrawScriptSelectWindow(GUI_t *GUI,SSTManager_t *SSTManager,VideoSystem_t *VideoSystem)
+{
+    if( !GUI->ScriptSelectWindowHandle ) {
+        return;
+    }
+
+    if( igBegin("Script Select",&GUI->ScriptSelectWindowHandle,0) ) {
+        if( !SSTManagerAreScriptsLoaded(SSTManager) ) {
+            igText("No script have been loaded yet!");
+        } else {
+            igText(SSTManager->EngineName);
+            igSeparator();
+            GUIDrawScriptList(GUI,SSTManager,VideoSystem);
+        }
+    }
     igEnd();
-    if( !GUI->LevelSelectWindowHandle ) {
-        GUIUpdateWindowStack(GUI,GUI->LevelSelectWindowHandle);
+    if( !GUI->ScriptSelectWindowHandle ) {
+        GUIUpdateWindowStack(GUI,GUI->ScriptSelectWindowHandle);
     }
 }
 
@@ -344,7 +299,7 @@ void GUIDraw(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,VideoSystem_t 
     if( GUI->VideoSettingsWindowHandle != PreviousHandleValue ) {
         GUIUpdateWindowStack(GUI,GUI->VideoSettingsWindowHandle);
     }
-    GUIDrawLevelSelectWindow(GUI,SSTManager,VideoSystem);
+    GUIDrawScriptSelectWindow(GUI,SSTManager,VideoSystem);
 //     igShowDemoWindow(NULL);
     GUIEndFrame();
 }

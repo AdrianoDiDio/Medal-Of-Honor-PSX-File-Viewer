@@ -82,11 +82,10 @@ typedef struct SSTManagerDialogData_s {
 } SSTManagerDialogData_t;
 
 SSTManager_t    *SSTManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem);
-int             SSTManagerLoadLevel(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
-                                      int MissionNumber,int LevelNumber);
+void            SSTManagerActivateScript(SSTManager_t *SSTManager,SST_t *Script);
 void            SSTManagerDrawString(const SSTManager_t *SSTManager,const char *String,float x,float y,Color4f_t Color);
 void            SSTManagerUpdateSoundSettings(SSTManager_t *SSTManager,int SoundValue);
-int             SSTManagerIsLevelLoaded(const SSTManager_t *SSTManager);
+int             SSTManagerAreScriptsLoaded(const SSTManager_t *SSTManager);
 int             SSTManagerGetGameEngine(SSTManager_t *SSTManager);
 int             SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
                                          const char *Path);

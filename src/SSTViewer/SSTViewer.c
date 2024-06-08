@@ -37,7 +37,7 @@ void ApplicationCheckEvents(Application_t *Application)
             GUIToggleVideoSettingsWindow(Application->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F3 ) {
-            GUIToggleLevelSelectWindow(Application->GUI);
+            GUIToggleScriptSelectWindow(Application->GUI);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
             SSTManagerToggleFileDialog(Application->SSTManager,Application->GUI,Application->Engine->VideoSystem);
