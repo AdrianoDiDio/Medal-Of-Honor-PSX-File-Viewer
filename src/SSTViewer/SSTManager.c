@@ -290,8 +290,8 @@ int SSTManagerInitWithPath(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_t *Vi
         goto Failure;
     }
     
-    SSTManager->ActiveScript = NULL;
     SSTManagerFreeScriptList(SSTManager->ScriptList);
+    SSTManager->ActiveScript = NULL;
     SSTManager->ScriptList = NULL;
     
     DPrintf("SSTManagerInitWithPath:Found %i scripts\n",NumScripts);

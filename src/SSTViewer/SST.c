@@ -75,14 +75,15 @@ const SSTRSCMap_t MOHSSTRSCMap[] = {
         "m_ctrl",
         1,
         (const char*[]) {
-        "SCR1/MCTRL.RSC"
+            "SCR1/MCTRL.RSC"
         }
     },
     {
         "m_dev",
-        1,
+        2,
         (const char*[]) {
-        "SCR1/MDEV.RSC"
+            "SCR1/MDEV.RSC",
+            "SCR2/MDEV.RSC"
         }
     },
     {
@@ -135,7 +136,7 @@ const SSTRSCMap_t MOHSSTRSCMap[] = {
         "m_mission",
                 1,
         (const char*[]) {
-        "SCR1/MMISSION.RSC"
+            "SCR1/MMISSION.RSC"
         }
     },
     {
@@ -414,14 +415,14 @@ const SSTRSCMap_t MOHUndergroundSSTRSCMap[] = {
         "m_ctrl",
         1,
         (const char*[]) {
-        "SCR1/MCTRL.RSC"
+            "SCR1/MCTRL.RSC"
         }
     },
     {
         "m_dev",
         1,
         (const char*[]) {
-        "SCR1/MDEV.RSC"
+            "SCR1/MDEV.RSC"
         }
     },
     {
@@ -446,7 +447,7 @@ const SSTRSCMap_t MOHUndergroundSSTRSCMap[] = {
         "m_diff",
         1,
         (const char*[]) {
-        "SCR1/MDIFF.RSC"
+            "SCR1/MDIFF.RSC"
         }
     },
     {
@@ -689,26 +690,7 @@ const SSTRSCMap_t MOHUndergroundSSTRSCMap[] = {
     }
 };
 int NumMOHUndergroundSSTRSCMapEntry = sizeof(MOHUndergroundSSTRSCMap) / sizeof(MOHUndergroundSSTRSCMap[0]);
-/*
- Every SST File starts with a type 1 section containing the name of the script.
- Basic Idea to begin loading it is to read and link section 2 and 3.
- 
- typedef struct SSTCallback_s {
-    char  SrcEvent[28];
-    char  DestEvent[28];
-    int   Unknown;
- }
- 
- typedef struct SSTLabelData_s {
-    
-    SSTLabelData_s *Next;
- }
- typedef struct SSTLabel {
-    SSTCallback_t *Callback;
-    SSTLabelData_t *Data;
- }
- 
- */
+
 SSTGFX_t Models[5];
 VAO_t  *LabelsVao[512];
 
