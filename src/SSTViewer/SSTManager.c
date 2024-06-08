@@ -212,6 +212,9 @@ void SSTManagerDraw(SSTManager_t *SSTManager,Camera_t *Camera)
 void SSTManagerActivateScript(SSTManager_t *SSTManager,SST_t *Script)
 {
     DPrintf("SSTManagerActivateScript:Activating script %s\n",Script->Name);
+    if( SSTManager->ActiveScript ) {
+        SSTUnload(SSTManager->ActiveScript);
+    }
     SSTGenerateVAOs(Script);
     SSTManager->ActiveScript = Script;
 }
@@ -373,6 +376,7 @@ SSTManager_t *SSTManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem)
                                                      SSTManagerOnDirSelected,SSTManagerOnDirSelectionCancelled);
     SSTManager->GlobalRSCList = NULL;
     SSTManager->BasePath = NULL;
+    SSTManager->ActiveScript = NULL;
     //No path has been provided to it yet.
     SSTManager->IsPathSet = 0;
     

@@ -132,6 +132,7 @@ typedef struct SST_s {
 
 SST_t   *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const RSC_t *GlobalRSCList,int GameEngine);
 void    SSTGenerateVAOs(SST_t *SST);
+void    SSTUnload(SST_t *SST);
 void    SSTRender(SST_t *SST,mat4 ProjectionMatrix);
 void    SSTModelRender(VRAM_t *VRam);
 void    SSTFree(SST_t *SST);

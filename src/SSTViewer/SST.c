@@ -1072,6 +1072,32 @@ void SSTGenerateClassVAOs(SSTClass_t *Class)
         SSTFillLabelsVAO(Label, Class->VRAM, Class->LabelsVAO);
     }
 }
+void SSTUnload(SST_t *SST)
+{
+    SSTClass_t *Class;
+    
+    if( !SST ) {
+        return;
+    }
+    if( !SST->ClassList ) {
+        return;
+    }
+
+    for( Class = SST->ClassList; Class; Class = Class->Next ) {
+        if( Class->LabelsVAO ) {
+            VAOFree(Class->LabelsVAO);
+            Class->LabelsVAO = NULL;
+        }
+        if( Class->VRAM ) {
+            VRAMFree(Class->VRAM);
+            Class->VRAM = NULL;
+        }
+    }
+
+//     for( i = 0; i < NumModels; i++ ) {
+//         GFXPrepareVAO(Models[i].Model);
+//     }
+}
 void SSTGenerateVAOs(SST_t *SST)
 {
     SSTClass_t *Class;
@@ -1087,7 +1113,7 @@ void SSTGenerateVAOs(SST_t *SST)
     for( Class = SST->ClassList; Class; Class = Class->Next ) {
         //TODO(Adriano): Remember to also skip the generation for models VAO when implemented
         if( Class->LabelsVAO ) {
-            return;
+            continue;
         }
         SSTGenerateClassVAOs(Class);
     }
