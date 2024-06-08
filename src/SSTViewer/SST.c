@@ -977,7 +977,7 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
     if( Shader ) {
         glUseProgram(Shader->ProgramId);
         
-        glDepthMask(GL_FALSE);  // disable writes to Z-Buffer
+        glDepthMask(GL_FALSE);
         glDisable(GL_DEPTH_TEST);
         glClear(GL_DEPTH_BUFFER_BIT);
         OrthoMatrixID = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
@@ -1506,7 +1506,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
 {
     SST_t *SST;
     SSTClass_t *CurrentClass;
-    SSTClass_t *LastCallback;
+    SSTCallback_t *LastCallback;
     SSTVideoInfo_t *SSTVideoInfo;
     SSTLabel_t *SSTLabel;
     SSTLabel_t *TempLabel;

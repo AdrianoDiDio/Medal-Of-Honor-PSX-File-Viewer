@@ -515,7 +515,7 @@ void TIMGetPalette(FILE *TIMIMage,TIMImage_t *Image)
 }
 void TIMGetPaletteFromBuffer(Byte **TIMImageBuffer,TIMImage_t *Image)
 {
-    unsigned short i;
+    int CLUTSize;
     
     Image->Header.CLUTSize = **(int **) TIMImageBuffer;
     *TIMImageBuffer += 4;
@@ -532,16 +532,14 @@ void TIMGetPaletteFromBuffer(Byte **TIMImageBuffer,TIMImage_t *Image)
     DPrintf("CLUTLocation is %ux%u\n",Image->Header.CLUTOrgX,Image->Header.CLUTOrgY);
     DPrintf("NumCLUTColors is %u\n",Image->Header.NumCLUTColors);
     DPrintf("NumCLUTs is %u\n",Image->Header.NumCLUTs);
-    Image->CLUT = malloc(Image->Header.NumCLUTColors * sizeof(unsigned short));
+    CLUTSize = Image->Header.NumCLUTColors * sizeof(unsigned short);
+    Image->CLUT = malloc(CLUTSize);
     if( !Image->CLUT ) {
         DPrintf("TIMGetPalette:Failed to allocate memory for CLUT data\n");
         return;
     }
-    for( i = 0; i < Image->Header.NumCLUTColors; i++ ) {
-        unsigned short Color  = **(short **) TIMImageBuffer;
-        *TIMImageBuffer += 2;;
-        Image->CLUT[i] = Color;
-    }
+    memcpy(Image->CLUT, *TIMImageBuffer, CLUTSize);
+    *TIMImageBuffer += CLUTSize;
 }
 float TIMGetImageSizeOffset(int BPP)
 {
@@ -685,6 +683,7 @@ TIMImage_t *TIMLoadImageFromBuffer(Byte **TIMImageBuffer,int NumImages)
     char *BaseName;
     char *FinalName;
     float ImageSizeOffset;
+    int ImageSize;
     int Ret;
     int i;
 
@@ -770,17 +769,16 @@ TIMImage_t *TIMLoadImageFromBuffer(Byte **TIMImageBuffer,int NumImages)
     DPrintf("NumPixels is %i\n",ResultImage->NumPixels);
     DPrintf("FrameBuffer Coordinates %ux%u page %i\n",ResultImage->FrameBufferX,ResultImage->FrameBufferY,ResultImage->TexturePage);
     DPrintf("Image is %ux%u RowCount is %u\n",ResultImage->Width,ResultImage->Height,ResultImage->RowCount);
-
-    ResultImage->Data = malloc((ResultImage->RowCount * ResultImage->Height) * sizeof(unsigned short));
+    ImageSize = (ResultImage->RowCount * ResultImage->Height) * sizeof(unsigned short);
+    ResultImage->Data = malloc(ImageSize);
     if( !ResultImage->Data ) {
         DPrintf("TIMLoadImage:Failed to allocate memory for image data\n");
         free(ResultImage);
         return NULL;
     }
-    for( i = 0; i < ResultImage->RowCount * ResultImage->Height; i++ ) {
-        ResultImage->Data[i] = **( unsigned short **) TIMImageBuffer;
-        *TIMImageBuffer += 2;
-    }
+    
+    memcpy(ResultImage->Data, *TIMImageBuffer, ImageSize);
+    *TIMImageBuffer += ImageSize;
     return ResultImage;
 }
 TIMImage_t *TIMLoadAllImagesFromBuffer(Byte *TIMImageBuffer)

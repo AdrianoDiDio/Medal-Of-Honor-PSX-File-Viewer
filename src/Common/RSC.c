@@ -205,7 +205,7 @@ RSC_t *RSCLoad(char *FileName)
         return NULL;
     }
 
-    printf("Loading pack %s...\n",FileName);
+    DPrintf("Loading pack %s...\n",FileName);
     
     RSCFile = fopen(FileName,"rb");
     
