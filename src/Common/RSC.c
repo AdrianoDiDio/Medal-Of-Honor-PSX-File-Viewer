@@ -63,7 +63,7 @@ int RSCSearch(RSC_t *RSC,char *FileName)
     }
     return RSC_FILE_NOT_FOUND;
 }
-int RSCOpen(RSC_t *RSC,char *FileName,RSCEntry_t *OutEntry) 
+int RSCOpen(const RSC_t *RSC,const char *FileName,RSCEntry_t *OutEntry) 
 {
     RSC_t *Iterator;
     int EntryIndex;
@@ -192,7 +192,7 @@ RSCEntry_t *RSCGetDirectoryEntries(const RSC_t *RSC,const char *Directory,int *N
     }
     return EntryList;
 }
-RSC_t *RSCLoad(char *FileName)
+RSC_t *RSCLoad(const char *FileName)
 {
     FILE *RSCFile;
     RSC_t *RSC;

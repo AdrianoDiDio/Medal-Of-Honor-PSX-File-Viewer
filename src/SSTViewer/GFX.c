@@ -87,6 +87,7 @@ void GFXReadOffsetTableChunk(GFX_t *GFX,void **GFXFileBuffer)
 
 void GFXReadVertexChunk(GFX_t *GFX,void **GFXFileBuffer)
 {
+    int VertexSize;
     int i;
     
     if( !GFX || !GFXFileBuffer ) {
@@ -98,12 +99,11 @@ void GFXReadVertexChunk(GFX_t *GFX,void **GFXFileBuffer)
         DPrintf("GFXReadVertexChunk:0 vertex in header...skipping\n");
         return;
     }
-    
-    GFX->Vertex = malloc(GFX->Header.NumVertices * sizeof(GFXVertex_t));
-//     DPrintf("Reading Vertex chunk at offset %i\n",*GFXFileBuffer - GFXFileBuffer);
+    VertexSize = GFX->Header.NumVertices * sizeof(GFXVertex_t);
+    GFX->Vertex = malloc(VertexSize);
+    memcpy(GFX->Vertex,*GFXFileBuffer,VertexSize);
+    *GFXFileBuffer += VertexSize;    
     for( i = 0; i < GFX->Header.NumVertices; i++ ) {
-        memcpy(&GFX->Vertex[i],*GFXFileBuffer,sizeof(GFX->Vertex[i]));
-        *GFXFileBuffer += sizeof(GFX->Vertex[i]);
         DPrintf(" -- VERTEX %i --\n",i);
         DPrintf("Position:(%i;%i;%i)\n",GFX->Vertex[i].x,GFX->Vertex[i].y,GFX->Vertex[i].z);
         DPrintf("Pad:%i\n",GFX->Vertex[i].Pad);
@@ -113,6 +113,7 @@ void GFXReadVertexChunk(GFX_t *GFX,void **GFXFileBuffer)
 
 void GFXReadNormalChunk(GFX_t *GFX,void **GFXFileBuffer)
 {
+    int NormalSize;
     int i;
     
     if( !GFX || !GFXFileBuffer ) {
@@ -126,11 +127,11 @@ void GFXReadNormalChunk(GFX_t *GFX,void **GFXFileBuffer)
         return;
     }
     
-    GFX->Normal = malloc(GFX->Header.NumNormals * sizeof(GFXVertex_t));
-    
+    NormalSize = (GFX->Header.NumNormals) * sizeof(GFXVertex_t);
+    GFX->Normal = malloc(NormalSize);
+    memcpy(GFX->Normal,*GFXFileBuffer,NormalSize);
+    *GFXFileBuffer += NormalSize;
     for( i = 0; i < GFX->Header.NumNormals; i++ ) {
-        memcpy(&GFX->Normal[i],*GFXFileBuffer,sizeof(GFX->Normal[i]));
-        *GFXFileBuffer += sizeof(GFX->Normal[i]);
         DPrintf(" -- Normal %i --\n",i);
         DPrintf("Position:(%i;%i;%i)\n",GFX->Normal[i].x,GFX->Normal[i].y,GFX->Normal[i].z);
         DPrintf("Pad:%i\n",GFX->Normal[i].Pad);
@@ -140,6 +141,7 @@ void GFXReadNormalChunk(GFX_t *GFX,void **GFXFileBuffer)
 
 void GFXReadFaceChunk(GFX_t *GFX,void **GFXFileBuffer)
 {
+    int FaceSize;
     int i;
     
     if( !GFX || !GFXFileBuffer ) {
@@ -153,16 +155,14 @@ void GFXReadFaceChunk(GFX_t *GFX,void **GFXFileBuffer)
         return;
     }
     
-//     GFXReadSpecialFaceChunk(GFX,InFile);
-//     GFXSkipUnknownSection(8,InFile);
-    
     assert(sizeof(GFXFace_t) == 36);
-    GFX->Face = malloc((GFX->Header.NumFaces) * sizeof(GFXFace_t));
-    
+    FaceSize = (GFX->Header.NumFaces) * sizeof(GFXFace_t);
+    GFX->Face = malloc(FaceSize);
+    memcpy(GFX->Face,*GFXFileBuffer,FaceSize);
+    *GFXFileBuffer += FaceSize;
     for( i = 0; i < GFX->Header.NumFaces; i++ ) {
         DPrintf(" -- FACE %i --\n",i);
-        memcpy(&GFX->Face[i],*GFXFileBuffer,sizeof(GFX->Face[i]));
-        *GFXFileBuffer += sizeof(GFX->Face[i]);
+ 
         DPrintf("TSB:%i\n",GFX->Face[i].TSB);
         DPrintf("U1V1:(%i;%i)\n",GFX->Face[i].U1, GFX->Face[i].V1);
         DPrintf("U2V2:(%i;%i)\n",GFX->Face[i].U2, GFX->Face[i].V2);
@@ -227,8 +227,6 @@ void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix)
     mat4 ModelViewMatrix;
     mat4 MVPMatrix;
     
-    vec3 v;
-    int i;
     if( !GFX ) {
         return;
     }

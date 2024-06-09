@@ -795,30 +795,34 @@ int SSTGetLabelStride()
 }
 void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
 {
-    int x0,y0;
-    int u0,v0;
-    int x1,y1;
-    int u1,v1;
-    int x2,y2;
-    int u2,v2;
-    int x3,y3;
-    int u3,v3;
+    int x0;
+    int y0;
+    int u0;
+    int v0;
+    int x1;
+    int y1;
+    int u1;
+    int v1;
+    int x2;
+    int y2;
+    int u2;
+    int v2;
+    int x3;
+    int y3;
+    int u3;
+    int v3;
     int CLUTPosX;
     int CLUTPosY;
     int CLUTDestX;
     int CLUTDestY;
     int CLUTPage;
-    int NumTransparentFaces;
-    int ColorMode;
     int VRAMPage;
     int BaseTextureX;
     int BaseTextureY;
-    int ColorModeOffset;
     int *VertexData;
     int Stride;
     int DataSize;
     int VertexPointer;
-    int TextureID;
     int Width;
     int Height;
     
@@ -944,7 +948,6 @@ void SSTRenderClass(SSTClass_t *Class)
 void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
 {
     Shader_t *Shader;
-    SSTLabel_t *Iterator;
     SSTClass_t *ClassIterator;
     float PsxScreenWidth = 512.f;
     float PsxScreenHeight = 256.f;
@@ -955,7 +958,6 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
     mat4 MVPMatrix;
     GFX_t *Model;
     vec3 v;
-    int i;
 
     if( !SST ) {
         DPrintf("SSTRender: Invalid SST script\n");
@@ -1137,11 +1139,7 @@ const char **SSTBuildRSCPathListFromClassName(const char *ClassName, const SSTRS
     return NULL;
 }
 const char **SSTGetRSCPathListFromClassName(SSTClass_t *Class, int GameEngine, int *NumRSCFile)
-{
-    const SSTRSCMap_t *Map;
-    int NumEntry;
-    int i;
-    
+{    
     if( !Class ) {
         DPrintf("SSTGetRSCPathFromClassName: Invalid class\n");
         return NULL;
@@ -1153,7 +1151,7 @@ const char **SSTGetRSCPathListFromClassName(SSTClass_t *Class, int GameEngine, i
     
     return SSTBuildRSCPathListFromClassName(Class->Name,MOHUndergroundSSTRSCMap,NumMOHUndergroundSSTRSCMapEntry,NumRSCFile);
 }
-int SSTLoadAssetFromRSCList(const char *FileName,RSC_t *ClassRSCList,RSC_t *GlobalRSCList,RSCEntry_t *Entry)
+int SSTLoadAssetFromRSCList(const char *FileName,RSC_t *ClassRSCList,const RSC_t *GlobalRSCList,RSCEntry_t *Entry)
 {
     int Ret;
     
@@ -1314,26 +1312,23 @@ void SSTLoadLabel(SST_t *SST, SSTClass_t *Class,SSTCallback_t *Callback,const RS
 SSTCallback_t *SSTLoadCallback(SST_t *SST, SSTClass_t *Class,Byte **SSTBuffer)
 {
     SSTCallback_t *Callback;
-    TIMImage_t *Image;
-    RSCEntry_t Entry;
-    int Ret;
     
     if( !SST ) {
         DPrintf("SSTLoadCallback: Invalid SST\n");
-        return;
+        return NULL;
     }
     if( !Class ) {
         DPrintf("SSTLoadCallback: Invalid class\n");
-        return;
+        return NULL;
     }
     if( !SSTBuffer ) {
         DPrintf("SSTLoadCallback: Invalid Buffer\n");
-        return;
+        return NULL;
     }
     Callback = malloc(sizeof(SSTCallback_t));
     if( !Callback ) {
         DPrintf("SSTLoadCallback: Failed to load callback for class %s\n",Class->Name);
-        return;
+        return NULL;
     }
 
     Callback->Next = NULL;
@@ -1514,21 +1509,14 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
     SST_t *SST;
     SSTClass_t *CurrentClass;
     SSTCallback_t *LastCallback;
-    SSTVideoInfo_t *SSTVideoInfo;
-    SSTLabel_t *SSTLabel;
-    SSTLabel_t *TempLabel;
-    RSCEntry_t Entry;
-    char Name[28];
     int Size;
     int Token;
-    int Ret;
-    int StoreLabel;
     
     if( !SSTBuffer ) {
         DPrintf("SSTLoad:Invalid data.\n");
         return NULL;
     }
-    DPrintf("Loading it\n");
+    DPrintf("SSTLoad:Loading it\n");
     
     SST = malloc(sizeof(SST_t));
     
@@ -1540,7 +1528,6 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
     SST->ClassList = NULL;
     SST->Next = NULL;
     CurrentClass = NULL;
-    StoreLabel = 0;
 
     DPrintf("SSTLoad:Loading script %s\n",SST->Name);
     
