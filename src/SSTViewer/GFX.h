@@ -51,41 +51,41 @@ typedef struct GFXVertex_s {
 } GFXVertex_t;
 
 typedef struct GFXFace_s {
-    short Unk0;
-    unsigned short Vert0; // => Vertex 0
-    unsigned short Vert1; // => Vertex 1
-    unsigned short Vert2; // => Vertex 2
-    unsigned short Norm0; // => Normal 0
-    unsigned short Norm1; // => Normal 1
-    unsigned short Norm2; // => Normal 2
-    unsigned char  U1;
-    unsigned char  V1;
-    unsigned char  U2;
-    unsigned char  V2;
-    unsigned char  U3;
-    unsigned char  V3;
-    Color1i_t      RGB0;
-    Color1i_t      RGB1;
-    Color1i_t      RGB2;
-    unsigned short TextureInfo;
-    short Clut;
+    short           Unk0;
+    unsigned short  Vert0; // => Vertex 0
+    unsigned short  Vert1; // => Vertex 1
+    unsigned short  Vert2; // => Vertex 2
+    unsigned short  Norm0; // => Normal 0
+    unsigned short  Norm1; // => Normal 1
+    unsigned short  Norm2; // => Normal 2
+    unsigned char   U1;
+    unsigned char   V1;
+    unsigned char   U2;
+    unsigned char   V2;
+    unsigned char   U3;
+    unsigned char   V3;
+    Color1i_t       RGB0;
+    Color1i_t       RGB1;
+    Color1i_t       RGB2;
+    unsigned short  TSB;
+    short           CBA;
 } GFXFace_t;
 
 typedef struct GFX_s {
-    GFXHeader_t Header;
-    GFXOffsetTable_t OffsetTable;
-    GFXVertex_t *Vertex;
-    GFXVertex_t *Normal;
-    GFXFace_t *Face;
-    GFXVertex_t *AnimationData;
-    int NumAnimations;
-    VAO_t *VAOList;
+    GFXHeader_t         Header;
+    GFXOffsetTable_t    OffsetTable;
+    GFXVertex_t         *Vertex;
+    GFXVertex_t         *Normal;
+    GFXFace_t           *Face;
+    GFXVertex_t         *AnimationData;
+    int                 NumAnimations;
+    VAO_t               *VAO;
     
-    struct GFX_s *Next;
+    struct GFX_s        *Next;
 } GFX_t;
 
 GFX_t *GFXRead(void* GFXFileBuffer);
 void GFXFree(GFX_t *GFX);
 void GFXPrepareVAO(GFX_t *GFX);
-void GFXRender(GFX_t *GFX,VRAM_t *VRAM);
+void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix);
 #endif //__GFX_H_

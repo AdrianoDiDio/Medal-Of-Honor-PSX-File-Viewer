@@ -38,6 +38,9 @@ void GFXFree(GFX_t *GFX)
         if( GFX->Face ) {
             free(GFX->Face);
         }
+        if( GFX->VAO ) {
+            VAOFree(GFX->VAO);
+        }
         Temp = GFX;
         GFX = GFX->Next;
         free(Temp);
@@ -160,7 +163,7 @@ void GFXReadFaceChunk(GFX_t *GFX,void **GFXFileBuffer)
         DPrintf(" -- FACE %i --\n",i);
         memcpy(&GFX->Face[i],*GFXFileBuffer,sizeof(GFX->Face[i]));
         *GFXFileBuffer += sizeof(GFX->Face[i]);
-        DPrintf("Texture Page:%i\n",GFX->Face[i].TextureInfo);
+        DPrintf("TSB:%i\n",GFX->Face[i].TSB);
         DPrintf("U1V1:(%i;%i)\n",GFX->Face[i].U1, GFX->Face[i].V1);
         DPrintf("U2V2:(%i;%i)\n",GFX->Face[i].U2, GFX->Face[i].V2);
         DPrintf("U3V3:(%i;%i)\n",GFX->Face[i].U3, GFX->Face[i].V3);
@@ -170,7 +173,7 @@ void GFXReadFaceChunk(GFX_t *GFX,void **GFXFileBuffer)
         DPrintf("Norm0:%i\n",GFX->Face[i].Norm0);
         DPrintf("Norm1:%i\n",GFX->Face[i].Norm1);
         DPrintf("Norm2:%i\n",GFX->Face[i].Norm2);
-        DPrintf("Clut:%i\n",GFX->Face[i].Clut);
+        DPrintf("CBA:%i\n",GFX->Face[i].CBA);
         DPrintf("Unk0:%i\n",GFX->Face[i].Unk0);
         DPrintf("Color0:%i;%i;%i;%i\n",GFX->Face[i].RGB0.rgba[0],GFX->Face[i].RGB0.rgba[1],
             GFX->Face[i].RGB0.rgba[2],GFX->Face[i].RGB0.rgba[3]
@@ -215,120 +218,169 @@ void GFXReadAnimationChunk(GFX_t *GFX,FILE *InFile)
 //     DPrintf("Read %i animation vertex\n",GFX->NumAnimations);
 }
 
-void GFXRender(GFX_t *GFX,VRAM_t *VRAM)
+void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix)
 {
-//     GL_Shader_t *Shader;
-//     VAO_t *Iterator;
-//     int MVPMatrixID;
-//     int EnableLightingId;
-//     int ColorMode;
-//     int TexturePage;
-//     
-//     Shader = Shader_Cache("GFXShader","Shaders/GFXVertexShader.glsl","Shaders/GFXFragmentShader.glsl");
-//     glUseProgram(Shader->ProgramID);
-// 
-//     MVPMatrixID = glGetUniformLocation(Shader->ProgramID,"MVPMatrix");
-//     glUniformMatrix4fv(MVPMatrixID,1,false,&VidConf.MVPMatrix[0][0]);
-//     EnableLightingId = glGetUniformLocation(Shader->ProgramID,"EnableLighting");
-//     glUniform1i(EnableLightingId, LightEnable);
-// 
-// 
-//     for( Iterator = GFX->VAOList; Iterator; Iterator = Iterator->Next ) {
-// //         int VRamPage = Iterator->TSB & 0x1F;
-//         ColorMode = (Iterator->TSB & 0xC0 ) >> 6;
-//         TexturePage = Iterator->TSB  & 0x7F;
-// //         if( ColorMode == 1) {
-// //             glBindTexture(GL_TEXTURE_2D, VRam->Page8Bit[TexturePage].TextureID);
-// //         } else {
-// //             glBindTexture(GL_TEXTURE_2D, VRam->Page4Bit[TexturePage].TextureID);
-// //         }
-//         glBindVertexArray(Iterator->VaoID[0]);
-//         glDrawArrays(GL_TRIANGLES, 0, 3);
-//         glBindVertexArray(0);
-//         glBindTexture(GL_TEXTURE_2D,0);
-//     }
-//     glUseProgram(0);
+    Shader_t *Shader;
+    int PaletteTextureId;
+    int TextureIndexId;
+    int OrthoMatrixID;
+    mat4 ModelViewMatrix;
+    mat4 MVPMatrix;
+    
+    vec3 v;
+    int i;
+    if( !GFX ) {
+        return;
+    }
+    
+    if( !VRAM ) {
+        return;
+    }
+    
+    Shader = ShaderCache("SSTShader","Shaders/SSTVertexShader.glsl","Shaders/SSTFragmentShader.glsl");
+    
+    if( Shader ) {
+        glUseProgram(Shader->ProgramId);
+        
+        OrthoMatrixID = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+        glm_mat4_identity(ModelViewMatrix);
+        glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
+        glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+        glUniformMatrix4fv(OrthoMatrixID,1,false,&MVPMatrix[0][0]);
+        PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
+        TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+        glUniform1i(TextureIndexId, 0);
+        glUniform1i(PaletteTextureId,  1);
+        glActiveTexture(GL_TEXTURE0 + 0);
+        glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
+        glActiveTexture(GL_TEXTURE0 + 1);
+        glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
+        glBindVertexArray(GFX->VAO->VAOId[0]);
+        glDrawArrays(GL_TRIANGLES, 0, GFX->VAO->Count);
+        glBindVertexArray(0);
+        glActiveTexture(GL_TEXTURE0 + 0);
+        glBindTexture(GL_TEXTURE_2D,0);
+        glUseProgram(0);
 
+    }
+}
+void GFXFillVertexBuffer(int *Buffer,int *BufferSize,int x,int y,int z,Color1i_t Color,int U,int V,int CLUTX,int CLUTY,int ColorMode)
+{
+    if( !Buffer ) {
+        DPrintf("GFXFillVertexBuffer:Invalid Buffer\n");
+        return;
+    }
+    if( !BufferSize ) {
+        DPrintf("GFXFillVertexBuffer:Invalid BufferSize\n");
+        return;
+    }
+    Buffer[*BufferSize] =   x;
+    Buffer[*BufferSize+1] = y;
+    Buffer[*BufferSize+2] = z;
+    Buffer[*BufferSize+3] = U;
+    Buffer[*BufferSize+4] = V;
+    Buffer[*BufferSize+5] = Color.rgba[0];
+    Buffer[*BufferSize+6] = Color.rgba[1];
+    Buffer[*BufferSize+7] = Color.rgba[2];
+    Buffer[*BufferSize+8] = CLUTX;
+    Buffer[*BufferSize+9] = CLUTY;
+    Buffer[*BufferSize+10] = ColorMode;
+    *BufferSize += 11;
 }
 
 void GFXPrepareVAO(GFX_t *GFX)
 {
-    float Width = 256.f;
-    float Height = 256.f;
-    int i;
-    float *VertexData;
+    int *VertexData;
     int VertexSize;
+    int TotalVertexSize;
     int VertexPointer;
     int Stride;
     int VertexOffset;
     int TextureOffset;
-    int NormalOffset;
+    int ColorOffset;
+    int CLUTOffset;
+    int ColorModeOffset;
+    int Vert0;
+    int Vert1;
+    int Vert2;
+    int U0;
+    int V0;
+    int U1;
+    int V1;
+    int U2;
+    int V2;
+    int TSB;
+    int CBA;
+    int CLUTPosX;
+    int CLUTPosY;
+    int CLUTPage;
+    int CLUTDestX;
+    int CLUTDestY;
+    int VRAMPage;
+    int ColorMode;
+    int i;
+
     if( !GFX ) {
         DPrintf("GFXPrepareVAO: Invalid GFX File\n");
         return;
     }
+//            XYZ UV RGB CLUT ColorMode
+    Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
+                
+    VertexOffset = 0;
+    TextureOffset = 3;
+    ColorOffset = 5;
+    CLUTOffset = 8;
+    ColorModeOffset = 10;
 
+    VertexSize = Stride * 3;
+    TotalVertexSize = VertexSize * GFX->Header.NumFaces;
+    VertexData = malloc(VertexSize);
+    VertexPointer = 0;
+    GFX->VAO = VAOInitXYZUVRGBCLUTColorModeInteger(NULL,TotalVertexSize,Stride,VertexOffset,TextureOffset,ColorOffset,CLUTOffset,ColorModeOffset,
+                                              GFX->Header.NumFaces * 3);
     for( i = 0; i < GFX->Header.NumFaces; i++ ) {
-        VAO_t *VAO;
-        int Vert0 = GFX->Face[i].Vert0;
-        int Vert1 = GFX->Face[i].Vert1;
-        int Vert2 = GFX->Face[i].Vert2;
-        int Norm0 = GFX->Face[i].Norm0;
-        int Norm1 = GFX->Face[i].Norm1;
-        int Norm2 = GFX->Face[i].Norm2;
-        float U0 = (GFX->Face[i].U1)/Width;
-        float V0 = (GFX->Face[i].V1) / Height;
-        float U1 = (GFX->Face[i].U2) / Width;
-        float V1 = (GFX->Face[i].V2) /Height;
-        float U2 = (GFX->Face[i].U3) /Width;
-        float V2 = (GFX->Face[i].V3) / Height;
+        Vert0 = GFX->Face[i].Vert0;
+        Vert1 = GFX->Face[i].Vert1;
+        Vert2 = GFX->Face[i].Vert2;
+        U0 = GFX->Face[i].U1;
+        V0 = GFX->Face[i].V1;
+        U1 = GFX->Face[i].U2;
+        V1 = GFX->Face[i].V2;
+        U2 = GFX->Face[i].U3;
+        V2 = GFX->Face[i].V3;
+        TSB = GFX->Face[i].TSB;
+        CBA = GFX->Face[i].CBA;
+        
+        
+        ColorMode = (TSB >> 7) & 0x3;
+        VRAMPage = TSB & 0x1F;
+        
+        
+        CLUTPosX = (CBA << 4) & 0x3F0;
+        CLUTPosY = (CBA >> 6) & 0x1ff;
+        CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
+        CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
+        CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
+        CLUTDestX += VRAMGetTexturePageX(CLUTPage);
 
-            //    XYZ UV XYZ
-        Stride = (3 + 2 + 3) * sizeof(float);
+        U0 += VRAMGetTexturePageX(VRAMPage);
+        V0 += VRAMGetTexturePageY(VRAMPage,ColorMode);
+        U1 += VRAMGetTexturePageX(VRAMPage);
+        V1 += VRAMGetTexturePageY(VRAMPage,ColorMode);
+        U2 += VRAMGetTexturePageX(VRAMPage);
+        V2 += VRAMGetTexturePageY(VRAMPage,ColorMode);
         
-        VertexOffset = 0;
-        TextureOffset = 3;
-        NormalOffset = 5;
-        
-        VertexSize = Stride;
-        VertexData = malloc(VertexSize * 3/** sizeof(float)*/);
+        GFXFillVertexBuffer(VertexData,&VertexPointer,GFX->Vertex[Vert0].x,GFX->Vertex[Vert0].y,GFX->Vertex[Vert0].z,
+                                GFX->Face[i].RGB0,U0,V0,CLUTDestX,CLUTDestY,ColorMode);
+        GFXFillVertexBuffer(VertexData,&VertexPointer,GFX->Vertex[Vert1].x,GFX->Vertex[Vert1].y,GFX->Vertex[Vert1].z,
+                                GFX->Face[i].RGB1,U1,V1,CLUTDestX,CLUTDestY,ColorMode);
+        GFXFillVertexBuffer(VertexData,&VertexPointer,GFX->Vertex[Vert2].x,GFX->Vertex[Vert2].y,GFX->Vertex[Vert2].z,
+                                GFX->Face[i].RGB2,U2,V2,CLUTDestX,CLUTDestY,ColorMode);
+        VAOUpdate(GFX->VAO,VertexData,VertexSize,3);
         VertexPointer = 0;
-                    
-        VertexData[VertexPointer] =   GFX->Vertex[Vert0].x;
-        VertexData[VertexPointer+1] = GFX->Vertex[Vert0].y;
-        VertexData[VertexPointer+2] = GFX->Vertex[Vert0].z;
-        VertexData[VertexPointer+3] = U0;
-        VertexData[VertexPointer+4] = V0;
-        VertexData[VertexPointer+5] = GFX->Face[i].RGB0.rgba[0] / 255.f;
-        VertexData[VertexPointer+6] = GFX->Face[i].RGB0.rgba[1] / 255.f;
-        VertexData[VertexPointer+7] = GFX->Face[i].RGB0.rgba[2] / 255.f;
-        VertexPointer += 8;
-            
-        VertexData[VertexPointer] =   GFX->Vertex[Vert1].x;
-        VertexData[VertexPointer+1] = GFX->Vertex[Vert1].y;
-        VertexData[VertexPointer+2] = GFX->Vertex[Vert1].z;
-        VertexData[VertexPointer+3] = U1;
-        VertexData[VertexPointer+4] = V1;
-        VertexData[VertexPointer+5] = GFX->Face[i].RGB1.rgba[0] / 255.f;
-        VertexData[VertexPointer+6] = GFX->Face[i].RGB1.rgba[1] / 255.f;
-        VertexData[VertexPointer+7] = GFX->Face[i].RGB1.rgba[2] / 255.f;
-        VertexPointer += 8;
-            
-        VertexData[VertexPointer] =   GFX->Vertex[Vert2].x;
-        VertexData[VertexPointer+1] = GFX->Vertex[Vert2].y;
-        VertexData[VertexPointer+2] = GFX->Vertex[Vert2].z;
-        VertexData[VertexPointer+3] = U2;
-        VertexData[VertexPointer+4] = V2;
-        VertexData[VertexPointer+5] = GFX->Face[i].RGB2.rgba[0] / 255.f;
-        VertexData[VertexPointer+6] = GFX->Face[i].RGB2.rgba[1] / 255.f;
-        VertexData[VertexPointer+7] = GFX->Face[i].RGB2.rgba[2] / 255.f;
-        VertexPointer += 8;
-            
-//         VAO = VAOInitXYZUVXYZ(VertexData,VertexSize * 3,Stride,VertexOffset,TextureOffset,NormalOffset,GFX->Face[i].TextureInfo);
-//         VAO->Next = GFX->VAOList;
-//         GFX->VAOList = VAO;
-        free(VertexData);
     }
+    free(VertexData);
 }
 
 GFX_t *GFXRead(void* GFXFileBuffer)
@@ -349,7 +401,7 @@ GFX_t *GFXRead(void* GFXFileBuffer)
     GFXData->Normal = NULL;
     GFXData->Face = NULL;
     GFXData->Next = NULL;
-    GFXData->VAOList = NULL;
+    GFXData->VAO = NULL;
     GFXReadHeaderChunk(GFXData,&GFXFileBuffer);
     GFXReadOffsetTableChunk(GFXData,&GFXFileBuffer);
     GFXFileBuffer += GFXData->Header.NumUnk4 * 4;

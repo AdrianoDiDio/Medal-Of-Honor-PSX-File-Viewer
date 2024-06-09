@@ -691,11 +691,6 @@ const SSTRSCMap_t MOHUndergroundSSTRSCMap[] = {
 };
 int NumMOHUndergroundSSTRSCMapEntry = sizeof(MOHUndergroundSSTRSCMap) / sizeof(MOHUndergroundSSTRSCMap[0]);
 
-SSTGFX_t Models[5];
-VAO_t  *LabelsVao[512];
-
-int NumModels;
-
 void SSTFreeLabelList(SSTLabel_t *LabelList)
 {
     SSTLabel_t *Temp;
@@ -922,10 +917,10 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
 }
 void SSTModelRender(VRAM_t *VRAM)
 {
-    int i;
-    for( i = 0; i < NumModels; i++ ) {
-        GFXRender(Models[i].Model,VRAM);
-    }
+//     int i;
+//     for( i = 0; i < NumModels; i++ ) {
+//         GFXRender(Models[i].Model,VRAM);
+//     }
 }
 void SSTRenderClass(SSTClass_t *Class)
 {
@@ -958,7 +953,7 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
     int OrthoMatrixID;
     mat4 ModelViewMatrix;
     mat4 MVPMatrix;
-    
+    GFX_t *Model;
     vec3 v;
     int i;
 
@@ -998,7 +993,13 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
         glDepthMask(GL_TRUE);
         glEnable(GL_DEPTH_TEST);
         glUseProgram(0);
-
+    }
+    glm_mat4_identity(ProjectionMatrix);
+    glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);    
+    for( ClassIterator = SST->ClassList; ClassIterator; ClassIterator = ClassIterator->Next ) {
+        for( Model = ClassIterator->GFXModelList; Model; Model = Model->Next ) {
+            GFXRender(Model,ClassIterator->VRAM,ProjectionMatrix);
+        }
     }
     
 //     SSTModelRender(VRam);
@@ -1082,7 +1083,7 @@ void SSTUnload(SST_t *SST)
 void SSTGenerateVAOs(SST_t *SST)
 {
     SSTClass_t *Class;
-    int i;
+    GFX_t *Model;
     
     if( !SST ) {
         return;
@@ -1092,15 +1093,16 @@ void SSTGenerateVAOs(SST_t *SST)
     }
 
     for( Class = SST->ClassList; Class; Class = Class->Next ) {
-        //TODO(Adriano): Remember to also skip the generation for models VAO when implemented
         if( Class->LabelsVAO ) {
             continue;
         }
         SSTGenerateClassVAOs(Class);
-    }
-
-    for( i = 0; i < NumModels; i++ ) {
-        GFXPrepareVAO(Models[i].Model);
+        for( Model = Class->GFXModelList; Model; Model = Model->Next ) {
+            if( Model->VAO ) {
+                continue;
+            }
+            GFXPrepareVAO(Model);
+        }
     }
 }
 void SSTAppendImageList(TIMImage_t **OriginalImageList,TIMImage_t *ImageList)
@@ -1529,7 +1531,6 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
         DPrintf("SSTLoad:Failed to allocate memory for struct\n");
         return NULL;
     }
-    NumModels = 0;
     SST->Name = StringCopy(ScriptName);
     SST->ClassList = NULL;
     SST->Next = NULL;
