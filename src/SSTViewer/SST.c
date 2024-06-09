@@ -1061,6 +1061,7 @@ void SSTGenerateClassVAOs(SSTClass_t *Class)
 void SSTUnload(SST_t *SST)
 {
     SSTClass_t *Class;
+    GFX_t *Model;
     
     if( !SST ) {
         return;
@@ -1073,6 +1074,10 @@ void SSTUnload(SST_t *SST)
         if( Class->LabelsVAO ) {
             VAOFree(Class->LabelsVAO);
             Class->LabelsVAO = NULL;
+        }
+        for( Model = Class->GFXModelList; Model; Model = Model->Next ) {
+            VAOFree(Model->VAO);
+            Model->VAO = NULL;
         }
         if( Class->VRAM ) {
             VRAMFree(Class->VRAM);
