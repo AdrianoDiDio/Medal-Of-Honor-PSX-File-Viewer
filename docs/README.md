@@ -1486,6 +1486,13 @@ title screen).
 
 Usually declared after a token type 10, has a fixed size of 288 bytes
 
+| Type | Size     | Description                              |
+| ---- | -------- | ---------------------------------------- |
+| Byte | 12 bytes | Unknown                                  |
+| Byte | 268 bytes | Unknown data (probably related to model animation) |
+| Byte | 4 bytes | Pad (Always -1)                           |
+| Byte | 4 bytes | Unknown                                |
+
 ##### GFX Model
 
 Every GFX file begins with an header containing all the data size needed to
