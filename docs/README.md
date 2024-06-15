@@ -91,8 +91,8 @@ Table of contents
       * [Token Type 8](#token-type-8)
       * [Token Type 9](#token-type-9)
       * [Token Type 10](#token-type-10)
-      * [GFX Model](#gfx-model)
       * [Token Type 11](#token-type-11)
+      * [GFX Model](#gfx-model)
   + [STR Files](#str-files)
 
 ## Introduction
@@ -1476,7 +1476,15 @@ title screen).
 | ---- | -------- | ---------------------------------------- |
 | char | 28 bytes | Model File (found inside the RSC file)   |
 | char | 28 bytes | Texture File (found inside the RSC file) |
-| Byte | 56 bytes | Unknown                                  |
+| Byte | 36 bytes | Unknown                                  |
+| Byte | 4 bytes | Rotation X                                |
+| Byte | 4 bytes | Rotation Y                                |
+| Byte | 4 bytes | Rotation Z                                |
+| Byte | 12 bytes | Unknown                                  |
+
+##### Token Type 11
+
+Usually declared after a token type 10, has a fixed size of 288 bytes
 
 ##### GFX Model
 
@@ -1545,10 +1553,6 @@ find the Faces data:
 | Byte                  | 12 bytes | Unknown (Probably color data for each vertex) |
 | unsigned short        | 2 bytes  | Texture Info                                  |
 | unsigned short        | 2 bytes  | CLUT data                                     |
-
-##### Token Type 11
-
-Unknown, usually is found right after declaring a GFX model.
 
 ### STR Files
 

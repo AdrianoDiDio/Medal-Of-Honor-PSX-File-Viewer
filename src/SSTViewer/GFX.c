@@ -217,13 +217,41 @@ void GFXReadAnimationChunk(GFX_t *GFX,FILE *InFile)
 //     }
 //     DPrintf("Read %i animation vertex\n",GFX->NumAnimations);
 }
-
+void GFXGetObjectMatrix(GFX_t *GFX,mat4 Result)
+{
+    vec3 Temp;
+    vec3 Rotation;
+    
+    glm_mat4_identity(Result);
+    
+    Rotation[0] = ( GFX->RotationX / 4096.f) * 360.f;
+    Rotation[1] = ( GFX->RotationY / 4096.f) * 360.f;
+    Rotation[2] = ( GFX->RotationZ / 4096.f) * 360.f;
+//     glm_vec3_copy(RenderObjectDrawable->Position,temp);
+//     glm_vec3_rotate(temp, DEGTORAD(180.f), GLM_XUP);    
+//     glm_translate(Result,temp);
+    
+    Temp[0] = 0;
+    Temp[1] = 1;
+    Temp[2] = 0;
+    glm_rotate(Result,glm_rad(-Rotation[1]), Temp);
+    Temp[0] = 1;
+    Temp[1] = 0;
+    Temp[2] = 0;
+    glm_rotate(Result,glm_rad(Rotation[0]), Temp);
+    Temp[0] = 0;
+    Temp[1] = 0;
+    Temp[2] = 1;
+    glm_rotate(Result,glm_rad(Rotation[2]), Temp);
+//     glm_scale(Result,RenderObjectDrawable->Scale);
+}
 void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix)
 {
     Shader_t *Shader;
     int PaletteTextureId;
     int TextureIndexId;
     int OrthoMatrixID;
+    mat4 ModelMatrix;
     mat4 ModelViewMatrix;
     mat4 MVPMatrix;
     
@@ -242,6 +270,7 @@ void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix)
         
         OrthoMatrixID = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
         glm_mat4_identity(ModelViewMatrix);
+        GFXGetObjectMatrix(GFX, ModelViewMatrix);
         glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
         glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
         glUniformMatrix4fv(OrthoMatrixID,1,false,&MVPMatrix[0][0]);

@@ -1425,7 +1425,14 @@ void SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byt
     } else {
         DPrintf("SSTLoadGFXModel: NULL texture...\n");
     }
-    *SSTBuffer += 56;
+    *SSTBuffer += 36;
+    GFX->RotationX = **(int **) SSTBuffer;
+    *SSTBuffer += 4;
+    GFX->RotationY = **(int **) SSTBuffer;
+    *SSTBuffer += 4;
+    GFX->RotationZ = **(int **) SSTBuffer;
+    //NOTE(Adriano): Also skips the remaining bytes
+    *SSTBuffer += 12;
     //Link it in!
     GFX->Next = Class->GFXModelList;
     Class->GFXModelList = GFX;

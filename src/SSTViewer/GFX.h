@@ -79,6 +79,11 @@ typedef struct GFX_s {
     GFXFace_t           *Face;
     GFXVertex_t         *AnimationData;
     int                 NumAnimations;
+    
+    int                 RotationX;
+    int                 RotationY;
+    int                 RotationZ;
+    
     VAO_t               *VAO;
     
     struct GFX_s        *Next;
