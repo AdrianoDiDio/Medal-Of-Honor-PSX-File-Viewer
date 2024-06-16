@@ -1476,11 +1476,14 @@ title screen).
 | ---- | -------- | ---------------------------------------- |
 | char | 28 bytes | Model File (found inside the RSC file)   |
 | char | 28 bytes | Texture File (found inside the RSC file) |
-| Byte | 36 bytes | Unknown                                  |
-| Byte | 4 bytes | Rotation X                                |
-| Byte | 4 bytes | Rotation Y                                |
-| Byte | 4 bytes | Rotation Z                                |
-| Byte | 12 bytes | Unknown                                  |
+| Byte | 28 bytes | Unused File                              |
+| int  | 4 bytes  | Unknown                                  |
+| Byte | 1 byte   | When set, the assets will be loaded from Global2 |
+| Byte | 3 bytes  | Unknown                                  |
+| int | 4 bytes | Rotation X                                |
+| int | 4 bytes | Rotation Y                                |
+| int | 4 bytes | Rotation Z                                |
+| Byte | 8 bytes | Unknown                                  |
 
 ##### Token Type 11
 

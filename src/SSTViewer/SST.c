@@ -1381,6 +1381,7 @@ void SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byt
     RSCEntry_t Entry;
     TIMImage_t *Image;
     char FileName[28];
+    Byte UseGlobal2;
     int Ret;
     
     if( !SST ) {
@@ -1402,6 +1403,7 @@ void SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byt
     
     memcpy(&FileName,*SSTBuffer,sizeof(FileName));
     *SSTBuffer += sizeof(FileName);
+    DPrintf("SSTLoadGFXModel:Looking up model %s\n",FileName);
     Ret = SSTLoadAssetFromRSCList(FileName, Class->RSCList, GlobalRSCList, &Entry);
     if( Ret ) {
         DPrintf("SSTLoadGFXModel:Model is %s\n",Entry.Name);
@@ -1425,7 +1427,9 @@ void SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byt
     } else {
         DPrintf("SSTLoadGFXModel: NULL texture...\n");
     }
-    *SSTBuffer += 36;
+    *SSTBuffer += 32;
+    UseGlobal2 = **(Byte **) SSTBuffer;
+    *SSTBuffer += 4;
     GFX->RotationX = **(int **) SSTBuffer;
     *SSTBuffer += 4;
     GFX->RotationY = **(int **) SSTBuffer;
@@ -1433,6 +1437,8 @@ void SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byt
     GFX->RotationZ = **(int **) SSTBuffer;
     //NOTE(Adriano): Also skips the remaining bytes
     *SSTBuffer += 12;
+    
+    DPrintf("SSTLoadGFXModel: Asset should be loaded from Global2:%i\n",UseGlobal2);
     //Link it in!
     GFX->Next = Class->GFXModelList;
     Class->GFXModelList = GFX;
@@ -1567,18 +1573,21 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
                 SSTLoadVideoInfo(SST,CurrentClass,&SSTBuffer);
                 break;
             case SST_UNKNOWN_1_TOKEN:
+                DPrintf("SSTLoad:Skipping unk1 276\n");
                 SSTBuffer += 276;
                 break;
             case SST_UNKNOWN_2_TOKEN:
                 memcpy(&Size,SSTBuffer,sizeof(Size));
                 SSTBuffer += sizeof(Size);
                 SSTBuffer += (4*Size) + 4;
+                DPrintf("SSTLoad:Skipping unk2\n");
                 break;
             case SST_GFX_TOKEN:
                 SSTLoadGFXModel(SST,CurrentClass,GlobalRSCList,&SSTBuffer);
                 break;
             case SST_UNKNOWN_3_TOKEN:
                 //After a GFX Model we have this token.
+                DPrintf("SSTLoad:Skipping unk3 288\n");
                 SSTBuffer += 288;
                 break;
             default:
