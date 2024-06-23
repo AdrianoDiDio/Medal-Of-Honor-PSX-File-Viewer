@@ -71,6 +71,15 @@ typedef struct GFXFace_s {
     short           CBA;
 } GFXFace_t;
 
+typedef struct GFXAnimationFrame_s {
+    GFXVertex_t *Vertex;
+} GFXAnimationFrame_t;
+
+typedef struct GFXAnimation_s {
+    GFXAnimationFrame_t *Frame;
+    int                  NumFrames;
+} GFXAnimation_t;
+
 typedef struct GFX_s {
     GFXHeader_t         Header;
     GFXOffsetTable_t    OffsetTable;
@@ -78,7 +87,7 @@ typedef struct GFX_s {
     GFXVertex_t         *Normal;
     int                 *AnimationIndex;
     GFXFace_t           *Face;
-    GFXVertex_t         *AnimationData;
+    GFXAnimation_t      *Animation;
     int                 NumAnimations;
     
     int                 RotationX;
