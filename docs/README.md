@@ -1507,7 +1507,7 @@ load it.
 | int  | 4 bytes | Number Of Normals  |
 | int  | 4 bytes | Number Of Faces    |
 | int  | 4 bytes | Unknown            |
-| int  | 4 bytes | Unknown Number     |
+| int  | 4 bytes | Number Of Animation Index     |
 | int  | 4 bytes | Pad (Always 0)     |
 
 After reading the header we find an offset table containing all the data
@@ -1523,9 +1523,9 @@ offsets needed to load it.
 | short | 2 bytes | Pad2            |
 | int   | 4 bytes | Pad3 (Always 0) |
 
-After the offset table we have a section whose size is equals to the
-'Unknown Number' variable in the header multiplied by four.  
-After skipping this section we find the start of the vertex data, where
+After the offset table we have an array of animation index whose size
+depends from the 'Number Of Animation Index' entry in the header.  
+After this section we find the start of the vertex data, where
 each vertex is 8 bytes:  
 
 | Type  | Size    | Description |
@@ -1545,8 +1545,8 @@ normal data that uses the same structure as the one used by the vertices:
 | short | 2 bytes | z           |
 | short | 2 bytes | Pad         |
 
-Finally, After reading all the normal vectors, as specified in the Header, we
-find the Faces data:    
+Finally, After reading all the normal vectors, as specified in the Header,
+we find the Faces data:    
 
 | Type                  | Size     | Description                                   |
 | --------------------- | -------- | --------------------------------------------- |
@@ -1563,6 +1563,14 @@ find the Faces data:
 | Byte                  | 12 bytes | Unknown (Probably color data for each vertex) |
 | unsigned short        | 2 bytes  | Texture Info                                  |
 | unsigned short        | 2 bytes  | CLUT data                                     |
+
+Right after the face data we have a section that has a length equals to
+the sum of all animation index (that we loaded previously) times the
+number of vertices in the header times the size of a single vertex.  
+
+This section should contain the vertex animation data that will be used
+to animate the model by swapping out the vertex data at runtime.  
+
 
 ### STR Files
 

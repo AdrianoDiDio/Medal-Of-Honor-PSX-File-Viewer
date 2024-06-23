@@ -29,7 +29,7 @@ typedef struct GFXHeader_s {
     int NumNormals;
     int NumFaces;
     int NumUnk3;
-    int NumUnk4;
+    int NumAnimationIndex;
     int Pad;
 } GFXHeader_t;
 
@@ -76,6 +76,7 @@ typedef struct GFX_s {
     GFXOffsetTable_t    OffsetTable;
     GFXVertex_t         *Vertex;
     GFXVertex_t         *Normal;
+    int                 *AnimationIndex;
     GFXFace_t           *Face;
     GFXVertex_t         *AnimationData;
     int                 NumAnimations;
@@ -89,7 +90,7 @@ typedef struct GFX_s {
     struct GFX_s        *Next;
 } GFX_t;
 
-GFX_t *GFXRead(void* GFXFileBuffer);
+GFX_t *GFXRead(void* GFXFileBuffer,int GFXLength);
 void GFXFree(GFX_t *GFX);
 void GFXPrepareVAO(GFX_t *GFX);
 void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix);

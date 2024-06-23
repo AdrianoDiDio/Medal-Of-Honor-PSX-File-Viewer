@@ -1407,7 +1407,7 @@ void SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byt
     Ret = SSTLoadAssetFromRSCList(FileName, Class->RSCList, GlobalRSCList, &Entry);
     if( Ret ) {
         DPrintf("SSTLoadGFXModel:Model is %s\n",Entry.Name);
-        GFX = GFXRead(Entry.Data);
+        GFX = GFXRead(Entry.Data,Entry.Length);
     } else {
         DPrintf("SSTLoadGFXModel:Failed to locate model %s\n",FileName);
     }

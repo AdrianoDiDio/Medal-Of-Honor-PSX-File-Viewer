@@ -38,6 +38,9 @@ void GFXFree(GFX_t *GFX)
         if( GFX->Face ) {
             free(GFX->Face);
         }
+        if( GFX->AnimationIndex ) {
+            free(GFX->AnimationIndex);
+        }
         if( GFX->VAO ) {
             VAOFree(GFX->VAO);
         }
@@ -60,7 +63,7 @@ void GFXReadHeaderChunk(GFX_t *GFX,void **GFXFileBuffer)
     DPrintf("NumNormals:%i\n",GFX->Header.NumNormals);
     DPrintf("NumFaces:%i\n",GFX->Header.NumFaces);
     DPrintf("NumUnk3:%i\n",GFX->Header.NumUnk3);
-    DPrintf("NumUnk4:%i\n",GFX->Header.NumUnk4);
+    DPrintf("NumAnimationIndex:%i\n",GFX->Header.NumAnimationIndex);
     DPrintf("Pad:%i\n",GFX->Header.Pad);
     assert(GFX->Header.Pad == 0);
 }
@@ -110,7 +113,31 @@ void GFXReadVertexChunk(GFX_t *GFX,void **GFXFileBuffer)
 //         assert(GFX->Vertex[i].Pad == 123);
     }
 }
-
+void GFXReadAnimationIndexTable(GFX_t *GFX,void **GFXFileBuffer)
+{
+    int AnimationIndexSize;
+    int i;
+    
+    if( !GFX || !GFXFileBuffer ) {
+        bool InvalidFileBuffer = (GFXFileBuffer == NULL ? true : false);
+        DPrintf("GFXReadAnimationIndexTable: Invalid %s\n",InvalidFileBuffer ? "file buffer" : "gfx struct");
+        return;
+    }
+    
+    if( GFX->Header.NumAnimationIndex == 0 ) {
+        DPrintf("GFXReadAnimationIndexTable:0 animation index in header...skipping\n");
+        return;
+    }
+    
+    AnimationIndexSize = (GFX->Header.NumAnimationIndex) * sizeof(int);
+    GFX->AnimationIndex = malloc(AnimationIndexSize);
+    memcpy(GFX->AnimationIndex,*GFXFileBuffer,AnimationIndexSize);
+    *GFXFileBuffer += AnimationIndexSize;
+    for( i = 0; i < GFX->Header.NumAnimationIndex; i++ ) {
+        DPrintf(" -- Index %i --\n",i);
+        DPrintf("Animation Data: %i\n",GFX->AnimationIndex[i]);
+    }
+}
 void GFXReadNormalChunk(GFX_t *GFX,void **GFXFileBuffer)
 {
     int NormalSize;
@@ -187,9 +214,8 @@ void GFXReadFaceChunk(GFX_t *GFX,void **GFXFileBuffer)
     }
 }
 
-void GFXReadAnimationChunk(GFX_t *GFX,FILE *InFile)
-{
-    DPrintf("GFXReadAnimationChunk:Stub\n");
+// void GFXReadAnimationChunk(GFX_t *GFX,void **GFXFileBuffer)
+// {
 //     int i;
 //     int Ret;
 //     int NumClerkbAnimationVertices = 16121;
@@ -200,7 +226,7 @@ void GFXReadAnimationChunk(GFX_t *GFX,FILE *InFile)
 //         return;
 //     }
 //     GFX->NumAnimations = 0;
-//     Clerkb seems to have 16121 vertices....
+// //     Clerkb seems to have 16121 vertices....
 //     GFX->AnimationData = malloc(NumClerkbAnimationVertices * sizeof(GFXVertex_t));
 //     
 //     for( i = 0; i < NumClerkbAnimationVertices; i++ ) {
@@ -216,7 +242,7 @@ void GFXReadAnimationChunk(GFX_t *GFX,FILE *InFile)
 //         GFX->NumAnimations++;
 //     }
 //     DPrintf("Read %i animation vertex\n",GFX->NumAnimations);
-}
+// }
 void GFXGetObjectMatrix(GFX_t *GFX,mat4 Result)
 {
     vec3 Temp;
@@ -410,9 +436,12 @@ void GFXPrepareVAO(GFX_t *GFX)
     free(VertexData);
 }
 
-GFX_t *GFXRead(void* GFXFileBuffer)
+GFX_t *GFXRead(void* GFXFileBuffer,int GFXLength)
 {
     GFX_t *GFXData;
+    void *GFXEnd;
+    int TotalAnimSize;
+    int i;
     
     if( !GFXFileBuffer ) {
         DPrintf("GFXRead: Invalid buffer.\n");
@@ -424,6 +453,8 @@ GFX_t *GFXRead(void* GFXFileBuffer)
         DPrintf("GFXRead: Failed to allocate memory for GFX model\n");
         return NULL;
     }
+    
+    GFXEnd = GFXFileBuffer + GFXLength;
     GFXData->Vertex = NULL;
     GFXData->Normal = NULL;
     GFXData->Face = NULL;
@@ -431,11 +462,16 @@ GFX_t *GFXRead(void* GFXFileBuffer)
     GFXData->VAO = NULL;
     GFXReadHeaderChunk(GFXData,&GFXFileBuffer);
     GFXReadOffsetTableChunk(GFXData,&GFXFileBuffer);
-    GFXFileBuffer += GFXData->Header.NumUnk4 * 4;
+    GFXReadAnimationIndexTable(GFXData,&GFXFileBuffer);
     GFXReadVertexChunk(GFXData,&GFXFileBuffer);
     GFXReadNormalChunk(GFXData,&GFXFileBuffer);
     GFXReadFaceChunk(GFXData,&GFXFileBuffer);
-//     GFXFileBuffer += 316;
-//     GFXReadAnimationChunk(GFXData,GFXFileBuffer);
+    //TODO: At the moment we only run a sanity check...in future we would need to load the actual data!
+    TotalAnimSize = 0;
+    for( i = 0; i < GFXData->Header.NumAnimationIndex; i++ ) {
+        TotalAnimSize += GFXData->AnimationIndex[i];
+    }
+    GFXFileBuffer += TotalAnimSize * GFXData->Header.NumVertices * sizeof(GFXVertex_t);
+    assert(GFXFileBuffer == GFXEnd);
     return GFXData;
 }
