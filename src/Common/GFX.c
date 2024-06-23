@@ -294,7 +294,7 @@ void GFXGetObjectMatrix(GFX_t *GFX,mat4 Result)
     glm_rotate(Result,glm_rad(Rotation[2]), Temp);
 //     glm_scale(Result,RenderObjectDrawable->Scale);
 }
-void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix)
+void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix,mat4 ViewMatrix)
 {
     Shader_t *Shader;
     int PaletteTextureId;
@@ -319,7 +319,8 @@ void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix)
         
         OrthoMatrixID = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
         glm_mat4_identity(ModelViewMatrix);
-        GFXGetObjectMatrix(GFX, ModelViewMatrix);
+        GFXGetObjectMatrix(GFX, ModelMatrix);
+        glm_mat4_mul(ViewMatrix,ModelMatrix,ModelViewMatrix);
         glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
         glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
         glUniformMatrix4fv(OrthoMatrixID,1,false,&MVPMatrix[0][0]);

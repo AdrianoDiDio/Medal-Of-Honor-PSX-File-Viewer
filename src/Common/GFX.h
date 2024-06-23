@@ -102,5 +102,5 @@ typedef struct GFX_s {
 GFX_t *GFXRead(void* GFXFileBuffer,int GFXLength);
 void GFXFree(GFX_t *GFX);
 void GFXPrepareVAO(GFX_t *GFX);
-void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix);
+void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix,mat4 ViewMatrix);
 #endif //__GFX_H_

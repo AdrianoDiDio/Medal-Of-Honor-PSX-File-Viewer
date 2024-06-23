@@ -956,6 +956,7 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
     int OrthoMatrixID;
     mat4 ModelViewMatrix;
     mat4 MVPMatrix;
+    mat4 ViewMatrix;
     GFX_t *Model;
     vec3 v;
 
@@ -997,10 +998,11 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
         glUseProgram(0);
     }
     glm_mat4_identity(ProjectionMatrix);
+    glm_mat4_identity(ViewMatrix);
     glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);    
     for( ClassIterator = SST->ClassList; ClassIterator; ClassIterator = ClassIterator->Next ) {
         for( Model = ClassIterator->GFXModelList; Model; Model = Model->Next ) {
-            GFXRender(Model,ClassIterator->VRAM,ProjectionMatrix);
+            GFXRender(Model,ClassIterator->VRAM,ProjectionMatrix,ViewMatrix);
         }
     }
     
