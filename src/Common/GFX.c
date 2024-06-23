@@ -4,22 +4,22 @@
 ===========================================================================
     Copyright (C) 2018-2024 Adriano Di Dio.
     
-    SSTViewer is free software: you can redistribute it and/or modify
+    Medal-Of-Honor-PSX-File-Viewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    SSTViewer is distributed in the hope that it will be useful,
+    Medal-Of-Honor-PSX-File-Viewer is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with SSTViewer.  If not, see <http://www.gnu.org/licenses/>.
+    along with Medal-Of-Honor-PSX-File-Viewer.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */
 #include "GFX.h"
-#include "SSTViewer.h"
+#include "ShaderManager.h"
 
 void GFXFree(GFX_t *GFX)
 {
@@ -265,35 +265,7 @@ void GFXReadAnimationChunk(GFX_t *GFX,void **GFXFileBuffer)
         }
     }
 }
-// void GFXReadAnimationChunk(GFX_t *GFX,void **GFXFileBuffer)
-// {
-//     int i;
-//     int Ret;
-//     int NumClerkbAnimationVertices = 16121;
-//     
-//     if( !GFX || !InFile ) {
-//         bool InvalidFile = (InFile == NULL ? true : false);
-//         DPrintf("GFXReadFaceChunk: Invalid %s\n",InvalidFile ? "file" : "gfx struct");
-//         return;
-//     }
-//     GFX->NumAnimations = 0;
-// //     Clerkb seems to have 16121 vertices....
-//     GFX->AnimationData = malloc(NumClerkbAnimationVertices * sizeof(GFXVertex_t));
-//     
-//     for( i = 0; i < NumClerkbAnimationVertices; i++ ) {
-//         DPrintf(" -- ANIMATION %i --\n",i);
-//         DPrintf("Offset:%li\n",ftell(InFile));
-//         Ret = fread(&GFX->AnimationData[i],sizeof(GFX->AnimationData[i]),1,InFile);
-//         if( Ret != 1 ) {
-//             DPrintf("GFXReadAnimationChunk:Early failure when reading animation data\n");
-//             return;
-//         }
-//         DPrintf("Pad:%i\n",GFX->AnimationData[i].Pad);
-//         assert(GFX->AnimationData[i].Pad == 0 || GFX->AnimationData[i].Pad == 101);
-//         GFX->NumAnimations++;
-//     }
-//     DPrintf("Read %i animation vertex\n",GFX->NumAnimations);
-// }
+
 void GFXGetObjectMatrix(GFX_t *GFX,mat4 Result)
 {
     vec3 Temp;

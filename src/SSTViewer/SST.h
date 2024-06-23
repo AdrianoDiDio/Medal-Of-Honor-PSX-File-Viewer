@@ -23,7 +23,7 @@
 
 #include "../Common/RSC.h"
 #include "../Common/VRAM.h"
-#include "GFX.h"
+#include "../Common/GFX.h"
 
 typedef enum 
 {
