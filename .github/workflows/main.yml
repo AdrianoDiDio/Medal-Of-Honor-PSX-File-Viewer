@@ -48,7 +48,7 @@ jobs:
           sudo apt-get update
           sudo apt install libegl1-mesa-dev libglu1-mesa-dev libasound2-dev libpulse-dev ninja-build cmake build-essential -y
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checkout submodules
         run: git submodule update --init --recursive
       - name: Configure
@@ -62,7 +62,7 @@ jobs:
       - name: Build
         run: cmake --build Build --parallel
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.config.artifact }}
           path: Build/bin/

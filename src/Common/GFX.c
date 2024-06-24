@@ -588,11 +588,10 @@ void GFXPrepareVAO(GFX_t *GFX)
     free(VertexData);
 }
 /*
- Set the RenderObject to a specific pose, given AnimationIndex and FrameIndex.
+ Set the GFX to a specific pose, given AnimationIndex and FrameIndex.
  Returns 0 if the pose was not valid ( pose was already set,pose didn't exists), 1 otherwise.
- NOTE that calling this function will modify the RenderObject's VAO.
+ NOTE that calling this function will modify the GFX's VAO.
  If the VAO is NULL a new one is created otherwise it will be updated to reflect the pose that was applied to the model.
- If Override is true then the pose will be set again in case the AnimationIndex and FrameIndex did not change.
  */
 int GFXSetAnimationPose(GFX_t *GFX,int AnimationIndex,int FrameIndex)
 {
@@ -602,7 +601,7 @@ int GFXSetAnimationPose(GFX_t *GFX,int AnimationIndex,int FrameIndex)
         DPrintf("GFXSetAnimationPose:Failed to set pose using index %i...Index is out of bounds\n",AnimationIndex);
         return 0;
     }
-    if( (AnimationIndex == GFX->CurrentAnimationIndex && FrameIndex == GFX->CurrentFrameIndex ) /*&& !Override*/) {
+    if( AnimationIndex == GFX->CurrentAnimationIndex && FrameIndex == GFX->CurrentFrameIndex ) {
         DPrintf("GFXSetAnimationPose:Pose is already set\n");
         return 0;
     }
@@ -614,72 +613,11 @@ int GFXSetAnimationPose(GFX_t *GFX,int AnimationIndex,int FrameIndex)
         DPrintf("GFXSetAnimationPose:Failed to set pose using frame %i...Frame Index is out of bounds\n",FrameIndex);
         return 0;
     }
-//     BSDRenderObjectResetVertexTable(RenderObject);
-//     glm_vec3_zero(RenderObject->Center);
-//     glm_mat4_identity(TransformMatrix);
-//     Translation[0] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.x / 4096.f;
-//     Translation[1] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.y / 4096.f;
-//     Translation[2] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.z / 4096.f;
-//     glm_translate_make(TransformMatrix,Translation);
-//     //NOTE(Adriano):Interpolate only between frames of the same animation and not in-between two different one.
-//     //              Also do not interpolate if the frame is the same as the previous one.
-//     if( RenderObject->CurrentAnimationIndex == AnimationIndex && RenderObject->CurrentFrameIndex != -1 && 
-//         RenderObject->CurrentFrameIndex != FrameIndex
-//     ) {
-//         assert(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions == 
-//             RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[RenderObject->CurrentFrameIndex].NumQuaternions
-//         );
-//         QuaternionList = malloc(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions * sizeof(BSDQuaternion_t));
-//         for( i = 0; i < RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions; i++ ) {
-//             FromQuaternion[0] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
-//                 Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].x / 4096.f;
-//             FromQuaternion[1] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
-//                 Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].y / 4096.f;
-//             FromQuaternion[2] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
-//                 Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].z / 4096.f;
-//             FromQuaternion[3] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
-//                 Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].w / 4096.f;
-//             ToQuaternion[0] = RenderObject->AnimationList[AnimationIndex].
-//                 Frame[FrameIndex].QuaternionList[i].x / 4096.f;
-//             ToQuaternion[1] = RenderObject->AnimationList[AnimationIndex].
-//                 Frame[FrameIndex].QuaternionList[i].y / 4096.f;
-//             ToQuaternion[2] = RenderObject->AnimationList[AnimationIndex].
-//                 Frame[FrameIndex].QuaternionList[i].z / 4096.f;
-//             ToQuaternion[3] = RenderObject->AnimationList[AnimationIndex].
-//                 Frame[FrameIndex].QuaternionList[i].w / 4096.f;
-//             glm_quat_nlerp(FromQuaternion,
-//                 ToQuaternion,
-//                 0.5f,
-//                 DestQuaternion
-//             );
-//             QuaternionList[i].x = DestQuaternion[0] * 4096.f;
-//             QuaternionList[i].y = DestQuaternion[1] * 4096.f;
-//             QuaternionList[i].z = DestQuaternion[2] * 4096.f;
-//             QuaternionList[i].w = DestQuaternion[3] * 4096.f;
-//         }
-//         BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,QuaternionList,
-//                                     RenderObject->CurrentVertexTable,TransformMatrix);
-//         free(QuaternionList);
-//     } else {
-//         BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,
-//                                     RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].CurrentQuaternionList,
-//                                     RenderObject->CurrentVertexTable,TransformMatrix);
-//     }
     GFX->CurrentAnimationIndex = AnimationIndex;
     GFX->CurrentFrameIndex = FrameIndex;
     
     memcpy(GFX->CurrentVertexList, GFX->Animation[AnimationIndex].Frame[FrameIndex].Vertex, GFX->Header.NumVertices * sizeof(GFXVertex_t));
     
-//     NumVertices = 0;
-//     for( int i = 0; i < RenderObject->NumVertexTables; i++ ) {
-//         for( int j = 0; j < RenderObject->CurrentVertexTable[i].NumVertex; j++ ) {
-//             RenderObject->Center[0] += RenderObject->CurrentVertexTable[i].VertexList[j].x;
-//             RenderObject->Center[1] += RenderObject->CurrentVertexTable[i].VertexList[j].y;
-//             RenderObject->Center[2] += RenderObject->CurrentVertexTable[i].VertexList[j].z;
-//             NumVertices++;
-//         }
-//     }
-//     glm_vec3_scale(RenderObject->Center,1.f/NumVertices,RenderObject->Center);
     if( !GFX->VAO ) {
         GFXPrepareVAO(GFX);
     } else {
