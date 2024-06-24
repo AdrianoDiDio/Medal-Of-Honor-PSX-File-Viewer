@@ -52,6 +52,8 @@ void GFXObjectManagerFreePack(GFXPack_t *Pack)
     if( Pack->Name ) {
         free(Pack->Name);
     }
+    
+    free(Pack);
 }
 void GFXObjectManagerCleanUp(GFXObjectManager_t *GFXObjectManager)
 {
@@ -205,85 +207,75 @@ int GFXObjectManagerLoadModel(GFXObjectManager_t *GFXObjectManager,GUI_t *GUI,Vi
 {
     char *TIMFile;
     int ErrorCode;
+    GFXPack_t *Pack;
     
     ErrorCode = GFX_OBJECT_MANAGER_NO_ERRORS;
     
     //TODO(Adriano): Instance a new GFX pack, if it can be loaded then swap the current one with the one that is being loaded
-//     if( !GFXObjectManager ) {
-//         DPrintf("GFXObjectManagerLoadModel:Invalid GFXObjectManager\n");
-//         return GFX_OBJECT_MANAGER_ERROR_GENERIC;
-//     }
-//     if( !File ) {
-//         DPrintf("GFXObjectManagerLoadModel:Invalid file name\n");
-//         return GFX_OBJECT_MANAGER_ERROR_GENERIC;
-//     }
-//     
-//     ProgressBarReset(GUI->ProgressBar);
-//     
-//     DPrintf("GFXObjectManagerLoadModel:Attempting to load %s\n",File);
-//     BSDPack = malloc(sizeof(BSDRenderObjectPack_t));
-//     
-//     if( !BSDPack ) {
-//         DPrintf("GFXObjectManagerLoadModel:Failed to allocate memory for BSD pack\n");
-//         goto Failure;
-//     }
-//     BSDPack->Name = GetBaseName(File);
-//     BSDPack->ImageList = NULL;
-//     BSDPack->VRAM = NULL;
-//     BSDPack->RenderObjectList = NULL;
-//     BSDPack->SelectedRenderObject = NULL;
-//     BSDPack->LastUpdateTime = 0;
-//     BSDPack->Next = NULL;
-//     TAFFile = NULL;
-//     
-//     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,0,"Loading all images");
-//     TAFFile = SwitchExt(File,".tim");
-//     TIMImageList = TIMLoadAllImages(TAFFile,NULL);
-//     if( !TIMImageList ) {
-//         free(TAFFile);
-//         TAFFile = SwitchExt(File,".TIM");
-//         TIMImageList = TIMLoadAllImages(TAFFile,NULL);
-//         if( !TIMImageList ) {
-//             DPrintf("GFXObjectManagerLoadModel:Failed to load images from TAF file %s\n",TAFFile);
-//             ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_INVALID_TAF_FILE;
-//             goto Failure;
-//         }
-//     }
-//     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20,"Loading GFX Model");
-// //     GFX = GFXLoad(File,&BSDPack->GameVersion);
-//     if( !GFX ) {
-//         DPrintf("GFXObjectManagerLoadModel:Failed to load render objects from file\n");
-//         ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_NO_ANIMATED_RENDEROBJECTS;
-//         goto Failure;
-//     }
-//     if( GFXObjectManagerGetBSDPack(GFXObjectManager,BSDPack->Name,BSDPack->GameVersion) != NULL ) {
-//         DPrintf("GFXObjectManagerLoadModel:Duplicated found in list!\n");
-//         ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_ALREADY_LOADED;
-//         goto Failure;
-//     }
-//     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,40,"Initializing VRAM");
-//     BSDPack->VRAM = VRAMInit(BSDPack->ImageList);
-//     if( !BSDPack->VRAM ) {
-//         DPrintf("GFXObjectManagerLoadModel:Failed to initialize VRAM\n");
-//         ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_VRAM_INITIALIZATION;
-//         goto Failure;
-//     }
-//     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,90,"Setting default pose");
-//     for( Iterator = BSDPack->RenderObjectList; Iterator; Iterator = Iterator->Next ) {
-//         BSDRenderObjectSetAnimationPose(Iterator,0,0,0);
-//     }
-//     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Done");
-//     GFXObjectManagerAppendBSDPack(GFXObjectManager,BSDPack);
-//     if( !GFXObjectManager->SelectedBSDPack ) {
-//         GFXObjectManagerSetSelectedRenderObject(GFXObjectManager,BSDPack,BSDPack->RenderObjectList);
-//     }
-//     free(TAFFile);
-//     return ErrorCode;
-// Failure:
-//     GFXObjectManagerFreeBSDRenderObjectPack(BSDPack);
-//     if( TAFFile ) {
-//         free(TAFFile);
-//     }
+    if( !GFXObjectManager ) {
+        DPrintf("GFXObjectManagerLoadModel:Invalid GFXObjectManager\n");
+        return GFX_OBJECT_MANAGER_ERROR_GENERIC;
+    }
+    if( !File ) {
+        DPrintf("GFXObjectManagerLoadModel:Invalid file name\n");
+        return GFX_OBJECT_MANAGER_ERROR_GENERIC;
+    }
+    
+    ProgressBarReset(GUI->ProgressBar);
+    
+    DPrintf("GFXObjectManagerLoadModel:Attempting to load %s\n",File);
+    Pack = malloc(sizeof(GFXPack_t));
+    
+    if( !Pack ) {
+        DPrintf("GFXObjectManagerLoadModel:Failed to allocate memory for GFX pack\n");
+        goto Failure;
+    }
+    Pack->Name = GetBaseName(File);
+    Pack->ImageList = NULL;
+    Pack->VRAM = NULL;
+    Pack->GFX = NULL;
+    Pack->LastUpdateTime = 0;
+    TIMFile = NULL;
+    
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,0,"Loading all images");
+    TIMFile = SwitchExt(File,".tim");
+    Pack->ImageList = TIMLoadAllImages(TIMFile,NULL);
+    if( !Pack->ImageList ) {
+        free(TIMFile);
+        TIMFile = SwitchExt(File,".TIM");
+        Pack->ImageList = TIMLoadAllImages(TIMFile,NULL);
+        if( !Pack->ImageList ) {
+            DPrintf("GFXObjectManagerLoadModel:Failed to load images from TIM file %s\n",TIMFile);
+            ErrorCode = GFX_OBJECT_MANAGER_ERROR_INVALID_TIM_FILE;
+            goto Failure;
+        }
+    }
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20,"Loading GFX Model");
+    Pack->GFX = GFXReadFromFile(File);
+    if( !Pack->GFX ) {
+        DPrintf("GFXObjectManagerLoadModel:Failed to load GFX model from file\n");
+        ErrorCode = GFX_OBJECT_MANAGER_ERROR_INVALID_GFX_FILE;
+        goto Failure;
+    }
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,40,"Initializing VRAM");
+    Pack->VRAM = VRAMInit(Pack->ImageList);
+    if( !Pack->VRAM ) {
+        DPrintf("GFXObjectManagerLoadModel:Failed to initialize VRAM\n");
+        ErrorCode = GFX_OBJECT_MANAGER_ERROR_VRAM_INITIALIZATION;
+        goto Failure;
+    }
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,90,"Generating VAOs");
+    GFXPrepareVAO(Pack->GFX);
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Done");
+    GFXObjectManagerFreePack(GFXObjectManager->GFXPack);
+    GFXObjectManager->GFXPack = Pack;
+    free(TIMFile);
+    return ErrorCode;
+Failure:
+    GFXObjectManagerFreePack(Pack);
+    if( TIMFile ) {
+        free(TIMFile);
+    }
     return ErrorCode;
 }
 
@@ -355,7 +347,7 @@ void GFXObjectManagerDrawPack(GFXPack_t *GFXPack,Camera_t *Camera,
         return;
     }
 
-    GFXRender(GFXPack->GFX,GFXPack->VRAM,Camera,ProjectionMatrix);
+    GFXRender(GFXPack->GFX,GFXPack->VRAM,Camera->ViewMatrix,ProjectionMatrix);
 }
 void GFXObjectManagerOpenFileDialog(GFXObjectManager_t *GFXObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
@@ -391,7 +383,7 @@ void GFXObjectManagerUpdate(GFXObjectManager_t *GFXObjectManager)
 
     Now = SysMilliseconds();
     //NOTE(Adriano):Avoid running too fast...
-    if( (Now - GFXObjectManager->LastUpdateTime ) < 30 ) {
+    if( (Now - GFXObjectManager->GFXPack->LastUpdateTime ) < 30 ) {
         return;
     }
     //TODO(Adriano):Animation code
@@ -441,7 +433,6 @@ GFXObjectManager_t *GFXObjectManagerInit(GUI_t *GUI)
     EnableAmbientLight = ConfigGet("EnableAmbientLight");
     
     GFXObjectManager->PlayAnimation = 0;
-    GFXObjectManager->LastUpdateTime = 0;
 
     return GFXObjectManager;
 }

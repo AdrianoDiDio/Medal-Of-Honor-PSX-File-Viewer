@@ -3,13 +3,12 @@ out vec4 FragColor;
   
 in vec3 ourColor;
 in vec2 TexCoord;
-in float LightingEnabled;
 in vec2 CLUTCoord;
 flat in int ourColorMode;
-flat in int STPMode;
 
 uniform usampler2D ourIndexTexture;
 uniform sampler2D ourPaletteTexture;
+        
 
 uint InternalToPsxColor(vec4 c) {
     uint a = uint(floor(c.a + 0.5));
@@ -41,10 +40,10 @@ void main()
         discard;
     }
 
-    if( LightingEnabled > 0.5 ) {
-        CLUTTexel.r = clamp(CLUTTexel.r * ourColor.r * 2.f, 0.f, 1.f);
-        CLUTTexel.g = clamp(CLUTTexel.g * ourColor.g * 2.f, 0.f, 1.f);
-        CLUTTexel.b = clamp(CLUTTexel.b * ourColor.b * 2.f, 0.f, 1.f);
-    }
+//      CLUTTexel.r = clamp(CLUTTexel.r * ourColor.r * 2.f, 0.f, 1.f);
+//      CLUTTexel.g = clamp(CLUTTexel.g * ourColor.g * 2.f, 0.f, 1.f);
+//      CLUTTexel.b = clamp(CLUTTexel.b * ourColor.b * 2.f, 0.f, 1.f);
+  
+ 
     FragColor = CLUTTexel;
 }

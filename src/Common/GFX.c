@@ -294,7 +294,7 @@ void GFXGetObjectMatrix(GFX_t *GFX,mat4 Result)
     glm_rotate(Result,glm_rad(Rotation[2]), Temp);
 //     glm_scale(Result,RenderObjectDrawable->Scale);
 }
-void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix,mat4 ViewMatrix)
+void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ViewMatrix,mat4 ProjectionMatrix)
 {
     Shader_t *Shader;
     int PaletteTextureId;
@@ -493,4 +493,42 @@ GFX_t *GFXRead(void* GFXFileBuffer,int GFXLength)
     GFXReadAnimationChunk(GFXData,&GFXFileBuffer);
     assert(GFXFileBuffer == GFXEnd);
     return GFXData;
+}
+
+GFX_t *GFXReadFromFile(const char *FileName)
+{
+    FILE *GFXFile;
+    GFX_t *Result;
+    Byte *GFXContent;
+    int FileLength;
+    int Ret;
+    
+    if( !FileName ) {
+        DPrintf("GFXReadFromFile: Invalid filename\n");
+        return NULL;
+    }
+    
+    GFXFile = fopen(FileName,"rb");
+    if( !GFXFile ) {
+        DPrintf("GFXReadFromFile: Failed to open GFX file %s\n",FileName);
+        return NULL;
+    }
+    FileLength = GetFileLength(GFXFile);
+    GFXContent = malloc(FileLength);
+    
+    if( !GFXContent ) {
+        DPrintf("GFXReadFromFile:Failed to allocate buffer for gfx file\n");
+        fclose(GFXFile);
+        return NULL;
+    }
+    Ret = fread(GFXContent,1, FileLength,GFXFile);
+    fclose(GFXFile);
+    if( Ret != FileLength ) {
+        DPrintf("GFXReadFromFile:Failed to read file %s\n",FileName);
+        free(GFXContent);
+        return NULL;
+    }
+    Result = GFXRead(GFXContent,FileLength);
+    free(GFXContent);
+    return Result;
 }

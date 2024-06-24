@@ -29,6 +29,7 @@ typedef enum {
     GFX_OBJECT_MANAGER_NO_ERRORS = 1,
     GFX_OBJECT_MANAGER_ERROR_GENERIC = 0,
     GFX_OBJECT_MANAGER_ERROR_INVALID_TIM_FILE = -1,
+    GFX_OBJECT_MANAGER_ERROR_INVALID_GFX_FILE = -2,
     GFX_OBJECT_MANAGER_ERROR_VRAM_INITIALIZATION = -3
 } GFXObjectManagerErrorCode;
 
@@ -43,6 +44,7 @@ typedef struct GFXPack_s
     VRAM_t                  *VRAM;
     TIMImage_t              *ImageList;
     GFX_t                   *GFX;
+    int                     LastUpdateTime;
 
 } GFXPack_t;
 typedef struct GFXObjectManager_s {
@@ -51,7 +53,6 @@ typedef struct GFXObjectManager_s {
     FileDialog_t            *ExportFileDialog;
     
     int                     PlayAnimation;
-    int                     LastUpdateTime;
 } GFXObjectManager_t;
 
 typedef struct GFXObjectManagerDialogData_s {

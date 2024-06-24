@@ -99,8 +99,9 @@ typedef struct GFX_s {
     struct GFX_s        *Next;
 } GFX_t;
 
-GFX_t *GFXRead(void* GFXFileBuffer,int GFXLength);
-void GFXFree(GFX_t *GFX);
-void GFXPrepareVAO(GFX_t *GFX);
-void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ProjectionMatrix,mat4 ViewMatrix);
+GFX_t           *GFXRead(void* GFXFileBuffer,int GFXLength);
+GFX_t           *GFXReadFromFile(const char *GFXFile);
+void            GFXFree(GFX_t *GFX);
+void            GFXPrepareVAO(GFX_t *GFX);
+void            GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ViewMatrix,mat4 ProjectionMatrix);
 #endif //__GFX_H_
