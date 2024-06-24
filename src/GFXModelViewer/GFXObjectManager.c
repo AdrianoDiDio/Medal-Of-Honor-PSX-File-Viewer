@@ -71,6 +71,7 @@ void GFXObjectManagerCleanUp(GFXObjectManager_t *GFXObjectManager)
     }
     free(GFXObjectManager);
 }
+
 int GFXObjectManagerIsAnimationPlaying(GFXObjectManager_t *GFXObjectManager)
 {
     if( !GFXObjectManager ) {
@@ -94,57 +95,51 @@ void GFXObjectManagerCloseDialog(FileDialog_t *FileDialog)
 void GFXObjectManagerExportSelectedModelToPly(GFXObjectManager_t *GFXObjectManager,ProgressBar_t *ProgressBar,VideoSystem_t *VideoSystem,
                                                const char *Directory,bool ExportCurrentAnimation)
 {
-//TODO(Adriano): Need a complete rewrite
-//     char *EngineName;
-//     char *PlyFile;
-//     char *FileName;
-//     char *TextureFile;
-//     char *BSDName;
-//     FILE *OutFile;
-//     BSDRenderObjectPack_t *CurrentBSDPack;
-//     BSDRenderObject_t *CurrentRenderObject;
-//     
-//     if( !GFXObjectManager ) {
-//         DPrintf("GFXObjectManagerExportCurrentPoseToPly:Invalid GFXObjectManager\n");
-//         return;
-//     }
-//     CurrentBSDPack = GFXObjectManagerGetSelectedBSDPack(GFXObjectManager);
-//     if( !CurrentBSDPack ) {
-//         DPrintf("GFXObjectManagerExportCurrentPoseToPly:Invalid BSD Pack\n");
-//         return;
-//     }
-//     CurrentRenderObject = GFXObjectManagerGetSelectedRenderObject(GFXObjectManager);
-//     if( !CurrentRenderObject ) {
-//         DPrintf("GFXObjectManagerExportCurrentPoseToPly:Invalid RenderObject\n");
-//         return;
-//     }
-//     asprintf(&EngineName,"%s",(CurrentBSDPack->GameVersion == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
-//     asprintf(&FileName,"RenderObject-%u-%i-%s.ply",CurrentRenderObject->Id,CurrentRenderObject->CurrentAnimationIndex,EngineName);
-//     asprintf(&PlyFile,"%s%c%s",Directory,PATH_SEPARATOR,FileName);
-//     BSDName = SwitchExt(CurrentBSDPack->Name,"");
-//     asprintf(&TextureFile,"%s%cvram-%s.png",Directory,PATH_SEPARATOR,BSDName);
-//     ProgressBarSetDialogTitle(ProgressBar,"Exporting Current Pose to Ply...");
-//     ProgressBarIncrement(ProgressBar,VideoSystem,10,"Writing BSD data.");
-//     if( ExportCurrentAnimation ) {
-//         BSDRenderObjectExportCurrentAnimationToPly(CurrentRenderObject,CurrentBSDPack->VRAM,Directory,EngineName);
-//     } else {
-//         DPrintf("GFXObjectManagerExportCurrentPoseToPly:Dumping it...%s\n",PlyFile);
-//         OutFile = fopen(PlyFile,"w");
-//         if( !OutFile ) {
-//             DPrintf("GFXObjectManagerExportCurrentPoseToPly:Failed to open %s for writing\n",PlyFile);
-//             return;
-//         }
-//         BSDRenderObjectExportCurrentPoseToPly(CurrentRenderObject,CurrentBSDPack->VRAM,OutFile);
-//         fclose(OutFile);
-//     }
-//     ProgressBarIncrement(ProgressBar,VideoSystem,95,"Exporting VRAM.");
-//     VRAMSave(CurrentBSDPack->VRAM,TextureFile);
-//     ProgressBarIncrement(ProgressBar,VideoSystem,100,"Done.");
-//     free(EngineName);
-//     free(FileName);
-//     free(PlyFile);
-//     free(TextureFile);
-//     free(BSDName);
+    char *PlyFile;
+    char *FileName;
+    char *TextureFile;
+    char *GFXName;
+    FILE *OutFile;
+    GFX_t *CurrentGFX;
+    
+    if( !GFXObjectManager ) {
+        DPrintf("GFXObjectManagerExportSelectedModelToPly:Invalid GFXObjectManager\n");
+        return;
+    }
+    if( !GFXObjectManager->GFXPack ) {
+        DPrintf("GFXObjectManagerExportSelectedModelToPly:Invalid GFX Pack\n");
+        return;
+    }
+    CurrentGFX = GFXObjectManagerGetCurrentGFX(GFXObjectManager);
+    if( !CurrentGFX ) {
+        DPrintf("GFXObjectManagerExportSelectedModelToPly:Invalid GFX model\n");
+        return;
+    }
+    GFXName = SwitchExt(GFXObjectManager->GFXPack->Name,"");
+    asprintf(&FileName,"GFX-%s-%i.ply",GFXName,CurrentGFX->CurrentAnimationIndex);
+    asprintf(&PlyFile,"%s%c%s",Directory,PATH_SEPARATOR,FileName);
+    asprintf(&TextureFile,"%s%cvram-%s.png",Directory,PATH_SEPARATOR,GFXName);
+    ProgressBarSetDialogTitle(ProgressBar,"Exporting Current Pose to Ply...");
+    ProgressBarIncrement(ProgressBar,VideoSystem,10,"Writing BSD data.");
+    if( ExportCurrentAnimation ) {
+        GFXExportCurrentAnimationToPly(CurrentGFX,GFXObjectManager->GFXPack->VRAM,Directory,GFXName);
+    } else {
+        DPrintf("GFXObjectManagerExportCurrentPoseToPly:Dumping it...%s\n",PlyFile);
+        OutFile = fopen(PlyFile,"w");
+        if( !OutFile ) {
+            DPrintf("GFXObjectManagerExportCurrentPoseToPly:Failed to open %s for writing\n",PlyFile);
+            return;
+        }
+        GFXExportCurrentPoseToPly(CurrentGFX,GFXObjectManager->GFXPack->VRAM,OutFile);
+        fclose(OutFile);
+    }
+    ProgressBarIncrement(ProgressBar,VideoSystem,95,"Exporting VRAM.");
+    VRAMSave(GFXObjectManager->GFXPack->VRAM,TextureFile);
+    ProgressBarIncrement(ProgressBar,VideoSystem,100,"Done.");
+    free(FileName);
+    free(PlyFile);
+    free(TextureFile);
+    free(GFXName);
     return;
 }
 
@@ -264,8 +259,8 @@ int GFXObjectManagerLoadModel(GFXObjectManager_t *GFXObjectManager,GUI_t *GUI,Vi
         ErrorCode = GFX_OBJECT_MANAGER_ERROR_VRAM_INITIALIZATION;
         goto Failure;
     }
-    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,90,"Generating VAOs");
-    GFXPrepareVAO(Pack->GFX);
+    ProgressBarIncrement(GUI->ProgressBar,VideoSystem,90,"Setting default pose");
+    GFXSetAnimationPose(Pack->GFX,0,0);
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Done");
     GFXObjectManagerFreePack(GFXObjectManager->GFXPack);
     GFXObjectManager->GFXPack = Pack;
@@ -369,6 +364,7 @@ void GFXObjectManagerOpenFileDialog(GFXObjectManager_t *GFXObjectManager,GUI_t *
 }
 void GFXObjectManagerUpdate(GFXObjectManager_t *GFXObjectManager)
 {
+    GFX_t *GFX;
     int NextFrame;
     int Now;
     if( !GFXObjectManager ) {
@@ -387,11 +383,10 @@ void GFXObjectManagerUpdate(GFXObjectManager_t *GFXObjectManager)
         return;
     }
     //TODO(Adriano):Animation code
-//     CurrentRenderObject = GFXObjectManager->SelectedBSDPack->SelectedRenderObject;
-//     NextFrame = (CurrentRenderObject->CurrentFrameIndex + 1) % 
-//                     CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames;
-//     BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame,0);
-//     GFXObjectManager->SelectedBSDPack->LastUpdateTime = Now;
+    GFX = GFXObjectManager->GFXPack->GFX;
+    NextFrame = (GFX->CurrentFrameIndex + 1) % GFX->Animation[GFX->CurrentAnimationIndex].NumFrames;
+    GFXSetAnimationPose(GFX,GFX->CurrentAnimationIndex,NextFrame);
+    GFXObjectManager->GFXPack->LastUpdateTime = Now;
 }
 void GFXObjectManagerDraw(GFXObjectManager_t *GFXObjectManager,Camera_t *Camera)
 {

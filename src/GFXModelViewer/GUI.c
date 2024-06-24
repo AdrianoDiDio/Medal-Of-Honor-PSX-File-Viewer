@@ -109,8 +109,7 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
 
 void GUIDrawMainWindow(GUI_t *GUI,GFXObjectManager_t *GFXObjectManager,VideoSystem_t *VideoSystem,Camera_t *Camera)
 {
-    GFX_t *GFXIterator;
-    GFX_t *CurrentGFX;
+    GFX_t *GFX;
     ImVec2 ZeroSize;
     int IsSelected;
     int DisableNode;
@@ -163,201 +162,84 @@ void GUIDrawMainWindow(GUI_t *GUI,GFXObjectManager_t *GFXObjectManager,VideoSyst
             ConfigSetNumber("GUIShowFPS",GUIShowFPS->IValue);
         }
     }
-//     TreeNodeFlags = GFXObjectManager->GFXPackList != NULL ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_None;
-//     if( igCollapsingHeader_TreeNodeFlags("GFX List",TreeNodeFlags) ) {
-//         for(PackIterator = GFXObjectManager->GFXPackList; PackIterator; PackIterator = PackIterator->Next) {
-//             TreeNodeFlags = ImGuiTreeNodeFlags_None;
-//             if(  PackIterator == GFXObjectManagerGetSelectedGFXPack(GFXObjectManager) ) {
-//                 TreeNodeFlags |= ImGuiTreeNodeFlags_DefaultOpen;
-//             }
-//             if( igTreeNodeEx_Str(PackIterator->Name,TreeNodeFlags) ) {
-//                 igSameLine(0,-1);
-//                 //NOTE(Adriano):We do not allow for duplicated BSD however since we support both MOH and MOH:Underground then
-//                 //this could be confusing since the ID would for example be 2_1 for both versions when loading Mission 2 Level 1.
-//                 //In order to solve this we just append the GameVersion in order to obtain the final Id which will be
-//                 //in this example 2_1.BSD0 or 2_1.BSD1 thus solving any potential conflict.
-//                 sprintf(DeleteButtonId,"Remove##%s",PackIterator->Name);
-//                 if( igSmallButton(DeleteButtonId) ) {
-//                     if( GFXObjectManagerDeleteBSDPack(GFXObjectManager,PackIterator->Name,PackIterator->GameVersion) ) {
-//                         igTreePop();
-//                         break;
-//                     }
-//                     ErrorMessageDialogSet(GUI->ErrorMessageDialog,"Failed to remove BSD pack from list");
-//                 }
-//                 for( GFXIterator = PackIterator->GFXList; GFXIterator; GFXIterator = RenderObjectIterator->Next ) {
-//                     TreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
-//                     DisableNode = 0;
-//                     sprintf(SmallBuffer,"%s",PackIterator->Name);
-//                     if( RenderObjectIterator == GFXObjectManagerGetSelectedRenderObject(GFXObjectManager) ) {
-//                         TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
-//                         DisableNode = 1;
-//                     }
-//                     if( DisableNode ) {
-//                         igBeginDisabled(1);
-//                     }
-//                     if( igTreeNodeEx_Str(SmallBuffer,TreeNodeFlags) ) {
-//                         if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
-//                             GFXObjectManagerSetSelectedRenderObject(GFXObjectManager,PackIterator,RenderObjectIterator);
-//                         }
-//                     }
-//                     if( DisableNode ) {
-//                         igEndDisabled();
-//                     }
-//                 }
-//                 igTreePop();
-//             }
-//         }
-//     }
-//     if( igCollapsingHeader_TreeNodeFlags("Current RenderObject Informations",ImGuiTreeNodeFlags_DefaultOpen) ) {
-//         CurrentRenderObject = GFXObjectManagerGetSelectedRenderObject(GFXObjectManager);
-//         if( !CurrentRenderObject ) {
-//             igText("No RenderObject selected.");
-//         } else {
-//             CurrentFrame = BSDRenderObjectGetCurrentFrame(CurrentRenderObject);
-//             igText("Id:%i",CurrentRenderObject->Id);
-//             igText("Type:%i",CurrentRenderObject->Type);
-//             igText("Scale:%f;%f;%f",CurrentRenderObject->Scale[0],CurrentRenderObject->Scale[1],CurrentRenderObject->Scale[2]);
-//             igText("References RenderObject Id:%i",CurrentRenderObject->ReferencedRenderObjectId);
-//             igText("Current Animation Index:%i",CurrentRenderObject->CurrentAnimationIndex);
-//             igText("Current Frame Index:%i/%i",CurrentRenderObject->CurrentFrameIndex,
-//                    CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames);
-//             igText("Current Frame Interpolation Index:%i (From %i to %i)",CurrentFrame->FrameInterpolationIndex,
-//                    HighNibble(CurrentFrame->FrameInterpolationIndex),
-//                    LowNibble(CurrentFrame->FrameInterpolationIndex));
-//             igText("NumAnimations:%i",CurrentRenderObject->NumAnimations);
-//             sprintf(SmallBuffer,"Animation %i",CurrentRenderObject->CurrentAnimationIndex + 1);
-//             if( igBeginCombo("Animation Pose",SmallBuffer,0) ) {
-//                 for (i = 0; i < CurrentRenderObject->NumAnimations; i++) {
-//                     IsSelected = (CurrentRenderObject->CurrentAnimationIndex == i);
-//                     sprintf(SmallBuffer,"Animation %i",i + 1);
-//                     if( !CurrentRenderObject->AnimationList[i].NumFrames ) {
-//                         igBeginDisabled(1);
-//                     }
-//                     if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
-//                         if( CurrentRenderObject->CurrentAnimationIndex != i ) {
-//                             if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,i,0,0) ) {
-//                                 ErrorMessageDialogSet(GUI->ErrorMessageDialog,"Failed to set animation pose");
-//                             }
-//                         }
-//                     }
-//                     if( IsSelected ) {
-//                         igSetItemDefaultFocus();
-//                     }
-//                     if( !CurrentRenderObject->AnimationList[i].NumFrames ) {
-//                         igEndDisabled();
-//                     }
-//                 }
-//                 igEndCombo();
-//             }
-//             sprintf(SmallBuffer,"Frame %i",CurrentRenderObject->CurrentFrameIndex + 1);
-//             if( igBeginCombo("Animation Frame List",SmallBuffer,0) ) {
-//                 for( i = 0; i < CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames; i++ ) {
-//                     IsSelected = (CurrentRenderObject->CurrentFrameIndex == i);
-//                     sprintf(SmallBuffer,"Frame %i",i + 1);
-//                     if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
-//                         if( CurrentRenderObject->CurrentFrameIndex != i ) {
-//                             if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,i,0) ) {
-//                                 ErrorMessageDialogSet(GUI->ErrorMessageDialog,"Failed to set animation pose");
-//                             }
-//                         }
-//                     }
-//                     if( IsSelected ) {
-//                         igSetItemDefaultFocus();
-//                     }
-//                 }
-//                 igEndCombo();
-//             }
-//             if( igCollapsingHeader_TreeNodeFlags("Quaternion List",ImGuiTreeNodeFlags_None) ) {
-//                 igSeparator();
-//                 igText("Changes to an input-field can be undo by pressing CTRL-Z.\n");
-//                 igText("Note that numbers are in fixed point math where 4096 is equals to 1\n");
-//                 if( igButton("Reset",ZeroSize) ) {
-//                     BSDRenderObjectResetFrameQuaternionList(CurrentFrame);
-//                     BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,
-//                                                             CurrentRenderObject->CurrentFrameIndex,1);
-// 
-//                 }
-//                 TableFlags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Borders | 
-//                     ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX;
-//                 if( igBeginTable("Quaternion List",5,TableFlags,ZeroSize,0.f) ) {
-//                     igTableSetupColumn("Quaternion",0,0.f,0);
-//                     igTableSetupColumn("x",0,0.f,0);
-//                     igTableSetupColumn("y",0,0.f,0);
-//                     igTableSetupColumn("z",0,0.f,0);
-//                     igTableSetupColumn("w",0,0.f,0);
-// 
-//                     igTableHeadersRow();
-//                     InputTextFlags = ImGuiInputTextFlags_CharsDecimal;
-//                     if( GFXObjectManagerIsAnimationPlaying(GFXObjectManager) ) {
-//                         InputTextFlags |= ImGuiInputTextFlags_ReadOnly;
-//                     }
-//                     for( i = 0; i < CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
-//                         Frame[CurrentRenderObject->CurrentFrameIndex].NumQuaternions; i++ ) {
-//                         Changed = 0;
-//                         igTableNextRow(0,0.f);
-//                         igTableSetColumnIndex(0);
-//                         igAlignTextToFramePadding(); 
-//                         igText("Quaternion %i",i);
-//                         igTableSetColumnIndex(1);
-//                         igPushID_Int(5 * i + 1); 
-//                         Changed |= igInputScalar("##Q1", ImGuiDataType_S16, 
-//                                                 (short *) &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
-//                                                 Frame[CurrentRenderObject->CurrentFrameIndex].
-//                                                 CurrentQuaternionList[i].x,NULL,NULL,NULL,InputTextFlags);
-//                         igPopID();
-//                         igTableSetColumnIndex(2);
-//                         igPushID_Int(5 * i + 2); 
-//                         Changed |= igInputScalar("##Q2", ImGuiDataType_S16, 
-//                                                 (short *) &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
-//                                                 Frame[CurrentRenderObject->CurrentFrameIndex].
-//                                                 CurrentQuaternionList[i].y,NULL,NULL,NULL,InputTextFlags);
-//                         igPopID();
-//                         igTableSetColumnIndex(3);
-//                         igPushID_Int(5 * i + 3);
-//                         Changed |= igInputScalar("##Q3", ImGuiDataType_S16, 
-//                                                 (short *) &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
-//                                                 Frame[CurrentRenderObject->CurrentFrameIndex].
-//                                                 CurrentQuaternionList[i].z,NULL,NULL,NULL,InputTextFlags);
-//                         igPopID();
-//                         igTableSetColumnIndex(4);
-//                         igPushID_Int(5 * i + 4);
-//                         Changed |= igInputScalar("##Q4", ImGuiDataType_S16, 
-//                                                 (short *) &CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].
-//                                                 Frame[CurrentRenderObject->CurrentFrameIndex].
-//                                                 CurrentQuaternionList[i].w,NULL,NULL,NULL,InputTextFlags);
-//                         igPopID();
-//                         if( Changed ) {
-//                             BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,
-//                                                             CurrentRenderObject->CurrentFrameIndex,1);
-//                         }
-//                     }
-//                     igEndTable();
-//                 }
-//             }
-//             igSeparator();
-//             if( igButton("Play Animation",ZeroSize) ) {
-//                 if( !GFXObjectManagerIsAnimationPlaying(GFXObjectManager) ) {
-//                     CurrentRenderObject->CurrentFrameIndex = 0;
-//                     GFXObjectManagerSetAnimationPlay(GFXObjectManager,1);
-//                 }
-//                 
-//             }
-//             igSameLine(0,-1);
-//             if( igButton("Stop Animation",ZeroSize) ) {
-//                 GFXObjectManagerSetAnimationPlay(GFXObjectManager,0);
-//             }
-//             igSeparator();
-//             igText("Export selected model");
-//             if( igButton("Export current pose to Ply",ZeroSize) ) {
-//                 GFXObjectManagerExportSelectedModel(GFXObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY,false);
-//             }
-//             igSameLine(0.f,10.f);
-//             if( igButton("Export current animation to Ply",ZeroSize) ) {
-//                 GFXObjectManagerExportSelectedModel(GFXObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY,true);
-//             }
-//         }
-//     }
-//     igEnd();
+    TreeNodeFlags = GFXObjectManager->GFXPack != NULL ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_None;
+    if( igCollapsingHeader_TreeNodeFlags("GFX Informations",ImGuiTreeNodeFlags_DefaultOpen) ) {
+        GFX = GFXObjectManagerGetCurrentGFX(GFXObjectManager);
+        if( !GFX ) {
+            igText("No GFX selected.");
+        } else {
+            igText("Name:%s",GFXObjectManager->GFXPack->Name);
+            igText("Rotation:%i;%i;%i",GFX->RotationX,GFX->RotationY,GFX->RotationZ);
+            igText("Current Animation Index:%i",GFX->CurrentAnimationIndex);
+            igText("Current Frame Index:%i/%i",GFX->CurrentFrameIndex,
+                   GFX->Animation[GFX->CurrentAnimationIndex].NumFrames);
+            igText("NumAnimations:%i",GFX->Header.NumAnimationIndex);
+            sprintf(SmallBuffer,"Animation %i",GFX->CurrentAnimationIndex + 1);
+            if( igBeginCombo("Animation Pose",SmallBuffer,0) ) {
+                for (i = 0; i < GFX->Header.NumAnimationIndex; i++) {
+                    IsSelected = (GFX->CurrentAnimationIndex == i);
+                    sprintf(SmallBuffer,"Animation %i",i + 1);
+                    if( !GFX->Animation[i].NumFrames ) {
+                        igBeginDisabled(1);
+                    }
+                    if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
+                        if( GFX->CurrentAnimationIndex != i ) {
+                            if( !GFXSetAnimationPose(GFX,i,0) ) {
+                                ErrorMessageDialogSet(GUI->ErrorMessageDialog,"Failed to set animation pose");
+                            }
+                        }
+                    }
+                    if( IsSelected ) {
+                        igSetItemDefaultFocus();
+                    }
+                    if( !GFX->Animation[i].NumFrames ) {
+                        igEndDisabled();
+                    }
+                }
+                igEndCombo();
+            }
+            sprintf(SmallBuffer,"Frame %i",GFX->CurrentFrameIndex + 1);
+            if( igBeginCombo("Animation Frame List",SmallBuffer,0) ) {
+                for( i = 0; i < GFX->Animation[GFX->CurrentAnimationIndex].NumFrames; i++ ) {
+                    IsSelected = (GFX->CurrentFrameIndex == i);
+                    sprintf(SmallBuffer,"Frame %i",i + 1);
+                    if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
+                        if( GFX->CurrentFrameIndex != i ) {
+                            if( !GFXSetAnimationPose(GFX,GFX->CurrentAnimationIndex,i) ) {
+                                ErrorMessageDialogSet(GUI->ErrorMessageDialog,"Failed to set animation pose");
+                            }
+                        }
+                    }
+                    if( IsSelected ) {
+                        igSetItemDefaultFocus();
+                    }
+                }
+                igEndCombo();
+            }
+            igSeparator();
+            if( igButton("Play Animation",ZeroSize) ) {
+                if( !GFXObjectManagerIsAnimationPlaying(GFXObjectManager) ) {
+                    GFX->CurrentFrameIndex = 0;
+                    GFXObjectManagerSetAnimationPlay(GFXObjectManager,1);
+                }
+                
+            }
+            igSameLine(0,-1);
+            if( igButton("Stop Animation",ZeroSize) ) {
+                GFXObjectManagerSetAnimationPlay(GFXObjectManager,0);
+            }
+            igSeparator();
+            igText("Export selected model");
+            if( igButton("Export current pose to Ply",ZeroSize) ) {
+                GFXObjectManagerExportSelectedModel(GFXObjectManager,GUI,VideoSystem,GFX_OBJECT_MANAGER_EXPORT_FORMAT_PLY,false);
+            }
+            igSameLine(0.f,10.f);
+            if( igButton("Export current animation to Ply",ZeroSize) ) {
+                GFXObjectManagerExportSelectedModel(GFXObjectManager,GUI,VideoSystem,GFX_OBJECT_MANAGER_EXPORT_FORMAT_PLY,true);
+            }
+        }
+    }
+    igEnd();
 }
 void GUIDrawMenuBar(Application_t *Application)
 {

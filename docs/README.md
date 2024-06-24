@@ -13,6 +13,9 @@ Table of contents
   + [MOHModelViewer](#mohmodelviewer)
     - [Usage](#usage-1)
     - [Credits](#credits-1)
+  + [GFXModelViewer](#gfxmodelviewer)
+      - [Usage](#usage-1)
+      - [Credits](#credits-1)
   + [RSC Extractor](#rsc-extractor)
     - [Build](#build-1)
     - [Run](#run)
@@ -121,6 +124,12 @@ Some sample screenshot taken from MOHModelViewer:
 
 *GIF taken from MOHModelViewer showing JIMMY_P1.BSD Model from Medal Of Honor:Underground.*
 
+Some sample screenshot taken from GFXModelViewer:
+<img src="Images/GFXModelViewer_German_GFX.gif" width="600" />
+
+*GIF taken from GFXModelViewer showing the unused german.gfx model found
+inside the dev rsc archive from Medal Of Honor.*
+
 Some sample screenshot taken from SoundExplorer:  
 
 <img src="Images/SoundExplorer_Main_Interface.png" width="600" />
@@ -203,6 +212,31 @@ on Linux and %AppData% on Windows).**
 #### Credits
 
 MOHModelViewer uses the following libraries:  
+
+**SDL2**: https://www.libsdl.org/  
+**zlib**: https://github.com/madler/zlib  
+**libpng**:http://www.libpng.org/  
+**IMGUI**: https://github.com/ocornut/imgui/  
+**IMGUI_FileDialog**:  https://github.com/aiekick/ImGuiFileDialog  
+The font file shipped with the program is:  
+**DroidSans.ttf**: https://www.fontsquirrel.com/fonts/droid-sans
+
+### GFXModelViewer
+
+GFXModelViewer is able to load and render any animated GFX model from
+the games Medal Of Honor and Medal Of Honor:Underground.  
+It is able to load the model and export any animation pose to a ply file  
+
+#### Usage
+
+> ./GFXModelViewer `<Optional GFX file>`  
+
+**NOTE: The configuration is stored in the User preference folder (.local/share/GFXModelViewer
+on Linux and %AppData% on Windows).**  
+
+#### Credits
+
+GFXModelViewer uses the following libraries:  
 
 **SDL2**: https://www.libsdl.org/  
 **zlib**: https://github.com/madler/zlib  

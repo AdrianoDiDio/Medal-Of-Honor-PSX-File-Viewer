@@ -94,6 +94,11 @@ typedef struct GFX_s {
     int                 RotationY;
     int                 RotationZ;
     
+    int                 CurrentAnimationIndex;
+    int                 CurrentFrameIndex;
+    GFXVertex_t         *CurrentVertexList;
+
+    
     VAO_t               *VAO;
     
     struct GFX_s        *Next;
@@ -103,5 +108,9 @@ GFX_t           *GFXRead(void* GFXFileBuffer,int GFXLength);
 GFX_t           *GFXReadFromFile(const char *GFXFile);
 void            GFXFree(GFX_t *GFX);
 void            GFXPrepareVAO(GFX_t *GFX);
+int             GFXSetAnimationPose(GFX_t *GFX,int AnimationIndex,int FrameIndex);
 void            GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ViewMatrix,mat4 ProjectionMatrix);
+void            GFXExportCurrentPoseToPly(GFX_t *GFX,VRAM_t *VRAM,FILE *OutFile);
+void            GFXExportCurrentAnimationToPly(GFX_t *GFX,VRAM_t *VRAM,const char *Directory,const char *Name);
+
 #endif //__GFX_H_

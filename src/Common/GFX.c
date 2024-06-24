@@ -35,6 +35,9 @@ void GFXFree(GFX_t *GFX)
         if( GFX->Vertex ) {
             free(GFX->Vertex);
         }
+        if( GFX->CurrentVertexList ) {
+            free(GFX->CurrentVertexList);
+        }
         if( GFX->Normal ) {
             free(GFX->Normal);
         }
@@ -140,7 +143,9 @@ void GFXReadVertexChunk(GFX_t *GFX,void **GFXFileBuffer)
     }
     VertexSize = GFX->Header.NumVertices * sizeof(GFXVertex_t);
     GFX->Vertex = malloc(VertexSize);
+    GFX->CurrentVertexList = malloc(VertexSize);
     memcpy(GFX->Vertex,*GFXFileBuffer,VertexSize);
+    memcpy(GFX->CurrentVertexList,*GFXFileBuffer,VertexSize);
     *GFXFileBuffer += VertexSize;    
     for( i = 0; i < GFX->Header.NumVertices; i++ ) {
         DPrintf(" -- VERTEX %i --\n",i);
@@ -265,81 +270,158 @@ void GFXReadAnimationChunk(GFX_t *GFX,void **GFXFileBuffer)
         }
     }
 }
-
-void GFXGetObjectMatrix(GFX_t *GFX,mat4 Result)
+void GFXExportPoseToPly(GFX_t *GFX,GFXVertex_t *VertexList,VRAM_t *VRAM,FILE *OutFile)
 {
-    vec3 Temp;
-    vec3 Rotation;
-    
-    glm_mat4_identity(Result);
-    
-    Rotation[0] = ( GFX->RotationX / 4096.f) * 360.f;
-    Rotation[1] = ( GFX->RotationY / 4096.f) * 360.f;
-    Rotation[2] = ( GFX->RotationZ / 4096.f) * 360.f;
-//     glm_vec3_copy(RenderObjectDrawable->Position,temp);
-//     glm_vec3_rotate(temp, DEGTORAD(180.f), GLM_XUP);    
-//     glm_translate(Result,temp);
-    
-    Temp[0] = 0;
-    Temp[1] = 1;
-    Temp[2] = 0;
-    glm_rotate(Result,glm_rad(-Rotation[1]), Temp);
-    Temp[0] = 1;
-    Temp[1] = 0;
-    Temp[2] = 0;
-    glm_rotate(Result,glm_rad(Rotation[0]), Temp);
-    Temp[0] = 0;
-    Temp[1] = 0;
-    Temp[2] = 1;
-    glm_rotate(Result,glm_rad(Rotation[2]), Temp);
-//     glm_scale(Result,RenderObjectDrawable->Scale);
-}
-void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ViewMatrix,mat4 ProjectionMatrix)
-{
-    Shader_t *Shader;
-    int PaletteTextureId;
-    int TextureIndexId;
-    int OrthoMatrixID;
+    char Buffer[256];
+    float TextureWidth;
+    float TextureHeight;
+    int i;
+    int VRAMPage;
+    int ColorMode;
+    float U0;
+    float V0;
+    float U1;
+    float V1;
+    float U2;
+    float V2;
+    GFXFace_t *CurrentFace;
+    vec3 VertPos;
+    vec3 OutVector;
+    vec3 RotationAxis;
+    mat4 RotationMatrix;
+    mat4 ScaleMatrix;
     mat4 ModelMatrix;
-    mat4 ModelViewMatrix;
-    mat4 MVPMatrix;
     
-    if( !GFX ) {
+    if( !GFX || !OutFile ) {
+        bool InvalidFile = (OutFile == NULL ? true : false);
+        DPrintf("GFXExportPoseToPly: Invalid %s\n",InvalidFile ? "file" : "GFX struct");
         return;
     }
     
     if( !VRAM ) {
+        DPrintf("GFXExportPoseToPly:Invalid VRAM data\n");
         return;
     }
     
-    Shader = ShaderCache("SSTShader","Shaders/SSTVertexShader.glsl","Shaders/SSTFragmentShader.glsl");
+    TextureWidth = VRAM->Page.Width;
+    TextureHeight = VRAM->Page.Height;
     
-    if( Shader ) {
-        glUseProgram(Shader->ProgramId);
-        
-        OrthoMatrixID = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-        glm_mat4_identity(ModelViewMatrix);
-        GFXGetObjectMatrix(GFX, ModelMatrix);
-        glm_mat4_mul(ViewMatrix,ModelMatrix,ModelViewMatrix);
-        glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
-        glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
-        glUniformMatrix4fv(OrthoMatrixID,1,false,&MVPMatrix[0][0]);
-        PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
-        TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
-        glUniform1i(TextureIndexId, 0);
-        glUniform1i(PaletteTextureId,  1);
-        glActiveTexture(GL_TEXTURE0 + 0);
-        glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
-        glActiveTexture(GL_TEXTURE0 + 1);
-        glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
-        glBindVertexArray(GFX->VAO->VAOId[0]);
-        glDrawArrays(GL_TRIANGLES, 0, GFX->VAO->Count);
-        glBindVertexArray(0);
-        glActiveTexture(GL_TEXTURE0 + 0);
-        glBindTexture(GL_TEXTURE_2D,0);
-        glUseProgram(0);
+    glm_mat4_identity(ModelMatrix);
+    glm_mat4_identity(RotationMatrix);
+    glm_mat4_identity(ScaleMatrix);
+    
+    RotationAxis[0] = -1;
+    RotationAxis[1] = 0;
+    RotationAxis[2] = 0;
+    glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);        
+    glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
+    
+    sprintf(Buffer,"ply\nformat ascii 1.0\n");
+    fwrite(Buffer,strlen(Buffer),1,OutFile);
+    
+    sprintf(Buffer,
+        "element vertex %i\nproperty float x\nproperty float y\nproperty float z\nproperty float red\nproperty float green\nproperty float "
+        "blue\nproperty float s\nproperty float t\n",GFX->Header.NumFaces * 3);
+    fwrite(Buffer,strlen(Buffer),1,OutFile);
+    sprintf(Buffer,"element face %i\nproperty list uchar int vertex_indices\nend_header\n",GFX->Header.NumFaces);
+    fwrite(Buffer,strlen(Buffer),1,OutFile);
 
+    
+    for( i = 0 ; i < GFX->Header.NumFaces; i++ ) {
+        CurrentFace = &GFX->Face[i];
+        VRAMPage = CurrentFace->TSB;
+        ColorMode = (CurrentFace->TSB & 0xC0) >> 7;
+        U0 = (((float)CurrentFace->U1 + 
+            VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+        V0 = 1.f - (((float)CurrentFace->V1 +
+                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+        U1 = (((float)CurrentFace->U2 + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        V1 = 1.f - (((float)CurrentFace->V2 + 
+                    VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
+        U2 = (((float)CurrentFace->U3 + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        V2 = 1.f - (((float)CurrentFace->V3 + 
+                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+        
+        VertPos[0] = VertexList[CurrentFace->Vert0].x;
+        VertPos[1] = VertexList[CurrentFace->Vert0].y;
+        VertPos[2] = VertexList[CurrentFace->Vert0].z;
+        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",OutVector[0] / 4096.f, 
+                OutVector[1] / 4096.f, OutVector[2] / 4096.f,
+                CurrentFace->RGB0.rgba[0] / 255.f,CurrentFace->RGB0.rgba[1] / 255.f,CurrentFace->RGB0.rgba[2] / 255.f,U0,V0);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+        
+        VertPos[0] = VertexList[CurrentFace->Vert1].x;
+        VertPos[1] = VertexList[CurrentFace->Vert1].y;
+        VertPos[2] = VertexList[CurrentFace->Vert1].z;
+        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",OutVector[0] / 4096.f, 
+                OutVector[1] / 4096.f, OutVector[2] / 4096.f,
+                CurrentFace->RGB1.rgba[0] / 255.f,CurrentFace->RGB1.rgba[1] / 255.f,CurrentFace->RGB1.rgba[2] / 255.f,U1,V1);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+
+        VertPos[0] = VertexList[CurrentFace->Vert2].x;
+        VertPos[1] = VertexList[CurrentFace->Vert2].y;
+        VertPos[2] = VertexList[CurrentFace->Vert2].z;
+        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",OutVector[0] / 4096.f, 
+                OutVector[1] / 4096.f, OutVector[2] / 4096.f,
+                CurrentFace->RGB1.rgba[0] / 255.f,CurrentFace->RGB1.rgba[1] / 255.f,CurrentFace->RGB1.rgba[2] / 255.f,U2,V2);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
     }
+    for( i = 0; i < GFX->Header.NumFaces; i++ ) {
+        int Vert0 = (i * 3) + 0;
+        int Vert1 = (i * 3) + 1;
+        int Vert2 = (i * 3) + 2;
+        sprintf(Buffer,"3 %i %i %i\n",Vert0,Vert1,Vert2);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+    }
+}
+void GFXExportCurrentPoseToPly(GFX_t *GFX,VRAM_t *VRAM,FILE *OutFile)
+{    
+    if( !GFX || !OutFile ) {
+        bool InvalidFile = (OutFile == NULL ? true : false);
+        DPrintf("GFXExportCurrentPoseToPly: Invalid %s\n",InvalidFile ? "file" : "GFX struct");
+        return;
+    }
+    
+    if( !VRAM ) {
+        DPrintf("GFXExportCurrentPoseToPly:Invalid VRAM data\n");
+        return;
+    }
+    GFXExportPoseToPly(GFX,GFX->CurrentVertexList,VRAM,OutFile);
+}
+void GFXExportCurrentAnimationToPly(GFX_t *GFX,VRAM_t *VRAM,const char *Directory,const char *Name)
+{
+    GFXVertex_t *TempVertexList;
+    FILE *OutFile;
+    mat4 TransformMatrix;
+    vec3 Translation;
+    int i;
+    int j;
+    char *PlyFile;
+    int VertexListSize;
+    
+    if(GFX->CurrentAnimationIndex == -1 ) {
+        DPrintf("GFXExportCurrentAnimationToPly:Invalid animation index\n");
+        return;
+    }
+    VertexListSize = GFX->Header.NumVertices * sizeof(GFXVertex_t);
+    TempVertexList = malloc(VertexListSize);
+
+    for( i = 0; i < GFX->Animation[GFX->CurrentAnimationIndex].NumFrames; i++ ) {
+        asprintf(&PlyFile,"%s%cGFX-%s-%i-%i.ply",Directory,PATH_SEPARATOR,Name,GFX->CurrentAnimationIndex,i);
+        OutFile = fopen(PlyFile,"w");
+        //Copy the vertices for the current frame
+        memcpy(TempVertexList,GFX->Animation[GFX->CurrentAnimationIndex].Frame[i].Vertex,VertexListSize);
+        //Export it
+        GFXExportPoseToPly(GFX,TempVertexList,VRAM,OutFile);
+        fclose(OutFile);
+        free(PlyFile);
+    }
+    free(TempVertexList);
 }
 void GFXFillVertexBuffer(int *Buffer,int *BufferSize,int x,int y,int z,Color1i_t Color,int U,int V,int CLUTX,int CLUTY,int ColorMode)
 {
@@ -364,7 +446,53 @@ void GFXFillVertexBuffer(int *Buffer,int *BufferSize,int x,int y,int z,Color1i_t
     Buffer[*BufferSize+10] = ColorMode;
     *BufferSize += 11;
 }
+void GFXUpdateVAO(GFX_t *GFX)
+{
+    GFXFace_t *CurrentFace;
+    int Stride;
+    int BaseOffset;
+    int VertexData[3];
+    int i;
+    
+    if( !GFX ) {
+        DPrintf("GFXUpdateVAO:Invalid GFX\n");
+        return;
+    }
+    if( !GFX->CurrentVertexList ) {
+        DPrintf("GFXUpdateVAO: Called without a valid vertex list\n");
+        return;
+    }
+    if( !GFX->VAO ) {
+        DPrintf("GFXUpdateVAO:Invalid VAO\n");
+        return;
+    }
+    
+    Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
+    glBindBuffer(GL_ARRAY_BUFFER, GFX->VAO->VBOId[0]);
+    
+    for( i = 0; i < GFX->Header.NumFaces; i++ ) {
+        BaseOffset = (i * Stride * 3);
+        CurrentFace = &GFX->Face[i];
+        VertexData[0] = GFX->CurrentVertexList[CurrentFace->Vert0].x;
+        VertexData[1] = GFX->CurrentVertexList[CurrentFace->Vert0].y;
+        VertexData[2] = GFX->CurrentVertexList[CurrentFace->Vert0].z;
 
+        glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 0), 3 * sizeof(int), &VertexData);
+        
+        VertexData[0] = GFX->CurrentVertexList[CurrentFace->Vert1].x;
+        VertexData[1] = GFX->CurrentVertexList[CurrentFace->Vert1].y;
+        VertexData[2] = GFX->CurrentVertexList[CurrentFace->Vert1].z;
+
+        glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1), 3 * sizeof(int), &VertexData);
+        
+        VertexData[0] = GFX->CurrentVertexList[CurrentFace->Vert2].x;
+        VertexData[1] = GFX->CurrentVertexList[CurrentFace->Vert2].y;
+        VertexData[2] = GFX->CurrentVertexList[CurrentFace->Vert2].z;
+
+        glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2), 3 * sizeof(int), &VertexData);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
 void GFXPrepareVAO(GFX_t *GFX)
 {
     int *VertexData;
@@ -448,16 +576,191 @@ void GFXPrepareVAO(GFX_t *GFX)
         U2 += VRAMGetTexturePageX(VRAMPage);
         V2 += VRAMGetTexturePageY(VRAMPage,ColorMode);
         
-        GFXFillVertexBuffer(VertexData,&VertexPointer,GFX->Vertex[Vert0].x,GFX->Vertex[Vert0].y,GFX->Vertex[Vert0].z,
+        GFXFillVertexBuffer(VertexData,&VertexPointer,GFX->CurrentVertexList[Vert0].x,GFX->CurrentVertexList[Vert0].y,GFX->CurrentVertexList[Vert0].z,
                                 GFX->Face[i].RGB0,U0,V0,CLUTDestX,CLUTDestY,ColorMode);
-        GFXFillVertexBuffer(VertexData,&VertexPointer,GFX->Vertex[Vert1].x,GFX->Vertex[Vert1].y,GFX->Vertex[Vert1].z,
+        GFXFillVertexBuffer(VertexData,&VertexPointer,GFX->CurrentVertexList[Vert1].x,GFX->CurrentVertexList[Vert1].y,GFX->CurrentVertexList[Vert1].z,
                                 GFX->Face[i].RGB1,U1,V1,CLUTDestX,CLUTDestY,ColorMode);
-        GFXFillVertexBuffer(VertexData,&VertexPointer,GFX->Vertex[Vert2].x,GFX->Vertex[Vert2].y,GFX->Vertex[Vert2].z,
+        GFXFillVertexBuffer(VertexData,&VertexPointer,GFX->CurrentVertexList[Vert2].x,GFX->CurrentVertexList[Vert2].y,GFX->CurrentVertexList[Vert2].z,
                                 GFX->Face[i].RGB2,U2,V2,CLUTDestX,CLUTDestY,ColorMode);
         VAOUpdate(GFX->VAO,VertexData,VertexSize,3);
         VertexPointer = 0;
     }
     free(VertexData);
+}
+/*
+ Set the RenderObject to a specific pose, given AnimationIndex and FrameIndex.
+ Returns 0 if the pose was not valid ( pose was already set,pose didn't exists), 1 otherwise.
+ NOTE that calling this function will modify the RenderObject's VAO.
+ If the VAO is NULL a new one is created otherwise it will be updated to reflect the pose that was applied to the model.
+ If Override is true then the pose will be set again in case the AnimationIndex and FrameIndex did not change.
+ */
+int GFXSetAnimationPose(GFX_t *GFX,int AnimationIndex,int FrameIndex)
+{
+    int i;
+
+    if( AnimationIndex < 0 || AnimationIndex > GFX->Header.NumAnimationIndex ) {
+        DPrintf("GFXSetAnimationPose:Failed to set pose using index %i...Index is out of bounds\n",AnimationIndex);
+        return 0;
+    }
+    if( (AnimationIndex == GFX->CurrentAnimationIndex && FrameIndex == GFX->CurrentFrameIndex ) /*&& !Override*/) {
+        DPrintf("GFXSetAnimationPose:Pose is already set\n");
+        return 0;
+    }
+    if( !GFX->Animation[AnimationIndex].NumFrames ) {
+        DPrintf("GFXSetAnimationPose:Failed to set pose using index %i...animation has no frames\n",AnimationIndex);
+        return 0;
+    }
+    if( FrameIndex < 0 || FrameIndex > GFX->Animation[AnimationIndex].NumFrames ) {
+        DPrintf("GFXSetAnimationPose:Failed to set pose using frame %i...Frame Index is out of bounds\n",FrameIndex);
+        return 0;
+    }
+//     BSDRenderObjectResetVertexTable(RenderObject);
+//     glm_vec3_zero(RenderObject->Center);
+//     glm_mat4_identity(TransformMatrix);
+//     Translation[0] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.x / 4096.f;
+//     Translation[1] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.y / 4096.f;
+//     Translation[2] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.z / 4096.f;
+//     glm_translate_make(TransformMatrix,Translation);
+//     //NOTE(Adriano):Interpolate only between frames of the same animation and not in-between two different one.
+//     //              Also do not interpolate if the frame is the same as the previous one.
+//     if( RenderObject->CurrentAnimationIndex == AnimationIndex && RenderObject->CurrentFrameIndex != -1 && 
+//         RenderObject->CurrentFrameIndex != FrameIndex
+//     ) {
+//         assert(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions == 
+//             RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[RenderObject->CurrentFrameIndex].NumQuaternions
+//         );
+//         QuaternionList = malloc(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions * sizeof(BSDQuaternion_t));
+//         for( i = 0; i < RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions; i++ ) {
+//             FromQuaternion[0] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
+//                 Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].x / 4096.f;
+//             FromQuaternion[1] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
+//                 Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].y / 4096.f;
+//             FromQuaternion[2] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
+//                 Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].z / 4096.f;
+//             FromQuaternion[3] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
+//                 Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].w / 4096.f;
+//             ToQuaternion[0] = RenderObject->AnimationList[AnimationIndex].
+//                 Frame[FrameIndex].QuaternionList[i].x / 4096.f;
+//             ToQuaternion[1] = RenderObject->AnimationList[AnimationIndex].
+//                 Frame[FrameIndex].QuaternionList[i].y / 4096.f;
+//             ToQuaternion[2] = RenderObject->AnimationList[AnimationIndex].
+//                 Frame[FrameIndex].QuaternionList[i].z / 4096.f;
+//             ToQuaternion[3] = RenderObject->AnimationList[AnimationIndex].
+//                 Frame[FrameIndex].QuaternionList[i].w / 4096.f;
+//             glm_quat_nlerp(FromQuaternion,
+//                 ToQuaternion,
+//                 0.5f,
+//                 DestQuaternion
+//             );
+//             QuaternionList[i].x = DestQuaternion[0] * 4096.f;
+//             QuaternionList[i].y = DestQuaternion[1] * 4096.f;
+//             QuaternionList[i].z = DestQuaternion[2] * 4096.f;
+//             QuaternionList[i].w = DestQuaternion[3] * 4096.f;
+//         }
+//         BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,QuaternionList,
+//                                     RenderObject->CurrentVertexTable,TransformMatrix);
+//         free(QuaternionList);
+//     } else {
+//         BSDRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,
+//                                     RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].CurrentQuaternionList,
+//                                     RenderObject->CurrentVertexTable,TransformMatrix);
+//     }
+    GFX->CurrentAnimationIndex = AnimationIndex;
+    GFX->CurrentFrameIndex = FrameIndex;
+    
+    memcpy(GFX->CurrentVertexList, GFX->Animation[AnimationIndex].Frame[FrameIndex].Vertex, GFX->Header.NumVertices * sizeof(GFXVertex_t));
+    
+//     NumVertices = 0;
+//     for( int i = 0; i < RenderObject->NumVertexTables; i++ ) {
+//         for( int j = 0; j < RenderObject->CurrentVertexTable[i].NumVertex; j++ ) {
+//             RenderObject->Center[0] += RenderObject->CurrentVertexTable[i].VertexList[j].x;
+//             RenderObject->Center[1] += RenderObject->CurrentVertexTable[i].VertexList[j].y;
+//             RenderObject->Center[2] += RenderObject->CurrentVertexTable[i].VertexList[j].z;
+//             NumVertices++;
+//         }
+//     }
+//     glm_vec3_scale(RenderObject->Center,1.f/NumVertices,RenderObject->Center);
+    if( !GFX->VAO ) {
+        GFXPrepareVAO(GFX);
+    } else {
+        GFXUpdateVAO(GFX);
+    }
+    return 1;
+}
+void GFXGetObjectMatrix(GFX_t *GFX,mat4 Result)
+{
+    vec3 Temp;
+    vec3 Rotation;
+    
+    glm_mat4_identity(Result);
+    
+    Rotation[0] = ( GFX->RotationX / 4096.f) * 360.f;
+    Rotation[1] = ( GFX->RotationY / 4096.f) * 360.f;
+    Rotation[2] = ( GFX->RotationZ / 4096.f) * 360.f;
+//     glm_vec3_copy(RenderObjectDrawable->Position,temp);
+//     glm_vec3_rotate(temp, DEGTORAD(180.f), GLM_XUP);    
+//     glm_translate(Result,temp);
+    
+    Temp[0] = 0;
+    Temp[1] = 1;
+    Temp[2] = 0;
+    glm_rotate(Result,glm_rad(-Rotation[1]), Temp);
+    Temp[0] = 1;
+    Temp[1] = 0;
+    Temp[2] = 0;
+    glm_rotate(Result,glm_rad(Rotation[0]), Temp);
+    Temp[0] = 0;
+    Temp[1] = 0;
+    Temp[2] = 1;
+    glm_rotate(Result,glm_rad(Rotation[2]), Temp);
+//     glm_scale(Result,RenderObjectDrawable->Scale);
+}
+void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ViewMatrix,mat4 ProjectionMatrix)
+{
+    Shader_t *Shader;
+    int PaletteTextureId;
+    int TextureIndexId;
+    int OrthoMatrixID;
+    mat4 ModelMatrix;
+    mat4 ModelViewMatrix;
+    mat4 MVPMatrix;
+    
+    if( !GFX ) {
+        return;
+    }
+    
+    if( !VRAM ) {
+        return;
+    }
+    
+    Shader = ShaderCache("SSTShader","Shaders/SSTVertexShader.glsl","Shaders/SSTFragmentShader.glsl");
+    
+    if( Shader ) {
+        glUseProgram(Shader->ProgramId);
+        
+        OrthoMatrixID = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+        glm_mat4_identity(ModelViewMatrix);
+        GFXGetObjectMatrix(GFX, ModelMatrix);
+        glm_mat4_mul(ViewMatrix,ModelMatrix,ModelViewMatrix);
+        glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
+        glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+        glUniformMatrix4fv(OrthoMatrixID,1,false,&MVPMatrix[0][0]);
+        PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
+        TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+        glUniform1i(TextureIndexId, 0);
+        glUniform1i(PaletteTextureId,  1);
+        glActiveTexture(GL_TEXTURE0 + 0);
+        glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
+        glActiveTexture(GL_TEXTURE0 + 1);
+        glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
+        glBindVertexArray(GFX->VAO->VAOId[0]);
+        glDrawArrays(GL_TRIANGLES, 0, GFX->VAO->Count);
+        glBindVertexArray(0);
+        glActiveTexture(GL_TEXTURE0 + 0);
+        glBindTexture(GL_TEXTURE_2D,0);
+        glUseProgram(0);
+
+    }
 }
 
 GFX_t *GFXRead(void* GFXFileBuffer,int GFXLength)
@@ -480,10 +783,14 @@ GFX_t *GFXRead(void* GFXFileBuffer,int GFXLength)
     
     GFXEnd = GFXFileBuffer + GFXLength;
     GFXData->Vertex = NULL;
+    GFXData->CurrentVertexList = NULL;
     GFXData->Normal = NULL;
     GFXData->Face = NULL;
     GFXData->Next = NULL;
     GFXData->VAO = NULL;
+    GFXData->RotationX = 0;
+    GFXData->RotationY = 0;
+    GFXData->RotationZ = 0;
     GFXReadHeaderChunk(GFXData,&GFXFileBuffer);
     GFXReadOffsetTableChunk(GFXData,&GFXFileBuffer);
     GFXReadAnimationIndexTable(GFXData,&GFXFileBuffer);
