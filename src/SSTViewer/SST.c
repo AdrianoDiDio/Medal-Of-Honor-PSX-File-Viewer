@@ -1002,7 +1002,7 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
     glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);    
     for( ClassIterator = SST->ClassList; ClassIterator; ClassIterator = ClassIterator->Next ) {
         for( Model = ClassIterator->GFXModelList; Model; Model = Model->Next ) {
-            GFXRender(Model,ClassIterator->VRAM,ViewMatrix,ProjectionMatrix);
+            GFXRender(Model,ClassIterator->VRAM,ViewMatrix,ProjectionMatrix,false,false);
         }
     }
     

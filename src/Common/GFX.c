@@ -715,12 +715,13 @@ void GFXGetObjectMatrix(GFX_t *GFX,mat4 Result)
     glm_rotate(Result,glm_rad(Rotation[2]), Temp);
 //     glm_scale(Result,RenderObjectDrawable->Scale);
 }
-void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ViewMatrix,mat4 ProjectionMatrix)
+void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ViewMatrix,mat4 ProjectionMatrix,bool EnableWireFrameMode,bool EnableAmbientLight)
 {
     Shader_t *Shader;
     int PaletteTextureId;
     int TextureIndexId;
-    int OrthoMatrixID;
+    int OrthoMatrixId;
+    int EnableLightingId;
     mat4 ModelMatrix;
     mat4 ModelViewMatrix;
     mat4 MVPMatrix;
@@ -737,16 +738,23 @@ void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ViewMatrix,mat4 ProjectionMatrix)
     
     if( Shader ) {
         glUseProgram(Shader->ProgramId);
-        
-        OrthoMatrixID = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+            
+        if( EnableWireFrameMode ) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        OrthoMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
         glm_mat4_identity(ModelViewMatrix);
         GFXGetObjectMatrix(GFX, ModelMatrix);
         glm_mat4_mul(ViewMatrix,ModelMatrix,ModelViewMatrix);
         glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
         glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
-        glUniformMatrix4fv(OrthoMatrixID,1,false,&MVPMatrix[0][0]);
+        glUniformMatrix4fv(OrthoMatrixId,1,false,&MVPMatrix[0][0]);
+        EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
         PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
         TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+        glUniform1i(EnableLightingId, EnableAmbientLight);
         glUniform1i(TextureIndexId, 0);
         glUniform1i(PaletteTextureId,  1);
         glActiveTexture(GL_TEXTURE0 + 0);
@@ -759,7 +767,9 @@ void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ViewMatrix,mat4 ProjectionMatrix)
         glActiveTexture(GL_TEXTURE0 + 0);
         glBindTexture(GL_TEXTURE_2D,0);
         glUseProgram(0);
-
+        if( EnableWireFrameMode ) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
     }
 }
 

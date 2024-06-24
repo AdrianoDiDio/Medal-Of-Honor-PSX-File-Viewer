@@ -7,9 +7,11 @@ layout (location = 4) in int   aColorMode;
 
 uniform mat4 MVPMatrix;
 uniform int ColorMode;
+uniform bool EnableLighting;
 out vec3 ourColor;
 out vec2 TexCoord;
 out vec2 CLUTCoord;
+out float LightingEnabled;
 flat out int ourColorMode;
 
 void main()
@@ -18,5 +20,6 @@ void main()
     ourColor = vec3(aColor) / 255.f;
     TexCoord = vec2(aTexCoord) + vec2(0.001, 0.001);
     CLUTCoord = vec2(aCLUTCoord) + vec2(0.001, 0.001);
+    LightingEnabled = EnableLighting ? 1.0 : 0.0;
     ourColorMode = aColorMode;
 }

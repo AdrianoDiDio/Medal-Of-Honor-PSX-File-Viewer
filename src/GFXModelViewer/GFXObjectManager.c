@@ -342,7 +342,7 @@ void GFXObjectManagerDrawPack(GFXPack_t *GFXPack,Camera_t *Camera,
         return;
     }
 
-    GFXRender(GFXPack->GFX,GFXPack->VRAM,Camera->ViewMatrix,ProjectionMatrix);
+    GFXRender(GFXPack->GFX,GFXPack->VRAM,Camera->ViewMatrix,ProjectionMatrix,EnableWireFrameMode->IValue,EnableAmbientLight->IValue);
 }
 void GFXObjectManagerOpenFileDialog(GFXObjectManager_t *GFXObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem)
 {

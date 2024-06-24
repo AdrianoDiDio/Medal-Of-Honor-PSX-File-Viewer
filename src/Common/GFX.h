@@ -109,7 +109,7 @@ GFX_t           *GFXReadFromFile(const char *GFXFile);
 void            GFXFree(GFX_t *GFX);
 void            GFXPrepareVAO(GFX_t *GFX);
 int             GFXSetAnimationPose(GFX_t *GFX,int AnimationIndex,int FrameIndex);
-void            GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ViewMatrix,mat4 ProjectionMatrix);
+void            GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ViewMatrix,mat4 ProjectionMatrix,bool EnableWireFrameMode,bool EnableAmbientLight);
 void            GFXExportCurrentPoseToPly(GFX_t *GFX,VRAM_t *VRAM,FILE *OutFile);
 void            GFXExportCurrentAnimationToPly(GFX_t *GFX,VRAM_t *VRAM,const char *Directory,const char *Name);
 
