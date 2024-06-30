@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project(GFXModelViewer)
 
 set(SOURCE_FILES    Camera.c GUI.c 
-                    GFXObjectManager.c GFXModelViewer
+                    GFXObjectManager.c GFXModelViewer.c
 )
                  
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
