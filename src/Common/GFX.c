@@ -618,6 +618,14 @@ int GFXSetAnimationPose(GFX_t *GFX,int AnimationIndex,int FrameIndex)
     
     memcpy(GFX->CurrentVertexList, GFX->Animation[AnimationIndex].Frame[FrameIndex].Vertex, GFX->Header.NumVertices * sizeof(GFXVertex_t));
     
+    glm_vec3_zero(GFX->Center);
+    for( i = 0; i < GFX->Header.NumVertices; i++ ) {
+        GFX->Center[0] += GFX->CurrentVertexList[i].x;
+        GFX->Center[1] += GFX->CurrentVertexList[i].y;
+        GFX->Center[2] += GFX->CurrentVertexList[i].z;
+    }
+    glm_vec3_scale(GFX->Center,1.f / GFX->Header.NumVertices,GFX->Center);
+    
     if( !GFX->VAO ) {
         GFXPrepareVAO(GFX);
     } else {
@@ -635,9 +643,6 @@ void GFXGetObjectMatrix(GFX_t *GFX,mat4 Result)
     Rotation[0] = ( GFX->RotationX / 4096.f) * 360.f;
     Rotation[1] = ( GFX->RotationY / 4096.f) * 360.f;
     Rotation[2] = ( GFX->RotationZ / 4096.f) * 360.f;
-//     glm_vec3_copy(RenderObjectDrawable->Position,temp);
-//     glm_vec3_rotate(temp, DEGTORAD(180.f), GLM_XUP);    
-//     glm_translate(Result,temp);
     
     Temp[0] = 0;
     Temp[1] = 1;
@@ -651,7 +656,12 @@ void GFXGetObjectMatrix(GFX_t *GFX,mat4 Result)
     Temp[1] = 0;
     Temp[2] = 1;
     glm_rotate(Result,glm_rad(Rotation[2]), Temp);
-//     glm_scale(Result,RenderObjectDrawable->Scale);
+    
+    Temp[0] = -GFX->Center[0];
+    Temp[1] = -GFX->Center[1];
+    Temp[2] = -GFX->Center[2];
+    glm_vec3_rotate(Temp, DEGTORAD(180.f), GLM_XUP);    
+    glm_translate(Result,Temp);
 }
 void GFXRender(GFX_t *GFX,VRAM_t *VRAM,mat4 ViewMatrix,mat4 ProjectionMatrix,bool EnableWireFrameMode,bool EnableAmbientLight)
 {
@@ -739,6 +749,7 @@ GFX_t *GFXRead(void* GFXFileBuffer,int GFXLength)
     GFXData->RotationX = 0;
     GFXData->RotationY = 0;
     GFXData->RotationZ = 0;
+    glm_vec3_zero(GFXData->Center);
     GFXReadHeaderChunk(GFXData,&GFXFileBuffer);
     GFXReadOffsetTableChunk(GFXData,&GFXFileBuffer);
     GFXReadAnimationIndexTable(GFXData,&GFXFileBuffer);

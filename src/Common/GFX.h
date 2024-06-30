@@ -94,6 +94,8 @@ typedef struct GFX_s {
     int                 RotationY;
     int                 RotationZ;
     
+    vec3                Center;
+    
     int                 CurrentAnimationIndex;
     int                 CurrentFrameIndex;
     GFXVertex_t         *CurrentVertexList;
