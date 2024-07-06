@@ -154,6 +154,9 @@ void CameraUpdateViewMatrix(Camera_t *Camera)
 }
 void CameraBeginFrame(Camera_t *Camera)
 {
+    if( CameraFOV->FValue < 45.f || CameraFOV->FValue > 110.f ) {
+        ConfigSetNumber("CameraFOV",90.f);
+    }
     //NOTE(Adriano):Update it even if not focused in order to have a valid matrix available to all subsystems.
     CameraUpdateViewMatrix(Camera);
 } 

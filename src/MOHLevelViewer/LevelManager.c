@@ -817,10 +817,6 @@ void LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera)
         return;
     }
     
-    if( CameraFOV->FValue < 45.f || CameraFOV->FValue > 110.f ) {
-        ConfigSetNumber("CameraFOV",90.f);
-    }
-    
     glm_perspective(glm_rad(CameraFOV->FValue),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);     
     
     LevelDraw(LevelManager->CurrentLevel,Camera,LevelManager->RenderObjectShader,ProjectionMatrix);
