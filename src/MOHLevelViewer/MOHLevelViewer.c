@@ -224,6 +224,7 @@ void RegisterDefaultSettings()
 {
     ConfigRegister("CameraSpeed","30.f",NULL);
     ConfigRegister("CameraMouseSensitivity","1.f",NULL);
+    ConfigRegister("CameraFOV","110.f",NULL);
 
     ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to "
                                     "being set to empty.");

@@ -1004,9 +1004,7 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
         for( Model = ClassIterator->GFXModelList; Model; Model = Model->Next ) {
             GFXRender(Model,ClassIterator->VRAM,ViewMatrix,ProjectionMatrix,false,false);
         }
-    }
-    
-//     SSTModelRender(VRam);
+    }    
 }
 int SSTCreateLabelsVAO(SSTClass_t *Class)
 {

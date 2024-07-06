@@ -141,13 +141,16 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                 }
                 if( GUICheckBoxWithTooltip("Show Current Compartment",(bool *) &GUIShowCurrentCompartment->IValue,
                     GUIShowCurrentCompartment->Description ) ) {
-                        ConfigSetNumber("GUIShowCurrentCompartment",GUIShowCurrentCompartment->IValue);
+                    ConfigSetNumber("GUIShowCurrentCompartment",GUIShowCurrentCompartment->IValue);
                 }
                 if( igSliderFloat("Camera Speed",&CameraSpeed->FValue,10.f,256.f,"%.2f",0) ) {
-                        ConfigSetNumber("CameraSpeed",CameraSpeed->FValue);
+                    ConfigSetNumber("CameraSpeed",CameraSpeed->FValue);
                 }
                 if( igSliderFloat("Camera Mouse Sensitivity",&CameraMouseSensitivity->FValue,1.f,20.f,"%.2f",0) ) {
-                        ConfigSetNumber("CameraMouseSensitivity",CameraMouseSensitivity->FValue);
+                    ConfigSetNumber("CameraMouseSensitivity",CameraMouseSensitivity->FValue);
+                }
+                if( igSliderFloat("Camera FOV",&CameraFOV->FValue,45.f,110.f,"%.2f",0) ) {
+                    ConfigSetNumber("CameraFOV",CameraFOV->FValue);
                 }
             }
             if( igCollapsingHeader_TreeNodeFlags("Music Info",0) ) {

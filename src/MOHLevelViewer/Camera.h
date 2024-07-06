@@ -52,6 +52,7 @@ typedef struct Camera_s {
 
 extern Config_t *CameraSpeed;
 extern Config_t *CameraMouseSensitivity;
+extern Config_t *CameraFOV;
 
 Camera_t    *CameraInit();
 void        CameraBeginFrame(Camera_t *Camera);

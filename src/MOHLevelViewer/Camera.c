@@ -24,6 +24,7 @@
 
 Config_t *CameraSpeed;
 Config_t *CameraMouseSensitivity;
+Config_t *CameraFOV;
 
 void CameraCleanUp(Camera_t *Camera)
 {
@@ -194,5 +195,6 @@ Camera_t *CameraInit()
     CameraOnAngleUpdate(Camera);
     CameraSpeed = ConfigGet("CameraSpeed");
     CameraMouseSensitivity = ConfigGet("CameraMouseSensitivity");
+    CameraFOV = ConfigGet("CameraFOV");
     return Camera;
 }
