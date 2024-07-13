@@ -37,21 +37,10 @@ void ApplicationCheckEvents(Application_t *Application)
             Quit(Application);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_m ) {
-            CurrentGFX = GFXObjectManagerGetCurrentGFX(Application->GFXObjectManager);
-            if( CurrentGFX != NULL ) {
-                NextFrame = (CurrentGFX->CurrentFrameIndex + 1) % 
-                    CurrentGFX->Animation[CurrentGFX->CurrentAnimationIndex].NumFrames;
-                GFXSetAnimationPose(CurrentGFX,CurrentGFX->CurrentAnimationIndex,NextFrame);
-            }
+            GFXObjectManagerAdvanceCurrentGFXAnimationFrame(Application->GFXObjectManager);
         }
         if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_n ) {
-            CurrentGFX = GFXObjectManagerGetCurrentGFX(Application->GFXObjectManager);
-            if( CurrentGFX != NULL ) {
-                 NextPose = (CurrentGFX->CurrentAnimationIndex + 1) % CurrentGFX->Header.NumAnimationIndex;
-                 while( !GFXSetAnimationPose(CurrentGFX,NextPose,0) ) {
-                    NextPose = (NextPose + 1 ) % CurrentGFX->Header.NumAnimationIndex;
-                }
-            }
+            GFXObjectManagerAdvanceCurrentGFXAnimationPose(Application->GFXObjectManager);
         }
         GUIProcessEvent(Application->GUI,&Event);
         if( GUIIsMouseFree() ) {

@@ -71,7 +71,32 @@ void GFXObjectManagerCleanUp(GFXObjectManager_t *GFXObjectManager)
     }
     free(GFXObjectManager);
 }
-
+void GFXObjectManagerAdvanceCurrentGFXAnimationFrame(GFXObjectManager_t *GFXObjectManager)
+{
+    GFX_t *CurrentGFX;
+    int NextFrame;
+    
+    CurrentGFX = GFXObjectManagerGetCurrentGFX(GFXObjectManager);
+    if( CurrentGFX != NULL ) {
+        NextFrame = (CurrentGFX->CurrentFrameIndex + 1) % 
+            CurrentGFX->Animation[CurrentGFX->CurrentAnimationIndex].NumFrames;
+        GFXSetAnimationPose(CurrentGFX,CurrentGFX->CurrentAnimationIndex,NextFrame);
+    }
+}
+void GFXObjectManagerAdvanceCurrentGFXAnimationPose(GFXObjectManager_t *GFXObjectManager)
+{
+    GFX_t *CurrentGFX;
+    int NextPose;
+             
+    CurrentGFX = GFXObjectManagerGetCurrentGFX(GFXObjectManager);
+    if( CurrentGFX != NULL ) {
+        NextPose = (CurrentGFX->CurrentAnimationIndex + 1) % CurrentGFX->Header.NumAnimationIndex;
+        //NOTE(Adriano): Scan through the available pose until we find one that it's valid and can be set
+        while( !GFXSetAnimationPose(CurrentGFX,NextPose,0) ) {
+            NextPose = (NextPose + 1 ) % CurrentGFX->Header.NumAnimationIndex;
+        }
+    }
+}
 int GFXObjectManagerIsAnimationPlaying(GFXObjectManager_t *GFXObjectManager)
 {
     if( !GFXObjectManager ) {

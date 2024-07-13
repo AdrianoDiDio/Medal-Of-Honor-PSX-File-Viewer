@@ -75,6 +75,8 @@ void                    GFXObjectManagerDraw(GFXObjectManager_t *GFXObjectManage
 void                    GFXObjectManagerCleanUp(GFXObjectManager_t *GFXObjectManager);
 int                     GFXObjectManagerLoadPack(GFXObjectManager_t *GFXObjectManager,GUI_t *GUI,
                                                     VideoSystem_t *VideoSystem,const char *File);
+void                    GFXObjectManagerAdvanceCurrentGFXAnimationFrame(GFXObjectManager_t *GFXObjectManager);
+void                    GFXObjectManagerAdvanceCurrentGFXAnimationPose(GFXObjectManager_t *GFXObjectManager);
 void                    GFXObjectManagerSetAnimationPlay(GFXObjectManager_t *GFXObjectManager,int Play);
 int                     GFXObjectManagerIsAnimationPlaying(GFXObjectManager_t *GFXObjectManager);
 GFX_t                   *GFXObjectManagerGetCurrentGFX(GFXObjectManager_t *GFXObjectManager);
