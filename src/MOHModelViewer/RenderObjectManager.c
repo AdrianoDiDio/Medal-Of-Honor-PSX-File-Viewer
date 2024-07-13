@@ -74,6 +74,32 @@ void RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager)
     }
     free(RenderObjectManager);
 }
+void RenderObjectManagerAdvanceSelectedRenderObjectAnimationFrame(RenderObjectManager_t *RenderObjectManager)
+{
+    BSDRenderObject_t *CurrentRenderObject;
+    int NextFrame;
+    
+    CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(RenderObjectManager);
+    if( CurrentRenderObject != NULL ) {
+        NextFrame = (CurrentRenderObject->CurrentFrameIndex + 1) % 
+            CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames;
+        BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame,0);
+    }
+}
+void RenderObjectManagerAdvanceSelectedRenderObjectAnimationPose(RenderObjectManager_t *RenderObjectManager)
+{
+    BSDRenderObject_t *CurrentRenderObject;
+    int NextPose;
+    CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(RenderObjectManager);
+    if( CurrentRenderObject != NULL ) {
+        NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1) % 
+        CurrentRenderObject->NumAnimations;
+        //NOTE(Adriano): Scan through the available pose until we find one that it's valid and can be set
+        while( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,NextPose,0,0) ) {
+            NextPose = (NextPose + 1 ) % CurrentRenderObject->NumAnimations;
+        }                
+    }
+}
 int RenderObjectManagerIsAnimationPlaying(RenderObjectManager_t *RenderObjectManager)
 {
     if( !RenderObjectManager ) {

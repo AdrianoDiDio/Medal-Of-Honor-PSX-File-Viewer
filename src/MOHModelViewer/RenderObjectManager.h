@@ -85,6 +85,8 @@ void                    RenderObjectManagerDraw(RenderObjectManager_t *RenderObj
 void                    RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager);
 int                     RenderObjectManagerLoadPack(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,
                                                     VideoSystem_t *VideoSystem,const char *File);
+void                    RenderObjectManagerAdvanceSelectedRenderObjectAnimationFrame(RenderObjectManager_t *RenderObjectManager);
+void                    RenderObjectManagerAdvanceSelectedRenderObjectAnimationPose(RenderObjectManager_t *RenderObjectManager);
 void                    RenderObjectManagerSetAnimationPlay(RenderObjectManager_t *RenderObjectManager,int Play);
 int                     RenderObjectManagerIsAnimationPlaying(RenderObjectManager_t *RenderObjectManager);
 BSDRenderObjectPack_t   *RenderObjectManagerGetSelectedBSDPack(RenderObjectManager_t *RenderObjectManager);
