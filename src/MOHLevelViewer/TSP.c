@@ -2257,7 +2257,224 @@ int TSPGetPointYComponentFromKDTree(vec3 Point,TSP_t *TSPList,int *PropertySetFi
     }
     return -1;
 }
+bool TSPSphereIntersectsTriangle (TSPCollision_t *CollisionData,TSPVec3_t Point,float Radius,TSPCollisionFace_t *Face)
+{
+    vec3 A;
+    vec3 B;
+    vec3 C;
+    vec3 Origin;
+    vec3 v;
+    vec3 BA;
+    vec3 CA;
+    vec3 AC;
+    vec3 CB;
+    vec3 Ae1;
+    vec3 BAd1;
+    vec3 Q1;
+    vec3 Be2;
+    vec3 CBd2;
+    vec3 Q2;
+    vec3 Ce3;
+    vec3 ACd3;
+    vec3 Q3;
+    vec3 Ce1;
+    vec3 QC;
+    vec3 Ae2;
+    vec3 QA;
+    vec3 Be3;
+    vec3 QB;
+    float d;
+    float e;
+    float aa;
+    float ab;
+    float ac;
+    float bb;
+    float bc;
+    float cc;
+    float q1q1;
+    float q2q2;
+    float q3q3;
+    float q1qc;
+    float q2qa;
+    float q3qb;
+    float d1;
+    float d2;
+    float d3;
+    float e1;
+    float e2;
+    float e3;
+    int Separated1;
+    int Separated2;
+    int Separated3;
+    int Separated4;
+    int Separated5;
+    int Separated6;
+    int Separated7;
+    int Separated;
+    A[0] = CollisionData->Vertex[Face->V0].Position.x;
+    A[1] = CollisionData->Vertex[Face->V0].Position.y;
+    A[2] = CollisionData->Vertex[Face->V0].Position.z;
+    
+    B[0] = CollisionData->Vertex[Face->V1].Position.x;
+    B[1] = CollisionData->Vertex[Face->V1].Position.y;
+    B[2] = CollisionData->Vertex[Face->V1].Position.z;
+    
+    C[0] = CollisionData->Vertex[Face->V2].Position.x;
+    C[1] = CollisionData->Vertex[Face->V2].Position.y;
+    C[2] = CollisionData->Vertex[Face->V2].Position.z;
+    
+    Origin[0] = Point.x;
+    Origin[1] = Point.y;
+    Origin[2] = Point.z;
+    
+    glm_vec3_sub(A,Origin,A);
+    glm_vec3_sub(B,Origin,B);
+    glm_vec3_sub(C,Origin,C);
+    
+    glm_vec3_sub(B,A,BA);
+    glm_vec3_sub(C,A,CA);
+    glm_vec3_sub(A,C,AC);
+    glm_vec3_sub(C,B,CB);
 
+    glm_vec3_cross(BA,CA,v);
+    d = glm_vec3_dot(A, v);
+    e = glm_vec3_dot(v, v);
+    
+    Separated1 = d*d > Radius*Radius * e;
+    
+    aa = glm_vec3_dot(A,A);
+    ab = glm_vec3_dot(A,B);
+    ac = glm_vec3_dot(A,C);
+    bb = glm_vec3_dot(B,B);
+    bc = glm_vec3_dot(B,C);
+    cc = glm_vec3_dot(C,C);
+    
+    Separated2 = (aa > Radius*Radius) && (ab > aa) && (ac > aa);
+    Separated3 = (bb > Radius*Radius) && (ab > bb) && (bc > bb);
+    Separated4 = (cc > Radius*Radius) && (ac > cc) && (bc > cc);
+
+    d1 = ab - aa;
+    d2 = bc - bb;
+    d3 = ac - cc;
+    e1 = glm_vec3_dot(BA, BA);
+    e2 = glm_vec3_dot(CB, CB);
+    e3 = glm_vec3_dot(AC, AC);
+    
+ 
+    glm_vec3_scale(A,e1,Ae1);
+    glm_vec3_scale(BA,d1,BAd1);
+    glm_vec3_sub(Ae1,BAd1,Q1);
+
+    glm_vec3_scale(B,e2,Be2);
+    glm_vec3_scale(CB,d2,CBd2);
+    glm_vec3_sub(Be2,CBd2,Q2);
+
+    glm_vec3_scale(C,e3,Ce3);
+    glm_vec3_scale(CB,d2,ACd3);
+    glm_vec3_sub(Ce3,ACd3,Q3);
+
+    glm_vec3_scale(C,e1,Ce1);
+    glm_vec3_sub(Ce1,Q1,QC);
+    glm_vec3_scale(A,e2,Ae2);
+
+    glm_vec3_sub(Ae2,Q2,QA);
+    glm_vec3_scale(B,e3,Be3);
+    glm_vec3_sub(Be3,Q3,QB);
+
+    q1q1 = glm_vec3_dot(Q1,Q1);
+    q2q2 = glm_vec3_dot(Q2,Q2);
+    q3q3 = glm_vec3_dot(Q3,Q3);
+
+    q1qc = glm_vec3_dot(Q1,QC);
+    q2qa = glm_vec3_dot(Q2,QA);
+    q3qb = glm_vec3_dot(Q3,QB);
+    Separated5 = (q1q1 > (Radius*Radius) * e1 * e1) && q1qc > 0;
+    Separated6 = (q2q2 > (Radius*Radius) * e2 * e2) && q2qa > 0;
+    Separated7 = (q3q3 > (Radius*Radius) * e3 * e3) && q3qb > 0;
+    Separated = Separated1 | Separated2 | Separated3 | Separated4 | Separated5 | Separated6 | Separated7;
+    return !Separated;
+}
+int TSPCheckCollisionFaceSphereIntersection(TSPCollision_t *CollisionData,TSPVec3_t Point,float Radius,int StartingFaceListIndex,int NumFaces,int *OutY)
+{
+    int i;
+    TSPCollisionFace_t *CurrentFace;
+    int FaceListIndex;
+    int FaceIndex;
+    int Y;
+    int MinY;
+    
+    MinY = 99999;
+    FaceListIndex = StartingFaceListIndex;
+    i = 0;
+
+    while( i < NumFaces ) {
+        //First fetch the face index from Face Index array...
+        FaceIndex = CollisionData->FaceIndexList[FaceListIndex];
+        //Then grab the corresponding face from the face array...
+        CurrentFace = &CollisionData->Face[FaceIndex];
+        if( TSPSphereIntersectsTriangle(CollisionData,Point,Radius,CurrentFace) == 1) {
+            DPrintf("Point is in face %i...grabbing Y value\n",FaceIndex);
+            return 1;
+        }
+        //Make sure to increment it in order to fetch the next face.
+        FaceListIndex++;
+        i++;
+    }
+    return 0;
+}
+int TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY)
+{
+    TSPCollision_t *CollisionData;
+    TSPCollisionKDTreeNode_t *Node;
+    TSPVec3_t Position;
+    int WorldBoundMinX;
+    int WorldBoundMinZ;
+    int MinValue;
+    int CurrentNode;
+    
+    Position = TSPGLMVec3ToTSPVec3(Point);
+    CollisionData = TSPGetCollisionDataFromPoint(TSPList,Position);
+    
+    if( CollisionData == NULL ) {
+        DPrintf("TSPSphereVsKDtree:Point wasn't in any collision data...\n");
+        return 0;
+    }
+    
+    WorldBoundMinX = CollisionData->Header.CollisionBoundMinX;
+    WorldBoundMinZ = CollisionData->Header.CollisionBoundMinZ;
+    
+    CurrentNode = 0;
+    
+    while( 1 ) {
+//         CurrentPlaneIndex = (CurrentPlane - GOffset) / sizeof(TSPCollisionG_t);
+        Node = &CollisionData->KDTree[CurrentNode];
+        if( Node->Child0 < 0 ) {
+            assert(Node->Child1 >= 0);
+            if( PropertySetFileIndex != NULL ) {
+                *PropertySetFileIndex = Node->PropertySetFileIndex;
+            }
+            return TSPCheckCollisionFaceSphereIntersection(CollisionData,Position,Radius,Node->Child1,~Node->Child0,OutY);
+        }
+        if( Node->Child1 < 0 ) {
+            MinValue = WorldBoundMinZ + Node->SplitValue;
+            if (Position.z < MinValue) {
+                CurrentNode = Node->Child0;
+            } else {
+                CurrentNode = ~Node->Child1;
+                WorldBoundMinZ = MinValue;
+            }
+        } else {
+            MinValue = WorldBoundMinX + Node->SplitValue;
+            if( Position.x < MinValue ) {
+                CurrentNode = Node->Child0;
+            } else {
+                CurrentNode = Node->Child1;
+                WorldBoundMinX = MinValue;
+            }
+        }
+    }
+    return 0;
+}
 TSP_t *TSPLoad(const char *FName,int TSPNumber)
 {
     FILE *TSPFile;

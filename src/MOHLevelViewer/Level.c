@@ -158,6 +158,8 @@ void LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int Ga
 void LevelUpdate(Level_t *Level,Camera_t *Camera)
 {
     int DynamicData;
+    int YComponent;
+    vec3 CameraPosition;
     
     if( !Level ) {
         return;
@@ -173,6 +175,14 @@ void LevelUpdate(Level_t *Level,Camera_t *Camera)
     if( LevelEnableAnimatedLights->IValue ) {
         BSDUpdateAnimatedLights(Level->BSD);
 //         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,Camera,0);
+    }
+    
+    if( 1 ) {
+        glm_vec3_copy(Camera->Position,CameraPosition);
+        glm_vec3_rotate(CameraPosition, DEGTORAD(180.f), GLM_XUP);
+        if( TSPSphereVsKDtree(CameraPosition,50,Level->TSPList,NULL,&YComponent) != 0 ) {
+            DPrintf("LevelUpdate: Camera has collided\n");
+        }
     }
 }
 void LevelDraw(Level_t *Level,Camera_t *Camera,RenderObjectShader_t *RenderObjectShader,mat4 ProjectionMatrix)
