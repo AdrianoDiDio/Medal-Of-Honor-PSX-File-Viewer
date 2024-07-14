@@ -2076,17 +2076,26 @@ int TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     return 1;
 }
 
-TSPCollision_t *TSPGetCollisionDataFromPoint(TSP_t *TSPList,TSPVec3_t Point)
+TSP_t *TSPGetCompartmentByPoint(TSP_t *TSPList,vec3 Point)
 {
     TSP_t *TSP;
 
     for( TSP = TSPList; TSP; TSP = TSP->Next ) {
-        if( Point.x >= TSP->CollisionData->Header.CollisionBoundMinX && Point.x <= TSP->CollisionData->Header.CollisionBoundMaxX &&
-        Point.z >= TSP->CollisionData->Header.CollisionBoundMinZ && Point.z <= TSP->CollisionData->Header.CollisionBoundMaxZ ) {
-            return TSP->CollisionData;
+        if( Point[0] >= TSP->CollisionData->Header.CollisionBoundMinX && Point[0] <= TSP->CollisionData->Header.CollisionBoundMaxX &&
+        Point[2] >= TSP->CollisionData->Header.CollisionBoundMinZ && Point[2] <= TSP->CollisionData->Header.CollisionBoundMaxZ ) {
+            return TSP;
         }
     }
     return NULL;
+}
+TSPCollision_t *TSPGetCollisionDataFromPoint(TSP_t *TSPList,vec3 Point)
+{
+    TSP_t *TSP;
+    TSP = TSPGetCompartmentByPoint(TSPList,Point);
+    if( !TSP ) {
+        return NULL;
+    }
+    return TSP->CollisionData;
 }
 
 int TSPGetYFromCollisionFace(TSPCollision_t *CollisionData,TSPVec3_t Point,TSPCollisionFace_t *Face)
@@ -2210,7 +2219,7 @@ int TSPGetPointYComponentFromKDTree(vec3 Point,TSP_t *TSPList,int *PropertySetFi
     int CurrentNode;
     
     Position = TSPGLMVec3ToTSPVec3(Point);
-    CollisionData = TSPGetCollisionDataFromPoint(TSPList,Position);
+    CollisionData = TSPGetCollisionDataFromPoint(TSPList,Point);
     
     if( CollisionData == NULL ) {
         DPrintf("TSPGetPointYComponentFromKDTree:Point wasn't in any collision data...\n");
@@ -2394,7 +2403,7 @@ bool TSPSphereIntersectsTriangle (TSPCollision_t *CollisionData,TSPVec3_t Point,
     Separated = Separated1 | Separated2 | Separated3 | Separated4 | Separated5 | Separated6 | Separated7;
     return !Separated;
 }
-int TSPCheckCollisionFaceSphereIntersection(TSPCollision_t *CollisionData,TSPVec3_t Point,float Radius,int StartingFaceListIndex,int NumFaces,int *OutY)
+int TSPCheckCollisionFaceSphereIntersection(TSPCollision_t *CollisionData,TSPVec3_t Point,float Radius,int StartingFaceListIndex,int NumFaces)
 {
     int i;
     TSPCollisionFace_t *CurrentFace;
@@ -2422,8 +2431,9 @@ int TSPCheckCollisionFaceSphereIntersection(TSPCollision_t *CollisionData,TSPVec
     }
     return 0;
 }
-int TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY)
+int TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList)
 {
+    TSP_t *TSP;
     TSPCollision_t *CollisionData;
     TSPCollisionKDTreeNode_t *Node;
     TSPVec3_t Position;
@@ -2433,43 +2443,50 @@ int TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList,int *PropertySetFil
     int CurrentNode;
     
     Position = TSPGLMVec3ToTSPVec3(Point);
-    CollisionData = TSPGetCollisionDataFromPoint(TSPList,Position);
     
-    if( CollisionData == NULL ) {
-        DPrintf("TSPSphereVsKDtree:Point wasn't in any collision data...\n");
-        return 0;
-    }
+//     CollisionData = TSPGetCollisionDataFromPoint(TSPList,Point);
     
-    WorldBoundMinX = CollisionData->Header.CollisionBoundMinX;
-    WorldBoundMinZ = CollisionData->Header.CollisionBoundMinZ;
-    
-    CurrentNode = 0;
-    
-    while( 1 ) {
-//         CurrentPlaneIndex = (CurrentPlane - GOffset) / sizeof(TSPCollisionG_t);
-        Node = &CollisionData->KDTree[CurrentNode];
-        if( Node->Child0 < 0 ) {
-            assert(Node->Child1 >= 0);
-            if( PropertySetFileIndex != NULL ) {
-                *PropertySetFileIndex = Node->PropertySetFileIndex;
-            }
-            return TSPCheckCollisionFaceSphereIntersection(CollisionData,Position,Radius,Node->Child1,~Node->Child0,OutY);
+    for( TSP = TSPList; TSP; TSP = TSP->Next ) {
+        CollisionData = TSP->CollisionData;
+        if( CollisionData == NULL ) {
+            DPrintf("TSPSphereVsKDtree:Point wasn't in any collision data...\n");
+            continue;
         }
-        if( Node->Child1 < 0 ) {
-            MinValue = WorldBoundMinZ + Node->SplitValue;
-            if (Position.z < MinValue) {
-                CurrentNode = Node->Child0;
-            } else {
-                CurrentNode = ~Node->Child1;
-                WorldBoundMinZ = MinValue;
+        
+        WorldBoundMinX = CollisionData->Header.CollisionBoundMinX;
+        WorldBoundMinZ = CollisionData->Header.CollisionBoundMinZ;
+        
+        CurrentNode = 0;
+        
+        while( 1 ) {
+    //         CurrentPlaneIndex = (CurrentPlane - GOffset) / sizeof(TSPCollisionG_t);
+            Node = &CollisionData->KDTree[CurrentNode];
+            if( Node->Child0 < 0 ) {
+                assert(Node->Child1 >= 0);
+                //NOTE(Adriano):We reached a leaf node...either it's a collision or a miss...
+                //If we miss then we will check the next compartment.
+                if( TSPCheckCollisionFaceSphereIntersection(CollisionData,Position,Radius,Node->Child1,~Node->Child0) ) {
+                    return 1;
+                } else {
+                    break;
+                }
             }
-        } else {
-            MinValue = WorldBoundMinX + Node->SplitValue;
-            if( Position.x < MinValue ) {
-                CurrentNode = Node->Child0;
+            if( Node->Child1 < 0 ) {
+                MinValue = WorldBoundMinZ + Node->SplitValue;
+                if (Position.z < MinValue) {
+                    CurrentNode = Node->Child0;
+                } else {
+                    CurrentNode = ~Node->Child1;
+                    WorldBoundMinZ = MinValue;
+                }
             } else {
-                CurrentNode = Node->Child1;
-                WorldBoundMinX = MinValue;
+                MinValue = WorldBoundMinX + Node->SplitValue;
+                if( Position.x < MinValue ) {
+                    CurrentNode = Node->Child0;
+                } else {
+                    CurrentNode = Node->Child1;
+                    WorldBoundMinX = MinValue;
+                }
             }
         }
     }

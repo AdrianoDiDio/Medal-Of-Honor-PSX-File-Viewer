@@ -230,6 +230,7 @@ void RegisterDefaultSettings()
                                     "being set to empty.");
 
     ConfigRegister("GUIShowCurrentCompartment","0","When enabled, shows the current compartment based on the camera position.");
+    ConfigRegister("GUIShowCompartmentCollisions","0","When enabled, shows if there was a collision with a compartment based on the camera position.");
 
     ConfigRegister("LevelEnableWireFrameMode","0","Draw the level surfaces as lines");
     ConfigRegister("LevelDrawCollisionData","0","Draw the level collision data");

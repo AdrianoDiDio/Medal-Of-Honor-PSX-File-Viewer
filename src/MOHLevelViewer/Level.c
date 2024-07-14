@@ -94,19 +94,10 @@ void LevelCleanUp(Level_t *Level)
 }
 TSP_t *LevelGetTSPCompartmentByPoint(Level_t *Level,vec3 Point)
 {
-    TSP_t *TSP;
     if( !Level ) {
         return NULL;
     }
-    for( TSP = Level->TSPList; TSP; TSP = TSP->Next ) {
-        if( Point[0] >= TSP->CollisionData->Header.CollisionBoundMinX && 
-            Point[0] <= TSP->CollisionData->Header.CollisionBoundMaxX &&
-            Point[2] >= TSP->CollisionData->Header.CollisionBoundMinZ && 
-            Point[2] <= TSP->CollisionData->Header.CollisionBoundMaxZ ) {
-                return TSP;
-        }
-    }
-    return NULL;
+    return TSPGetCompartmentByPoint(Level->TSPList,Point);
 }
 int LevelDumpMusicToWav(Level_t *Level,const char *EngineName,const char *OutDirectory)
 {
@@ -175,14 +166,6 @@ void LevelUpdate(Level_t *Level,Camera_t *Camera)
     if( LevelEnableAnimatedLights->IValue ) {
         BSDUpdateAnimatedLights(Level->BSD);
 //         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,Camera,0);
-    }
-    
-    if( 1 ) {
-        glm_vec3_copy(Camera->Position,CameraPosition);
-        glm_vec3_rotate(CameraPosition, DEGTORAD(180.f), GLM_XUP);
-        if( TSPSphereVsKDtree(CameraPosition,50,Level->TSPList,NULL,&YComponent) != 0 ) {
-            DPrintf("LevelUpdate: Camera has collided\n");
-        }
     }
 }
 void LevelDraw(Level_t *Level,Camera_t *Camera,RenderObjectShader_t *RenderObjectShader,mat4 ProjectionMatrix)

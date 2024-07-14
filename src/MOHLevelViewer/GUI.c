@@ -25,6 +25,7 @@
 #include "MOHLevelViewer.h"
 
 Config_t *GUIShowCurrentCompartment;
+Config_t *GUIShowCompartmentCollisions;
 
 const char* LevelMusicOptions[] = { 
     "Disable",
@@ -142,6 +143,10 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                 if( GUICheckBoxWithTooltip("Show Current Compartment",(bool *) &GUIShowCurrentCompartment->IValue,
                     GUIShowCurrentCompartment->Description ) ) {
                     ConfigSetNumber("GUIShowCurrentCompartment",GUIShowCurrentCompartment->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Show Compartment Collisions",(bool *) &GUIShowCompartmentCollisions->IValue,
+                    GUIShowCompartmentCollisions->Description ) ) {
+                    ConfigSetNumber("GUIShowCompartmentCollisions",GUIShowCompartmentCollisions->IValue);
                 }
                 if( igSliderFloat("Camera Speed",&CameraSpeed->FValue,10.f,256.f,"%.2f",0) ) {
                     ConfigSetNumber("CameraSpeed",CameraSpeed->FValue);
@@ -326,6 +331,7 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
     ImVec2 WindowPosition;
     ImVec2 WindowPivot;
     TSP_t *TSP;
+    float CameraRadius = 15.f;
     vec3 CameraPosition;
     ImGuiWindowFlags WindowFlags;
     
@@ -342,17 +348,27 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
 
     igSetNextWindowPos(WindowPosition, ImGuiCond_Always, WindowPivot);
     if( igBegin("Debug", NULL, WindowFlags) ) {
+        glm_vec3_copy(Camera->Position,CameraPosition);
+        glm_vec3_rotate(CameraPosition, DEGTORAD(180.f), GLM_XUP);
         if( GUIShowFPS->IValue ) {
             igText(TimeInfo->FPSString);
         }
         if( GUIShowCurrentCompartment->IValue ) {
-            glm_vec3_copy(Camera->Position,CameraPosition);
-            glm_vec3_rotate(CameraPosition, DEGTORAD(180.f), GLM_XUP);
             TSP = LevelManagerGetTSPCompartmentByPoint(LevelManager,CameraPosition);
             if( TSP ) {
                 igText("Current Compartment %s",TSP->FName);
             } else {
                 igText("Camera is outside level boundaries");
+            }
+        }
+        if( GUIShowCompartmentCollisions->IValue ) {
+            if( LevelManagerIsLevelLoaded(LevelManager) ) {
+                //TODO(Adriano): Make CameraRadius an adjustable param
+                if( TSPSphereVsKDtree(CameraPosition,CameraRadius,LevelManager->CurrentLevel->TSPList) != 0 ) {
+                    igText("Camera is colliding with world (Radius %2.f)",CameraRadius);
+                } else {
+                    igText("No collisions reported");
+                }
             }
         }
     }
@@ -503,6 +519,7 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     free(ConfigPath);
     
     GUIShowCurrentCompartment = ConfigGet("GUIShowCurrentCompartment");
+    GUIShowCompartmentCollisions = ConfigGet("GUIShowCompartmentCollisions");
     GUILoadCommonSettings();
     
     GUI->DefaultContext = igCreateContext(NULL);
