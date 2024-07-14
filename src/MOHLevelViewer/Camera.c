@@ -25,6 +25,7 @@
 Config_t *CameraSpeed;
 Config_t *CameraMouseSensitivity;
 Config_t *CameraFOV;
+Config_t *CameraCollisionRadius;
 
 void CameraCleanUp(Camera_t *Camera)
 {
@@ -199,5 +200,6 @@ Camera_t *CameraInit()
     CameraSpeed = ConfigGet("CameraSpeed");
     CameraMouseSensitivity = ConfigGet("CameraMouseSensitivity");
     CameraFOV = ConfigGet("CameraFOV");
+    CameraCollisionRadius = ConfigGet("CameraCollisionRadius");
     return Camera;
 }

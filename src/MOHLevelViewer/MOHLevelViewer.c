@@ -225,6 +225,8 @@ void RegisterDefaultSettings()
     ConfigRegister("CameraSpeed","30.f",NULL);
     ConfigRegister("CameraMouseSensitivity","1.f",NULL);
     ConfigRegister("CameraFOV","110.f",NULL);
+    ConfigRegister("CameraCollisionRadius","15.f",
+                   "Defines the camera sphere radius that is used at runtime to check for any collision against the loaded compartments");
 
     ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to "
                                     "being set to empty.");

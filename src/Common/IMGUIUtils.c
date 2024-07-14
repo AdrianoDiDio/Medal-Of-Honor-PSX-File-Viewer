@@ -173,6 +173,23 @@ bool GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...)
     return IsChecked;
 }
 
+bool GUIFloatSliderWithTooltip(char *Label,float *Value,float MinValue,float MaxValue,char *FloatFormat,char *DescriptionFormat,...)
+{
+    va_list Arguments;
+    bool HasChanged;
+    HasChanged = igSliderFloat(Label,Value,MinValue,MaxValue,FloatFormat,0);
+    if( DescriptionFormat != NULL && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+        igBeginTooltip();
+        igPushTextWrapPos(igGetFontSize() * 40.0f);
+        va_start(Arguments, DescriptionFormat);
+        igTextV(DescriptionFormat,Arguments);
+        va_end(Arguments);
+        igPopTextWrapPos();
+        igEndTooltip();
+    }
+    return HasChanged;
+}
+
 void GUIReleaseContext(ImGuiContext *Context)
 {    
     igSetCurrentContext(Context);

@@ -157,6 +157,10 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                 if( igSliderFloat("Camera FOV",&CameraFOV->FValue,45.f,110.f,"%.2f",0) ) {
                     ConfigSetNumber("CameraFOV",CameraFOV->FValue);
                 }
+                if( GUIFloatSliderWithTooltip("Camera Collision Radius",&CameraCollisionRadius->FValue,1.f,1024.f,"%.2f",
+                    CameraCollisionRadius->Description) ) {
+                    ConfigSetNumber("CameraCollisionRadius",CameraCollisionRadius->FValue);
+                }
             }
             if( igCollapsingHeader_TreeNodeFlags("Music Info",0) ) {
                 if( igBeginCombo("Music Options",LevelMusicOptions[LevelEnableMusicTrack->IValue],0) ) {
@@ -363,8 +367,7 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
         }
         if( GUIShowCompartmentCollisions->IValue ) {
             if( LevelManagerIsLevelLoaded(LevelManager) ) {
-                //TODO(Adriano): Make CameraRadius an adjustable param
-                if( TSPSphereVsKDtree(CameraPosition,CameraRadius,LevelManager->CurrentLevel->TSPList) != 0 ) {
+                if( TSPSphereVsKDtree(CameraPosition,CameraCollisionRadius->FValue,LevelManager->CurrentLevel->TSPList) != 0 ) {
                     igText("Camera is colliding with world (Radius %2.f)",CameraRadius);
                 } else {
                     igText("No collisions reported");

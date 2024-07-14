@@ -74,6 +74,8 @@ void                    ErrorMessageDialogDraw(ErrorMessageDialog_t *ErrorMessag
 void                    ErrorMessageDialogFree(ErrorMessageDialog_t *ErrorMessageDialog);
 void                    GUIPrepareModalWindow();
 bool                    GUICheckBoxWithTooltip(char *Label,bool *Value,char *DescriptionFormat,...);
+bool                    GUIFloatSliderWithTooltip(char *Label,float *Value,float MinValue,float MaxValue,char *FloatFormat,char *DescriptionFormat,...);
+
 void                    GUIDrawVideoSettingsWindow(bool *WindowHandle,VideoSystem_t *VideoSystem);
 int                     GUIDrawTitleBar(const char *Title,float ContentWidth);
 

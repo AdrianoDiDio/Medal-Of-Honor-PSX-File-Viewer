@@ -42,6 +42,7 @@ typedef enum {
 typedef struct Camera_s {
     vec3    Position;
     vec3    Rotation;
+    
     //Movements...
     vec3	Right;
     vec3	Forward;
@@ -52,6 +53,7 @@ typedef struct Camera_s {
 
 extern Config_t *CameraSpeed;
 extern Config_t *CameraMouseSensitivity;
+extern Config_t *CameraCollisionRadius;
 extern Config_t *CameraFOV;
 
 Camera_t    *CameraInit();
