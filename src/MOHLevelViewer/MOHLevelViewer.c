@@ -215,7 +215,7 @@ void ApplicationFrame(Application_t *Application)
     }
     EngineBeginFrame(Application->Engine);
     ApplicationCheckEvents(Application);
-    CameraBeginFrame(Application->Camera);
+    CameraBeginFrame(Application->Camera,Application->LevelManager);
     LevelManagerUpdate(Application->LevelManager,Application->Camera);
     ApplicationDraw(Application);
     EngineEndFrame(Application->Engine);

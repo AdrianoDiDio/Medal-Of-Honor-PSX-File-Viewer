@@ -146,20 +146,42 @@ void CameraCheckKeyEvents(Camera_t *Camera,const Byte *KeyState,float Delta)
         CameraUpdate(Camera,CAMERA_DIRECTION_DOWNWARD,Delta);
     }
 }
-void CameraUpdateViewMatrix(Camera_t *Camera)
+void CameraUpdateViewMatrix(Camera_t *Camera,LevelManager_t *LevelManager)
 {
     vec3 Direction;
+    int DynamicData;
+    vec3 CameraPosition;
+    vec3 PenetrationNormal;
+    float PenetrationDepth;
+    vec3 CameraPushBack;
+    vec3 CollidedCameraPosition;
+    int Step;
+    
     glm_mat4_identity(Camera->ViewMatrix);
     glm_vec3_add(Camera->Position,Camera->Forward,Direction);
+    //TODO(Adriano): Check if we want to enable collision detection or not
+    if( 0 && LevelManagerIsLevelLoaded(LevelManager) ) {
+        glm_vec3_copy(Camera->Position,CameraPosition);
+        glm_vec3_rotate(CameraPosition, DEGTORAD(180.f), GLM_XUP);
+        for( Step = 0; Step < 20; Step++ ) {
+            if( TSPSphereVsKDtree(CameraPosition,CameraCollisionRadius->FValue,LevelManager->CurrentLevel->TSPList,
+                            PenetrationNormal,&PenetrationDepth) != 0 ) {
+                glm_vec3_rotate(PenetrationNormal, DEGTORAD(-180.f), GLM_XUP);
+                glm_vec3_scale(PenetrationNormal,PenetrationDepth + 0.0001f,CameraPushBack);
+                glm_vec3_add(Camera->Position,CameraPushBack,Camera->Position);
+                glm_vec3_add(Direction,CameraPushBack,Direction);
+            }
+        }
+    }
     glm_lookat(Camera->Position,Direction,GLM_YUP,Camera->ViewMatrix);
 }
-void CameraBeginFrame(Camera_t *Camera)
+void CameraBeginFrame(Camera_t *Camera,LevelManager_t *LevelManager)
 {
     if( CameraFOV->FValue < 45.f || CameraFOV->FValue > 110.f ) {
         ConfigSetNumber("CameraFOV",90.f);
     }
     //NOTE(Adriano):Update it even if not focused in order to have a valid matrix available to all subsystems.
-    CameraUpdateViewMatrix(Camera);
+    CameraUpdateViewMatrix(Camera,LevelManager);
 } 
 
 void CameraSetRotation(Camera_t *Camera,vec3 Rotation)
@@ -178,7 +200,7 @@ void CameraSetPosition(Camera_t *Camera,vec3 Position)
         return;
     }
     glm_vec3_copy(Position,Camera->Position);
-    CameraUpdateViewMatrix(Camera);
+    CameraUpdateViewMatrix(Camera,NULL);
 }
 Camera_t *CameraInit()
 {

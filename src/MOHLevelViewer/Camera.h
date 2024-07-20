@@ -56,8 +56,10 @@ extern Config_t *CameraMouseSensitivity;
 extern Config_t *CameraCollisionRadius;
 extern Config_t *CameraFOV;
 
+typedef struct LevelManager_s LevelManager_t;
+
 Camera_t    *CameraInit();
-void        CameraBeginFrame(Camera_t *Camera);
+void        CameraBeginFrame(Camera_t *Camera,LevelManager_t *LevelManager);
 void        CameraCheckKeyEvents(Camera_t *Camera,const Byte *KeyState,float Delta);
 void        CameraSetPosition(Camera_t *Camera,vec3 Position);
 void        CameraSetRotation(Camera_t *Camera,vec3 Rotation);
