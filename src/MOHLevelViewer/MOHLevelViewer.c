@@ -208,12 +208,6 @@ void ApplicationDraw(Application_t *Application)
 }
 void ApplicationFrame(Application_t *Application)
 {
-    vec3 PenetrationNormal;
-    float PenetrationDepth;
-    vec3 CollidedCameraPosition;
-    vec3 CameraPushBack;
-    vec3 CameraPosition;
-    int Step;
     
     if( !Application ) {
         DPrintf("ApplicationFrame:Called without a valid engine\n");
