@@ -2403,7 +2403,174 @@ bool TSPSphereIntersectsTriangle (TSPCollision_t *CollisionData,TSPVec3_t Point,
     Separated = Separated1 | Separated2 | Separated3 | Separated4 | Separated5 | Separated6 | Separated7;
     return !Separated;
 }
-int TSPCheckCollisionFaceSphereIntersection(TSPCollision_t *CollisionData,TSPVec3_t Point,float Radius,int StartingFaceListIndex,int NumFaces)
+void ClosestPointOnLineSegment(vec3 A, vec3 B, vec3 Point, vec3 ClosestPoint)
+{
+  vec3 BA;
+  vec3 PA;
+  float t;
+  vec3 ProjectedPoint;
+  
+  glm_vec3_sub(B,A,BA);
+  glm_vec3_sub(Point,A,PA);
+  t = glm_vec3_dot(PA, BA) / glm_vec3_dot(BA, BA);
+  glm_vec3_scale(BA,MIN(MAX(t,0),1),ProjectedPoint);
+  glm_vec3_add(A,ProjectedPoint,ClosestPoint);
+}
+float TSPSphereTriangleResolveCollision(vec3 ProjectedSphereCenter,vec3 SphereCenter,float SphereRadius,vec3 FirstEdge,vec3 SecondEdge,vec3 ThirdEdge,
+                                       bool Inside,vec3 PenetrationNormal)
+{
+    vec3 BestPoint;
+    vec3 IntersectionVector;
+    vec3 Distance;
+    float BestDistanceSquared;
+    float DistanceSquared;
+    float IntersectionVectorMagnitude;
+    
+    glm_vec3_copy(ProjectedSphereCenter,BestPoint);
+    
+    if( Inside ) {
+        glm_vec3_sub(SphereCenter,ProjectedSphereCenter,IntersectionVector);
+    } else {
+        glm_vec3_sub(SphereCenter,FirstEdge,Distance);
+        BestDistanceSquared = glm_vec3_dot(Distance,Distance);
+        glm_vec3_copy(FirstEdge,BestPoint);
+        glm_vec3_copy(Distance,IntersectionVector);
+
+        glm_vec3_sub(SphereCenter,SecondEdge,Distance);
+        DistanceSquared = glm_vec3_dot(Distance,Distance);
+        if( DistanceSquared < BestDistanceSquared ) {
+            DistanceSquared = BestDistanceSquared;
+            glm_vec3_copy(SecondEdge,BestPoint);
+            glm_vec3_copy(Distance,IntersectionVector);
+        }
+
+        glm_vec3_sub(SphereCenter,ThirdEdge,Distance);
+        DistanceSquared = glm_vec3_dot(Distance,Distance);
+        if( DistanceSquared < BestDistanceSquared ) {
+            DistanceSquared = BestDistanceSquared;
+            glm_vec3_copy(ThirdEdge,BestPoint);
+            glm_vec3_copy(Distance,IntersectionVector);
+        }
+    }
+
+    IntersectionVectorMagnitude = glm_vec3_norm(IntersectionVector);
+    glm_vec3_normalize_to(IntersectionVector,PenetrationNormal);
+    return SphereRadius - IntersectionVectorMagnitude; 
+}
+bool TSPSphereIntersectsTriangleV2(TSPCollision_t *CollisionData,TSPVec3_t Point,float Radius,TSPCollisionFace_t *Face,vec3 PenetrationNormal,
+                                   float *PenetrationDepth)
+{
+    vec3 A;
+    vec3 B;
+    vec3 C;
+    vec3 Origin;
+    vec3 BA;
+    vec3 CA;
+    vec3 AC;
+    vec3 CB;
+    vec3 PointOnPlane;
+    vec3 PlaneNormal;
+    vec3 PlaneNormalScaled;
+    float PlaneDistance;
+    vec3 SphereOriginProjection;
+    vec3 SphereOriginProjectionA;
+    vec3 SphereOriginProjectionB;
+    vec3 SphereOriginProjectionC;
+    float RadiusSquared;
+    vec3 C0;
+    vec3 C1;
+    vec3 C2;
+    vec3 Point1;
+    vec3 V1;
+    float DistanceSquared1;
+    vec3 Point2;
+    vec3 V2;
+    float DistanceSquared2;
+    vec3 Point3;
+    vec3 V3;
+    float DistanceSquared3;
+    bool Intersects;
+    bool Inside;
+    vec3 ResultPenetrationNormal;
+    float ResultPenetrationDepth;
+    
+    A[0] = CollisionData->Vertex[Face->V0].Position.x;
+    A[1] = CollisionData->Vertex[Face->V0].Position.y;
+    A[2] = CollisionData->Vertex[Face->V0].Position.z;
+    
+    B[0] = CollisionData->Vertex[Face->V1].Position.x;
+    B[1] = CollisionData->Vertex[Face->V1].Position.y;
+    B[2] = CollisionData->Vertex[Face->V1].Position.z;
+    
+    C[0] = CollisionData->Vertex[Face->V2].Position.x;
+    C[1] = CollisionData->Vertex[Face->V2].Position.y;
+    C[2] = CollisionData->Vertex[Face->V2].Position.z;
+    
+    Origin[0] = Point.x;
+    Origin[1] = Point.y;
+    Origin[2] = Point.z;
+    
+    //TODO(Adriano): We should already have the plane normal for this triangle...
+    glm_vec3_sub(B,A,BA);
+    glm_vec3_sub(C,A,CA);
+    glm_vec3_sub(A,C,AC);
+    glm_vec3_sub(C,B,CB);
+
+    glm_vec3_sub(Origin,A,PointOnPlane);
+    glm_vec3_crossn(BA,CA,PlaneNormal);
+    PlaneDistance = glm_vec3_dot(PointOnPlane, PlaneNormal);
+    
+    if( PlaneDistance < -Radius || PlaneDistance > Radius ) {
+        return false;
+    }
+    
+    glm_vec3_scale(PlaneNormal,PlaneDistance,PlaneNormalScaled);
+    glm_vec3_sub(Origin,PlaneNormalScaled,SphereOriginProjection);
+
+    glm_vec3_sub(SphereOriginProjection,A,SphereOriginProjectionA);
+    glm_vec3_sub(SphereOriginProjection,B,SphereOriginProjectionB);
+    glm_vec3_sub(SphereOriginProjection,C,SphereOriginProjectionC);
+
+    glm_vec3_cross(SphereOriginProjectionA, BA, C0);
+    glm_vec3_cross(SphereOriginProjectionB, CB, C1);
+    glm_vec3_cross(SphereOriginProjectionC, AC, C2);
+    Inside = glm_vec3_dot(C0, PlaneNormal) <= 0 && glm_vec3_dot(C1, PlaneNormal) <= 0 && glm_vec3_dot(C2, PlaneNormal) <= 0;
+    RadiusSquared = Radius * Radius;
+    
+    ClosestPointOnLineSegment(A,B,Origin,Point1);
+    glm_vec3_sub(Origin,Point1,V1);
+    DistanceSquared1 = glm_vec3_dot(V1,V1);
+    Intersects = DistanceSquared1 < RadiusSquared;
+    
+    ClosestPointOnLineSegment(B,C,Origin,Point2);
+    glm_vec3_sub(Origin,Point2,V2);
+    DistanceSquared2 = glm_vec3_dot(V2,V2);
+    Intersects |= DistanceSquared2 < RadiusSquared;
+
+    ClosestPointOnLineSegment(C,A,Origin,Point3);
+    glm_vec3_sub(Origin,Point3,V3);
+    DistanceSquared3 = glm_vec3_dot(V3,V3);
+    Intersects |= DistanceSquared3 < RadiusSquared;
+    
+    if( Inside || Intersects ) {
+        if( PenetrationNormal || PenetrationDepth ) {
+            //Resolve collision
+            ResultPenetrationDepth = TSPSphereTriangleResolveCollision(SphereOriginProjection,Origin,Radius,Point1,Point2,Point3,
+                                        Inside,ResultPenetrationNormal);
+            if( *PenetrationDepth ) {
+                *PenetrationDepth = ResultPenetrationDepth;
+            }
+            if( PenetrationNormal ) {
+                glm_vec3_copy(ResultPenetrationNormal, PenetrationNormal);
+            }
+        }
+        return true;
+    }
+
+    return false;
+}
+int TSPCheckCollisionFaceSphereIntersection(TSPCollision_t *CollisionData,TSPVec3_t Point,float Radius,int StartingFaceListIndex,int NumFaces,
+                                            vec3 PenetrationNormal,float *PenetrationDepth)
 {
     int i;
     TSPCollisionFace_t *CurrentFace;
@@ -2421,8 +2588,8 @@ int TSPCheckCollisionFaceSphereIntersection(TSPCollision_t *CollisionData,TSPVec
         FaceIndex = CollisionData->FaceIndexList[FaceListIndex];
         //Then grab the corresponding face from the face array...
         CurrentFace = &CollisionData->Face[FaceIndex];
-        if( TSPSphereIntersectsTriangle(CollisionData,Point,Radius,CurrentFace) == 1) {
-            DPrintf("Point is in face %i...grabbing Y value\n",FaceIndex);
+        if( TSPSphereIntersectsTriangleV2(CollisionData,Point,Radius,CurrentFace,PenetrationNormal,PenetrationDepth) == 1) {
+            DPrintf("TSPCheckCollisionFaceSphereIntersection:Sphere is in face %i\n",FaceIndex);
             return 1;
         }
         //Make sure to increment it in order to fetch the next face.
@@ -2431,7 +2598,7 @@ int TSPCheckCollisionFaceSphereIntersection(TSPCollision_t *CollisionData,TSPVec
     }
     return 0;
 }
-int TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList)
+int TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList,vec3 PenetrationNormal,float *PenetrationDepth)
 {
     TSP_t *TSP;
     TSPCollision_t *CollisionData;
@@ -2459,13 +2626,12 @@ int TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList)
         CurrentNode = 0;
         
         while( 1 ) {
-    //         CurrentPlaneIndex = (CurrentPlane - GOffset) / sizeof(TSPCollisionG_t);
             Node = &CollisionData->KDTree[CurrentNode];
             if( Node->Child0 < 0 ) {
                 assert(Node->Child1 >= 0);
                 //NOTE(Adriano):We reached a leaf node...either it's a collision or a miss...
                 //If we miss then we will check the next compartment.
-                if( TSPCheckCollisionFaceSphereIntersection(CollisionData,Position,Radius,Node->Child1,~Node->Child0) ) {
+                if( TSPCheckCollisionFaceSphereIntersection(CollisionData,Position,Radius,Node->Child1,~Node->Child0,PenetrationNormal,PenetrationDepth) ) {
                     return 1;
                 } else {
                     break;

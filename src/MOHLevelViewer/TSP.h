@@ -269,7 +269,7 @@ void    TSPUpdateDynamicFaces(TSP_t *TSPList,Camera_t *Camera,int DynamicDataInd
 void    TSPCreateVAOs(TSP_t *TSPList);
 TSP_t   *TSPGetCompartmentByPoint(TSP_t *TSPList,vec3 Point);
 int     TSPGetPointYComponentFromKDTree(vec3 Point,TSP_t *TSPList,int *PropertySetFileIndex,int *OutY);
-int     TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList);
+int     TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList,vec3 PenetrationNormal,float *PenetrationDepth);
 bool    TSPIsVersion3(TSP_t *TSP);
 void    TSPDumpDataToObjFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile);
 void    TSPDumpDataToPlyFile(TSP_t *TSPList,VRAM_t *VRAM,FILE* OutFile);

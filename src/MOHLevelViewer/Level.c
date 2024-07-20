@@ -151,6 +151,11 @@ void LevelUpdate(Level_t *Level,Camera_t *Camera)
     int DynamicData;
     int YComponent;
     vec3 CameraPosition;
+    vec3 PenetrationNormal;
+    float PenetrationDepth;
+    vec3 CameraPushBack;
+    vec3 CollidedCameraPosition;
+    int Step;
     
     if( !Level ) {
         return;
@@ -167,6 +172,7 @@ void LevelUpdate(Level_t *Level,Camera_t *Camera)
         BSDUpdateAnimatedLights(Level->BSD);
 //         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,Camera,0);
     }
+    
 }
 void LevelDraw(Level_t *Level,Camera_t *Camera,RenderObjectShader_t *RenderObjectShader,mat4 ProjectionMatrix)
 {

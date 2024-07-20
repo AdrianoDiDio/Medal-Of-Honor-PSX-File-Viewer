@@ -334,6 +334,8 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
     ImVec2 WorkSize;
     ImVec2 WindowPosition;
     ImVec2 WindowPivot;
+    vec3 PenetrationNormal;
+    float PenetrationDepth;
     TSP_t *TSP;
     float CameraRadius = 15.f;
     vec3 CameraPosition;
@@ -367,8 +369,11 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
         }
         if( GUIShowCompartmentCollisions->IValue ) {
             if( LevelManagerIsLevelLoaded(LevelManager) ) {
-                if( TSPSphereVsKDtree(CameraPosition,CameraCollisionRadius->FValue,LevelManager->CurrentLevel->TSPList) != 0 ) {
+                if( TSPSphereVsKDtree(CameraPosition,CameraCollisionRadius->FValue,LevelManager->CurrentLevel->TSPList,
+                    PenetrationNormal,&PenetrationDepth) != 0 ) {
                     igText("Camera is colliding with world (Radius %2.f)",CameraRadius);
+                    igText("Penetration Normal %2.f;%2.f;%2.f Depth: %f",PenetrationNormal[0],PenetrationNormal[1],PenetrationNormal[2],PenetrationDepth);
+
                 } else {
                     igText("No collisions reported");
                 }
