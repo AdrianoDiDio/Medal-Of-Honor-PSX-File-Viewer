@@ -1488,8 +1488,16 @@ void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader
     }
     glUseProgram(0);
     if( LevelDrawCollisionData->IValue ) {
+        if( LevelEnableWireFrameMode->IValue ) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
         for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
             TSPDrawCollisionData(Iterator,MVPMatrix);
+        }
+        if( LevelEnableWireFrameMode->IValue ) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
     }
 }

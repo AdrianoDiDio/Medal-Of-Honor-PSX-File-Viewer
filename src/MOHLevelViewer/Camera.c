@@ -173,8 +173,10 @@ void CameraUpdateViewMatrix(Camera_t *Camera,LevelManager_t *LevelManager)
             glm_vec3_add(CameraPosition,StepForwardVector,CameraPosition);
             if( TSPSphereVsKDtree(CameraPosition,CameraCollisionRadius->FValue,LevelManager->CurrentLevel->TSPList,
                             PenetrationNormal,&PenetrationDepth) != 0 ) {
-                glm_vec3_rotate(PenetrationNormal, DEGTORAD(-180.f), GLM_XUP);
                 glm_vec3_scale(PenetrationNormal,PenetrationDepth + 0.0001f,CameraPushBack);
+                glm_vec3_add(CameraPosition,CameraPushBack,CameraPosition);
+                glm_vec3_rotate(CameraPushBack, DEGTORAD(-180.f), GLM_XUP);
+                //Push it back
                 glm_vec3_add(Camera->Position,CameraPushBack,Camera->Position);
                 glm_vec3_add(Direction,CameraPushBack,Direction);
             }
