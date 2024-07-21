@@ -155,23 +155,31 @@ void CameraUpdateViewMatrix(Camera_t *Camera,LevelManager_t *LevelManager)
     float PenetrationDepth;
     vec3 CameraPushBack;
     vec3 CollidedCameraPosition;
+    vec3 StepForwardVector;
+    vec3 StepPositionVector;
+    vec3 TSPDirection;
     int Step;
+    int NumDiscreteCollisionStep = 5;
     
     glm_mat4_identity(Camera->ViewMatrix);
-    glm_vec3_add(Camera->Position,Camera->Forward,Direction);
+    glm_vec3_zero(Direction);
     //TODO(Adriano): Check if we want to enable collision detection or not
     if( 0 && LevelManagerIsLevelLoaded(LevelManager) ) {
         glm_vec3_copy(Camera->Position,CameraPosition);
         glm_vec3_rotate(CameraPosition, DEGTORAD(180.f), GLM_XUP);
-        for( Step = 0; Step < 20; Step++ ) {
+        glm_vec3_scale(Camera->Forward,1.f/NumDiscreteCollisionStep,StepForwardVector);
+        for( Step = 0; Step < NumDiscreteCollisionStep; Step++ ) {
+            glm_vec3_add(Camera->Position,StepForwardVector,Direction);
+            glm_vec3_add(CameraPosition,StepForwardVector,CameraPosition);
             if( TSPSphereVsKDtree(CameraPosition,CameraCollisionRadius->FValue,LevelManager->CurrentLevel->TSPList,
                             PenetrationNormal,&PenetrationDepth) != 0 ) {
-                glm_vec3_rotate(PenetrationNormal, DEGTORAD(-180.f), GLM_XUP);
                 glm_vec3_scale(PenetrationNormal,PenetrationDepth + 0.0001f,CameraPushBack);
                 glm_vec3_add(Camera->Position,CameraPushBack,Camera->Position);
                 glm_vec3_add(Direction,CameraPushBack,Direction);
             }
         }
+    } else {
+        glm_vec3_add(Camera->Position,Camera->Forward,Direction);
     }
     glm_lookat(Camera->Position,Direction,GLM_YUP,Camera->ViewMatrix);
 }

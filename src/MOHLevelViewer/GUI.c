@@ -370,6 +370,7 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
             if( LevelManagerIsLevelLoaded(LevelManager) ) {
                 if( TSPSphereVsKDtree(CameraPosition,CameraCollisionRadius->FValue,LevelManager->CurrentLevel->TSPList,
                     PenetrationNormal,&PenetrationDepth) != 0 ) {
+                    glm_vec3_rotate(PenetrationNormal, DEGTORAD(-180.f), GLM_XUP);
                     igText("Camera is colliding with world (Radius %2.f)",CameraCollisionRadius->FValue);
                     igText("Penetration Normal %2.f;%2.f;%2.f Depth: %f",PenetrationNormal[0],PenetrationNormal[1],PenetrationNormal[2],PenetrationDepth);
 

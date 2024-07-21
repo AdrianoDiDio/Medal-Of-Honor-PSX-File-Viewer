@@ -2598,6 +2598,21 @@ int TSPCheckCollisionFaceSphereIntersection(TSPCollision_t *CollisionData,TSPVec
     }
     return 0;
 }
+/*
+ * NOTE(Adriano): Given an origin and a radius, check for any collision againsts all the triangles contained
+ * in the TSP's collision data.
+ * Point is the origin of the sphere using TSP coordinate system, Radius is the sphere radius.
+ * Returns the PenetrationNormal and Depth only if there was a collision against any triangle that belongs to
+ * one of the loaded TSP files.
+ * NOTE that PenetrationNormal is returned using TSP coordinate system and it must be converted back if we
+ * use a different one.
+ * TODO(Adriano): Decide whether we want to work with TSP coordinate system or if we want to convert it back and
+ * forth inside the function.
+ * I.E:
+ * Point will be in our coordinate system and it gets converted right at the beginning of the function) and
+ * PenetrationNormal gets converted back to our coordinate system before returning it.
+ * 
+*/
 int TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList,vec3 PenetrationNormal,float *PenetrationDepth)
 {
     TSP_t *TSP;
@@ -2616,7 +2631,7 @@ int TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList,vec3 PenetrationNor
     for( TSP = TSPList; TSP; TSP = TSP->Next ) {
         CollisionData = TSP->CollisionData;
         if( CollisionData == NULL ) {
-            DPrintf("TSPSphereVsKDtree:Point wasn't in any collision data...\n");
+            DPrintf("TSPSphereVsKDtree:Point wasn't in %s collision data...\n",TSP->FName);
             continue;
         }
         
