@@ -2557,7 +2557,7 @@ bool TSPSphereIntersectsTriangleV2(TSPCollision_t *CollisionData,TSPVec3_t Point
             //Resolve collision
             ResultPenetrationDepth = TSPSphereTriangleResolveCollision(SphereOriginProjection,Origin,Radius,Point1,Point2,Point3,
                                         Inside,ResultPenetrationNormal);
-            if( *PenetrationDepth ) {
+            if( PenetrationDepth ) {
                 *PenetrationDepth = ResultPenetrationDepth;
             }
             if( PenetrationNormal ) {
