@@ -94,7 +94,7 @@ void FontLoadChar(Font_t *Font,const VRAM_t *VRAM,int CharIndex,float RowX,float
     u0 = ((float)RowX + VRAMGetTexturePageX(MOH_FONT_TEXTURE_VRAM_PAGE)) / ImageWidth;
     //Color Mode 0 => 4 BPP texture
     v0 = ((float)RowY + VRAMGetTexturePageY(MOH_FONT_TEXTURE_VRAM_PAGE,0)) / ImageHeight;
-    TexWidth = ((float)MOH_FONT_CHAR_WIdTH) / ImageWidth;
+    TexWidth = ((float)MOH_FONT_CHAR_WIDTH) / ImageWidth;
     TexHeight = ((float)MOH_FONT_CHAR_HEIGHT) / ImageHeight;
     
     VertexData = malloc(FontGetStride() * 6/** sizeof(float)*/);
@@ -107,7 +107,7 @@ void FontLoadChar(Font_t *Font,const VRAM_t *VRAM,int CharIndex,float RowX,float
     
     x = 0;
     y = 0;
-    w = MOH_FONT_CHAR_WIdTH;
+    w = MOH_FONT_CHAR_WIDTH;
     h = MOH_FONT_CHAR_HEIGHT;
 
     VertexData[VertexPointer] =  x;
@@ -224,7 +224,7 @@ void FontLoad(Font_t *Font,const VRAM_t *VRAM)
     ColumnPosition = MOH_FONT_CHAR_STARTING_TEXTURE_Y;
     for( i = 0; i < NUM_MOH_FONT_CHARS; i++ ) {
         if( i == NUM_MOH_FONT_CHAR_PER_COLUMN ) {
-            RowPosition = MOH_FONT_CHAR_STARTING_TEXTURE_X + MOH_FONT_CHAR_WIdTH;
+            RowPosition = MOH_FONT_CHAR_STARTING_TEXTURE_X + MOH_FONT_CHAR_WIDTH;
             ColumnPosition = 0;
         }
         DPrintf("Fetching char %i at %fx%f\n",i,RowPosition,ColumnPosition);

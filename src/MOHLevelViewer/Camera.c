@@ -159,7 +159,7 @@ void CameraUpdateViewMatrix(Camera_t *Camera,LevelManager_t *LevelManager)
     vec3 StepPositionVector;
     vec3 TSPDirection;
     int Step;
-    int NumDiscreteCollisionStep = 5;
+    int NumDiscreteCollisionStep = 10;
     
     glm_mat4_identity(Camera->ViewMatrix);
     glm_vec3_zero(Direction);

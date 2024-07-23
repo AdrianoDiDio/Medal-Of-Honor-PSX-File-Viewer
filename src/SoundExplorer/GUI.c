@@ -178,7 +178,7 @@ void GUIDrawMainWindow(GUI_t *GUI,VideoSystem_t *VideoSystem,SoundManager_t *Sou
                 TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
             }
             if( igTreeNodeEx_Str(VBMusicIterator->Name,TreeNodeFlags) ) {
-                if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+                if (igIsMouseDoubleClicked_Nil(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
                     SoundManager->SelectedSound = VBMusicIterator;
                     SoundSystemPlay(SoundManager->SoundSystem);
                 }

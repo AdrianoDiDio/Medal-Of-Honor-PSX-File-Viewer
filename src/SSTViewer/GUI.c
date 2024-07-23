@@ -249,7 +249,7 @@ void GUIDrawScriptList(GUI_t *GUI,SSTManager_t *SSTManager,VideoSystem_t *VideoS
             TreeNodeFlags |= ImGuiTreeNodeFlags_Selected;
         }
         if( igTreeNodeEx_Str(ScriptIterator->Name,TreeNodeFlags) ) {
-            if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+            if (igIsMouseDoubleClicked_Nil(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
                 SSTManagerActivateScript(SSTManager,ScriptIterator);
             }
         }

@@ -639,7 +639,7 @@ void BSDCreateRenderObjectPointListVAO(BSD_t *BSD)
     free(RenderObjectData);
 }
 
-void BSDAddNodeToRenderObjecDrawabletList(BSD_t *BSD,int IsMultiplayer,unsigned int NodeId,vec3 Position,vec3 Rotation)
+void BSDAddNodeToRenderObjecDrawableList(BSD_t *BSD,int IsMultiplayer,unsigned int NodeId,vec3 Position,vec3 Rotation)
 {
     BSDRenderObjectDrawable_t *Object;
     unsigned int RenderObjectId;
@@ -2702,7 +2702,7 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFile
             if( NodeNumReferencedRenderObjectIdOffset != 0 ) {
                 if( Node->Type == 4 ) {
                     DPrintf("Node has Type 4 so the RenderObject Id is %u.\n",NodeNumReferencedRenderObjectIdOffset);
-                    BSDAddNodeToRenderObjecDrawabletList(BSD,IsMultiplayer,NodeNumReferencedRenderObjectIdOffset,NodePosition,NodeRotation);
+                    BSDAddNodeToRenderObjecDrawableList(BSD,IsMultiplayer,NodeNumReferencedRenderObjectIdOffset,NodePosition,NodeRotation);
                 } else {
                     fseek(BSDFile,NodeFilePosition + NodeNumReferencedRenderObjectIdOffset,SEEK_SET);
                     fread(&NumReferencedRenderObjectId,sizeof(NumReferencedRenderObjectId),1,BSDFile);
@@ -2712,7 +2712,7 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFile
                         if( Node->Id == BSD_ENEMY_SPAWN && NodeRenderObjectId != 3817496448 && i == 0 ) {
                             DPrintf("We have a different RenderObject for this enemy spawn...\n");
                         }
-                        BSDAddNodeToRenderObjecDrawabletList(BSD,IsMultiplayer,NodeRenderObjectId,NodePosition,NodeRotation);
+                        BSDAddNodeToRenderObjecDrawableList(BSD,IsMultiplayer,NodeRenderObjectId,NodePosition,NodeRotation);
                     }
                 }
             }

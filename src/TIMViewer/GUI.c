@@ -316,7 +316,7 @@ void GUIDrawMainWindow(GUI_t *GUI,VideoSystem_t *VideoSystem,ImageManager_t *Ima
                 }
             }
             if( igTreeNodeEx_Str(ImageIterator->Name,TreeNodeFlags) ) {
-                if (igIsMouseDoubleClicked(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
+                if (igIsMouseDoubleClicked_Nil(0) && igIsItemHovered(ImGuiHoveredFlags_None) ) {
                     ImageManager->SelectedImage = ImageIterator;
                 }
             }
