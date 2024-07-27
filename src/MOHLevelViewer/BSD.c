@@ -22,14 +22,22 @@
 #include "BSD.h"
 #include "MOHLevelViewer.h"
 
-Color3b_t StarsColors[7] = {
+Color3b_t StarsColors[8] = {
     {128,128,128},
-    {96,64,128},
+    
     {240,96,64},
-    {32,240,64},
-    {96,96,240},
-    {255,255,255},
-    {64,128,64},
+    
+    {128,128,32}, //OK
+    
+    {240,64,64}, // OK F0 40 40
+    
+    {96,96,240}, // 60 60 f0
+    
+    {255,255,255}, // FF FF FF 
+    
+    {255,128,64}, // FF 80 40
+    
+    {128,64,255}, // 80 40 FF
 };
 
 void BSDPositionToGLMVec3(BSDPosition_t In,vec3 Out)
@@ -894,7 +902,8 @@ void BSDCreateStarsVAO(BSD_t *BSD)
     int Stride;
     int VertexSize;
     int i;
-    Color3b_t RandColor;
+    int StarColorIndex;
+    Color3b_t StarColor;
 
     if( !BSDAreStarsEnabled(BSD) ) {
         DPrintf("Stars are not enabled...\n");
@@ -905,22 +914,23 @@ void BSDCreateStarsVAO(BSD_t *BSD)
     VertexSize = Stride * BSD_SKY_MAX_STARS_NUMBER;
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
-    
+    StarColorIndex = RandRangeI(0,7);
     for( i = 0; i < BSD_SKY_MAX_STARS_NUMBER; i++ ) {
         R = (BSD->SkyData.StarRadius*256) * sqrt(Rand01());
         Theta = Rand01() * 2 * M_PI;
         Phi = acos(2.0 * Rand01() - 1.0);/*BSDRand01() * M_PI;*/
-        RandColor = StarsColors[RandRangeI(0,6)];
-        BSD->SkyData.StarsColors[i].rgba[0] = RandColor.r;
-        BSD->SkyData.StarsColors[i].rgba[1] = RandColor.g;
-        BSD->SkyData.StarsColors[i].rgba[2] = RandColor.b;
+        StarColor = StarsColors[StarColorIndex];
+        StarColorIndex = (StarColorIndex + 1) & 7;
+        BSD->SkyData.StarsColors[i].rgba[0] = StarColor.r;
+        BSD->SkyData.StarsColors[i].rgba[1] = StarColor.g;
+        BSD->SkyData.StarsColors[i].rgba[2] = StarColor.b;
 
         VertexData[VertexPointer] =  (R * sin(Phi) * cos(Theta) );
         VertexData[VertexPointer+1] = (R * sin(Theta) * sin(Phi) ) - (BSD->SkyData.StarRadius*264);
         VertexData[VertexPointer+2] = R * cos(Phi);
-        VertexData[VertexPointer+3] = RandColor.r / 255.f;
-        VertexData[VertexPointer+4] = RandColor.g / 255.f;
-        VertexData[VertexPointer+5] = RandColor.b / 255.f;
+        VertexData[VertexPointer+3] = StarColor.r / 255.f;
+        VertexData[VertexPointer+4] = StarColor.g / 255.f;
+        VertexData[VertexPointer+5] = StarColor.b / 255.f;
         VertexPointer += 6;
     }
     BSD->SkyData.StarsVAO = VAOInitXYZRGB(VertexData,VertexSize,Stride,0,3,1);

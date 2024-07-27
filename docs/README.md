@@ -793,7 +793,7 @@ moon and how the stars are projected across the screen.
 There can be a maximum number of 255 stars across the screen and they are
 generated randomly using the Radius variable.  
 The stars colors are selected from a fixed array of colors that has a size
-of 7 and can be found inside the source file (BSD.c).  
+of 8 and can be found inside the source file (BSD.c).  
 
 ##### RenderObject Block
 
