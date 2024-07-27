@@ -125,7 +125,38 @@ void CameraUpdate(Camera_t *Camera,int Orientation, float Delta)
             break;
     }
 }
-void CameraCheckKeyEvents(Camera_t *Camera,const Byte *KeyState,float Delta)
+void CameraCheckForCollisions(Camera_t *Camera,LevelManager_t *LevelManager)
+{
+    vec3 Direction;
+    vec3 CameraPosition;
+    vec3 PenetrationNormal;
+    float PenetrationDepth;
+    vec3 CameraPushBack;
+    int Step;
+    int NumDiscreteCollisionStep = 5;
+    
+    glm_mat4_identity(Camera->ViewMatrix);
+    glm_vec3_zero(Direction);
+    //TODO(Adriano): Check if we want to enable collision detection or not
+    if( 1 && LevelManagerIsLevelLoaded(LevelManager) ) {
+        return;
+    }
+    glm_vec3_copy(Camera->Position,CameraPosition);
+    glm_vec3_rotate(CameraPosition, DEGTORAD(180.f), GLM_XUP);
+    for( Step = 0; Step < NumDiscreteCollisionStep; Step++ ) {
+        glm_vec3_add(Camera->Position,Camera->Forward,Direction);
+        glm_vec3_copy(Camera->Position,CameraPosition);
+        glm_vec3_rotate(CameraPosition, DEGTORAD(180.f), GLM_XUP);
+        if( TSPSphereVsKDtree(CameraPosition,CameraCollisionRadius->FValue,LevelManager->CurrentLevel->TSPList,
+                        PenetrationNormal,&PenetrationDepth) != 0 ) {
+            glm_vec3_scale(PenetrationNormal,PenetrationDepth + 0.0001f,CameraPushBack);
+            glm_vec3_rotate(CameraPushBack, DEGTORAD(-180.f), GLM_XUP);
+            //Push it back
+            glm_vec3_add(Camera->Position,CameraPushBack,Camera->Position);
+        }
+    }
+}
+void CameraCheckKeyEvents(Camera_t *Camera,LevelManager_t *LevelManager,const Byte *KeyState,float Delta)
 {
     if( KeyState[SDL_SCANCODE_W] ) {
         CameraUpdate(Camera,CAMERA_DIRECTION_FORWARD,Delta);
@@ -145,54 +176,22 @@ void CameraCheckKeyEvents(Camera_t *Camera,const Byte *KeyState,float Delta)
     if( KeyState[SDL_SCANCODE_Z] ) {
         CameraUpdate(Camera,CAMERA_DIRECTION_DOWNWARD,Delta);
     }
+    CameraCheckForCollisions(Camera,LevelManager);
 }
-void CameraUpdateViewMatrix(Camera_t *Camera,LevelManager_t *LevelManager)
+void CameraUpdateViewMatrix(Camera_t *Camera)
 {
-    vec3 Direction;
-    int DynamicData;
-    vec3 CameraPosition;
-    vec3 PenetrationNormal;
-    float PenetrationDepth;
-    vec3 CameraPushBack;
-    vec3 CollidedCameraPosition;
-    vec3 StepForwardVector;
-    vec3 StepPositionVector;
-    vec3 TSPDirection;
-    int Step;
-    int NumDiscreteCollisionStep = 10;
-    
+    vec3 Direction;    
     glm_mat4_identity(Camera->ViewMatrix);
-    glm_vec3_zero(Direction);
-    //TODO(Adriano): Check if we want to enable collision detection or not
-    if( 0 && LevelManagerIsLevelLoaded(LevelManager) ) {
-        glm_vec3_copy(Camera->Position,CameraPosition);
-        glm_vec3_rotate(CameraPosition, DEGTORAD(180.f), GLM_XUP);
-        glm_vec3_scale(Camera->Forward,1.f/NumDiscreteCollisionStep,StepForwardVector);
-        for( Step = 0; Step < NumDiscreteCollisionStep; Step++ ) {
-            glm_vec3_add(Camera->Position,StepForwardVector,Direction);
-            glm_vec3_add(CameraPosition,StepForwardVector,CameraPosition);
-            if( TSPSphereVsKDtree(CameraPosition,CameraCollisionRadius->FValue,LevelManager->CurrentLevel->TSPList,
-                            PenetrationNormal,&PenetrationDepth) != 0 ) {
-                glm_vec3_scale(PenetrationNormal,PenetrationDepth + 0.0001f,CameraPushBack);
-                glm_vec3_add(CameraPosition,CameraPushBack,CameraPosition);
-                glm_vec3_rotate(CameraPushBack, DEGTORAD(-180.f), GLM_XUP);
-                //Push it back
-                glm_vec3_add(Camera->Position,CameraPushBack,Camera->Position);
-                glm_vec3_add(Direction,CameraPushBack,Direction);
-            }
-        }
-    } else {
-        glm_vec3_add(Camera->Position,Camera->Forward,Direction);
-    }
+    glm_vec3_add(Camera->Position,Camera->Forward,Direction);
     glm_lookat(Camera->Position,Direction,GLM_YUP,Camera->ViewMatrix);
 }
-void CameraBeginFrame(Camera_t *Camera,LevelManager_t *LevelManager)
+void CameraBeginFrame(Camera_t *Camera)
 {
     if( CameraFOV->FValue < 45.f || CameraFOV->FValue > 110.f ) {
         ConfigSetNumber("CameraFOV",90.f);
     }
     //NOTE(Adriano):Update it even if not focused in order to have a valid matrix available to all subsystems.
-    CameraUpdateViewMatrix(Camera,LevelManager);
+    CameraUpdateViewMatrix(Camera);
 } 
 
 void CameraSetRotation(Camera_t *Camera,vec3 Rotation)
@@ -211,7 +210,7 @@ void CameraSetPosition(Camera_t *Camera,vec3 Position)
         return;
     }
     glm_vec3_copy(Position,Camera->Position);
-    CameraUpdateViewMatrix(Camera,NULL);
+    CameraUpdateViewMatrix(Camera);
 }
 Camera_t *CameraInit()
 {

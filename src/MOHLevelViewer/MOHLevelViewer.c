@@ -55,7 +55,7 @@ void ApplicationCheckEvents(Application_t *Application)
     //NOTE(Adriano):If the GUI is closed and we pumped all the events then
     //              check if any key is down and update the camera.
     if( !GUIIsActive(Application->GUI) ) {
-        CameraCheckKeyEvents(Application->Camera,Application->Engine->KeyState,Application->Engine->TimeInfo->Delta);
+        CameraCheckKeyEvents(Application->Camera,Application->LevelManager,Application->Engine->KeyState,Application->Engine->TimeInfo->Delta);
     }
 }
 
@@ -215,7 +215,7 @@ void ApplicationFrame(Application_t *Application)
     }
     EngineBeginFrame(Application->Engine);
     ApplicationCheckEvents(Application);
-    CameraBeginFrame(Application->Camera,Application->LevelManager);
+    CameraBeginFrame(Application->Camera);
     LevelManagerUpdate(Application->LevelManager,Application->Camera);
     ApplicationDraw(Application);
     EngineEndFrame(Application->Engine);
