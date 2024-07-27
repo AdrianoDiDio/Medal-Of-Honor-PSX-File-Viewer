@@ -134,11 +134,16 @@ void CameraCheckForCollisions(Camera_t *Camera,LevelManager_t *LevelManager)
     vec3 CameraPushBack;
     int Step;
     int NumDiscreteCollisionStep = 5;
-    
+    int EnableCollisionDetection = 0;
     glm_mat4_identity(Camera->ViewMatrix);
     glm_vec3_zero(Direction);
+    
     //TODO(Adriano): Check if we want to enable collision detection or not
-    if( 1 && LevelManagerIsLevelLoaded(LevelManager) ) {
+    if( !EnableCollisionDetection ) {
+        return;
+    }
+    
+    if( !LevelManagerIsLevelLoaded(LevelManager) ) {
         return;
     }
     glm_vec3_copy(Camera->Position,CameraPosition);
