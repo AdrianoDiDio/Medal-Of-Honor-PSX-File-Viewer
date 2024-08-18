@@ -32,9 +32,11 @@
 #define MOH_FONT_CHAR_HEIGHT 7
 #define MOH_FONT_CHAR_STARTING_TEXTURE_X 224
 #define MOH_FONT_CHAR_STARTING_TEXTURE_Y 0
+#define MOH_FONT_CHAR_SPACING 10
 
 typedef struct Font_s {
     VAO_t *Characters[NUM_MOH_FONT_CHARS];
+    VAO_t *VAO;
 } Font_t;
 
 Font_t *FontInit(const VRAM_t *VRAM);

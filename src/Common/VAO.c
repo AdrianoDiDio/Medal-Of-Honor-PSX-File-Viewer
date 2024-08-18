@@ -32,7 +32,7 @@ void VAOFree(VAO_t *VAO)
         free(Temp);
     }
 }
-void VAOUpdate(VAO_t *VAO,int *Data,int DataSize,int NumElements)
+void VAOUpdate(VAO_t *VAO,void *Data,int DataSize,int NumElements)
 {
     int NextSlot;
     NextSlot = VAO->CurrentSize * VAO->Stride;
@@ -217,7 +217,10 @@ VAO_t *VAOInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int Text
     glEnableVertexAttribArray(1);
 
     VAO->Next = NULL;
-    
+    VAO->CurrentSize = 0;
+    VAO->Stride = Stride;
+    VAO->Size = DataSize;
+
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
     glBindVertexArray(0);

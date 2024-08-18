@@ -50,6 +50,6 @@ VAO_t *VAOInitXYZIBO(float *Data,int DataSize,int Stride,int *Index,int IndexSiz
 VAO_t *VAOInitXYUVRGB(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,int ColorOffset,bool StaticDraw);
 VAO_t *VAOInitXYUV(float *Data,int DataSize,int Stride,int VertexOffset,int TextureOffset,bool StaticDraw);
 VAO_t *VAOInitXYRGB(float *Data,int DataSize,int Stride,int VertexOffset,int ColorOffset,bool StaticDraw);
-void VAOUpdate(VAO_t *VAO,int *Data,int DataSize,int NumElements);
+void VAOUpdate(VAO_t *VAO,void *Data,int DataSize,int NumElements);
 void VAOFree(VAO_t *VAO);
 #endif //__VAO_H_

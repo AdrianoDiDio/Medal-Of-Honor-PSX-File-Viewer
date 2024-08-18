@@ -53,13 +53,14 @@ static const Byte ASCII_To_MOH_Table[128] = {
 
 void FontFree(Font_t *Font)
 {
-    int i;
     if( Font == NULL ) {
         return;
     }
-    for( i = 0; i < NUM_MOH_FONT_CHARS; i++ ) {
-        free(Font->Characters[i]);
-    }
+//     for( i = 0; i < NUM_MOH_FONT_CHARS; i++ ) {
+//         free(Font->Characters[i]);
+//     }
+    DPrintf("Releasing font vao\n");
+    VAOFree(Font->VAO);
     free(Font);
 }
 int FontGetStride()
@@ -67,51 +68,58 @@ int FontGetStride()
 //          XY  UV
     return (2 + 2) * sizeof(float);
 }
-void FontLoadChar(Font_t *Font,const VRAM_t *VRAM,int CharIndex,float RowX,float RowY)
+
+void FontDrawChar(Font_t *Font,const VRAM_t *VRAM,char c,float x,float y,int ColorId,Color4f_t Color)
 {
-    float x;
-    float y;
-    float w;
-    float h;
-    float u0;
-    float v0;
+    Shader_t *Shader;
+    vec4 CharColor;
+    int ShaderColorId;
+    float *VertexData;
+    float Width;
+    float Height;
     float TexWidth;
     float TexHeight;
-    float ImageWidth;
-    float ImageHeight;
-    float *VertexData;
-    int Stride;
-    int DataSize;
+    float u0;
+    float v0;
+    float CharTexelX;
+    float CharTexelY;
+    int CharIndex;
     int VertexPointer;
-    
-    Stride = FontGetStride();
-    //We need 6 vertices to describe a quad...
-    DataSize = Stride * 6;
-    
-    ImageWidth = VRAM->Page.Width;
-    ImageHeight = VRAM->Page.Height;
-    
-    u0 = ((float)RowX + VRAMGetTexturePageX(MOH_FONT_TEXTURE_VRAM_PAGE)) / ImageWidth;
-    //Color Mode 0 => 4 BPP texture
-    v0 = ((float)RowY + VRAMGetTexturePageY(MOH_FONT_TEXTURE_VRAM_PAGE,0)) / ImageHeight;
-    TexWidth = ((float)MOH_FONT_CHAR_WIDTH) / ImageWidth;
-    TexHeight = ((float)MOH_FONT_CHAR_HEIGHT) / ImageHeight;
-    
-    VertexData = malloc(FontGetStride() * 6/** sizeof(float)*/);
-    
-    if( !VertexData ) {
-        DPrintf("FontLoadChar:Couldn't allocate memory for vertex data.\n");
-        return;
+
+    CharColor[0] = Color.r;
+    CharColor[1] = Color.g;
+    CharColor[2] = Color.b;
+    CharColor[3] = Color.a;
+
+    if( ColorId == -1 ) {
+        Shader = ShaderCache("FontShader","Shaders/FontVertexShader.glsl","Shaders/FontFragmentShader.glsl");
+        if( !Shader ) {
+        DPrintf("FontDrawChar:Invalid shader\n");
+            return;
+        }
+        glUseProgram(Shader->ProgramId);
+        ShaderColorId = glGetUniformLocation(Shader->ProgramId,"Color");
+    } else {
+        ShaderColorId = ColorId;
     }
+    glUniform4fv(ShaderColorId,1,CharColor);
     VertexPointer = 0;
     
-    x = 0;
-    y = 0;
-    w = MOH_FONT_CHAR_WIDTH;
-    h = MOH_FONT_CHAR_HEIGHT;
-
+    Width = MOH_FONT_CHAR_WIDTH;
+    Height = MOH_FONT_CHAR_HEIGHT;
+    CharIndex = ASCII_To_MOH_Table[(int) c];
+    CharTexelX = MOH_FONT_CHAR_STARTING_TEXTURE_X + ( (CharIndex / 24) * MOH_FONT_CHAR_WIDTH);
+    CharTexelY = MOH_FONT_CHAR_STARTING_TEXTURE_Y + ( (CharIndex % 24) * MOH_FONT_CHAR_HEIGHT);
+    u0 = ((float)CharTexelX + VRAMGetTexturePageX(MOH_FONT_TEXTURE_VRAM_PAGE)) / VRAM->Page.Width;
+    //Color Mode 0 => 4 BPP texture
+    v0 = ((float)CharTexelY + VRAMGetTexturePageY(MOH_FONT_TEXTURE_VRAM_PAGE,0)) / VRAM->Page.Height;
+    TexWidth = ((float)MOH_FONT_CHAR_WIDTH) / VRAM->Page.Width;
+    TexHeight = ((float)MOH_FONT_CHAR_HEIGHT) / VRAM->Page.Height;
+    
+    VertexData = malloc(FontGetStride() * 6/** sizeof(float)*/);
+        
     VertexData[VertexPointer] =  x;
-    VertexData[VertexPointer+1] = y + h;
+    VertexData[VertexPointer+1] = y + Height;
     VertexData[VertexPointer+2] = u0;
     VertexData[VertexPointer+3] = v0 + TexHeight;
     VertexPointer += 4;
@@ -122,15 +130,15 @@ void FontLoadChar(Font_t *Font,const VRAM_t *VRAM,int CharIndex,float RowX,float
     VertexData[VertexPointer+3] = v0;
     VertexPointer += 4;
             
-    VertexData[VertexPointer] =  x + w;
-    VertexData[VertexPointer+1] = y+h;
+    VertexData[VertexPointer] =  x + Width;
+    VertexData[VertexPointer+1] = y+Height;
     VertexData[VertexPointer+2] = u0 + TexWidth;
     VertexData[VertexPointer+3] = v0 + TexHeight;
     VertexPointer += 4;
             
 
-    VertexData[VertexPointer] =  x + w;
-    VertexData[VertexPointer+1] = y + h;
+    VertexData[VertexPointer] =  x + Width;
+    VertexData[VertexPointer+1] = y + Height;
     VertexData[VertexPointer+2] = u0 + TexWidth;
     VertexData[VertexPointer+3] = v0 + TexHeight;
     VertexPointer += 4;
@@ -141,96 +149,67 @@ void FontLoadChar(Font_t *Font,const VRAM_t *VRAM,int CharIndex,float RowX,float
     VertexData[VertexPointer+3] = v0;
     VertexPointer += 4;
             
-    VertexData[VertexPointer] =  x + w;
+    VertexData[VertexPointer] =  x + Width;
     VertexData[VertexPointer+1] = y;
     VertexData[VertexPointer+2] = u0 + TexWidth;
     VertexData[VertexPointer+3] = v0;
-    VertexPointer += 4;        
-    Font->Characters[CharIndex] = VAOInitXYUV(VertexData,DataSize,Stride,0,2,true);
+    VertexPointer += 4;
+    
+    VAOUpdate(Font->VAO,VertexData,FontGetStride() * 6,0);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    if( ColorId == -1 ) {
+        glUseProgram(0);
+    }
     free(VertexData);
 }
 
-void FontDrawChar(Font_t *Font,mat4 ProjectionMatrix,char c,float x,float y,Color4f_t Color)
+void FontDrawString(Font_t *Font,const VRAM_t *VRAM,const char *String,float x,float y,Color4f_t Color)
 {
+
+    float Spacing;
+    float CurrentX;
+    mat4 ProjectionMatrix;
     Shader_t *Shader;
     int OrthoMatrixId;
     int ColorId;
-    vec3 temp;
-    vec4 color;
-    int CharIndex;
-    mat4 ModelViewMatrix;
-    mat4 MVPMatrix;
-    
-    
-    color[0] = Color.r;
-    color[1] = Color.g;
-    color[2] = Color.b;
-    color[3] = Color.a;
     
     Shader = ShaderCache("FontShader","Shaders/FontVertexShader.glsl","Shaders/FontFragmentShader.glsl");
     if( !Shader ) {
         DPrintf("FontDrawChar:Invalid shader\n");
         return;
     }
+    CurrentX = x;
+    Spacing = (float) MOH_FONT_CHAR_SPACING;
+    glm_mat4_identity(ProjectionMatrix);
+    glm_ortho(0,VidConfigWidth->IValue,VidConfigHeight->IValue,0,-1,1,ProjectionMatrix);
     glUseProgram(Shader->ProgramId);
     OrthoMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
     ColorId = glGetUniformLocation(Shader->ProgramId,"Color");
-    glUniform4fv(ColorId,1,color);
-    glm_mat4_identity(ModelViewMatrix);
-    temp[0] = x;
-    temp[1] = y;
-    temp[2] = 0;
-    glm_translate(ModelViewMatrix,temp);
-    glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
-    glUniformMatrix4fv(OrthoMatrixId,1,false,&MVPMatrix[0][0]);
-    CharIndex = (int) c;
-    glBindVertexArray(Font->Characters[ASCII_To_MOH_Table[CharIndex]]->VAOId[0]);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
-}
-
-void FontDrawString(Font_t *Font,const VRAM_t *VRAM,const char *String,float x,float y,Color4f_t Color)
-{
-
-    float Spacing = 10.f;
-    float currentX;
-    mat4 ProjectionMatrix;
-    
-    currentX = x;
-    
-    glm_mat4_identity(ProjectionMatrix);
-    glm_ortho(0,VidConfigWidth->IValue,VidConfigHeight->IValue,0,-1,1,ProjectionMatrix);
+    glUniformMatrix4fv(OrthoMatrixId,1,false,&ProjectionMatrix[0][0]);
     glBindTexture(GL_TEXTURE_2D, VRAM->Page.TextureId);
+    glBindVertexArray(Font->VAO->VAOId[0]);
+    
     while( *String ) {
         if( *String == ' ' ) {
-            currentX += Spacing;
+            CurrentX += Spacing;
             String++;
             continue;
         }
-        FontDrawChar(Font,ProjectionMatrix,*String,currentX,y,Color);
-        currentX += Spacing;
+        FontDrawChar(Font,VRAM,*String,CurrentX,y,ColorId,Color);
+        CurrentX += Spacing;
         String++;
     }
     glBindTexture(GL_TEXTURE_2D, 0);
+    glBindVertexArray(0);
 }
 
 void FontLoad(Font_t *Font,const VRAM_t *VRAM)
 {
-    int i;
-    float RowPosition;
-    float ColumnPosition;
-    
-    RowPosition = MOH_FONT_CHAR_STARTING_TEXTURE_X;
-    ColumnPosition = MOH_FONT_CHAR_STARTING_TEXTURE_Y;
-    for( i = 0; i < NUM_MOH_FONT_CHARS; i++ ) {
-        if( i == NUM_MOH_FONT_CHAR_PER_COLUMN ) {
-            RowPosition = MOH_FONT_CHAR_STARTING_TEXTURE_X + MOH_FONT_CHAR_WIDTH;
-            ColumnPosition = 0;
-        }
-        DPrintf("Fetching char %i at %fx%f\n",i,RowPosition,ColumnPosition);
-        FontLoadChar(Font,VRAM,i,RowPosition,ColumnPosition);
-        ColumnPosition += MOH_FONT_CHAR_HEIGHT;
+    if( !Font ) {
+        return;
     }
+    
+    Font->VAO = VAOInitXYUV(NULL,FontGetStride() * 6,FontGetStride(),0,2,false);
 }
 
 Font_t *FontInit(const VRAM_t *VRAM)
@@ -241,6 +220,7 @@ Font_t *FontInit(const VRAM_t *VRAM)
         DPrintf("FontInit:Failed to allocate memory for Font data\n");
         return NULL;
     }
+    Font->VAO = NULL;
     FontLoad(Font,VRAM);
     return Font;
 }
