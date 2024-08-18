@@ -231,11 +231,11 @@ void RegisterDefaultSettings()
     ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to "
                                     "being set to empty.");
     ConfigRegister("GUIShowCurrentCompartment","0","When enabled, shows the current compartment,based on the camera position,\n"
-                   "inside the debug overlay (Show Debug Overlay(GUIShowDebugOverlay) should be enabled for it to work).");
+                   "inside the debug overlay (Show Debug Overlay(GUIShowDebugOverlay) should be enabled for this to work).");
     ConfigRegister("GUIShowCompartmentCollisions","0","When enabled, shows if there was a collision with a compartment,based on the camera position,\n"
-                    "inside the debug overlay (Show Debug Overlay(GUIShowDebugOverlay) should be enabled for it to work).");
+                    "inside the debug overlay (Show Debug Overlay(GUIShowDebugOverlay) should be enabled for this to work).");
     ConfigRegister("GUIShowBSDNodeCollisions","0","When enabled, shows if there was a collision with any BSD node,based on the camera position,\n"
-                    "inside the debug overlay (Show Debug Overlay(GUIShowDebugOverlay) should be enabled for it to work).");
+                    "inside the debug overlay (Show Debug Overlay(GUIShowDebugOverlay) should be enabled for this to work).");
     ConfigRegister("GUIShowDebugOverlay","0","When enabled, shows a debug overlay in the top-right corner.");
 
     ConfigRegister("LevelEnableWireFrameMode","0","Draw the level surfaces as lines");
