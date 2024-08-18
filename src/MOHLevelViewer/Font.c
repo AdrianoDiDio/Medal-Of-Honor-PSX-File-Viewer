@@ -56,10 +56,6 @@ void FontFree(Font_t *Font)
     if( Font == NULL ) {
         return;
     }
-//     for( i = 0; i < NUM_MOH_FONT_CHARS; i++ ) {
-//         free(Font->Characters[i]);
-//     }
-    DPrintf("Releasing font vao\n");
     VAOFree(Font->VAO);
     free(Font);
 }
@@ -74,7 +70,6 @@ void FontDrawChar(Font_t *Font,const VRAM_t *VRAM,char c,float x,float y,int Col
     Shader_t *Shader;
     vec4 CharColor;
     int ShaderColorId;
-    float *VertexData;
     float Width;
     float Height;
     float TexWidth;
@@ -84,7 +79,7 @@ void FontDrawChar(Font_t *Font,const VRAM_t *VRAM,char c,float x,float y,int Col
     float CharTexelX;
     float CharTexelY;
     int CharIndex;
-    int VertexPointer;
+    float VertexData[6][4];
 
     CharColor[0] = Color.r;
     CharColor[1] = Color.g;
@@ -103,7 +98,6 @@ void FontDrawChar(Font_t *Font,const VRAM_t *VRAM,char c,float x,float y,int Col
         ShaderColorId = ColorId;
     }
     glUniform4fv(ShaderColorId,1,CharColor);
-    VertexPointer = 0;
     
     Width = MOH_FONT_CHAR_WIDTH;
     Height = MOH_FONT_CHAR_HEIGHT;
@@ -115,52 +109,43 @@ void FontDrawChar(Font_t *Font,const VRAM_t *VRAM,char c,float x,float y,int Col
     v0 = ((float)CharTexelY + VRAMGetTexturePageY(MOH_FONT_TEXTURE_VRAM_PAGE,0)) / VRAM->Page.Height;
     TexWidth = ((float)MOH_FONT_CHAR_WIDTH) / VRAM->Page.Width;
     TexHeight = ((float)MOH_FONT_CHAR_HEIGHT) / VRAM->Page.Height;
-    
-    VertexData = malloc(FontGetStride() * 6/** sizeof(float)*/);
-        
-    VertexData[VertexPointer] =  x;
-    VertexData[VertexPointer+1] = y + Height;
-    VertexData[VertexPointer+2] = u0;
-    VertexData[VertexPointer+3] = v0 + TexHeight;
-    VertexPointer += 4;
             
-    VertexData[VertexPointer] =  x;
-    VertexData[VertexPointer+1] = y;
-    VertexData[VertexPointer+2] = u0;
-    VertexData[VertexPointer+3] = v0;
-    VertexPointer += 4;
+    VertexData[0][0] = x;
+    VertexData[0][1] = y + Height;
+    VertexData[0][2] = u0;
+    VertexData[0][3] = v0 + TexHeight;
             
-    VertexData[VertexPointer] =  x + Width;
-    VertexData[VertexPointer+1] = y+Height;
-    VertexData[VertexPointer+2] = u0 + TexWidth;
-    VertexData[VertexPointer+3] = v0 + TexHeight;
-    VertexPointer += 4;
+    VertexData[1][0] = x;
+    VertexData[1][1] = y;
+    VertexData[1][2] = u0;
+    VertexData[1][3] = v0;
+            
+    VertexData[2][0] =  x + Width;
+    VertexData[2][1] = y+Height;
+    VertexData[2][2] = u0 + TexWidth;
+    VertexData[2][3] = v0 + TexHeight;
             
 
-    VertexData[VertexPointer] =  x + Width;
-    VertexData[VertexPointer+1] = y + Height;
-    VertexData[VertexPointer+2] = u0 + TexWidth;
-    VertexData[VertexPointer+3] = v0 + TexHeight;
-    VertexPointer += 4;
+    VertexData[3][0] = x + Width;
+    VertexData[3][1] = y + Height;
+    VertexData[3][2] = u0 + TexWidth;
+    VertexData[3][3] = v0 + TexHeight;
             
-    VertexData[VertexPointer] =  x;
-    VertexData[VertexPointer+1] = y;
-    VertexData[VertexPointer+2] = u0;
-    VertexData[VertexPointer+3] = v0;
-    VertexPointer += 4;
+    VertexData[4][0] = x;
+    VertexData[4][1] = y;
+    VertexData[4][2] = u0;
+    VertexData[4][3] = v0;
             
-    VertexData[VertexPointer] =  x + Width;
-    VertexData[VertexPointer+1] = y;
-    VertexData[VertexPointer+2] = u0 + TexWidth;
-    VertexData[VertexPointer+3] = v0;
-    VertexPointer += 4;
+    VertexData[5][0] = x + Width;
+    VertexData[5][1] = y;
+    VertexData[5][2] = u0 + TexWidth;
+    VertexData[5][3] = v0;
     
-    VAOUpdate(Font->VAO,VertexData,FontGetStride() * 6,0);
+    VAOUpdate(Font->VAO,&VertexData,FontGetStride() * 6,0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     if( ColorId == -1 ) {
         glUseProgram(0);
     }
-    free(VertexData);
 }
 
 void FontDrawString(Font_t *Font,const VRAM_t *VRAM,const char *String,float x,float y,Color4f_t Color)
