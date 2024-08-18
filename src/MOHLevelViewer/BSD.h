@@ -123,7 +123,7 @@ typedef struct BSDNode_s {
     // This is actually an unsigned int Id
 //     unsigned short Id;
 //     unsigned short u1;
-    unsigned int Id;
+    int Id;
     int Size;
     int u2;
     int Type;
@@ -181,7 +181,7 @@ typedef struct BSDNodeInfo_s {
 */
 
 typedef struct BSDRenderObjectElement_s {
-unsigned int Id;
+    int     Id;
     char    U0[40];
     int     FaceOffset;
     char    U[8];
@@ -201,7 +201,7 @@ unsigned short NumVertex;
 //     int     UOffset1;
     int     ColorOffset;
     char    LastU[32];
-    unsigned int     ReferencedRenderObject;
+    int     ReferencedRenderObject;
     char    Pad3[16];
     int     Type;
 } BSDRenderObjectElement_t;
@@ -374,7 +374,7 @@ typedef struct RenderObjectShader_s RenderObjectShader_t;
 
 FILE                    *BSDEarlyInit(BSD_t **BSD,const char *MissionPath,int MissionNumber,int LevelNumber);
 int                     BSDLoad(BSD_t *BSD,int GameEngine,int Multiplayer,FILE *BSDFile);
-const char              *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId);
+const char              *BSDNodeGetEnumStringFromNodeId(int NodeId);
 const char              *BSDRenderObjectGetEnumStringFromType(int RenderObjectType);
 void                    BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 Rotation);
 void                    BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM);
@@ -382,10 +382,10 @@ void                    BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderO
 void                    BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void                    BSDClearNodesFlag(BSD_t *BSD);
 int                     BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD,Camera_t *Camera);
-unsigned int            BSDNodeIdToRenderObjectId(unsigned int NodeId);
-unsigned int            BSDMPNodeIdToRenderObjectId(unsigned int NodeId);
+int                     BSDNodeIdToRenderObjectId(int NodeId);
+int                     BSDMPNodeIdToRenderObjectId(int NodeId);
 int                     BSDGetRenderObjectIndexById(BSD_t *BSD,int Id);
-bool                    BSDIsRenderObjectPresent(BSD_t *BSD,unsigned int RenderObjectId);
+bool                    BSDIsRenderObjectPresent(BSD_t *BSD,int RenderObjectId);
 void                    BSDFixRenderObjectPosition(Level_t *Level);
 int                     BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index);
 void                    BSDDumpDataToObjFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile);
@@ -394,6 +394,8 @@ void                    BSDUpdateAnimatedLights(BSD_t *BSD);
 void                    BSDUpdateStarsColors(BSD_t *BSD);
 int                     BSDIsMoonEnabled(BSD_t *BSD);
 int                     BSDAreStarsEnabled(BSD_t *BSD);
+bool                    BSDPointInNode(vec3 Position,const BSDNode_t *Node);
+char                    *BSDGetCollisionVolumeStringFromType(int CollisionVolumeType);
 void                    BSDFree(BSD_t *BSD);
 
 #endif //__BSDVIEWER_H_

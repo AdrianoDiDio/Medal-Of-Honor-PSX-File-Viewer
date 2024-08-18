@@ -640,10 +640,10 @@ void BSDCreateRenderObjectPointListVAO(BSD_t *BSD)
     free(RenderObjectData);
 }
 
-void BSDAddNodeToRenderObjecDrawableList(BSD_t *BSD,int IsMultiplayer,unsigned int NodeId,vec3 Position,vec3 Rotation)
+void BSDAddNodeToRenderObjecDrawableList(BSD_t *BSD,int IsMultiplayer,int NodeId,vec3 Position,vec3 Rotation)
 {
     BSDRenderObjectDrawable_t *Object;
-    unsigned int RenderObjectId;
+    int RenderObjectId;
     int RenderObjectIndex;
 
     if( IsMultiplayer ) {
@@ -655,10 +655,10 @@ void BSDAddNodeToRenderObjecDrawableList(BSD_t *BSD,int IsMultiplayer,unsigned i
     RenderObjectIndex = BSDGetRenderObjectIndexById(BSD,RenderObjectId);
 
     if( RenderObjectIndex == -1 ) {
-        DPrintf("Failed adding new object...Id %u doesn't match any.\n",NodeId);
+        DPrintf("Failed adding new object...Id %i doesn't match any.\n",RenderObjectId);
         return;
     }
-    DPrintf("RenderObjectId %u for node %u Index %i\n",RenderObjectId,NodeId,RenderObjectIndex);
+    DPrintf("RenderObjectId %i for node %i Index %i\n",RenderObjectId,NodeId,RenderObjectIndex);
 
     Object = malloc(sizeof(BSDRenderObjectDrawable_t));
     Object->RenderObjectIndex = RenderObjectIndex;
@@ -1243,10 +1243,9 @@ BSDRenderObject_t *BSDGetRenderObjectById(BSD_t *BSD,int Id)
     return NULL;
 }
 
-unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId)
+int BSDNodeIdToRenderObjectId(int NodeId)
 {
-    unsigned int RenderObjectId;
-// TODO:Look at the assembly to find any other RenderBlockId/NodeRenderBlockId.
+    int RenderObjectId;
 //  1821346472 -> 519275822
 //  935865828 -> 2278882431
 //  149114796 -> 1686008476
@@ -1335,9 +1334,9 @@ unsigned int BSDNodeIdToRenderObjectId(unsigned int NodeId)
     return RenderObjectId;
 }
 
-unsigned int BSDMPNodeIdToRenderObjectId(unsigned int NodeId)
+int BSDMPNodeIdToRenderObjectId(int NodeId)
 {
-    unsigned int RenderObjectId;
+    int RenderObjectId;
     switch( NodeId ) {
         //NEW
         case 3815705185:
@@ -1428,14 +1427,14 @@ unsigned int BSDMPNodeIdToRenderObjectId(unsigned int NodeId)
     return RenderObjectId;
 }
 
-bool BSDIsRenderObjectPresent(BSD_t *BSD,unsigned int RenderObjectId) {
+bool BSDIsRenderObjectPresent(BSD_t *BSD,int RenderObjectId) {
     if( BSDGetRenderObjectIndexById(BSD,RenderObjectId) == -1 ) {
-        DPrintf("Render Object Id %u not found..\n",RenderObjectId);
+        DPrintf("Render Object Id %i not found..\n",RenderObjectId);
         return false;
     }
     return true;
 }
-const char *BSDNodeGetEnumStringFromNodeId(unsigned int NodeId)
+const char *BSDNodeGetEnumStringFromNodeId(int NodeId)
 {
     switch( NodeId ) {
         case BSD_PLAYER_SPAWN:
@@ -1631,7 +1630,7 @@ bool BSDPointInBox(vec3 Point,BSDPosition_t Center,BSDPosition_t NodeRotation,fl
     return false;
 }
 
-bool BSDPointInNode(vec3 Position,BSDNode_t *Node)
+bool BSDPointInNode(vec3 Position,const BSDNode_t *Node)
 {
     switch( Node->CollisionVolumeType ) {
         case BSD_COLLISION_VOLUME_TYPE_SPHERE:
@@ -1876,22 +1875,6 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *Rend
     
     //Emulate PSX Coordinate system...
     glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
-    
-    if( 1 ) {
-        for( int i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
-            if( BSD->NodeData.Node[i].MessageData == -1 ) {
-                continue;
-            }
-            if( BSDPointInNode(Camera->Position,&BSD->NodeData.Node[i]) ) {
-                DPrintf("Camera is inside node %i => %s\n",i,BSDNodeGetEnumStringFromNodeId(BSD->NodeData.Node[i].Id));
-                DPrintf("Node CollisionVolumeType:%s\n",BSDGetCollisionVolumeStringFromType(BSD->NodeData.Node[i].CollisionVolumeType));
-                if( BSD->NodeData.Node[i].Type == 5 ) {
-                    DPrintf("Node has dynamic face index set to %i\n",BSD->NodeData.Node[i].DynamicBlockIndex);
-                }
-                break;
-            }
-        }
-    }
         
     if( LevelDrawBSDNodesAsPoints->IValue ) {    
         Shader = ShaderCache("BSDShader","Shaders/BSDVertexShader.glsl","Shaders/BSDFragmentShader.glsl");
@@ -2291,7 +2274,7 @@ int BSDLoadRenderObjectFaceData(BSDRenderObject_t *RenderObject,BSD_t *BSD,int R
     if( RenderObject->Data->FaceOffset == 0 ) {
         return 0;
     }
-    DPrintf("BSDLoadRenderObjectFaceData:RenderObject Id %u\n",RenderObject->Data->Id);
+    DPrintf("BSDLoadRenderObjectFaceData:RenderObject Id %i\n",RenderObject->Data->Id);
     RenderObject->Face = NULL;
     if( GameEngine == MOH_GAME_UNDERGROUND ) {
         FaceOffset = ( RenderObjectDataOffset + (RenderObjectIndex * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) ) + 260;
@@ -2318,12 +2301,12 @@ int BSDParseRenderObjectData(BSD_t *BSD,FILE *BSDFile,int FirstRenderObjectFileP
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
         BSD->RenderObjectList[i].Data = &BSD->RenderObjectTable.RenderObject[i];
         if( !BSDParseRenderObjectVertexAndColorData(&BSD->RenderObjectList[i],BSD,BSDFile) ) {
-            DPrintf("BSDParseRenderObjectData:Failed to parse Vertex and Color data for RenderObject %u\n",BSD->RenderObjectTable.RenderObject[i].Id);
+            DPrintf("BSDParseRenderObjectData:Failed to parse Vertex and Color data for RenderObject %i\n",BSD->RenderObjectTable.RenderObject[i].Id);
             continue;
         }
 
         if( !BSDLoadRenderObjectFaceData(&BSD->RenderObjectList[i],BSD,i,FirstRenderObjectFilePosition,GameEngine,BSDFile) ) {
-            DPrintf("BSDParseRenderObjectData:Failed to parse Face data for RenderObject %u\n",BSD->RenderObjectTable.RenderObject[i].Id);
+            DPrintf("BSDParseRenderObjectData:Failed to parse Face data for RenderObject %i\n",BSD->RenderObjectTable.RenderObject[i].Id);
             continue;
         }
     }
@@ -2548,7 +2531,7 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
         }
         DPrintf("Reading RenderObject %i at %i\n",i,GetCurrentFilePosition(BSDFile));
         fread(&BSD->RenderObjectTable.RenderObject[i],sizeof(BSD->RenderObjectTable.RenderObject[i]),1,BSDFile);
-        DPrintf("RenderObject Id:%u\n",BSD->RenderObjectTable.RenderObject[i].Id);
+        DPrintf("RenderObject Id:%i\n",BSD->RenderObjectTable.RenderObject[i].Id);
         if( BSD->RenderObjectTable.RenderObject[i].Type == 1 ) {
             DPrintf("RenderObject Type:%i | %s\n",BSD->RenderObjectTable.RenderObject[i].Type,
                     BSDRenderObjectGetWeaponNameFromId(BSD->RenderObjectTable.RenderObject[i].Id));
@@ -2573,7 +2556,7 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
                 BSD->RenderObjectTable.RenderObject[i].ScaleY / 4,
                 BSD->RenderObjectTable.RenderObject[i].ScaleZ / 4);
         if( BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObject != -1 ) {
-            DPrintf("RenderObject References RenderObject Id:%u\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObject);
+            DPrintf("RenderObject References RenderObject Id:%i\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObject);
         } else {
             DPrintf("RenderObject No Reference set...\n");
         }
@@ -2602,7 +2585,7 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFile
     int Offset;
     int NodeNumReferencedRenderObjectIdOffset;
     int NumReferencedRenderObjectId;
-    unsigned int NodeRenderObjectId;
+    int NodeRenderObjectId;
     vec3 NodePosition;
     vec3 NodeRotation;
     int PrevPos;
@@ -2614,7 +2597,7 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFile
         printf("BSDParseNodeChunk: Invalid %s\n",InvalidFile ? "file" : "node struct");
         return;
     }
-    DPrintf("BSDParseNodeChunk:Parsing node with Id:%u | Id:%s\n",Node->Id,BSDNodeGetEnumStringFromNodeId(Node->Id));
+    DPrintf("BSDParseNodeChunk:Parsing node with Id:%i | Id:%s\n",Node->Id,BSDNodeGetEnumStringFromNodeId(Node->Id));
     DPrintf("Size:%i\n",Node->Size);
     DPrintf("U2:%i\n",Node->u2);
     DPrintf("Type:%i\n",Node->Type);
@@ -2704,7 +2687,7 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,int NodeFile
             DPrintf("Node has RenderObject offset %i.\n",NodeNumReferencedRenderObjectIdOffset);
             if( NodeNumReferencedRenderObjectIdOffset != 0 ) {
                 if( Node->Type == 4 ) {
-                    DPrintf("Node has Type 4 so the RenderObject Id is %u.\n",NodeNumReferencedRenderObjectIdOffset);
+                    DPrintf("Node has Type 4 so the RenderObject Id is %i.\n",NodeNumReferencedRenderObjectIdOffset);
                     BSDAddNodeToRenderObjecDrawableList(BSD,IsMultiplayer,NodeNumReferencedRenderObjectIdOffset,NodePosition,NodeRotation);
                 } else {
                     fseek(BSDFile,NodeFilePosition + NodeNumReferencedRenderObjectIdOffset,SEEK_SET);

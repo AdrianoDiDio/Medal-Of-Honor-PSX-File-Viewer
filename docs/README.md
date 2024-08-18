@@ -808,7 +808,7 @@ NULL or contains an offset to the data stored inside the BSD file.
 
 | Type           | Size     | Description                                                        |
 | -------------- | -------- | ------------------------------------------------------------------ |
-| unsigned int   | 4 bytes  | ID                                                                 |
+| int            | 4 bytes  | ID                                                                 |
 | int            | 4 bytes  | Unknown Offset (Valid if not 0)                                    |
 | int            | 4 bytes  | Animation Data Offset (Valid if not -1)                            |
 | int            | 4 bytes  | Unknown Offset (Valid if not 0)                                    |
@@ -1256,7 +1256,7 @@ Each node has the following structure:
 
 | Type                           | Size    | Description                                                                                   |
 | ------------------------------ | ------- | --------------------------------------------------------------------------------------------- |
-| unsigned int                   | 4 bytes | ID                                                                                            |
+| int                            | 4 bytes | ID                                                                                            |
 | int                            | 4 bytes | Size                                                                                          |
 | int                            | 4 bytes | Unknown                                                                                       |
 | int                            | 4 bytes | Type                                                                                          |

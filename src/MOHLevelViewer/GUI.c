@@ -26,6 +26,8 @@
 
 Config_t *GUIShowCurrentCompartment;
 Config_t *GUIShowCompartmentCollisions;
+Config_t *GUIShowBSDNodeCollisions;
+Config_t *GUIShowDebugOverlay;
 
 const char* LevelMusicOptions[] = { 
     "Disable",
@@ -129,6 +131,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
     if( !GUI->DebugWindowHandle ) {
         return;
     }
+    
     ZeroSize.x = 0.f;
     ZeroSize.y = 0.f;
     if( igBegin("Debug Settings",&GUI->DebugWindowHandle,ImGuiWindowFlags_AlwaysAutoResize) ) {
@@ -144,9 +147,17 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
                     GUIShowCurrentCompartment->Description ) ) {
                     ConfigSetNumber("GUIShowCurrentCompartment",GUIShowCurrentCompartment->IValue);
                 }
+                if( GUICheckBoxWithTooltip("Show Debug overlay",(bool *) &GUIShowDebugOverlay->IValue,
+                    GUIShowDebugOverlay->Description ) ) {
+                    ConfigSetNumber("GUIShowDebugOverlay",GUIShowDebugOverlay->IValue);
+                }
                 if( GUICheckBoxWithTooltip("Show Compartment Collisions",(bool *) &GUIShowCompartmentCollisions->IValue,
                     GUIShowCompartmentCollisions->Description ) ) {
                     ConfigSetNumber("GUIShowCompartmentCollisions",GUIShowCompartmentCollisions->IValue);
+                }
+                if( GUICheckBoxWithTooltip("Show BSD Node Collisions",(bool *) &GUIShowBSDNodeCollisions->IValue,
+                    GUIShowBSDNodeCollisions->Description ) ) {
+                    ConfigSetNumber("GUIShowBSDNodeCollisions",GUIShowBSDNodeCollisions->IValue);
                 }
                 if( igSliderFloat("Camera Speed",&CameraSpeed->FValue,10.f,256.f,"%.2f",0) ) {
                     ConfigSetNumber("CameraSpeed",CameraSpeed->FValue);
@@ -339,6 +350,12 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
     TSP_t *TSP;
     vec3 CameraPosition;
     ImGuiWindowFlags WindowFlags;
+    int i;
+    BSD_t *BSD;
+    
+    if( !GUIShowDebugOverlay->IValue ) {
+        return;
+    }
     
     WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | 
                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | 
@@ -376,6 +393,20 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
 
                 } else {
                     igText("No collisions reported");
+                }
+            }
+        }
+        if( GUIShowBSDNodeCollisions->IValue ) {
+            if( LevelManagerIsLevelLoaded(LevelManager) ) {
+                BSD = LevelManager->CurrentLevel->BSD;
+                for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
+                    if( BSDPointInNode(Camera->Position,&BSD->NodeData.Node[i]) ) {
+                        igText("Camera is inside node %i => %s\n",i,BSDNodeGetEnumStringFromNodeId(BSD->NodeData.Node[i].Id));
+                        igText("Node CollisionVolumeType:%s\n",BSDGetCollisionVolumeStringFromType(BSD->NodeData.Node[i].CollisionVolumeType));
+                        if( BSD->NodeData.Node[i].Type == 5 ) {
+                            igText("Node has dynamic face index set to %i\n",BSD->NodeData.Node[i].DynamicBlockIndex);
+                        }
+                    }
                 }
             }
         }
@@ -528,6 +559,9 @@ GUI_t *GUIInit(VideoSystem_t *VideoSystem)
     
     GUIShowCurrentCompartment = ConfigGet("GUIShowCurrentCompartment");
     GUIShowCompartmentCollisions = ConfigGet("GUIShowCompartmentCollisions");
+    GUIShowBSDNodeCollisions = ConfigGet("GUIShowBSDNodeCollisions");
+    GUIShowDebugOverlay = ConfigGet("GUIShowDebugOverlay");
+    
     GUILoadCommonSettings();
     
     GUI->DefaultContext = igCreateContext(NULL);
