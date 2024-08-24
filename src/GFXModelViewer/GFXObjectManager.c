@@ -89,7 +89,7 @@ void GFXObjectManagerAdvanceCurrentGFXAnimationPose(GFXObjectManager_t *GFXObjec
     int NextPose;
              
     CurrentGFX = GFXObjectManagerGetCurrentGFX(GFXObjectManager);
-    if( CurrentGFX != NULL ) {
+    if( CurrentGFX != NULL && CurrentGFX->Header.NumAnimationIndex > 1) {
         NextPose = (CurrentGFX->CurrentAnimationIndex + 1) % CurrentGFX->Header.NumAnimationIndex;
         //NOTE(Adriano): Scan through the available pose until we find one that it's valid and can be set
         while( !GFXSetAnimationPose(CurrentGFX,NextPose,0) ) {
