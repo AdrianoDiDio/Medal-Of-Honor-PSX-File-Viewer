@@ -91,7 +91,7 @@ void RenderObjectManagerAdvanceSelectedRenderObjectAnimationPose(RenderObjectMan
     BSDRenderObject_t *CurrentRenderObject;
     int NextPose;
     CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(RenderObjectManager);
-    if( CurrentRenderObject != NULL ) {
+    if( CurrentRenderObject != NULL && CurrentRenderObject->NumAnimations > 1) {
         NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1) % 
         CurrentRenderObject->NumAnimations;
         //NOTE(Adriano): Scan through the available pose until we find one that it's valid and can be set
