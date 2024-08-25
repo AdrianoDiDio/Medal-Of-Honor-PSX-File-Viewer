@@ -1232,12 +1232,13 @@ int BSDGetRenderObjectIndexById(BSD_t *BSD,int Id)
     return -1;
 }
 
-BSDRenderObject_t *BSDGetRenderObjectById(BSD_t *BSD,int Id)
+
+BSDRenderObjectElement_t *BSDGetRenderObjectById(BSD_t *BSD,int Id)
 {
     int i;
     for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
         if( BSD->RenderObjectTable.RenderObject[i].Id == Id ) {
-            return &BSD->RenderObjectList[i];
+            return &BSD->RenderObjectTable.RenderObject[i];
         }
     }
     return NULL;
@@ -2497,7 +2498,54 @@ int BSDReadSkyChunk(BSD_t *BSD,FILE *BSDFile)
     DPrintf("Star Radius:%i\n",BSD->SkyData.StarRadius);
     return 1;
 }
+/*
+ * Patch all the render objects that have the ReferencedRenderObject Id set.
+ * At the moment only static object fields are mapped...if we decide to also support
+ * animated render objects then we would need to add all the related fields (as it has been already done in MOHModelViewer)
+*/
+void BSDPatchRenderObjects(BSD_t *BSD,int GameEngine,FILE *BSDFile)
+{
+    BSDRenderObjectElement_t *CurrentRenderObject;
+    BSDRenderObjectElement_t *ReferencedRenderObject;
+    int i;
+        
+    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
+        if( BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId == -1 ) {
+            continue;
+        }
+        ReferencedRenderObject = BSDGetRenderObjectById(BSD,BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
+        if( !ReferencedRenderObject ) {
+            DPrintf("BSDPatchRenderObjects:RenderObject Id %i not found\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
+            continue;
+        }
+        CurrentRenderObject = &BSD->RenderObjectTable.RenderObject[i];
+        DPrintf("BSDPatchRenderObjects:Patching up RenderObject Id %i using Id %i\n",BSD->RenderObjectTable.RenderObject[i].Id,
+            BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId
+        );
+        if(CurrentRenderObject->FaceOffset == -1 ) {
+            CurrentRenderObject->FaceOffset = ReferencedRenderObject->FaceOffset;
+        }
+        if(CurrentRenderObject->UnknownOffset4 == -1 ) {
+            CurrentRenderObject->UnknownOffset4 = ReferencedRenderObject->UnknownOffset4;
+        }
+        if(CurrentRenderObject->VertOffset == -1 ) {
+            CurrentRenderObject->VertOffset = ReferencedRenderObject->VertOffset;
+            CurrentRenderObject->NumVertex = ReferencedRenderObject->NumVertex;
+        }
+        if(CurrentRenderObject->ColorOffset == -1 ) {
+            CurrentRenderObject->ColorOffset = ReferencedRenderObject->ColorOffset;
+        }
+        if( CurrentRenderObject->ScaleX == 0 && CurrentRenderObject->ScaleY == 0 && CurrentRenderObject->ScaleZ == 0 ) {
+            CurrentRenderObject->ScaleX = ReferencedRenderObject->ScaleX;
+            CurrentRenderObject->ScaleY = ReferencedRenderObject->ScaleY;
+            CurrentRenderObject->ScaleZ = ReferencedRenderObject->ScaleZ;
 
+        }
+        if( CurrentRenderObject->Type == -1 ) {
+            CurrentRenderObject->Type = ReferencedRenderObject->Type;
+        }
+    }
+}
 int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
 {
     int FirstRenderObjectFilePosition;
@@ -2555,8 +2603,8 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
                 BSD->RenderObjectTable.RenderObject[i].ScaleX / 4,
                 BSD->RenderObjectTable.RenderObject[i].ScaleY / 4,
                 BSD->RenderObjectTable.RenderObject[i].ScaleZ / 4);
-        if( BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObject != -1 ) {
-            DPrintf("RenderObject References RenderObject Id:%i\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObject);
+        if( BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId != -1 ) {
+            DPrintf("RenderObject References RenderObject Id:%i\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
         } else {
             DPrintf("RenderObject No Reference set...\n");
         }
@@ -2569,6 +2617,8 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
             }
         }
     }
+    // Patch up the data using the referenced renderobjects ids...
+    BSDPatchRenderObjects(BSD,GameEngine,BSDFile);
     // Prepare vertices to be rendered!
     PreviousFilePosition = ftell(BSDFile);
     Result = BSDParseRenderObjectData(BSD,BSDFile,FirstRenderObjectFilePosition,GameEngine);

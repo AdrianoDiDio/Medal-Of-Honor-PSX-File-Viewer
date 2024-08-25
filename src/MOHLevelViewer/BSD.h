@@ -201,7 +201,7 @@ unsigned short NumVertex;
 //     int     UOffset1;
     int     ColorOffset;
     char    LastU[32];
-    int     ReferencedRenderObject;
+    int     ReferencedRenderObjectId;
     char    Pad3[16];
     int     Type;
 } BSDRenderObjectElement_t;
