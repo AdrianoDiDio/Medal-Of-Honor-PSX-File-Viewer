@@ -2503,7 +2503,7 @@ int BSDReadSkyChunk(BSD_t *BSD,FILE *BSDFile)
  * At the moment only static object fields are mapped...if we decide to also support
  * animated render objects then we would need to add all the related fields (as it has been already done in MOHModelViewer)
 */
-void BSDPatchRenderObjects(BSD_t *BSD,int GameEngine,FILE *BSDFile)
+void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile)
 {
     BSDRenderObjectElement_t *CurrentRenderObject;
     BSDRenderObjectElement_t *ReferencedRenderObject;
@@ -2618,7 +2618,7 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
         }
     }
     // Patch up the data using the referenced renderobjects ids...
-    BSDPatchRenderObjects(BSD,GameEngine,BSDFile);
+    BSDPatchRenderObjects(BSD,BSDFile);
     // Prepare vertices to be rendered!
     PreviousFilePosition = ftell(BSDFile);
     Result = BSDParseRenderObjectData(BSD,BSDFile,FirstRenderObjectFilePosition,GameEngine);
