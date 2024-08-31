@@ -1410,6 +1410,7 @@ void SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byt
         GFX = GFXRead(Entry.Data,Entry.Length);
     } else {
         DPrintf("SSTLoadGFXModel:Failed to locate model %s\n",FileName);
+        return;
     }
     
     memcpy(&FileName,*SSTBuffer,sizeof(FileName));
