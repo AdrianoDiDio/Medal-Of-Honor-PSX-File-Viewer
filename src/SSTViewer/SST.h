@@ -130,6 +130,13 @@ typedef struct SST_s {
     struct SST_s    *Next;
 } SST_t;
 
+typedef struct GFXVector_s {
+    int x;
+    int y;
+    int z;
+    int Pad;
+} GFXVector_t;
+
 SST_t   *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const RSC_t *GlobalRSCList,int GameEngine);
 void    SSTGenerateVAOs(SST_t *SST);
 void    SSTUnload(SST_t *SST);

@@ -1375,7 +1375,7 @@ void SSTLoadVideoInfo(SST_t *SST,SSTClass_t *Class,Byte **SSTBuffer)
     VideoInfo->Unknown,VideoInfo->Unknown2);
     Class->VideoInfo = VideoInfo;
 }
-void SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte **SSTBuffer)
+GFX_t *SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byte **SSTBuffer)
 {
     GFX_t *GFX;
     RSCEntry_t Entry;
@@ -1386,19 +1386,19 @@ void SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byt
     
     if( !SST ) {
         DPrintf("SSTLoadGFXModel:Invalid SST data\n");
-        return;
+        return NULL;
     }
     if( !Class ) {
         DPrintf("SSTLoadGFXModel:Invalid class\n");
-        return;
+        return NULL;
     }
     if( !GlobalRSCList ) {
         DPrintf("SSTLoadGFXModel: Invalid global RSC list\n");
-        return;
+        return NULL;
     }
     if( !SSTBuffer ) {
         DPrintf("SSTLoadGFXModel:Invalid buffer\n");
-        return;
+        return NULL;
     }
     
     memcpy(&FileName,*SSTBuffer,sizeof(FileName));
@@ -1410,7 +1410,7 @@ void SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byt
         GFX = GFXRead(Entry.Data,Entry.Length);
     } else {
         DPrintf("SSTLoadGFXModel:Failed to locate model %s\n",FileName);
-        return;
+        return NULL;
     }
     
     memcpy(&FileName,*SSTBuffer,sizeof(FileName));
@@ -1443,6 +1443,59 @@ void SSTLoadGFXModel(SST_t *SST,SSTClass_t *Class,const RSC_t *GlobalRSCList,Byt
     //Link it in!
     GFX->Next = Class->GFXModelList;
     Class->GFXModelList = GFX;
+    return GFX;
+}
+void SSTLoadGFXAdditionalInfo(SST_t *SST,SSTClass_t *Class,GFX_t *GFX,Byte **SSTBuffer)
+{
+    GFXVector_t VectorList[17];
+    int FirstNumber;
+    int SecondNumber;
+    int ThirdNumber;
+    int i;
+    
+    if( !SST ) {
+        DPrintf("SSTLoadGFXAdditionalInfo:Invalid SST data\n");
+        return;
+    }
+    if( !Class ) {
+        DPrintf("SSTLoadGFXAdditionalInfo:Invalid class\n");
+        return;
+    }
+    if( !GFX ) {
+        DPrintf("SSTLoadGFXAdditionalInfo: Invalid GFX\n");
+        return;
+    }
+    if( !SSTBuffer ) {
+        DPrintf("SSTLoadGFXAdditionalInfo:Invalid buffer\n");
+        return;
+    }
+    //TODO(Adriano): If the informations contained here are related to the scripted sequence the model has to take then
+    // it wouldn't make sense to store it in the GFX file (since they can be used globally and we have another tool that has no
+    // knowledge on how the SST script works)...this means that we would need to create a wrapper struct that has a GFX model and
+    // the following data if any that will be used to move the model around...
+    //NOTE(Adriano): First 12 bytes contains some metadata info...
+    FirstNumber = **(int **) SSTBuffer;
+    *SSTBuffer += 4;
+    SecondNumber = **(int **) SSTBuffer;
+    *SSTBuffer += 4;
+    ThirdNumber = **(int **) SSTBuffer;
+    *SSTBuffer += 4;
+    //NOTE(Adriano): Then we have 16 vectors, where each vector has a size of 16 bytes for a total of 256 bytes
+    memcpy(&VectorList,*SSTBuffer,sizeof(GFXVector_t) * 16);
+    //NOTE(Adriano): Finally we have another vector and a pad value
+    memcpy(&VectorList[16],*SSTBuffer,sizeof(GFXVector_t));
+    *SSTBuffer += sizeof(VectorList) + 4;
+    
+    DPrintf("SSTLoadGFXAdditionalInfo:Metadata info are %i;%i;%i\n",FirstNumber,SecondNumber,ThirdNumber);
+    DPrintf("SSTLoadGFXAdditionalInfo:Dumping vector list...\n");
+    for( i = 0; i < 17; i++ ) {
+        if( i == 16 ) {
+            DPrintf("SSTLoadGFXAdditionalInfo:Next vector is the 'special' one\n");
+        }
+        DPrintf("SSTLoadGFXAdditionalInfo:Vector%i %i;%i;%i;%i (%i;%i;%i;%i divided by 4096)\n",i,
+                VectorList[i].x,VectorList[i].y,VectorList[i].z,VectorList[i].Pad,
+                VectorList[i].x / 4096,VectorList[i].y / 4096,VectorList[i].z / 4096,VectorList[i].Pad);
+    }
 }
 SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int GameEngine)
 {
@@ -1523,6 +1576,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
     SST_t *SST;
     SSTClass_t *CurrentClass;
     SSTCallback_t *LastCallback;
+    GFX_t *CurrentGFXModel;
     int Size;
     int Token;
     
@@ -1542,6 +1596,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
     SST->ClassList = NULL;
     SST->Next = NULL;
     CurrentClass = NULL;
+    CurrentGFXModel = NULL;
 
     DPrintf("SSTLoad:Loading script %s\n",SST->Name);
     
@@ -1558,7 +1613,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
                 CurrentClass = SSTLoadClass(SST,&SSTBuffer,BasePath,GameEngine);
                 if( !CurrentClass ) {
                     DPrintf("SSTLoad:Failed to allocate class...\n");
-                    return NULL;
+                    goto Failure;
                 }
                 break;
             case SST_CALLBACK_TOKEN:
@@ -1584,12 +1639,16 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
                 DPrintf("SSTLoad:Skipping unk2\n");
                 break;
             case SST_GFX_TOKEN:
-                SSTLoadGFXModel(SST,CurrentClass,GlobalRSCList,&SSTBuffer);
+                CurrentGFXModel = SSTLoadGFXModel(SST,CurrentClass,GlobalRSCList,&SSTBuffer);
+                if( !CurrentGFXModel ) {
+                    DPrintf("Failed to load GFX model...\n");
+                    goto Failure;
+                }
                 break;
             case SST_UNKNOWN_3_TOKEN:
                 //After a GFX Model we have this token.
                 DPrintf("SSTLoad:Skipping unk3 288\n");
-                SSTBuffer += 288;
+                SSTLoadGFXAdditionalInfo(SST,CurrentClass,CurrentGFXModel,&SSTBuffer);
                 break;
             default:
                 DPrintf("SSTLoad:Unknown token %i\n",Token);
@@ -1599,4 +1658,8 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
     }
     //qsort( &Label, NumLabels, sizeof(SSTLabel_t), SSTCompare );
     return SST;
+    
+Failure:
+    SSTFree(SST);
+    return NULL;
 }
