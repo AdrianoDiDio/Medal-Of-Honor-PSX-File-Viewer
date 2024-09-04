@@ -1531,7 +1531,7 @@ model.
 | int  | 4 bytes  | Unknown                                  |
 | int  | 4 bytes  | Unknown                                  |
 | Byte | 272 bytes | List of 17 vectors (each vector takes up 16 bytes) |
-| Byte | 4 bytes | Pad (Always -1)                           |
+| Byte | 4 bytes | Pad                          |
 
 ##### GFX Model
 
