@@ -1521,14 +1521,17 @@ title screen).
 
 ##### Token Type 11
 
-Usually declared after a token type 10, has a fixed size of 288 bytes
+Usually declared after a token type 10, has a fixed size of 288 bytes.  
+Could be related to the scripted sequence used in the title screen to animate the
+model.
 
 | Type | Size     | Description                              |
 | ---- | -------- | ---------------------------------------- |
-| Byte | 12 bytes | Unknown                                  |
-| Byte | 268 bytes | Unknown data (probably related to model animation) |
+| int  | 4 bytes  | Unknown                                  |
+| int  | 4 bytes  | Unknown                                  |
+| int  | 4 bytes  | Unknown                                  |
+| Byte | 272 bytes | List of 17 vectors (each vector takes up 16 bytes) |
 | Byte | 4 bytes | Pad (Always -1)                           |
-| Byte | 4 bytes | Unknown                                |
 
 ##### GFX Model
 
