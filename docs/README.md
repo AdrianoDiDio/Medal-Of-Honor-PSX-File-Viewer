@@ -4,99 +4,102 @@ Medal Of Honor PSX File Viewer
 Table of contents
 =================
 
-* [Introduction](#introduction)
-* [Build](#build)
-* [Programs](#programs)
-  + [MOHLevelViewer](#mohlevelviewer)
-    - [Usage](#usage)
-    - [Credits](#credits)
-  + [MOHModelViewer](#mohmodelviewer)
-    - [Usage](#usage-1)
-    - [Credits](#credits-1)
-  + [GFXModelViewer](#gfxmodelviewer)
-      - [Usage](#usage-1)
-      - [Credits](#credits-1)
-  + [RSC Extractor](#rsc-extractor)
-    - [Build](#build-1)
-    - [Run](#run)
-  + [TIM Viewer](#tim-viewer)
-    - [Run](#run-1)
-    - [Credits](#credits-2)
-  + [Sound Explorer](#sound-explorer)
-    - [Run](#run-2)
-    - [Credits](#credits-3)
-* [File Formats](#file-formats)
-  + [Common Formats](#common-formats)
-    - [TSB](#tsb)
-  + [TSP Files](#tsp-files)
-    - [TSP Nodes](#tsp-nodes)
-      * [Vector3](#vector3)
-      * [Bounding Box](#bounding-box)
-      * [TSP Node](#tsp-node)
-    - [Vertex](#vertex)
-    - [Color](#color)
-    - [Faces](#faces)
-      * [UV Coordinates](#uv-coordinates)
-    - [Texture Info](#texture-info)
-      * [Face Data](#face-data)
-    - [Dynamic Data](#dynamic-data)
-      * [Dynamic Face Data](#dynamic-face-data)
-    - [Collision Data](#collision-data)
-      * [KDTree Nodes](#kdtree-nodes)
-      * [Face Index Array](#face-index-array)
-      * [Collision Vertices](#collision-vertices)
-      * [Collision Normals](#collision-normals)
-      * [Collision Faces](#collision-faces)
-  + [BSD Files](#bsd-files)
-    - [File Format](#file-format)
-      * [TSP Info Block](#tsp-info-block)
-      * [Scene Info Block](#scene-info-block)
-      * [Animated Lights Block](#animated-lights-block)
-      * [Entry Table Block](#entry-table-block)
-      * [Sky Box Definitions](#sky-box-definitions)
-      * [RenderObject Block](#renderobject-block)
-        + [Color Mode](#color-mode)
-        + [Texture Page](#texture-page)
-        + [Vertex Data](#vertex-data)
-        + [Animations](#animations)
-        + [Animation Entry](#animation-entry)
-        + [Animation Data](#animation-data)
-      * [Vertex Table](#vertex-table)
-      * [Vertex Data](#vertex-data-1)
-      * [Hierarchy Data](#hierarchy-data)
-      * [Face Table](#face-table)
-      * [Face Data](#face-data-1)
-      * [Node Table](#node-table)
-        + [Node Table Data](#node-table-data)
-        + [Node Table Entry](#node-table-entry)
-      * [Node](#node)
-        + [Node Position](#node-position)
-        + [Node Data](#node-data)
-        + [Node Type](#node-type)
-      * [Property Set File](#property-set-file)
-  + [RSC Files](#rsc-files)
-    - [File Format](#file-format-1)
-      + [RSC Header](#rsc-header)
-      + [RSC Entry](#rsc-entry)
-  + [TAF Files](#taf-files)
-  + [TIM Files](#tim-files)
-    - [File Format](#file-format-2)
-      + [TIM Header](#tim-header)
-      + [TIM CLUT Color](#tim-clut-color)
-      + [TIM Content](#tim-content)
-  + [SST Files](#sst-files)
-    - [SST Tokens](#sst-tokens)
-      * [Token Type 1](#token-type-1)
-      * [Token Type 2](#token-type-2)
-      * [Token Type 3](#token-type-3)
-      * [Token Type 5](#token-type-5)
-      * [Token Type 7](#token-type-7)
-      * [Token Type 8](#token-type-8)
-      * [Token Type 9](#token-type-9)
-      * [Token Type 10](#token-type-10)
-      * [Token Type 11](#token-type-11)
-      * [GFX Model](#gfx-model)
-  + [STR Files](#str-files)
+- [Introduction](#introduction)
+- [Build](#build)
+- [Programs](#programs)
+   * [MOHLevelViewer](#mohlevelviewer)
+      + [Usage](#usage)
+      + [Credits](#credits)
+   * [MOHModelViewer](#mohmodelviewer)
+      + [Usage](#usage-1)
+      + [Credits](#credits-1)
+   * [GFXModelViewer](#gfxmodelviewer)
+      + [Usage](#usage-2)
+      + [Credits](#credits-2)
+   * [SSTViewer](#sstviewer)
+      + [Usage](#usage-3)
+      + [Credits](#credits-3)
+   * [RSC Extractor](#rsc-extractor)
+      + [Build](#build-1)
+      + [Run](#run)
+   * [TIM Viewer](#tim-viewer)
+      + [Run](#run-1)
+      + [Credits](#credits-4)
+   * [Sound Explorer](#sound-explorer)
+      + [Run](#run-2)
+      + [Credits](#credits-5)
+- [File Formats](#file-formats)
+   * [Common Formats](#common-formats)
+      + [TSB](#tsb)
+   * [TSP Files](#tsp-files)
+      + [TSP Nodes](#tsp-nodes)
+         - [Vector3](#vector3)
+         - [Bounding Box](#bounding-box)
+         - [TSP Node](#tsp-node)
+      + [Vertex](#vertex)
+      + [Color](#color)
+      + [Faces](#faces)
+         - [UV Coordinates](#uv-coordinates)
+      + [Texture Info](#texture-info)
+         - [Face Data](#face-data)
+      + [Dynamic Data](#dynamic-data)
+         - [Dynamic Face Data](#dynamic-face-data)
+      + [Collision Data](#collision-data)
+         - [KDTree Nodes](#kdtree-nodes)
+         - [Face Index Array](#face-index-array)
+         - [Collision Vertices](#collision-vertices)
+         - [Collision Normals](#collision-normals)
+         - [Collision Faces](#collision-faces)
+   * [BSD Files](#bsd-files)
+      + [File Format](#file-format)
+         - [TSP Info Block](#tsp-info-block)
+      + [Scene Info Block](#scene-info-block)
+         - [Animated Lights Block](#animated-lights-block)
+         - [Entry Table Block](#entry-table-block)
+         - [Sky Box Definitions](#sky-box-definitions)
+         - [RenderObject Block](#renderobject-block)
+            * [Color Mode](#color-mode)
+            * [Texture Page](#texture-page)
+            * [Vertex Data](#vertex-data)
+            * [Animations](#animations)
+            * [Animation Entry](#animation-entry)
+            * [Animation Data](#animation-data)
+         - [Vertex Table](#vertex-table)
+         - [Vertex Data](#vertex-data-1)
+         - [Hierarchy Data](#hierarchy-data)
+         - [Face Table](#face-table)
+         - [Face Data](#face-data-1)
+         - [Node Table](#node-table)
+            * [Node Table Data](#node-table-data)
+            * [Node Table Entry](#node-table-entry)
+         - [Node](#node)
+            * [Node Position](#node-position)
+            * [Node Data](#node-data)
+            * [Node Type](#node-type)
+         - [Property Set File](#property-set-file)
+   * [RSC Files](#rsc-files)
+      + [File Format](#file-format-1)
+          * [RSC Header](#rsc-header)
+          * [RSC Entry](#rsc-entry)
+   * [TAF Files](#taf-files)
+   * [TIM Files](#tim-files)
+      + [File Format](#file-format-2)
+          * [TIM Header](#tim-header)
+          * [TIM CLUT Color](#tim-clut-color)
+          * [TIM Content](#tim-content)
+   * [SST Files](#sst-files)
+      + [SST Tokens](#sst-tokens)
+         - [Token Type 1](#token-type-1)
+         - [Token Type 2](#token-type-2)
+         - [Token Type 3](#token-type-3)
+         - [Token Type 5](#token-type-5)
+         - [Token Type 7](#token-type-7)
+         - [Token Type 8](#token-type-8)
+         - [Token Type 9](#token-type-9)
+         - [Token Type 10](#token-type-10)
+         - [Token Type 11](#token-type-11)
+         - [GFX Model](#gfx-model)
+   * [STR Files](#str-files)
 
 ## Introduction
 
@@ -143,6 +146,13 @@ Some sample screenshot taken from TIMViewer:
 
 *Screenshot taken from TIMViewer when opening all the
 tims inside the TAF file contained in Medal Of Honor Mission 1 Level 3*
+
+Some sample screenshot taken from SSTViewer:  
+
+<img src="Images/SSTViewer_Main_Interface.png" width="600" />
+
+*Screenshot taken from SSTViewer when opening the meval
+script from the first Medal Of Honor game*
 
 ## Build
 
@@ -237,6 +247,31 @@ on Linux and %AppData% on Windows).**
 #### Credits
 
 GFXModelViewer uses the following libraries:  
+
+**SDL2**: https://www.libsdl.org/  
+**zlib**: https://github.com/madler/zlib  
+**libpng**:http://www.libpng.org/  
+**IMGUI**: https://github.com/ocornut/imgui/  
+**IMGUI_FileDialog**:  https://github.com/aiekick/ImGuiFileDialog  
+The font file shipped with the program is:  
+**DroidSans.ttf**: https://www.fontsquirrel.com/fonts/droid-sans
+
+### SSTViewer
+
+SSTViewer is able to load and render any SST script from
+the games Medal Of Honor and Medal Of Honor:Underground.  
+At the moment it is only able to load all the labels and the models without the ability to interact with them  
+
+#### Usage
+
+> ./SSTViewer `<Optional Game Directory>`  
+
+**NOTE: The configuration is stored in the User preference folder (.local/share/SSTViewer
+on Linux and %AppData% on Windows).**  
+
+#### Credits
+
+SSTViewer uses the following libraries:  
 
 **SDL2**: https://www.libsdl.org/  
 **zlib**: https://github.com/madler/zlib  
@@ -515,7 +550,7 @@ Note that unlike V2, that it is not encoded, V0 and V1 can be extracted
 using bit shifting: (V0V1 & 0x1FFF) and (V0V1 >> 16 ) & 0X1FFF  
 There are three possible cases that we can find when reading this int:
 
-* *If it is equal to 0x1fff1fff than this is the last data that we need to
+* If it is equal to 0x1fff1fff than this is the last data that we need to
   read for that node.  
 
 * If, instead, is equal to 0x1FFF then we need to read a new face struct and
