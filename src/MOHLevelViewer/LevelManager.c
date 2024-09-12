@@ -492,9 +492,7 @@ void LevelManagerOnAudioUpdate(void *UserData,Byte *Stream,int Length)
             }
         }
     }
-    for (int i = 0; i < Length; i++) {
-        Stream[i] = 0;
-    }
+    memset(Stream, 0, Length);
     ChunkLength = (CurrentMusic->Size - CurrentMusic->DataPointer);
     if( ChunkLength > Length ) {
         ChunkLength = Length;
