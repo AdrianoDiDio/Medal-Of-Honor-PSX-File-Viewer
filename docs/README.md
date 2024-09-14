@@ -53,7 +53,7 @@ Table of contents
    * [BSD Files](#bsd-files)
       + [File Format](#file-format)
          - [TSP Info Block](#tsp-info-block)
-      + [Scene Info Block](#scene-info-block)
+         - [Scene Info Block](#scene-info-block)
          - [Animated Lights Block](#animated-lights-block)
          - [Entry Table Block](#entry-table-block)
          - [Sky Box Definitions](#sky-box-definitions)

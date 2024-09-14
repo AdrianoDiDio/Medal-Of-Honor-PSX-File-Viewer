@@ -38,7 +38,7 @@ int RSCFree(RSC_t *RSC)
     int i;
     
     if( !RSC ) {
-        printf("RSCOpen:Invalid RSC data\n");
+        printf("RSCFree:Invalid RSC data\n");
         return RSC_INVALID_DATA; 
     }
     while( RSC ) {
@@ -52,12 +52,12 @@ int RSCFree(RSC_t *RSC)
     }
     return RSC_OK;
 }
-int RSCSearch(RSC_t *RSC,char *FileName)
+int RSCSearch(RSC_t *RSC,const char *FileName)
 {
     int i;
     for( i = 0; i < (int) RSC->Header.NumEntry; i++ ) {
         if( !strcmp(RSC->EntryList[i].Name,FileName) ) {
-            DPrintf("Found Entry %s in list\n",FileName);
+            DPrintf("RSCSearch:Found Entry %s in list\n",FileName);
             return i;
         }
     }
@@ -85,7 +85,7 @@ int RSCOpen(const RSC_t *RSC,const char *FileName,RSCEntry_t *OutEntry)
             return RSC_OK;
         }
     }
-    DPrintf("An error has occurred:%s\n",RSCGetErrorString(EntryIndex));
+    DPrintf("RSCOpen:An error has occurred:%s\n",RSCGetErrorString(EntryIndex));
     return RSC_FILE_NOT_FOUND;
 }
 

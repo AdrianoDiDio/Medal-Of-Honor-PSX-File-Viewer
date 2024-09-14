@@ -950,7 +950,7 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
     Shader_t *Shader;
     SSTClass_t *ClassIterator;
     float PsxScreenWidth = 512.f;
-    float PsxScreenHeight = 256.f;
+    float PsxScreenHeight = 240.f;
     int PaletteTextureId;
     int TextureIndexId;
     int OrthoMatrixID;
