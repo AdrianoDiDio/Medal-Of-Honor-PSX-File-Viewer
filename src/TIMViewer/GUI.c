@@ -178,7 +178,7 @@ void GUIDrawVRAMWindow(GUI_t *GUI,ImageManager_t *ImageManager)
 
     igBeginChild_Str("VRAM Viewer",ZeroSize,false, ImGuiWindowFlags_HorizontalScrollbar);
     
-    igSetItemKeyOwner(ImGuiKey_MouseWheelY,0);
+    igSetItemKeyOwner_Nil(ImGuiKey_MouseWheelY);
     if (igIsWindowHovered(0) && ( igIsKeyDown_Nil(ImGuiKey_LeftCtrl) || igIsKeyDown_Nil(ImGuiKey_RightCtrl) ) ) {
         WheelFactor = IO->MouseWheel;
         if( WheelFactor ) {
