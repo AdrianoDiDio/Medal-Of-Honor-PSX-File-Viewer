@@ -421,7 +421,7 @@ void FileDialogRender(FileDialog_t *FileDialog)
     if (IGFD_DisplayDialog(FileDialog->Window, FileDialog->Key, 
         ImGuiWindowFlags_NoCollapse  | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings, MinSize, MaxSize)) {
         if (IGFD_IsOk(FileDialog->Window)) {
-                FileName = IGFD_GetFilePathName(FileDialog->Window);
+                FileName = IGFD_GetFilePathName(FileDialog->Window,IGFD_ResultMode_KeepInputFile);
                 DirectoryPath = IGFD_GetCurrentPath(FileDialog->Window);
                 UserData = IGFD_GetUserDatas(FileDialog->Window);
                 if( FileDialog->PreviousFolder ) {
@@ -480,6 +480,7 @@ void *FileDialogGetUserData(FileDialog_t *FileDialog)
 void FileDialogOpenWithUserData(FileDialog_t *FileDialog,const char *Path,void *UserData)
 {
     const char *StartingPath;
+    struct IGFD_FileDialog_Config DialogConfig;
     if( !FileDialog ) {
         DPrintf("FileDialogOpenWithUserData:Invalid dialog data\n");
         return;
@@ -493,9 +494,12 @@ void FileDialogOpenWithUserData(FileDialog_t *FileDialog,const char *Path,void *
     } else {
         StartingPath = FileDialog->PreviousFolder == NULL ? FILE_DIALOG_DEFAULT_OPEN_DIR : FileDialog->PreviousFolder;
     }
-    IGFD_OpenDialog(FileDialog->Window,FileDialog->Key,FileDialog->WindowTitle,FileDialog->Filters,
-                    StartingPath,"",1,
-                    UserData,ImGuiFileDialogFlags_DontShowHiddenFiles | ImGuiFileDialogFlags_CaseInsensitiveExtention);
+    DialogConfig = IGFD_FileDialog_Config_Get();
+    DialogConfig.path = StartingPath;
+    DialogConfig.countSelectionMax = 1;
+    DialogConfig.userDatas = UserData;
+    DialogConfig.flags = ImGuiFileDialogFlags_DontShowHiddenFiles | ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering;
+    IGFD_OpenDialog(FileDialog->Window,FileDialog->Key,FileDialog->WindowTitle,FileDialog->Filters,DialogConfig);
 }
 /*
  * Opens a new file dialog starting from the previous folder if set or from the current one if NULL.
