@@ -975,6 +975,64 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
     return 1;
 }
 
+int BSDLoadStaticVertexAndColorData(BSDRenderObject_t *RenderObject,BSDRenderObjectElement_t RenderObjectElement,FILE *BSDFile)
+{
+    int i;
+    int Size;
+    
+    if( !RenderObject || !BSDFile ) {
+        bool InvalidFile = (BSDFile == NULL ? true : false);
+        printf("BSDLoadStaticVertexAndColorData: Invalid %s\n",InvalidFile ? "file" : "RenderObject struct");
+        return 0;
+    }
+    if( RenderObjectElement.VertexOffset == 0 ) {
+        DPrintf("BSDLoadStaticVertexAndColorData:Invalid Vertex Offset\n");
+        return 0;
+    }
+    Size = RenderObjectElement.NumVertex * sizeof(BSDVertex_t);
+    RenderObject->VertexList = malloc(Size);
+    if( !RenderObject->VertexList ) {
+        DPrintf("BSDParseRenderObjectVertexData:Failed to allocate memory for VertexData\n");
+        return 0;
+    } 
+    memset(RenderObject->VertexList,0,Size);
+    fseek(BSDFile,RenderObjectElement.VertexOffset + 2048,SEEK_SET);
+    DPrintf("BSDParseRenderObjectVertexData:Reading Vertex definition at %i (Current:%i)\n",
+            RenderObjectElement.VertexOffset + 2048,GetCurrentFilePosition(BSDFile)); 
+    for( i = 0; i < RenderObjectElement.NumVertex; i++ ) {
+        DPrintf("BSDParseRenderObjectVertexData:Reading Vertex at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+        fread(&RenderObject->VertexList[i],sizeof(BSDVertex_t),1,BSDFile);
+        DPrintf("BSDParseRenderObjectVertexData:Vertex %i;%i;%i %i\n",RenderObject->VertexList[i].x,
+                RenderObject->VertexList[i].y,RenderObject->VertexList[i].z,
+                RenderObject->VertexList[i].Pad
+        );
+    }
+    
+    if( RenderObjectElement.ColorOffset != 0 ) {
+        Size = RenderObjectElement.NumVertex * sizeof(Color1i_t);
+        RenderObject->ColorList = malloc(Size);
+        if( !RenderObject->ColorList ) {
+            DPrintf("BSDParseRenderObjectVertexData:Failed to allocate memory for ColorData\n");
+            return 0;
+        } 
+        memset(RenderObject->ColorList,0,Size);
+        fseek(BSDFile,RenderObjectElement.ColorOffset + 2048,SEEK_SET);
+        DPrintf("BSDParseRenderObjectVertexData:Reading Color definition at %i (Current:%i)\n",
+                RenderObjectElement.ColorOffset + 2048,GetCurrentFilePosition(BSDFile)); 
+        for( i = 0; i < RenderObjectElement.NumVertex; i++ ) {
+            DPrintf("BSDParseRenderObjectVertexData:Reading Color at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+            fread(&RenderObject->ColorList[i],sizeof(Color1i_t),1,BSDFile);
+            DPrintf("BSDParseRenderObjectVertexData:Color %i => %i;%i;%i;%i\n",RenderObject->ColorList[i].c,
+                    RenderObject->ColorList[i].rgba[0],RenderObject->ColorList[i].rgba[1],
+                    RenderObject->ColorList[i].rgba[2],
+                    RenderObject->ColorList[i].rgba[3]
+            );
+        }
+    }
+    
+    return 1;
+}
+
 int BSDLoadAnimationVertexData(BSDRenderObject_t *RenderObject,int VertexTableIndexOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
 {
     int VertexTableOffset;
@@ -1564,7 +1622,7 @@ BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderOb
     RenderObject->Type = RenderObjectElement.Type;
     RenderObject->VertexTable = NULL;
     RenderObject->CurrentVertexTable = NULL;
-    RenderObject->FaceList = NULL;
+    RenderObject->StaticFaceList = NULL;
     RenderObject->HierarchyDataRoot = NULL;
     RenderObject->AnimationList = NULL;
     RenderObject->VAO = NULL;
@@ -1602,6 +1660,56 @@ Failure:
     BSDFreeRenderObject(RenderObject);
     return NULL;
 }
+
+BSDRenderObject_t *BSDLoadStaticRenderObject(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t BSDEntryTable,FILE *BSDFile,
+                                               int RenderObjectIndex,int ReferencedRenderObjectIndex,int GameVersion
+)
+{
+    BSDRenderObject_t *RenderObject;
+    
+    RenderObject = NULL;
+    if( !BSDFile ) {
+        DPrintf("BSDLoadStaticRenderObject:Invalid BSD file\n");
+        goto Failure;
+    }
+    RenderObject = malloc(sizeof(BSDRenderObject_t));
+    if( !RenderObject ) {
+        DPrintf("BSDLoadStaticRenderObject:Failed to allocate memory for RenderObject\n");
+        goto Failure;
+    }
+    RenderObject->Id = RenderObjectElement.Id;
+    RenderObject->ReferencedRenderObjectId = RenderObjectElement.ReferencedRenderObjectId;
+    RenderObject->Type = RenderObjectElement.Type;
+    RenderObject->VertexTable = NULL;
+    RenderObject->VertexList = NULL;
+    RenderObject->ColorList = NULL;
+    RenderObject->FaceList = NULL;
+    RenderObject->CurrentVertexTable = NULL;
+    RenderObject->FaceList = NULL;
+    RenderObject->HierarchyDataRoot = NULL;
+    RenderObject->AnimationList = NULL;
+    RenderObject->VAO = NULL;
+    RenderObject->CurrentAnimationIndex = -1;
+    RenderObject->CurrentFrameIndex = -1;
+    RenderObject->Next = NULL;
+
+    RenderObject->Scale[0] = (float) (RenderObjectElement.ScaleX  / 16 ) / 4096.f;
+    RenderObject->Scale[1] = (float) (RenderObjectElement.ScaleY  / 16 ) / 4096.f;
+    RenderObject->Scale[2] = (float) (RenderObjectElement.ScaleZ  / 16 ) / 4096.f;
+
+    glm_vec3_zero(RenderObject->Center);
+
+    if( !BSDLoadStaticVertexAndColorData(RenderObject,RenderObjectElement,BSDFile) ) {
+        DPrintf("BSDLoadStaticRenderObject:Failed to load vertex/color data\n");
+        goto Failure;
+    }
+
+    return RenderObject;
+Failure:
+    BSDFreeRenderObject(RenderObject);
+    return NULL;
+}
+
 BSD_t *BSDLoad(FILE *BSDFile,int *GameVersion)
 {
     BSD_t *BSD;

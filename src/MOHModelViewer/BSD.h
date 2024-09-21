@@ -131,6 +131,18 @@ typedef struct BSDAnimation_s
 //     int NumVector;
 } BSDAnimation_t;
 
+typedef struct BSDFace_s {
+    BSDUv_t UV0;
+    short CBA;
+    BSDUv_t UV1;
+    short TexInfo;
+    BSDUv_t UV2;
+    short Pad;
+    
+    unsigned int Vert0;
+    unsigned int Vert1;
+    unsigned int Vert2;
+} BSDFace_t;
 
 typedef struct BSDRenderObjectElement_s {
     int             Id;
@@ -212,6 +224,11 @@ typedef struct BSDRenderObject_s {
     int                         NumAnimations;
     int                         CurrentAnimationIndex;
     int                         CurrentFrameIndex;
+    
+    BSDVertex_t                 *VertexList;
+    Color1i_t                   *ColorList;
+    BSDFace_t                   *StaticFaceList;
+
     vec3                        Scale;
     vec3                        Center;
     VAO_t                       *VAO;
