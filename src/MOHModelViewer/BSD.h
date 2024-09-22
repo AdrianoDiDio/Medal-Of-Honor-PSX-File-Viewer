@@ -226,12 +226,14 @@ typedef struct BSDRenderObject_s {
     int                         CurrentFrameIndex;
     
     BSDVertex_t                 *VertexList;
-    Color1i_t                   *ColorList;
+    BSDColor_t                  *ColorList;
     BSDFace_t                   *StaticFaceList;
 
     vec3                        Scale;
     vec3                        Center;
     VAO_t                       *VAO;
+    
+    bool                        IsStatic;
 
     struct BSDRenderObject_s *Next;
 } BSDRenderObject_t;
@@ -253,6 +255,7 @@ BSDAnimationFrame_t     *BSDRenderObjectGetCurrentFrame(BSDRenderObject_t *Rende
 void                    BSDRenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame);
 
 void                    BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject);
+void                    BSDRenderObjectGenerateStaticVAO(BSDRenderObject_t *RenderObject);
 void                    BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile);
 void                    BSDRenderObjectExportCurrentAnimationToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,const char *Directory,
                                                                    const char *EngineName);
