@@ -725,6 +725,7 @@ found if it is a level file otherwise it's replaced by zeroes.
 | int  | 4 bytes   | Total Number of TSP Files                              |
 | int  | 4 bytes   | Number of TSP Files that needs to be rendered at start |
 | int  | 4 bytes   | Number of the first TSP File that needs to be rendered |
+| int  | 4 bytes   | Unkown (Always 0)                                      |
 
 The other TSP are loaded in real time when hitting specific triggers
 contained into the level that unloads the previous one that were loaded in
