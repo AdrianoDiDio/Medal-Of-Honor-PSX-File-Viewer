@@ -40,6 +40,9 @@
 
 //Position is defined as if the BSD header was removed.
 //Real file position is + sizeof(BSD_HEADER_t).
+
+#define BSD_TSP_INFO_BLOCK_POSITION 0x0
+#define BSD_SCENE_INFO_BLOCK_POSITION 0x90
 #define BSD_HANDLER_REG_TABLE_POSITION 0x59C
 #define BSD_PROPERTY_SET_FILE_POSITION 0x598
 #define BSD_ANIMATED_LIGHTS_FILE_POSITION 0xD8
@@ -384,6 +387,8 @@ typedef struct BSDSceneInfo_s {
 } BSDSceneInfo_t;
 
 bool                    BSDReadTSPInfoBlock(FILE *BSDFile, BSDTSPInfo_t *BSDTSPInfo);
+bool                    BSDReadSceneInfoBlock(FILE *BSDFile, BSDSceneInfo_t *BSDSceneInfo);
+
 void                    BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
                                                     BSDVertexTable_t *VertexTable,mat4 TransformMatrix);
 void                    BSDRenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame);

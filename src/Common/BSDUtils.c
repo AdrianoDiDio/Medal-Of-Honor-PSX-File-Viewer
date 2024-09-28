@@ -94,6 +94,26 @@ void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQua
     }
 }
 
+bool BSDReadSceneInfoBlock(FILE *BSDFile, BSDSceneInfo_t *BSDSceneInfo)
+{
+    if( !BSDFile ) {
+        DPrintf("BSDReadSceneInfoBlock: Invalid file\n");
+        return false;
+    }
+    if( !BSDSceneInfo ) {
+        DPrintf("BSDReadSceneInfoBlock: Invalid data\n");
+        return false;
+    }
+    if(GetCurrentFilePosition(BSDFile) != BSD_SCENE_INFO_BLOCK_POSITION + BSD_HEADER_SIZE ) {
+        fseek(BSDFile, BSD_SCENE_INFO_BLOCK_POSITION + BSD_HEADER_SIZE, SEEK_SET);
+    }
+    fread(BSDSceneInfo,sizeof(BSDSceneInfo_t),1,BSDFile);
+    DPrintf("BSDReadSceneInfoBlock:Reading scene info...\n");
+    DPrintf("Fog Near: %i\n",BSDSceneInfo->FogNear);
+    DPrintf("Clear Color: %i;%i;%i\n",BSDSceneInfo->ClearColor.r,BSDSceneInfo->ClearColor.g,BSDSceneInfo->ClearColor.b);
+    return true;
+}
+
 bool BSDReadTSPInfoBlock(FILE *BSDFile, BSDTSPInfo_t *BSDTSPInfo)
 {
     
@@ -105,8 +125,8 @@ bool BSDReadTSPInfoBlock(FILE *BSDFile, BSDTSPInfo_t *BSDTSPInfo)
         DPrintf("BSDReadTSPInfoBlock: Invalid data\n");
         return false;
     }
-    if(GetCurrentFilePosition(BSDFile) != BSD_HEADER_SIZE ) {
-        fseek(BSDFile, BSD_HEADER_SIZE, SEEK_SET);
+    if(GetCurrentFilePosition(BSDFile) != BSD_TSP_INFO_BLOCK_POSITION + BSD_HEADER_SIZE ) {
+        fseek(BSDFile, BSD_TSP_INFO_BLOCK_POSITION + BSD_HEADER_SIZE, SEEK_SET);
     }
     fread(BSDTSPInfo,sizeof(BSDTSPInfo_t),1,BSDFile);
     DPrintf("BSDReadTSPInfoBlock:Reading TSP info...\n");

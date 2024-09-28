@@ -2841,7 +2841,10 @@ int BSDLoad(BSD_t *BSD,int GameEngine,int IsMultiplayer,FILE *BSDFile)
     int Jump;
     BSDAnimatedLight_t *AnimatedLight;
 
-    fread(&BSD->SceneInfo,sizeof(BSD->SceneInfo),1,BSDFile);
+    if( !BSDReadSceneInfoBlock(BSDFile, &BSD->SceneInfo) ) {
+        return 0;
+    }
+        
     if( !BSDReadAnimatedLightChunk(BSD,BSDFile) ) {
         return 0;
     }
