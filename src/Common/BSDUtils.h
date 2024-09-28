@@ -388,6 +388,7 @@ typedef struct BSDSceneInfo_s {
 
 bool                    BSDReadTSPInfoBlock(FILE *BSDFile, BSDTSPInfo_t *BSDTSPInfo);
 bool                    BSDReadSceneInfoBlock(FILE *BSDFile, BSDSceneInfo_t *BSDSceneInfo);
+bool                    BSDReadAnimatedLightTableBlock(FILE *BSDFile, BSDAnimatedLightTable_t *BSDAnimatedLightTable);
 
 void                    BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
                                                     BSDVertexTable_t *VertexTable,mat4 TransformMatrix);

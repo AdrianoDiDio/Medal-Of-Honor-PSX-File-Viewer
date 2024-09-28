@@ -93,6 +93,70 @@ void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQua
         BSDRecursivelyApplyHierachyData(Bone->Child1,QuaternionList,VertexTable,LocalTransformMatrix);
     }
 }
+int BSDGetRealOffset(int RelativeOffset)
+{
+    return RelativeOffset + BSD_HEADER_SIZE;
+}
+
+bool BSDReadAnimatedLightTableBlock(FILE *BSDFile, BSDAnimatedLightTable_t *BSDAnimatedLightTable)
+{
+    BSDAnimatedLight_t *AnimatedLight;
+    int PreviousFilePosition;
+    int i;
+    int j;
+    
+    if( !BSDFile ) {
+        DPrintf("BSDReadAnimatedLightTableBlock: Invalid file\n");
+        return false;
+    }
+    if( !BSDAnimatedLightTable ) {
+        DPrintf("BSDReadAnimatedLightTableBlock: Invalid data\n");
+        return false;
+    }
+    
+    if(GetCurrentFilePosition(BSDFile) != BSDGetRealOffset(BSD_ANIMATED_LIGHTS_FILE_POSITION)) {
+        fseek(BSDFile, BSDGetRealOffset(BSD_ANIMATED_LIGHTS_FILE_POSITION), SEEK_SET);
+    }
+    DPrintf("BSDReadAnimatedLightTableBlock:AnimatedLightsTable is at %li\n",ftell(BSDFile));
+    fread(&BSDAnimatedLightTable->NumAnimatedLights,sizeof(BSDAnimatedLightTable->NumAnimatedLights),1,BSDFile);
+    DPrintf("BSDReadAnimatedLightTableBlock:AnimatedLightsTable:Reading %i colors at %li\n",BSDAnimatedLightTable->NumAnimatedLights,ftell(BSDFile));
+
+    for( i = 0; i < BSD_ANIMATED_LIGHTS_TABLE_SIZE; i++ ) {
+        AnimatedLight = &BSDAnimatedLightTable->AnimatedLightsList[i];
+        fread(&AnimatedLight->NumColors,sizeof(AnimatedLight->NumColors),1,BSDFile);
+        fread(&AnimatedLight->StartingColorOffset,sizeof(AnimatedLight->StartingColorOffset),1,BSDFile);
+        fread(&AnimatedLight->ColorIndex,sizeof(AnimatedLight->ColorIndex),1,BSDFile);
+        fread(&AnimatedLight->CurrentColor,sizeof(AnimatedLight->CurrentColor),1,BSDFile);
+        fread(&AnimatedLight->Delay,sizeof(AnimatedLight->Delay),1,BSDFile);
+        if( AnimatedLight->NumColors == 0 ) {
+            continue;
+        }
+        AnimatedLight->LastUpdateTime = 0;
+        AnimatedLight->ColorList = malloc(AnimatedLight->NumColors * sizeof(Color1i_t));
+        if( !AnimatedLight->ColorList ) {
+            DPrintf("BSDReadAnimatedLightTableBlock:Failed to allocate memory for Color List\n");
+            return false;
+        }
+        DPrintf("BSDReadAnimatedLightTableBlock: Reading Animated Light %i...\n",i);
+        DPrintf("StartingColorOffset:%i\n",AnimatedLight->StartingColorOffset);
+        DPrintf("StartingColorOffset No Header:%i\n",AnimatedLight->StartingColorOffset + 2048);
+        DPrintf("CurrentColor:%i\n",AnimatedLight->CurrentColor);
+        DPrintf("ColorIndex:%i\n",AnimatedLight->ColorIndex);
+        DPrintf("Delay:%i\n",AnimatedLight->Delay);
+        PreviousFilePosition = GetCurrentFilePosition(BSDFile);
+        fseek(BSDFile,AnimatedLight->StartingColorOffset + 2048,SEEK_SET);
+        DPrintf("Reading color at %i\n",GetCurrentFilePosition(BSDFile));
+        for( j = 0; j < AnimatedLight->NumColors; j++ ) {
+            fread(&AnimatedLight->ColorList[j],sizeof(AnimatedLight->ColorList[j]),1,BSDFile);
+            DPrintf("Color %i %i %i %i %i (As Int %u)\n",j,AnimatedLight->ColorList[j].rgba[0],
+                    AnimatedLight->ColorList[j].rgba[1],AnimatedLight->ColorList[j].rgba[2],AnimatedLight->ColorList[j].rgba[3],
+                    AnimatedLight->ColorList[j].c
+            );
+        }
+        fseek(BSDFile,PreviousFilePosition,SEEK_SET);
+    }
+    return true;
+}
 
 bool BSDReadSceneInfoBlock(FILE *BSDFile, BSDSceneInfo_t *BSDSceneInfo)
 {
@@ -104,8 +168,8 @@ bool BSDReadSceneInfoBlock(FILE *BSDFile, BSDSceneInfo_t *BSDSceneInfo)
         DPrintf("BSDReadSceneInfoBlock: Invalid data\n");
         return false;
     }
-    if(GetCurrentFilePosition(BSDFile) != BSD_SCENE_INFO_BLOCK_POSITION + BSD_HEADER_SIZE ) {
-        fseek(BSDFile, BSD_SCENE_INFO_BLOCK_POSITION + BSD_HEADER_SIZE, SEEK_SET);
+    if(GetCurrentFilePosition(BSDFile) != BSDGetRealOffset(BSD_SCENE_INFO_BLOCK_POSITION)) {
+        fseek(BSDFile, BSDGetRealOffset(BSD_SCENE_INFO_BLOCK_POSITION), SEEK_SET);
     }
     fread(BSDSceneInfo,sizeof(BSDSceneInfo_t),1,BSDFile);
     DPrintf("BSDReadSceneInfoBlock:Reading scene info...\n");
@@ -125,8 +189,8 @@ bool BSDReadTSPInfoBlock(FILE *BSDFile, BSDTSPInfo_t *BSDTSPInfo)
         DPrintf("BSDReadTSPInfoBlock: Invalid data\n");
         return false;
     }
-    if(GetCurrentFilePosition(BSDFile) != BSD_TSP_INFO_BLOCK_POSITION + BSD_HEADER_SIZE ) {
-        fseek(BSDFile, BSD_TSP_INFO_BLOCK_POSITION + BSD_HEADER_SIZE, SEEK_SET);
+    if(GetCurrentFilePosition(BSDFile) != BSDGetRealOffset(BSD_TSP_INFO_BLOCK_POSITION) ) {
+        fseek(BSDFile, BSDGetRealOffset(BSD_TSP_INFO_BLOCK_POSITION), SEEK_SET);
     }
     fread(BSDTSPInfo,sizeof(BSDTSPInfo_t),1,BSDFile);
     DPrintf("BSDReadTSPInfoBlock:Reading TSP info...\n");

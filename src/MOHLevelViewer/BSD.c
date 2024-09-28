@@ -2392,61 +2392,6 @@ int BSDGetTSPDynamicIndexOffsetFromNodeType(int Type)
             return -1;
     }
 }
-int BSDReadAnimatedLightChunk(BSD_t *BSD,FILE *BSDFile)
-{
-    BSDAnimatedLight_t *AnimatedLight;
-    int i;
-    int j;
-    int PreviousFilePosition;
-    
-    if( !BSD || !BSDFile ) {
-        bool InvalidFile = (BSDFile == NULL ? true : false);
-        printf("BSDReadAnimatedLightChunk: Invalid %s\n",InvalidFile ? "file" : "BSD struct");
-        return 0;
-    }
-    
-    assert((GetCurrentFilePosition(BSDFile) - 2048) == BSD_ANIMATED_LIGHTS_FILE_POSITION);
-    DPrintf("AnimatedLightsTable is at %li\n",ftell(BSDFile));
-    fread(&BSD->AnimatedLightsTable.NumAnimatedLights,sizeof(BSD->AnimatedLightsTable.NumAnimatedLights),1,BSDFile);
-    DPrintf("AnimatedLightsTable:Reading %i colors at %li\n",BSD->AnimatedLightsTable.NumAnimatedLights,ftell(BSDFile));
-
-    for( i = 0; i < BSD_ANIMATED_LIGHTS_TABLE_SIZE; i++ ) {
-        AnimatedLight = &BSD->AnimatedLightsTable.AnimatedLightsList[i];
-        fread(&AnimatedLight->NumColors,sizeof(AnimatedLight->NumColors),1,BSDFile);
-        fread(&AnimatedLight->StartingColorOffset,sizeof(AnimatedLight->StartingColorOffset),1,BSDFile);
-        fread(&AnimatedLight->ColorIndex,sizeof(AnimatedLight->ColorIndex),1,BSDFile);
-        fread(&AnimatedLight->CurrentColor,sizeof(AnimatedLight->CurrentColor),1,BSDFile);
-        fread(&AnimatedLight->Delay,sizeof(AnimatedLight->Delay),1,BSDFile);
-        if( AnimatedLight->NumColors == 0 ) {
-            continue;
-        }
-        AnimatedLight->LastUpdateTime = 0;
-        AnimatedLight->ColorList = malloc(AnimatedLight->NumColors * sizeof(Color1i_t));
-        if( !AnimatedLight->ColorList ) {
-            DPrintf("BSDReadAnimatedLightChunk:Failed to allocate memory for Color List\n");
-            return 0;
-        }
-        DPrintf("Animated Light: %i\n",i);
-        DPrintf("StartingColorOffset:%i\n",AnimatedLight->StartingColorOffset);
-        DPrintf("StartingColorOffset No Header:%i\n",AnimatedLight->StartingColorOffset + 2048);
-        DPrintf("CurrentColor:%i\n",AnimatedLight->CurrentColor);
-        DPrintf("ColorIndex:%i\n",AnimatedLight->ColorIndex);
-        DPrintf("Delay:%i\n",AnimatedLight->Delay);
-        PreviousFilePosition = GetCurrentFilePosition(BSDFile);
-        fseek(BSDFile,AnimatedLight->StartingColorOffset + 2048,SEEK_SET);
-        DPrintf("Reading color at %i\n",GetCurrentFilePosition(BSDFile));
-        for( j = 0; j < AnimatedLight->NumColors; j++ ) {
-            fread(&AnimatedLight->ColorList[j],sizeof(AnimatedLight->ColorList[j]),1,BSDFile);
-            DPrintf("Color %i %i %i %i %i (As Int %u)\n",j,AnimatedLight->ColorList[j].rgba[0],
-                    AnimatedLight->ColorList[j].rgba[1],AnimatedLight->ColorList[j].rgba[2],AnimatedLight->ColorList[j].rgba[3],
-                    AnimatedLight->ColorList[j].c
-            );
-        }
-        fseek(BSDFile,PreviousFilePosition,SEEK_SET);
-    }
-    DPrintf("AnimatedLightsTable ends at %i\n",GetCurrentFilePosition(BSDFile));
-    return 1;
-}
 
 int BSDReadEntryTableChunk(BSD_t *BSD,FILE *BSDFile)
 {    
@@ -2844,8 +2789,8 @@ int BSDLoad(BSD_t *BSD,int GameEngine,int IsMultiplayer,FILE *BSDFile)
     if( !BSDReadSceneInfoBlock(BSDFile, &BSD->SceneInfo) ) {
         return 0;
     }
-        
-    if( !BSDReadAnimatedLightChunk(BSD,BSDFile) ) {
+    
+    if( !BSDReadAnimatedLightTableBlock(BSDFile, &BSD->AnimatedLightsTable) ) {
         return 0;
     }
     //This section seems unused and should be constant in size (320 bytes).
