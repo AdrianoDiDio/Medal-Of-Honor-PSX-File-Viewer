@@ -2241,62 +2241,6 @@ int BSDParseRenderObjectData(BSD_t *BSD,FILE *BSDFile,int FirstRenderObjectFileP
     
 */
 
-int BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
-{
-    int PreviousFilePosition;
-    int PropertySetFileOffset;
-    int i;
-    int j;
-    
-    if( !BSD || !BSDFile ) {
-        bool InvalidFile = (BSDFile == NULL ? true : false);
-        DPrintf("BSDReadPropertySetFile: Invalid %s\n",InvalidFile ? "file" : "bsd");
-        return 0;
-    }
-    
-    PreviousFilePosition = GetCurrentFilePosition(BSDFile);
-    fseek(BSDFile,BSD_HEADER_SIZE + BSD_PROPERTY_SET_FILE_POSITION,SEEK_SET);
-    fread(&PropertySetFileOffset,sizeof(PropertySetFileOffset),1,BSDFile);
-    if( PropertySetFileOffset == 0 ) {
-        DPrintf("BSDReadPropertySetFile:BSD File has no property file set.\n");
-        return 0;
-    }
-    fseek(BSDFile,BSD_HEADER_SIZE + PropertySetFileOffset,SEEK_SET);
-    fread(&BSD->PropertySetFile.NumProperties,sizeof(BSD->PropertySetFile.NumProperties),1,BSDFile);
-    DPrintf("BSDReadPropertySetFile:Reading %i properties at %i (%i).\n",BSD->PropertySetFile.NumProperties,
-            GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
-    BSD->PropertySetFile.NumProperties++;
-    BSD->PropertySetFile.Property = malloc(sizeof(BSDProperty_t) * BSD->PropertySetFile.NumProperties);
-    if( !BSD->PropertySetFile.Property ) {
-        DPrintf("BSDReadPropertySetFile:Couldn't allocate memory for Property array\n");
-        return 0;
-    }
-    for( i = 0; i < BSD->PropertySetFile.NumProperties; i++ ) {
-        DPrintf("BSDReadPropertySetFile:Reading property %i at %i (%i)\n",i,GetCurrentFilePosition(BSDFile),
-            GetCurrentFilePosition(BSDFile) - 2048
-        );
-        fread(&BSD->PropertySetFile.Property[i].NumNodes,sizeof(BSD->PropertySetFile.Property[i].NumNodes),1,BSDFile);
-        BSD->PropertySetFile.Property[i].NumNodes = (255 - BSD->PropertySetFile.Property[i].NumNodes) /*<< 1*/;
-        DPrintf("Property contains %i nodes\n",BSD->PropertySetFile.Property[i].NumNodes);
-        
-        SkipFileSection(1,BSDFile);
-        BSD->PropertySetFile.Property[i].NodeList = malloc(BSD->PropertySetFile.Property[i].NumNodes * sizeof(unsigned short));
-        if( !BSD->PropertySetFile.Property[i].NodeList ) {
-            DPrintf("BSDReadPropertySetFile:Couldn't allocate memory for Property node array\n");
-            return 0;
-        }
-        DPrintf("BSDReadPropertySetFile:Reading %li bytes.\n",BSD->PropertySetFile.Property[i].NumNodes * sizeof(unsigned short));
-        for( j = 0; j <  BSD->PropertySetFile.Property[i].NumNodes; j++ ) {
-            fread(&BSD->PropertySetFile.Property[i].NodeList[j],sizeof(BSD->PropertySetFile.Property[i].NodeList[j]),1,BSDFile);
-            DPrintf("Short %u\n", BSD->PropertySetFile.Property[i].NodeList[j]);
-//             assert(BSD->PropertySetFile.Property[i].Data[j] < 158);
-        }
-    }
-    DPrintf("BSDReadPropertySetFile:Property end at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
-    fseek(BSDFile,PreviousFilePosition,SEEK_SET);
-    return 1;
-}
-
 int BSDGetTSPDynamicIndexOffsetFromNodeType(int Type)
 {
     switch( Type ) {
@@ -2499,7 +2443,7 @@ int BSDLoad(BSD_t *BSD,int GameEngine,int IsMultiplayer,FILE *BSDFile)
         return 0;
     }
     
-    if( !BSDReadPropertySetFile(BSD,BSDFile) ) {
+    if( !BSDReadPropertySetFileBlock(BSDFile,&BSD->PropertySetFile) ) {
         return 0;
     }
     fclose(BSDFile);

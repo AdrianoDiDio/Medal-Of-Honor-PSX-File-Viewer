@@ -267,6 +267,67 @@ void BSDPatchRenderObjects(FILE *BSDFile,BSDRenderObjectTable_t *RenderObjectTab
     }
 }
 
+bool BSDReadPropertySetFileBlock(FILE *BSDFile, BSDPropertySetFile_t *PropertySetFile)
+{
+    int PropertySetFileOffset;
+    int i;
+    int j;
+    
+    if( !BSDFile ) {
+        DPrintf("BSDReadPropertySetFileBlock: Invalid file\n");
+        return false;
+    }
+    
+    if( !PropertySetFile ) {
+        DPrintf("BSDReadPropertySetFileBlock: Invalid data\n");
+        return false;
+    }
+    
+    if(GetCurrentFilePosition(BSDFile) != BSDGetRealOffset(BSD_PROPERTY_SET_FILE_POSITION)) {
+        fseek(BSDFile, BSDGetRealOffset(BSD_PROPERTY_SET_FILE_POSITION), SEEK_SET);
+    }
+
+    fread(&PropertySetFileOffset,sizeof(PropertySetFileOffset),1,BSDFile);
+    
+    if( PropertySetFileOffset == 0 ) {
+        DPrintf("BSDReadPropertySetFileBlock:BSD File has no property file set.\n");
+        return false;
+    }
+    
+    fseek(BSDFile, BSDGetRealOffset(PropertySetFileOffset), SEEK_SET);
+    fread(&PropertySetFile->NumProperties,sizeof(PropertySetFile->NumProperties),1,BSDFile);
+    DPrintf("BSDReadPropertySetFile:Reading %i properties at %i (%i).\n",PropertySetFile->NumProperties,
+            GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+    PropertySetFile->NumProperties++;
+    PropertySetFile->Property = malloc(sizeof(BSDProperty_t) * PropertySetFile->NumProperties);
+    if( !PropertySetFile->Property ) {
+        DPrintf("BSDReadPropertySetFileBlock:Couldn't allocate memory for Property array\n");
+        return 0;
+    }
+    for( i = 0; i < PropertySetFile->NumProperties; i++ ) {
+        DPrintf("BSDReadPropertySetFileBlock:Reading property %i at %i (%i)\n",i,GetCurrentFilePosition(BSDFile),
+            GetCurrentFilePosition(BSDFile) - 2048
+        );
+        fread(&PropertySetFile->Property[i].NumNodes,sizeof(PropertySetFile->Property[i].NumNodes),1,BSDFile);
+        PropertySetFile->Property[i].NumNodes = (255 - PropertySetFile->Property[i].NumNodes) /*<< 1*/;
+        DPrintf("Property contains %i nodes\n",PropertySetFile->Property[i].NumNodes);
+        
+        SkipFileSection(1,BSDFile);
+        PropertySetFile->Property[i].NodeList = malloc(PropertySetFile->Property[i].NumNodes * sizeof(unsigned short));
+        if( !PropertySetFile->Property[i].NodeList ) {
+            DPrintf("BSDReadPropertySetFileBlock:Couldn't allocate memory for Property node array\n");
+            return 0;
+        }
+        DPrintf("BSDReadPropertySetFileBlock:Reading %li bytes.\n",PropertySetFile->Property[i].NumNodes * sizeof(unsigned short));
+        for( j = 0; j <  PropertySetFile->Property[i].NumNodes; j++ ) {
+            fread(&PropertySetFile->Property[i].NodeList[j],sizeof(PropertySetFile->Property[i].NodeList[j]),1,BSDFile);
+            DPrintf("Short %u\n", PropertySetFile->Property[i].NodeList[j]);
+        }
+    }
+    DPrintf("BSDReadPropertySetFileBlock:Property end at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+    return 1;
+}
+
 bool BSDReadNodeInfoBlock(FILE *BSDFile,int NodeInfoOffset, BSDNodeInfo_t *NodeInfo)
 {
     int NodeFilePosition;

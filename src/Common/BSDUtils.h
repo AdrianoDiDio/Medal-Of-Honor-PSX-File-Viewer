@@ -396,6 +396,7 @@ bool                        BSDReadEntryTableBlock(FILE *BSDFile,BSDEntryTable_t
 bool                        BSDReadSkyBlock(FILE *BSDFile,BSDSky_t *Sky);
 bool                        BSDReadRenderObjectTable(FILE *BSDFile,int GameEngine, BSDRenderObjectTable_t *RenderObjectTable);
 bool                        BSDReadNodeInfoBlock(FILE *BSDFile,int NodeInfoOffset,BSDNodeInfo_t *NodeInfo);
+bool                        BSDReadPropertySetFileBlock(FILE *BSDFile, BSDPropertySetFile_t *PropertySetFile);
 
 BSDRenderObjectElement_t    *BSDGetRenderObjectById(const BSDRenderObjectTable_t *RenderObjectTable,unsigned int RenderObjectId);
 int                         BSDGetRenderObjectIndexById(const BSDRenderObjectTable_t *RenderObjectTable,unsigned int RenderObjectId);
