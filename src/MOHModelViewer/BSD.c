@@ -521,70 +521,7 @@ void BSDRenderObjectUpdateVAO(BSDRenderObject_t *RenderObject)
     }
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
-void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,BSDVertexTable_t *VertexTable,
-                                     mat4 TransformMatrix)
-{
-    versor Quaternion;
-    mat4 LocalRotationMatrix;
-    mat4 LocalTranslationMatrix;
-    mat4 LocalTransformMatrix;
-    vec3 TransformedBonePosition;
-    vec3 TransformedVertexPosition;
-    vec3 Temp;
-    int i;
-    
-    if( !Bone ) {
-        DPrintf("BSDRecursivelyApplyHierachyData:NULL Bone.\n");
-        return;
-    }
-    
-    if( !QuaternionList ) {
-        DPrintf("BSDRecursivelyApplyHierachyData:Invalid Quaternion List.\n");
-        return;
-    }
-    if( !VertexTable ) {
-        DPrintf("BSDRecursivelyApplyHierachyData:Invalid Vertex Table.\n");
-        return;
-    }
 
-    glm_mat4_identity(LocalRotationMatrix);
-    glm_mat4_identity(LocalTranslationMatrix);
-    glm_mat4_identity(LocalTransformMatrix);
-    
-    Quaternion[0] = QuaternionList[Bone->VertexTableIndex].x / 4096.f;
-    Quaternion[1] = QuaternionList[Bone->VertexTableIndex].y / 4096.f;
-    Quaternion[2] = QuaternionList[Bone->VertexTableIndex].z / 4096.f;
-    Quaternion[3] = QuaternionList[Bone->VertexTableIndex].w / 4096.f;
-    
-    glm_quat_mat4t(Quaternion,LocalRotationMatrix);
-    
-    Temp[0] = Bone->Position.x;
-    Temp[1] = Bone->Position.y;
-    Temp[2] = Bone->Position.z;
-    
-    glm_mat4_mulv3(TransformMatrix,Temp,1.f,TransformedBonePosition);
-    glm_translate_make(LocalTranslationMatrix,TransformedBonePosition);
-    glm_mat4_mul(LocalTranslationMatrix,LocalRotationMatrix,LocalTransformMatrix);
-
-    if( VertexTable[Bone->VertexTableIndex].Offset != -1 && VertexTable[Bone->VertexTableIndex].NumVertex != 0 ) {
-        for( i = 0; i < VertexTable[Bone->VertexTableIndex].NumVertex; i++ ) {
-            Temp[0] = VertexTable[Bone->VertexTableIndex].VertexList[i].x;
-            Temp[1] = VertexTable[Bone->VertexTableIndex].VertexList[i].y;
-            Temp[2] = VertexTable[Bone->VertexTableIndex].VertexList[i].z;
-            glm_mat4_mulv3(LocalTransformMatrix,Temp,1.f,TransformedVertexPosition);
-            VertexTable[Bone->VertexTableIndex].VertexList[i].x = TransformedVertexPosition[0];
-            VertexTable[Bone->VertexTableIndex].VertexList[i].y = TransformedVertexPosition[1];
-            VertexTable[Bone->VertexTableIndex].VertexList[i].z = TransformedVertexPosition[2];
-        }
-    }
-
-    if( Bone->Child2 ) {
-        BSDRecursivelyApplyHierachyData(Bone->Child2,QuaternionList,VertexTable,TransformMatrix);
-    }
-    if( Bone->Child1 ) {
-        BSDRecursivelyApplyHierachyData(Bone->Child1,QuaternionList,VertexTable,LocalTransformMatrix);
-    }
-}
 void BSDRenderObjectResetVertexTable(BSDRenderObject_t *RenderObject)
 {
     int i;
@@ -600,13 +537,7 @@ void BSDRenderObjectResetVertexTable(BSDRenderObject_t *RenderObject)
                RenderObject->VertexTable[i].VertexList,sizeof(BSDVertex_t) * RenderObject->VertexTable[i].NumVertex);
     }
 }
-void BSDRenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame)
-{
-    if( !Frame ) {
-        return;
-    }
-    memcpy(Frame->CurrentQuaternionList,Frame->QuaternionList,Frame->NumQuaternions * sizeof(BSDQuaternion_t));
-}
+
 BSDAnimationFrame_t *BSDRenderObjectGetCurrentFrame(BSDRenderObject_t *RenderObject)
 {
     if( !RenderObject ) {

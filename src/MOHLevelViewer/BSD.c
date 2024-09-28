@@ -2041,7 +2041,7 @@ int BSDParseRenderObjectVertexAndColorData(BSDRenderObject_t *RenderObject,BSD_t
     
     RenderObject->Vertex = NULL;
     RenderObject->Color = NULL;
-    if( RenderObject->Data->VertOffset != 0 ) {
+    if( RenderObject->Data->VertexOffset != 0 ) {
         Size = RenderObject->Data->NumVertex * sizeof(BSDPosition_t);
         RenderObject->Vertex = malloc(Size);
         if( !RenderObject->Vertex ) {
@@ -2049,9 +2049,9 @@ int BSDParseRenderObjectVertexAndColorData(BSDRenderObject_t *RenderObject,BSD_t
             return 0;
         } 
         memset(RenderObject->Vertex,0,Size);
-        fseek(BSDFile,RenderObject->Data->VertOffset + 2048,SEEK_SET);
+        fseek(BSDFile,RenderObject->Data->VertexOffset + 2048,SEEK_SET);
         DPrintf("Reading Vertex definition at %i (Current:%i)\n",
-                RenderObject->Data->VertOffset + 2048,GetCurrentFilePosition(BSDFile)); 
+                RenderObject->Data->VertexOffset + 2048,GetCurrentFilePosition(BSDFile)); 
         for( i = 0; i < RenderObject->Data->NumVertex; i++ ) {
             DPrintf("Reading Vertex at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
             fread(&RenderObject->Vertex[i],sizeof(BSDPosition_t),1,BSDFile);
@@ -2337,13 +2337,13 @@ int BSDReadPropertySetFile(BSD_t *BSD,FILE *BSDFile)
     }
     
     PreviousFilePosition = GetCurrentFilePosition(BSDFile);
-    fseek(BSDFile,sizeof(BSDHeader_t) + BSD_PROPERTY_SET_FILE_POSITION,SEEK_SET);
+    fseek(BSDFile,BSD_HEADER_SIZE + BSD_PROPERTY_SET_FILE_POSITION,SEEK_SET);
     fread(&PropertySetFileOffset,sizeof(PropertySetFileOffset),1,BSDFile);
     if( PropertySetFileOffset == 0 ) {
         DPrintf("BSDReadPropertySetFile:BSD File has no property file set.\n");
         return 0;
     }
-    fseek(BSDFile,sizeof(BSDHeader_t) + PropertySetFileOffset,SEEK_SET);
+    fseek(BSDFile,BSD_HEADER_SIZE + PropertySetFileOffset,SEEK_SET);
     fread(&BSD->PropertySetFile.NumProperties,sizeof(BSD->PropertySetFile.NumProperties),1,BSDFile);
     DPrintf("BSDReadPropertySetFile:Reading %i properties at %i (%i).\n",BSD->PropertySetFile.NumProperties,
             GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
@@ -2460,17 +2460,26 @@ int BSDReadEntryTableChunk(BSD_t *BSD,FILE *BSDFile)
     assert(sizeof(BSD->EntryTable) == 80);
     DPrintf("Reading EntryTable at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
     fread(&BSD->EntryTable,sizeof(BSD->EntryTable),1,BSDFile);
-    DPrintf("Node table is at %i (%i)\n",BSD->EntryTable.NodeTableOffset,BSD->EntryTable.NodeTableOffset + 2048);
-    DPrintf("Unknown data is at %i (%i)\n",BSD->EntryTable.UnknownDataOffset,BSD->EntryTable.UnknownDataOffset + 2048);
-    DPrintf("Data0 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off0,BSD->EntryTable.Off0 + 2048,BSD->EntryTable.Num0);
-    DPrintf("Data1 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off1,BSD->EntryTable.Off1 + 2048,BSD->EntryTable.Num1);
-    DPrintf("Data2 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off2,BSD->EntryTable.Off2 + 2048,BSD->EntryTable.Num2);
-    DPrintf("Data3 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off3,BSD->EntryTable.Off3 + 2048,BSD->EntryTable.Num3);
-    DPrintf("Data4 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off4,BSD->EntryTable.Off4 + 2048,BSD->EntryTable.Num4);
-    DPrintf("Data5 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off5,BSD->EntryTable.Off5 + 2048,BSD->EntryTable.Num5);
-    DPrintf("Data6 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off6,BSD->EntryTable.Off6 + 2048,BSD->EntryTable.Num6);
-    DPrintf("Data7 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off7,BSD->EntryTable.Off7 + 2048,BSD->EntryTable.Num7);
-    DPrintf("Data8 at %i (%i) contains %i elements.\n",BSD->EntryTable.Off8,BSD->EntryTable.Off8 + 2048,BSD->EntryTable.Num8);
+    DPrintf("Node table is at %i (%i)\n",BSD->EntryTable.NodeTableOffset,BSD->EntryTable.NodeTableOffset + BSD_HEADER_SIZE);
+    DPrintf("Unknown data is at %i (%i)\n",BSD->EntryTable.UnknownDataOffset,BSD->EntryTable.UnknownDataOffset + BSD_HEADER_SIZE);
+    DPrintf("AnimationTableOffset is at %i (%i) and contains %i elements.\n",BSD->EntryTable.AnimationTableOffset,
+            BSD->EntryTable.AnimationTableOffset + BSD_HEADER_SIZE,BSD->EntryTable.NumAnimationTableEntries);
+    DPrintf("AnimationDataOffset is at %i (%i) contains %i elements.\n",BSD->EntryTable.AnimationDataOffset,
+            BSD->EntryTable.AnimationDataOffset + BSD_HEADER_SIZE,BSD->EntryTable.NumAnimationData);
+    DPrintf("AnimationQuaternionDataOffset is at %i (%i) and contains %i elements.\n",BSD->EntryTable.AnimationQuaternionDataOffset,
+            BSD->EntryTable.AnimationQuaternionDataOffset + BSD_HEADER_SIZE,BSD->EntryTable.NumAnimationQuaternionData);
+    DPrintf("AnimationHierarchyDataOffset is at %i (%i) and contains %i elements.\n",BSD->EntryTable.AnimationHierarchyDataOffset,
+            BSD->EntryTable.AnimationHierarchyDataOffset + BSD_HEADER_SIZE,BSD->EntryTable.NumAnimationHierarchyData);
+    DPrintf("AnimationFaceTableOffset is at %i (%i) and contains %i elements.\n",BSD->EntryTable.AnimationFaceTableOffset,
+            BSD->EntryTable.AnimationFaceTableOffset + BSD_HEADER_SIZE,BSD->EntryTable.NumAnimationFaceTables);
+    DPrintf("AnimationFaceDataOffset is at %i (%i) and contains %i elements.\n",BSD->EntryTable.AnimationFaceDataOffset,
+            BSD->EntryTable.AnimationFaceDataOffset + BSD_HEADER_SIZE,BSD->EntryTable.NumAnimationFaces);
+    DPrintf("AnimationVertexTableIndexOffset is at %i (%i) and contains %i elements.\n",BSD->EntryTable.AnimationVertexTableIndexOffset,
+            BSD->EntryTable.AnimationVertexTableIndexOffset + BSD_HEADER_SIZE,BSD->EntryTable.NumAnimationVertexTableIndex);
+    DPrintf("AnimationVertexTableOffset is at %i (%i) and contains %i elements.\n",BSD->EntryTable.AnimationVertexTableOffset,
+            BSD->EntryTable.AnimationVertexTableOffset + BSD_HEADER_SIZE,BSD->EntryTable.NumAnimationVertexTableEntry);
+    DPrintf("AnimationVertexDataOffset is at %i (%i) and contains %i elements.\n",BSD->EntryTable.AnimationVertexDataOffset,
+            BSD->EntryTable.AnimationVertexDataOffset + BSD_HEADER_SIZE,BSD->EntryTable.NumAnimationVertex);
     return 1;
 }
 
@@ -2528,8 +2537,8 @@ void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile)
         if(CurrentRenderObject->UnknownOffset4 == -1 ) {
             CurrentRenderObject->UnknownOffset4 = ReferencedRenderObject->UnknownOffset4;
         }
-        if(CurrentRenderObject->VertOffset == -1 ) {
-            CurrentRenderObject->VertOffset = ReferencedRenderObject->VertOffset;
+        if(CurrentRenderObject->VertexOffset == -1 ) {
+            CurrentRenderObject->VertexOffset = ReferencedRenderObject->VertexOffset;
             CurrentRenderObject->NumVertex = ReferencedRenderObject->NumVertex;
         }
         if(CurrentRenderObject->ColorOffset == -1 ) {
@@ -2587,18 +2596,18 @@ int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
             DPrintf("RenderObject Type:%i | %s\n",BSD->RenderObjectTable.RenderObject[i].Type,
                     BSDRenderObjectGetEnumStringFromType(BSD->RenderObjectTable.RenderObject[i].Type));
         }
-        DPrintf("RenderObject Element Vertex Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].VertOffset,
-                BSD->RenderObjectTable.RenderObject[i].VertOffset + 2048);
+        DPrintf("RenderObject Element Vertex Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].VertexOffset,
+                BSD->RenderObjectTable.RenderObject[i].VertexOffset + BSD_HEADER_SIZE);
         DPrintf("RenderObject Element NumVertex: %i\n",BSD->RenderObjectTable.RenderObject[i].NumVertex);
         //Those offset are relative to the EntryTable.
-        DPrintf("RenderObject UnknownOffset1: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].UnknownOffset1,
-                BSD->RenderObjectTable.RenderObject[i].UnknownOffset1 + 2048);
-        DPrintf("RenderObject UnknownOffset2: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].UnknownOffset2,
-                BSD->RenderObjectTable.RenderObject[i].UnknownOffset2 + 2048);
-        DPrintf("RenderObject Root Bone Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].RootBoneOffset,
-                BSD->RenderObjectTable.RenderObject[i].RootBoneOffset + 2048);
+        DPrintf("RenderObject FaceTableOffset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].FaceTableOffset,
+                BSD->RenderObjectTable.RenderObject[i].FaceTableOffset + BSD_HEADER_SIZE);
+        DPrintf("RenderObject VertexTableIndexOffset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].VertexTableIndexOffset,
+                BSD->RenderObjectTable.RenderObject[i].VertexTableIndexOffset + BSD_HEADER_SIZE);
+        DPrintf("RenderObject Hierarchy Data Root Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].HierarchyDataRootOffset,
+                BSD->RenderObjectTable.RenderObject[i].HierarchyDataRootOffset + BSD_HEADER_SIZE);
         DPrintf("RenderObject FaceOffset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].FaceOffset,
-                BSD->RenderObjectTable.RenderObject[i].FaceOffset + 2048);
+                BSD->RenderObjectTable.RenderObject[i].FaceOffset + BSD_HEADER_SIZE);
         DPrintf("RenderObject Scale: %i;%i;%i (4096 is 1 meaning no scale)\n",
                 BSD->RenderObjectTable.RenderObject[i].ScaleX / 4,
                 BSD->RenderObjectTable.RenderObject[i].ScaleY / 4,
@@ -2938,24 +2947,13 @@ FILE *BSDEarlyInit(BSD_t **BSD,const char *MissionPath,int MissionNumber,int Lev
         LocalBSD->AnimatedLightsTable.AnimatedLightsList[i].ColorList = NULL;
     }
 
-    
-    assert(sizeof(LocalBSD->Header) == 2048);
-    fread(&LocalBSD->Header,sizeof(LocalBSD->Header),1,BSDFile);
-    DPrintf("BSDEarlyInit: BSD Header contains %i(%#02x) element.\n",LocalBSD->Header.NumHeadElements,LocalBSD->Header.NumHeadElements);
-    for( i = 0; i < LocalBSD->Header.NumHeadElements; i++ ) {
-        DPrintf("BSDEarlyInit:Got %i(%#02x)(%i)\n",LocalBSD->Header.Sector[i],LocalBSD->Header.Sector[i],LocalBSD->Header.Sector[i] >> 0xb);
-    }
     //At position 152 after the header we have the SPRITE definitions...
     //Maybe hud/ammo...
-    fread(&LocalBSD->TSPInfo,sizeof(LocalBSD->TSPInfo),1,BSDFile);
-    DPrintf("BSDEarlyInit:Reading TSP info.\n");
-    DPrintf("Compartment pattern: %s\n",LocalBSD->TSPInfo.TSPPattern);
-    DPrintf("Number of compartments: %i\n",LocalBSD->TSPInfo.NumTSP);
-    DPrintf("TargetInitialCompartment: %i\n",LocalBSD->TSPInfo.TargetInitialCompartment);
-    DPrintf("Starting Compartment: %i\n",LocalBSD->TSPInfo.StartingComparment);
-    DPrintf("u3: %i\n",LocalBSD->TSPInfo.u3);
-    DPrintf("TSP Block ends at %i\n",GetCurrentFilePosition(BSDFile));
-    assert(LocalBSD->TSPInfo.u3 == 0);
+    if( !BSDReadTSPInfoBlock(BSDFile,&LocalBSD->TSPInfo) ) {
+        free(LocalBSD);
+        fclose(BSDFile);
+        return NULL;
+    }
     *BSD = LocalBSD;
     return BSDFile;
 }
