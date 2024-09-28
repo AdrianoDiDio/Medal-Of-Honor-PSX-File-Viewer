@@ -93,12 +93,414 @@ void BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQua
         BSDRecursivelyApplyHierachyData(Bone->Child1,QuaternionList,VertexTable,LocalTransformMatrix);
     }
 }
+
 int BSDGetRealOffset(int RelativeOffset)
 {
     return RelativeOffset + BSD_HEADER_SIZE;
 }
 
-bool BSDReadAnimatedLightTableBlock(FILE *BSDFile, BSDAnimatedLightTable_t *BSDAnimatedLightTable)
+int BSDGetRenderObjectTableOffset(int GameEngine)
+{
+    return GameEngine == MOH_GAME_STANDARD ? BSD_RENDER_OBJECT_STARTING_OFFSET : BSD_MOH_UNDERGROUND_RENDER_OBJECT_STARTING_OFFSET;
+}
+
+BSDRenderObjectElement_t *BSDGetRenderObjectById(const BSDRenderObjectTable_t *RenderObjectTable,unsigned int RenderObjectId)
+{
+    int i;
+    
+    if( !RenderObjectTable ) {
+        return NULL;
+    }
+    
+    for( i = 0; i < RenderObjectTable->NumRenderObject; i++ ) {
+        if( RenderObjectTable->RenderObject[i].Id == RenderObjectId ) {
+            return &RenderObjectTable->RenderObject[i];
+        }
+    }
+    return NULL;
+}
+
+int BSDGetRenderObjectIndexById(const BSDRenderObjectTable_t *RenderObjectTable,unsigned int RenderObjectId)
+{
+    int i;
+    
+    if( !RenderObjectTable ) {
+        return -1;
+    }
+    for( i = 0; i < RenderObjectTable->NumRenderObject; i++ ) {
+        if( RenderObjectTable->RenderObject[i].Id == RenderObjectId ) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+const char *BSDRenderObjectGetStringFromType(int RenderObjectType)
+{
+    switch( RenderObjectType ) {
+        case BSD_RENDER_OBJECT_CARRY_AUX_ELEMENTS:
+            return "Carry Aux Elements";
+        case BSD_RENDER_OBJECT_PICKUP_AND_EXPLOSIVE:
+            return "Pickup And Explosive";
+        case BSD_RENDER_OBJECT_ENEMY:
+            return "Enemy Render Object";
+        case BSD_RENDER_OBJECT_PLANE:
+            return "Airplane";
+        case BSD_RENDER_OBJECT_MG42:
+            return "MG42";
+        case BSD_RENDER_OBJECT_DOOR:
+            return "Door";
+        case BSD_RENDER_OBJECT_UNKNOWN1:
+            return "Unknown1";
+        case BSD_RENDER_OBJECT_DESTRUCTIBLE_WINDOW:
+            return "Destructible Window";
+        case BSD_RENDER_OBJECT_VALVE:
+            return "Valve";
+        case BSD_RENDER_OBJECT_RADIO:
+            return "Radio";
+        case BSD_RENDER_OBJECT_EXPLOSIVE_CHARGE:
+            return "Explosive Charge";
+        default:
+            return "Unknown";
+    }
+}
+
+const char *BSDRenderObjectGetWeaponNameFromId(int RenderObjectId)
+{
+    switch( RenderObjectId ) {
+        case BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_1:
+            return "Pistol Type 1";
+        case BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_1:
+            return "SubMachineGun Type 1";
+        case BSD_RENDER_OBJECT_WEAPON_BAZOOKA:
+            return "Bazooka";
+        case BSD_RENDER_OBJECT_WEAPON_AMERICAN_GRENADE:
+            return "American Grenade";
+        case BSD_RENDER_OBJECT_WEAPON_SHOTGUN:
+            return "Shotgun";
+        case BSD_RENDER_OBJECT_WEAPON_SNIPER_RIFLE:
+            return "Sniper Rifle";
+        case BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_2:
+            return "SubMachineGun Type 2";
+        case BSD_RENDER_OBJECT_WEAPON_DOCUMENT_PAPERS:
+            return "Document Papers";
+        case BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_2:
+            return "Pistol Type 2";
+        case BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_3:
+            return "Pistol Type 3";
+        case BSD_RENDER_OBJECT_WEAPON_GERMAN_GRENADE:
+            return "German Grenade";
+        case BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_3:
+            return "SubMachineGun Type 3";
+        case BSD_RENDER_OBJECT_WEAPON_M1_GARAND:
+            return "M1 Garand";
+        default:
+            //Should never happen!
+            return "Unknown";
+    }
+}
+
+/*
+ * NOTE(Adriano):
+ * Some RenderObjects uses the 'ReferencedRenderObjectId' field to reference a RenderObject that contains common
+ * informations shared by multiple RenderObjects.
+ * In order to correctly parse these entry we need to copy the field from the 'ReferencedRenderObjectId' to the RenderObject that
+ * requested it.
+ * NOTE(Adriano):Make sure to update the data when new fields are added.
+ */
+void BSDPatchRenderObjects(FILE *BSDFile,BSDRenderObjectTable_t *RenderObjectTable)
+{
+    BSDRenderObjectElement_t *CurrentRenderObject;
+    BSDRenderObjectElement_t *ReferencedRenderObject;
+    int i;
+        
+    for( i = 0; i < RenderObjectTable->NumRenderObject; i++ ) {
+        if( RenderObjectTable->RenderObject[i].ReferencedRenderObjectId == -1 ) {
+            continue;
+        }
+        ReferencedRenderObject = BSDGetRenderObjectById(RenderObjectTable,RenderObjectTable->RenderObject[i].ReferencedRenderObjectId);
+        CurrentRenderObject = &RenderObjectTable->RenderObject[i];
+        if( !ReferencedRenderObject ) {
+            DPrintf("BSDPatchRenderObjects:RenderObject Id %i not found\n",RenderObjectTable->RenderObject[i].ReferencedRenderObjectId);
+            continue;
+        }
+        DPrintf("BSDPatchRenderObjects:Patching up RenderObject Id %i using Id %i\n",RenderObjectTable->RenderObject[i].Id,
+            RenderObjectTable->RenderObject[i].ReferencedRenderObjectId
+        );
+        if(CurrentRenderObject->AnimationDataOffset == -1 ) {
+            CurrentRenderObject->AnimationDataOffset = ReferencedRenderObject->AnimationDataOffset;
+        }
+        if(CurrentRenderObject->FaceOffset == -1 ) {
+            CurrentRenderObject->FaceOffset = ReferencedRenderObject->FaceOffset;
+        }
+        if(CurrentRenderObject->FaceTableOffset == -1 ) {
+            CurrentRenderObject->FaceTableOffset = ReferencedRenderObject->FaceTableOffset;
+        }
+        if(CurrentRenderObject->VertexTableIndexOffset == -1 ) {
+            CurrentRenderObject->VertexTableIndexOffset = ReferencedRenderObject->VertexTableIndexOffset;
+        }
+        if(CurrentRenderObject->UnknownOffset4 == -1 ) {
+            CurrentRenderObject->UnknownOffset4 = ReferencedRenderObject->UnknownOffset4;
+        }
+        if(CurrentRenderObject->VertexOffset == -1 ) {
+            CurrentRenderObject->VertexOffset = ReferencedRenderObject->VertexOffset;
+            CurrentRenderObject->NumVertex = ReferencedRenderObject->NumVertex;
+        }
+        if(CurrentRenderObject->HierarchyDataRootOffset == -1 ) {
+            CurrentRenderObject->HierarchyDataRootOffset = ReferencedRenderObject->HierarchyDataRootOffset;
+        }
+        if(CurrentRenderObject->ColorOffset == -1 ) {
+            CurrentRenderObject->ColorOffset = ReferencedRenderObject->ColorOffset;
+        }
+        if(CurrentRenderObject->AnimationDataOffset == -1 ) {
+            CurrentRenderObject->AnimationDataOffset = ReferencedRenderObject->AnimationDataOffset;
+        }
+        if( CurrentRenderObject->ScaleX == 0 && CurrentRenderObject->ScaleY == 0 && CurrentRenderObject->ScaleZ == 0 ) {
+            CurrentRenderObject->ScaleX = ReferencedRenderObject->ScaleX;
+            CurrentRenderObject->ScaleY = ReferencedRenderObject->ScaleY;
+            CurrentRenderObject->ScaleZ = ReferencedRenderObject->ScaleZ;
+
+        }
+        if( CurrentRenderObject->Type == -1 ) {
+            CurrentRenderObject->Type = ReferencedRenderObject->Type;
+        }
+    }
+}
+
+bool BSDReadNodeInfoBlock(FILE *BSDFile,int NodeInfoOffset, BSDNodeInfo_t *NodeInfo)
+{
+    int NodeFilePosition;
+    int NodeTableEnd;
+    int NextNodeOffset;
+    int i;
+    
+    if( !BSDFile ) {
+        DPrintf("BSDReadNodeInfoBlock: Invalid file\n");
+        return false;
+    }
+    
+    if( !NodeInfo ) {
+        DPrintf("BSDReadNodeInfoBlock: Invalid data\n");
+        return false;
+    }
+    
+    if(GetCurrentFilePosition(BSDFile) != BSDGetRealOffset(NodeInfoOffset)) {
+        fseek(BSDFile, BSDGetRealOffset(NodeInfoOffset), SEEK_SET);
+    }
+
+    DPrintf("BSDReadNodeInfoBlock:Reading node table at %i...\n",GetCurrentFilePosition(BSDFile));
+    fread(&NodeInfo->Header,sizeof(NodeInfo->Header),1,BSDFile);
+    DPrintf("BSDReadNodeInfoBlock:Reading %i entries.\n",NodeInfo->Header.NumNodes);
+    DPrintf("TableSize: %i\n",NodeInfo->Header.TableSize);
+    DPrintf("U2: %i\n",NodeInfo->Header.u2);
+    DPrintf("U3: %i\n",NodeInfo->Header.u3);
+    DPrintf("U4: %i\n",NodeInfo->Header.u4);
+    DPrintf("U5: %i\n",NodeInfo->Header.u5);
+    NodeInfo->Table = malloc(NodeInfo->Header.NumNodes * sizeof(BSDNodeTableEntry_t));
+    if( !NodeInfo->Table ) {
+        DPrintf("BSDReadNodeChunk:Failed to allocate memory for node table\n");
+        return false;
+    }
+    DPrintf("BSDReadNodeInfoBlock:Nodetable starts at %i\n",GetCurrentFilePosition(BSDFile));
+    for( i = 0; i < NodeInfo->Header.NumNodes; i++ ) {
+        fread(&NodeInfo->Table[i],sizeof(NodeInfo->Table[i]),1,BSDFile);
+        DPrintf("-- NODE %i --\n",i);
+        DPrintf("Pointer:%i\n",NodeInfo->Table[i].Pointer);
+        DPrintf("Offset:%i\n",NodeInfo->Table[i].Offset);
+    }
+    NodeTableEnd = GetCurrentFilePosition(BSDFile);
+    DPrintf("BSDReadNodeInfoBlock:Nodetable ends at %i\n",NodeTableEnd);
+    //All the node offset are calculated from the 0 node...
+    //So all the offset inside a node are Offset+AddressOfFirstNode.
+    //TODO:Load each node entry one by one (not using a single fread) since
+    //     there are many types of node that contains different data...
+    NodeInfo->Node = malloc(NodeInfo->Header.NumNodes * sizeof(BSDNode_t));
+    if( !NodeInfo->Node ) {
+        DPrintf("BSDReadNodeInfoBlock:Failed to allocate memory for node array\n");
+        return false;
+    }
+    for( i = 0; i < NodeInfo->Header.NumNodes; i++ ) {
+        NodeFilePosition = GetCurrentFilePosition(BSDFile);
+        DPrintf(" -- NODE %i (Pos %i PosNoHeader %i)-- \n",i,NodeFilePosition,NodeFilePosition - 2048);
+        assert(GetCurrentFilePosition(BSDFile) == (NodeInfo->Table[i].Offset + NodeTableEnd));
+        fread(&NodeInfo->Node[i].Id,sizeof(NodeInfo->Node[i].Id),1,BSDFile);
+        fread(&NodeInfo->Node[i].Size,sizeof(NodeInfo->Node[i].Size),1,BSDFile);
+        fread(&NodeInfo->Node[i].u2,sizeof(NodeInfo->Node[i].u2),1,BSDFile);
+        fread(&NodeInfo->Node[i].Type,sizeof(NodeInfo->Node[i].Type),1,BSDFile);
+        fread(&NodeInfo->Node[i].Position,sizeof(NodeInfo->Node[i].Position),1,BSDFile);
+        fread(&NodeInfo->Node[i].Rotation,sizeof(NodeInfo->Node[i].Rotation),1,BSDFile);
+        fread(&NodeInfo->Node[i].Pad,sizeof(NodeInfo->Node[i].Pad),1,BSDFile);
+        fread(&NodeInfo->Node[i].CollisionVolumeType,sizeof(NodeInfo->Node[i].CollisionVolumeType),1,BSDFile);
+        fread(&NodeInfo->Node[i].CollisionInfo0,sizeof(NodeInfo->Node[i].CollisionInfo0),1,BSDFile);
+        fread(&NodeInfo->Node[i].CollisionInfo1,sizeof(NodeInfo->Node[i].CollisionInfo1),1,BSDFile);
+        fread(&NodeInfo->Node[i].CollisionInfo2,sizeof(NodeInfo->Node[i].CollisionInfo2),1,BSDFile);
+        NodeInfo->Node[i].FilePosition = NodeFilePosition;
+        NextNodeOffset = NodeFilePosition + NodeInfo->Node[i].Size;
+        fseek(BSDFile,NextNodeOffset,SEEK_SET);
+    }
+    return true;
+}
+
+bool BSDReadRenderObjectTable(FILE *BSDFile,int GameEngine, BSDRenderObjectTable_t *RenderObjectTable)
+{
+    int FirstRenderObjectFilePosition;
+    int PreviousFilePosition;
+    int Result;
+    int i;
+    int TableOffset;
+    
+    if( !BSDFile ) {
+        DPrintf("BSDReadRenderObjectTable: Invalid file\n");
+        return false;
+    }
+    
+    if( !RenderObjectTable ) {
+        DPrintf("BSDReadRenderObjectTable: Invalid data\n");
+        return false;
+    }
+    
+    TableOffset = BSDGetRenderObjectTableOffset(GameEngine);
+    
+    if(GetCurrentFilePosition(BSDFile) != BSDGetRealOffset(TableOffset)) {
+        fseek(BSDFile, BSDGetRealOffset(TableOffset), SEEK_SET);
+    }
+    
+    fread(&RenderObjectTable->NumRenderObject,sizeof(RenderObjectTable->NumRenderObject),1,BSDFile);
+    FirstRenderObjectFilePosition = GetCurrentFilePosition(BSDFile);
+    
+    DPrintf("BSDReadRenderObjectTable:Reading %i RenderObject Elements...\n",RenderObjectTable->NumRenderObject);
+    
+    assert(sizeof(BSDRenderObjectElement_t) == MOH_RENDER_OBJECT_SIZE);
+    
+    RenderObjectTable->RenderObject = malloc(RenderObjectTable->NumRenderObject * sizeof(BSDRenderObjectElement_t));
+    if( !RenderObjectTable->RenderObject ) {
+        DPrintf("BSDReadRenderObjectTable:Failed to allocate memory for RenderObject Array\n");
+        return 0;
+    }
+    for( i = 0; i < RenderObjectTable->NumRenderObject; i++ ) {
+        if( GameEngine == MOH_GAME_UNDERGROUND ) {
+            assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectFilePosition + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE));
+        } else {
+            assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectFilePosition + (i * MOH_RENDER_OBJECT_SIZE));
+        }
+        DPrintf("BSDReadRenderObjectTable:Reading RenderObject %i at %i...\n",i,GetCurrentFilePosition(BSDFile));
+        fread(&RenderObjectTable->RenderObject[i],sizeof(RenderObjectTable->RenderObject[i]),1,BSDFile);
+        DPrintf("RenderObject Id:%i\n",RenderObjectTable->RenderObject[i].Id);
+        if( RenderObjectTable->RenderObject[i].Type == 1 ) {
+            DPrintf("RenderObject Type:%i | %s\n",RenderObjectTable->RenderObject[i].Type,
+                    BSDRenderObjectGetWeaponNameFromId(RenderObjectTable->RenderObject[i].Id));
+        } else {
+            DPrintf("RenderObject Type:%i | %s\n",RenderObjectTable->RenderObject[i].Type,
+                    BSDRenderObjectGetStringFromType(RenderObjectTable->RenderObject[i].Type));
+        }
+        DPrintf("RenderObject Element Vertex Offset: %i (%i)\n",RenderObjectTable->RenderObject[i].VertexOffset,
+                RenderObjectTable->RenderObject[i].VertexOffset + BSD_HEADER_SIZE);
+        DPrintf("RenderObject Element NumVertex: %i\n",RenderObjectTable->RenderObject[i].NumVertex);
+        //Those offset are relative to the EntryTable.
+        DPrintf("RenderObject FaceTableOffset: %i (%i)\n",RenderObjectTable->RenderObject[i].FaceTableOffset,
+                RenderObjectTable->RenderObject[i].FaceTableOffset + BSD_HEADER_SIZE);
+        DPrintf("RenderObject VertexTableIndexOffset: %i (%i)\n",RenderObjectTable->RenderObject[i].VertexTableIndexOffset,
+                RenderObjectTable->RenderObject[i].VertexTableIndexOffset + BSD_HEADER_SIZE);
+        DPrintf("RenderObject Hierarchy Data Root Offset: %i (%i)\n",RenderObjectTable->RenderObject[i].HierarchyDataRootOffset,
+                RenderObjectTable->RenderObject[i].HierarchyDataRootOffset + BSD_HEADER_SIZE);
+        DPrintf("RenderObject FaceOffset: %i (%i)\n",RenderObjectTable->RenderObject[i].FaceOffset,
+                RenderObjectTable->RenderObject[i].FaceOffset + BSD_HEADER_SIZE);
+        DPrintf("RenderObject Scale: %i;%i;%i (4096 is 1 meaning no scale)\n",
+                RenderObjectTable->RenderObject[i].ScaleX / 4,
+                RenderObjectTable->RenderObject[i].ScaleY / 4,
+                RenderObjectTable->RenderObject[i].ScaleZ / 4);
+        if( RenderObjectTable->RenderObject[i].ReferencedRenderObjectId != -1 ) {
+            DPrintf("RenderObject References RenderObject Id:%i\n",RenderObjectTable->RenderObject[i].ReferencedRenderObjectId);
+        } else {
+            DPrintf("RenderObject No Reference set...\n");
+        }
+        if( GameEngine == MOH_GAME_UNDERGROUND ) {
+            if( RenderObjectTable->RenderObject[i].FaceOffset == 0 ) {
+                fread(&RenderObjectTable->RenderObject[i].FaceOffset,sizeof(int),1,BSDFile);
+                SkipFileSection(16,BSDFile);
+            } else {
+                SkipFileSection(20,BSDFile);
+            }
+        }
+    }
+    // Patch up the data using the referenced renderobjects ids...
+    BSDPatchRenderObjects(BSDFile,RenderObjectTable);
+    return 1;
+}
+bool BSDReadSkyBlock(FILE *BSDFile,BSDSky_t *Sky)
+{    
+    if( !BSDFile ) {
+        DPrintf("BSDReadSkyBlock: Invalid file\n");
+        return false;
+    }
+    
+    if( !Sky ) {
+        DPrintf("BSDReadSkyBlock: Invalid data\n");
+        return false;
+    }
+
+    if(GetCurrentFilePosition(BSDFile) != BSDGetRealOffset(BSD_SKY_DATA_FILE_POSITION)) {
+        fseek(BSDFile, BSDGetRealOffset(BSD_SKY_DATA_FILE_POSITION), SEEK_SET);
+    }
+
+    fread(&Sky->U0,sizeof(Sky->U0),1,BSDFile);
+    fread(&Sky->U1,sizeof(Sky->U1),1,BSDFile);
+    fread(&Sky->U2,sizeof(Sky->U2),1,BSDFile);
+    fread(&Sky->StarRadius,sizeof(Sky->StarRadius),1,BSDFile);
+    fread(&Sky->U3,sizeof(Sky->U3),1,BSDFile);
+    fread(&Sky->MoonZ,sizeof(Sky->MoonZ),1,BSDFile);
+    fread(&Sky->MoonY,sizeof(Sky->MoonY),1,BSDFile);
+    fread(&Sky->U4,sizeof(Sky->U4),1,BSDFile);
+    fread(&Sky->U5,sizeof(Sky->U5),1,BSDFile);
+    fread(&Sky->U6,sizeof(Sky->U6),1,BSDFile);
+    
+    DPrintf("BSDReadSkyBlock:MoonY:%i MoonZ:%i\n",Sky->MoonY,Sky->MoonZ);
+    DPrintf("BSDReadSkyBlock:Star Radius:%i\n",Sky->StarRadius);
+    return true;
+}
+
+bool BSDReadEntryTableBlock(FILE *BSDFile,BSDEntryTable_t *EntryTable)
+{    
+    if( !BSDFile ) {
+        DPrintf("BSDReadEntryTableBlock: Invalid file\n");
+        return false;
+    }
+    if( !EntryTable ) {
+        DPrintf("BSDReadEntryTableBlock: Invalid data\n");
+        return false;
+    }
+
+    if(GetCurrentFilePosition(BSDFile) != BSDGetRealOffset(BSD_ENTRY_TABLE_FILE_POSITION)) {
+        fseek(BSDFile, BSDGetRealOffset(BSD_ENTRY_TABLE_FILE_POSITION), SEEK_SET);
+    }
+    
+    assert(sizeof(BSDEntryTable_t) == 80);
+    DPrintf("BSDReadEntryTableBlock: Reading EntryTable at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+    fread(EntryTable,sizeof(BSDEntryTable_t),1,BSDFile);
+    DPrintf("Node table is at %i (%i)\n",EntryTable->NodeTableOffset,EntryTable->NodeTableOffset + BSD_HEADER_SIZE);
+    DPrintf("Unknown data is at %i (%i)\n",EntryTable->UnknownDataOffset,EntryTable->UnknownDataOffset + BSD_HEADER_SIZE);
+    DPrintf("AnimationTableOffset is at %i (%i) and contains %i elements.\n",EntryTable->AnimationTableOffset,
+            EntryTable->AnimationTableOffset + BSD_HEADER_SIZE,EntryTable->NumAnimationTableEntries);
+    DPrintf("AnimationDataOffset is at %i (%i) contains %i elements.\n",EntryTable->AnimationDataOffset,
+            EntryTable->AnimationDataOffset + BSD_HEADER_SIZE,EntryTable->NumAnimationData);
+    DPrintf("AnimationQuaternionDataOffset is at %i (%i) and contains %i elements.\n",EntryTable->AnimationQuaternionDataOffset,
+            EntryTable->AnimationQuaternionDataOffset + BSD_HEADER_SIZE,EntryTable->NumAnimationQuaternionData);
+    DPrintf("AnimationHierarchyDataOffset is at %i (%i) and contains %i elements.\n",EntryTable->AnimationHierarchyDataOffset,
+            EntryTable->AnimationHierarchyDataOffset + BSD_HEADER_SIZE,EntryTable->NumAnimationHierarchyData);
+    DPrintf("AnimationFaceTableOffset is at %i (%i) and contains %i elements.\n",EntryTable->AnimationFaceTableOffset,
+            EntryTable->AnimationFaceTableOffset + BSD_HEADER_SIZE,EntryTable->NumAnimationFaceTables);
+    DPrintf("AnimationFaceDataOffset is at %i (%i) and contains %i elements.\n",EntryTable->AnimationFaceDataOffset,
+            EntryTable->AnimationFaceDataOffset + BSD_HEADER_SIZE,EntryTable->NumAnimationFaces);
+    DPrintf("AnimationVertexTableIndexOffset is at %i (%i) and contains %i elements.\n",EntryTable->AnimationVertexTableIndexOffset,
+            EntryTable->AnimationVertexTableIndexOffset + BSD_HEADER_SIZE,EntryTable->NumAnimationVertexTableIndex);
+    DPrintf("AnimationVertexTableOffset is at %i (%i) and contains %i elements.\n",EntryTable->AnimationVertexTableOffset,
+            EntryTable->AnimationVertexTableOffset + BSD_HEADER_SIZE,EntryTable->NumAnimationVertexTableEntry);
+    DPrintf("AnimationVertexDataOffset is at %i (%i) and contains %i elements.\n",EntryTable->AnimationVertexDataOffset,
+            EntryTable->AnimationVertexDataOffset + BSD_HEADER_SIZE,EntryTable->NumAnimationVertex);
+    return true;
+}
+
+bool BSDReadAnimatedLightTableBlock(FILE *BSDFile, BSDAnimatedLightTable_t *AnimatedLightTable)
 {
     BSDAnimatedLight_t *AnimatedLight;
     int PreviousFilePosition;
@@ -109,7 +511,7 @@ bool BSDReadAnimatedLightTableBlock(FILE *BSDFile, BSDAnimatedLightTable_t *BSDA
         DPrintf("BSDReadAnimatedLightTableBlock: Invalid file\n");
         return false;
     }
-    if( !BSDAnimatedLightTable ) {
+    if( !AnimatedLightTable ) {
         DPrintf("BSDReadAnimatedLightTableBlock: Invalid data\n");
         return false;
     }
@@ -118,11 +520,11 @@ bool BSDReadAnimatedLightTableBlock(FILE *BSDFile, BSDAnimatedLightTable_t *BSDA
         fseek(BSDFile, BSDGetRealOffset(BSD_ANIMATED_LIGHTS_FILE_POSITION), SEEK_SET);
     }
     DPrintf("BSDReadAnimatedLightTableBlock:AnimatedLightsTable is at %li\n",ftell(BSDFile));
-    fread(&BSDAnimatedLightTable->NumAnimatedLights,sizeof(BSDAnimatedLightTable->NumAnimatedLights),1,BSDFile);
-    DPrintf("BSDReadAnimatedLightTableBlock:AnimatedLightsTable:Reading %i colors at %li\n",BSDAnimatedLightTable->NumAnimatedLights,ftell(BSDFile));
+    fread(&AnimatedLightTable->NumAnimatedLights,sizeof(AnimatedLightTable->NumAnimatedLights),1,BSDFile);
+    DPrintf("BSDReadAnimatedLightTableBlock:AnimatedLightsTable:Reading %i colors at %li\n",AnimatedLightTable->NumAnimatedLights,ftell(BSDFile));
 
     for( i = 0; i < BSD_ANIMATED_LIGHTS_TABLE_SIZE; i++ ) {
-        AnimatedLight = &BSDAnimatedLightTable->AnimatedLightsList[i];
+        AnimatedLight = &AnimatedLightTable->AnimatedLightsList[i];
         fread(&AnimatedLight->NumColors,sizeof(AnimatedLight->NumColors),1,BSDFile);
         fread(&AnimatedLight->StartingColorOffset,sizeof(AnimatedLight->StartingColorOffset),1,BSDFile);
         fread(&AnimatedLight->ColorIndex,sizeof(AnimatedLight->ColorIndex),1,BSDFile);
@@ -158,48 +560,48 @@ bool BSDReadAnimatedLightTableBlock(FILE *BSDFile, BSDAnimatedLightTable_t *BSDA
     return true;
 }
 
-bool BSDReadSceneInfoBlock(FILE *BSDFile, BSDSceneInfo_t *BSDSceneInfo)
+bool BSDReadSceneInfoBlock(FILE *BSDFile, BSDSceneInfo_t *SceneInfo)
 {
     if( !BSDFile ) {
         DPrintf("BSDReadSceneInfoBlock: Invalid file\n");
         return false;
     }
-    if( !BSDSceneInfo ) {
+    if( !SceneInfo ) {
         DPrintf("BSDReadSceneInfoBlock: Invalid data\n");
         return false;
     }
     if(GetCurrentFilePosition(BSDFile) != BSDGetRealOffset(BSD_SCENE_INFO_BLOCK_POSITION)) {
         fseek(BSDFile, BSDGetRealOffset(BSD_SCENE_INFO_BLOCK_POSITION), SEEK_SET);
     }
-    fread(BSDSceneInfo,sizeof(BSDSceneInfo_t),1,BSDFile);
+    fread(SceneInfo,sizeof(BSDSceneInfo_t),1,BSDFile);
     DPrintf("BSDReadSceneInfoBlock:Reading scene info...\n");
-    DPrintf("Fog Near: %i\n",BSDSceneInfo->FogNear);
-    DPrintf("Clear Color: %i;%i;%i\n",BSDSceneInfo->ClearColor.r,BSDSceneInfo->ClearColor.g,BSDSceneInfo->ClearColor.b);
+    DPrintf("Fog Near: %i\n",SceneInfo->FogNear);
+    DPrintf("Clear Color: %i;%i;%i\n",SceneInfo->ClearColor.r,SceneInfo->ClearColor.g,SceneInfo->ClearColor.b);
     return true;
 }
 
-bool BSDReadTSPInfoBlock(FILE *BSDFile, BSDTSPInfo_t *BSDTSPInfo)
+bool BSDReadTSPInfoBlock(FILE *BSDFile, BSDTSPInfo_t *TSPInfo)
 {
     
     if( !BSDFile ) {
         DPrintf("BSDReadTSPInfoBlock: Invalid file\n");
         return false;
     }
-    if( !BSDTSPInfo ) {
+    if( !TSPInfo ) {
         DPrintf("BSDReadTSPInfoBlock: Invalid data\n");
         return false;
     }
     if(GetCurrentFilePosition(BSDFile) != BSDGetRealOffset(BSD_TSP_INFO_BLOCK_POSITION) ) {
         fseek(BSDFile, BSDGetRealOffset(BSD_TSP_INFO_BLOCK_POSITION), SEEK_SET);
     }
-    fread(BSDTSPInfo,sizeof(BSDTSPInfo_t),1,BSDFile);
+    fread(TSPInfo,sizeof(BSDTSPInfo_t),1,BSDFile);
     DPrintf("BSDReadTSPInfoBlock:Reading TSP info...\n");
-    DPrintf("Compartment pattern: %s\n",BSDTSPInfo->TSPPattern);
-    DPrintf("Number of compartments: %i\n",BSDTSPInfo->NumTSP);
-    DPrintf("TargetInitialCompartment: %i\n",BSDTSPInfo->TargetInitialCompartment);
-    DPrintf("Starting Compartment: %i\n",BSDTSPInfo->StartingComparment);
-    DPrintf("u3: %i\n",BSDTSPInfo->u3);
+    DPrintf("Compartment pattern: %s\n",TSPInfo->TSPPattern);
+    DPrintf("Number of compartments: %i\n",TSPInfo->NumTSP);
+    DPrintf("TargetInitialCompartment: %i\n",TSPInfo->TargetInitialCompartment);
+    DPrintf("Starting Compartment: %i\n",TSPInfo->StartingComparment);
+    DPrintf("u3: %i\n",TSPInfo->u3);
     DPrintf("TSP Block ends at %i\n",GetCurrentFilePosition(BSDFile));
-    assert(BSDTSPInfo->u3 == 0);
+    assert(TSPInfo->u3 == 0);
     return true;
 }

@@ -67,7 +67,7 @@ typedef struct BSD_s {
     BSDAnimatedLightTable_t     AnimatedLightsTable;
     BSDEntryTable_t             EntryTable;
     BSDSky_t                    SkyData;
-    BSDRenderObjectBlock_t      RenderObjectTable;
+    BSDRenderObjectTable_t      RenderObjectTable;
     BSDNodeInfo_t               NodeData;
     BSDPropertySetFile_t        PropertySetFile;
     

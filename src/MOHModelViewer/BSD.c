@@ -842,26 +842,7 @@ int BSDReadEntryTableChunk(BSD_t *BSD,FILE *BSDFile)
             BSD->EntryTable.AnimationVertexDataOffset + BSD_HEADER_SIZE,BSD->EntryTable.NumAnimationVertex);
     return 1;
 }
-BSDRenderObjectElement_t *BSDGetRenderObjectById(const BSD_t *BSD,unsigned int RenderObjectId)
-{
-    int i;
-    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        if( BSD->RenderObjectTable.RenderObject[i].Id == RenderObjectId ) {
-            return &BSD->RenderObjectTable.RenderObject[i];
-        }
-    }
-    return NULL;
-}
-int BSDGetRenderObjectIndexById(const BSD_t *BSD,unsigned int RenderObjectId)
-{
-    int i;
-    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        if( BSD->RenderObjectTable.RenderObject[i].Id == RenderObjectId ) {
-            return i;
-        }
-    }
-    return -1;
-}
+
 void BSDAppendRenderObjectToList(BSDRenderObject_t **List,BSDRenderObject_t *Node)
 {
     BSDRenderObject_t *LastNode;
@@ -874,153 +855,6 @@ void BSDAppendRenderObjectToList(BSDRenderObject_t **List,BSDRenderObject_t *Nod
         }
         LastNode->Next = Node;
     }
-}
-/*
- * NOTE(Adriano):
- * Some RenderObjects uses the 'ReferencedRenderObjectId' field to reference a RenderObject that contains common
- * informations shared by multiple RenderObjects.
- * In order to correctly parse these entry we need to copy the field from the 'ReferencedRenderObjectId' to the RenderObject that
- * requested it.
- * NOTE(Adriano):Make sure to update the data when new fields are added.
- */
-void BSDPatchRenderObjects(BSD_t *BSD,FILE *BSDFile,int GameEngine)
-{
-    BSDRenderObjectElement_t *CurrentRenderObject;
-    BSDRenderObjectElement_t *ReferencedRenderObject;
-    int i;
-        
-    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        if( BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId == -1 ) {
-            continue;
-        }
-        ReferencedRenderObject = BSDGetRenderObjectById(BSD,BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
-        CurrentRenderObject = &BSD->RenderObjectTable.RenderObject[i];
-        if( !ReferencedRenderObject ) {
-            DPrintf("BSDPatchRenderObjects:RenderObject Id %i not found\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
-            continue;
-        }
-        DPrintf("BSDPatchRenderObjects:Patching up RenderObject Id %i using Id %i\n",BSD->RenderObjectTable.RenderObject[i].Id,
-            BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId
-        );
-        if(CurrentRenderObject->AnimationDataOffset == -1 ) {
-            CurrentRenderObject->AnimationDataOffset = ReferencedRenderObject->AnimationDataOffset;
-        }
-        if(CurrentRenderObject->FaceOffset == -1 ) {
-            CurrentRenderObject->FaceOffset = ReferencedRenderObject->FaceOffset;
-        }
-        if(CurrentRenderObject->FaceTableOffset == -1 ) {
-            CurrentRenderObject->FaceTableOffset = ReferencedRenderObject->FaceTableOffset;
-        }
-        if(CurrentRenderObject->VertexTableIndexOffset == -1 ) {
-            CurrentRenderObject->VertexTableIndexOffset = ReferencedRenderObject->VertexTableIndexOffset;
-        }
-        if(CurrentRenderObject->UnknownOffset4 == -1 ) {
-            CurrentRenderObject->UnknownOffset4 = ReferencedRenderObject->UnknownOffset4;
-        }
-        if(CurrentRenderObject->VertexOffset == -1 ) {
-            CurrentRenderObject->VertexOffset = ReferencedRenderObject->VertexOffset;
-            CurrentRenderObject->NumVertex = ReferencedRenderObject->NumVertex;
-        }
-        if(CurrentRenderObject->HierarchyDataRootOffset == -1 ) {
-            CurrentRenderObject->HierarchyDataRootOffset = ReferencedRenderObject->HierarchyDataRootOffset;
-        }
-        if(CurrentRenderObject->ColorOffset == -1 ) {
-            CurrentRenderObject->ColorOffset = ReferencedRenderObject->ColorOffset;
-        }
-        if(CurrentRenderObject->AnimationDataOffset == -1 ) {
-            CurrentRenderObject->AnimationDataOffset = ReferencedRenderObject->AnimationDataOffset;
-        }
-        if( CurrentRenderObject->ScaleX == 0 && CurrentRenderObject->ScaleY == 0 && CurrentRenderObject->ScaleZ == 0 ) {
-            CurrentRenderObject->ScaleX = ReferencedRenderObject->ScaleX;
-            CurrentRenderObject->ScaleY = ReferencedRenderObject->ScaleY;
-            CurrentRenderObject->ScaleZ = ReferencedRenderObject->ScaleZ;
-
-        }
-        if( CurrentRenderObject->Type == -1 ) {
-            CurrentRenderObject->Type = ReferencedRenderObject->Type;
-        }
-    }
-}
-int BSDReadRenderObjectChunk(BSD_t *BSD,int GameEngine,FILE *BSDFile)
-{
-    int FirstRenderObjectPosition;
-    int i;
-    
-    if( !BSD || !BSDFile ) {
-        bool InvalidFile = (BSDFile == NULL ? true : false);
-        printf("BSDReadRenderObjectChunk: Invalid %s\n",InvalidFile ? "file" : "BSD struct");
-        return 0;
-    }
-    
-    fseek(BSDFile,BSD_RENDER_OBJECT_STARTING_OFFSET + BSD_HEADER_SIZE,SEEK_SET);
-    if( GameEngine == MOH_GAME_UNDERGROUND) {
-        //NOTE(Adriano):Skips the face offset...
-        fseek(BSDFile,16,SEEK_CUR);
-    }
-    fread(&BSD->RenderObjectTable.NumRenderObject,sizeof(BSD->RenderObjectTable.NumRenderObject),1,BSDFile);
-    FirstRenderObjectPosition = GetCurrentFilePosition(BSDFile);
-    
-    DPrintf("BSDReadRenderObjectChunk:Reading %i RenderObject Elements...\n",BSD->RenderObjectTable.NumRenderObject);
-    
-    assert(sizeof(BSDRenderObjectElement_t) == MOH_RENDER_OBJECT_SIZE);
-    
-    BSD->RenderObjectTable.RenderObject = malloc(BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObjectElement_t));
-    if( !BSD->RenderObjectTable.RenderObject ) {
-        DPrintf("BSDReadRenderObjectChunk:Failed to allocate memory for RenderObject Array\n");
-        return 0;
-    }
-    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectPosition + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE));
-        } else {
-            assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectPosition + (i * MOH_RENDER_OBJECT_SIZE));
-        }
-        DPrintf("Reading RenderObject %i at %i\n",i,GetCurrentFilePosition(BSDFile));
-        fread(&BSD->RenderObjectTable.RenderObject[i],sizeof(BSD->RenderObjectTable.RenderObject[i]),1,BSDFile);
-//         if( GameEngine == MOH_GAME_UNDERGROUND ) {
-//             SkipFileSection(20,BSDFile);
-//         }
-        DPrintf("RenderObject Id:%i\n",BSD->RenderObjectTable.RenderObject[i].Id);
-        DPrintf("RenderObject Type:%i\n",BSD->RenderObjectTable.RenderObject[i].Type);
-        if( BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId != -1 ) {
-            DPrintf("RenderObject References RenderObject Id:%i\n",BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
-        } else {
-            DPrintf("RenderObject No Reference set...\n");
-        }
-        if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            if( BSD->RenderObjectTable.RenderObject[i].FaceOffset == 0 ) {
-                fread(&BSD->RenderObjectTable.RenderObject[i].FaceOffset,sizeof(int),1,BSDFile);
-                SkipFileSection(16,BSDFile);
-            } else {
-                SkipFileSection(20,BSDFile);
-            }
-        }
-        DPrintf("RenderObject Element Unknown Offset0: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].UnknownOffset0,
-                BSD->RenderObjectTable.RenderObject[i].UnknownOffset0 + BSD_HEADER_SIZE);
-        DPrintf("RenderObject Element Animation Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].AnimationDataOffset,
-                BSD->RenderObjectTable.RenderObject[i].AnimationDataOffset + BSD_HEADER_SIZE);
-        DPrintf("RenderObject Element Unknown Offset1: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].UnknownOffset1,
-                BSD->RenderObjectTable.RenderObject[i].UnknownOffset1 + BSD_HEADER_SIZE);
-        DPrintf("RenderObject Element Vertex Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].VertexOffset,
-                BSD->RenderObjectTable.RenderObject[i].VertexOffset + BSD_HEADER_SIZE);
-        DPrintf("RenderObject Element NumVertex: %i\n",BSD->RenderObjectTable.RenderObject[i].NumVertex);
-        //These offsets are relative to the EntryTable.
-        DPrintf("RenderObject FaceTableOffset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].FaceTableOffset,
-                BSD->RenderObjectTable.RenderObject[i].FaceTableOffset + BSD_HEADER_SIZE);
-        DPrintf("RenderObject VertexTableIndexOffset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].VertexTableIndexOffset,
-                BSD->RenderObjectTable.RenderObject[i].VertexTableIndexOffset + BSD_HEADER_SIZE);
-        DPrintf("RenderObject Hierarchy Data Root Offset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].HierarchyDataRootOffset,
-                BSD->RenderObjectTable.RenderObject[i].HierarchyDataRootOffset + BSD_HEADER_SIZE);
-        DPrintf("RenderObject FaceOffset: %i (%i)\n",BSD->RenderObjectTable.RenderObject[i].FaceOffset,
-                BSD->RenderObjectTable.RenderObject[i].FaceOffset + BSD_HEADER_SIZE);
-        DPrintf("RenderObject Scale: %i;%i;%i (4096 is 1 meaning no scale)\n",
-                BSD->RenderObjectTable.RenderObject[i].ScaleX / 4,
-                BSD->RenderObjectTable.RenderObject[i].ScaleY / 4,
-                BSD->RenderObjectTable.RenderObject[i].ScaleZ / 4);
- 
-    }
-    BSDPatchRenderObjects(BSD,BSDFile,GameEngine);
-    return 1;
 }
 
 int BSDLoadStaticVertexAndColorData(BSDRenderObject_t *RenderObject,BSDRenderObjectElement_t RenderObjectElement,FILE *BSDFile)
@@ -2005,7 +1839,7 @@ BSD_t *BSDLoad(FILE *BSDFile,int *GameVersion)
     }
     DPrintf("Running BSD from %s since size is %i\n",LocalGameVersion == MOH_GAME_STANDARD ? 
         "Medal Of Honor" : "Medal Of Honor:Underground",RenderObjectSize);
-    if( !BSDReadRenderObjectChunk(BSD,LocalGameVersion,BSDFile) ) {
+    if( !BSDReadRenderObjectTable(BSDFile,LocalGameVersion,&BSD->RenderObjectTable) ) {
         goto Failure;
     }
     if( GameVersion ) {
@@ -2053,7 +1887,8 @@ BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName,int *GameVe
             //This could happens for example when loading the SET1 BSD that is looking for another RenderObject containted inside
             //the level file.
             //For the moment this is bypassed and could cause the RenderObject to not be loaded due to missing offsets...
-            ReferencedRenderObjectIndex = BSDGetRenderObjectIndexById(BSD,BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
+            ReferencedRenderObjectIndex = BSDGetRenderObjectIndexById(&BSD->RenderObjectTable,
+                                                                      BSD->RenderObjectTable.RenderObject[i].ReferencedRenderObjectId);
         }
         DPrintf("BSDLoadAllAnimatedRenderObjects:Loading Animated RenderObject %i\n",BSD->RenderObjectTable.RenderObject[i].Id);
         if( BSD->RenderObjectTable.RenderObject[i].AnimationDataOffset == -1 ) {

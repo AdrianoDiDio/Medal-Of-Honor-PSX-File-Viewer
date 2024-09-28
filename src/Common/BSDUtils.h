@@ -47,6 +47,7 @@
 #define BSD_PROPERTY_SET_FILE_POSITION 0x598
 #define BSD_ANIMATED_LIGHTS_FILE_POSITION 0xD8
 #define BSD_RENDER_OBJECT_STARTING_OFFSET 0x5A4
+#define BSD_MOH_UNDERGROUND_RENDER_OBJECT_STARTING_OFFSET 0x5B4
 #define BSD_ENTRY_TABLE_FILE_POSITION 0x53C
 #define BSD_SKY_DATA_FILE_POSITION 0x58C
 
@@ -231,6 +232,8 @@ typedef struct BSDNode_s {
     Byte DynamicBlockIndex;
     //TODO:At 0x5c in every pickup object is stored the amount of ammo...
     int Visited;
+    
+    int FilePosition; // Position inside the BSD file
 } BSDNode_t;
 
 typedef struct BSDNodeTableEntry_s {
@@ -299,10 +302,10 @@ typedef struct BSDRenderObjectElement_s {
     int             Type;
 } BSDRenderObjectElement_t;
 
-typedef struct BSDRenderObjectBlock_s {
+typedef struct BSDRenderObjectTable_s {
     int NumRenderObject;
     BSDRenderObjectElement_t *RenderObject;
-} BSDRenderObjectBlock_t;
+} BSDRenderObjectTable_t;
 
 typedef struct BSDEntryTable_s {
     int NodeTableOffset;
@@ -386,12 +389,24 @@ typedef struct BSDSceneInfo_s {
     char        Unknown2[7];
 } BSDSceneInfo_t;
 
-bool                    BSDReadTSPInfoBlock(FILE *BSDFile, BSDTSPInfo_t *BSDTSPInfo);
-bool                    BSDReadSceneInfoBlock(FILE *BSDFile, BSDSceneInfo_t *BSDSceneInfo);
-bool                    BSDReadAnimatedLightTableBlock(FILE *BSDFile, BSDAnimatedLightTable_t *BSDAnimatedLightTable);
+bool                        BSDReadTSPInfoBlock(FILE *BSDFile, BSDTSPInfo_t *TSPInfo);
+bool                        BSDReadSceneInfoBlock(FILE *BSDFile, BSDSceneInfo_t *SceneInfo);
+bool                        BSDReadAnimatedLightTableBlock(FILE *BSDFile, BSDAnimatedLightTable_t *AnimatedLightTable);
+bool                        BSDReadEntryTableBlock(FILE *BSDFile,BSDEntryTable_t *EntryTable);
+bool                        BSDReadSkyBlock(FILE *BSDFile,BSDSky_t *Sky);
+bool                        BSDReadRenderObjectTable(FILE *BSDFile,int GameEngine, BSDRenderObjectTable_t *RenderObjectTable);
+bool                        BSDReadNodeInfoBlock(FILE *BSDFile,int NodeInfoOffset,BSDNodeInfo_t *NodeInfo);
 
-void                    BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
-                                                    BSDVertexTable_t *VertexTable,mat4 TransformMatrix);
-void                    BSDRenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame);
+BSDRenderObjectElement_t    *BSDGetRenderObjectById(const BSDRenderObjectTable_t *RenderObjectTable,unsigned int RenderObjectId);
+int                         BSDGetRenderObjectIndexById(const BSDRenderObjectTable_t *RenderObjectTable,unsigned int RenderObjectId);
+const char                  *BSDRenderObjectGetWeaponNameFromId(int RenderObjectId);
+const char                  *BSDRenderObjectGetStringFromType(int RenderObjectType);
+int                         BSDGetRenderObjectTableOffset(int GameEngine);
+int                         BSDGetRealOffset(int RelativeOffset);
+
+
+void                        BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
+                                                            BSDVertexTable_t *VertexTable,mat4 TransformMatrix);
+void                        BSDRenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame);
 
 #endif //__BSD_UTILS_H_

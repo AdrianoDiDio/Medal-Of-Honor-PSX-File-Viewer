@@ -55,7 +55,7 @@ typedef struct BSDRenderObject_s {
 
 typedef struct BSD_s {
     BSDEntryTable_t         EntryTable;
-    BSDRenderObjectBlock_t  RenderObjectTable;
+    BSDRenderObjectTable_t  RenderObjectTable;
 } BSD_t;
 
 typedef struct Camera_s Camera_t;
