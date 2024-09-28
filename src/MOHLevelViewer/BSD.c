@@ -652,7 +652,7 @@ void BSDAddNodeToRenderObjecDrawableList(BSD_t *BSD,int IsMultiplayer,int NodeId
         RenderObjectId = BSDNodeIdToRenderObjectId(NodeId);
     }
 
-    RenderObjectIndex = BSDGetRenderObjectIndexById(BSD,RenderObjectId);
+    RenderObjectIndex = BSDGetRenderObjectIndexById(&BSD->RenderObjectTable,RenderObjectId);
 
     if( RenderObjectIndex == -1 ) {
         DPrintf("Failed adding new object...Id %i doesn't match any.\n",RenderObjectId);
@@ -1221,16 +1221,7 @@ void BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 Rotation)
     }
     return;
 }
-int BSDGetRenderObjectIndexById(BSD_t *BSD,int Id)
-{
-    int i;
-    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        if( BSD->RenderObjectTable.RenderObject[i].Id == Id ) {
-            return i;
-        }
-    }
-    return -1;
-}
+
 
 
 int BSDNodeIdToRenderObjectId(int NodeId)
@@ -1418,7 +1409,7 @@ int BSDMPNodeIdToRenderObjectId(int NodeId)
 }
 
 bool BSDIsRenderObjectPresent(BSD_t *BSD,int RenderObjectId) {
-    if( BSDGetRenderObjectIndexById(BSD,RenderObjectId) == -1 ) {
+    if( BSDGetRenderObjectIndexById(&BSD->RenderObjectTable,RenderObjectId) == -1 ) {
         DPrintf("Render Object Id %i not found..\n",RenderObjectId);
         return false;
     }

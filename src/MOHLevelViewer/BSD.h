@@ -100,7 +100,6 @@ void                    BSDClearNodesFlag(BSD_t *BSD);
 int                     BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD,Camera_t *Camera);
 int                     BSDNodeIdToRenderObjectId(int NodeId);
 int                     BSDMPNodeIdToRenderObjectId(int NodeId);
-int                     BSDGetRenderObjectIndexById(BSD_t *BSD,int Id);
 bool                    BSDIsRenderObjectPresent(BSD_t *BSD,int RenderObjectId);
 void                    BSDFixRenderObjectPosition(Level_t *Level);
 int                     BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index);
