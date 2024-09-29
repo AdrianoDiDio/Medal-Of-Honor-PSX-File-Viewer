@@ -83,6 +83,11 @@ typedef struct RenderObject_s {
     struct RenderObject_s *Next;
 } RenderObject_t;
 
+RenderObject_t              *RenderObjectLoad(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t EntryTable,
+                                              BSDRenderObjectTable_t RenderObjectTable,FILE *BSDFile,int GameVersion);
+
+void                        RenderObjectFree(RenderObject_t *RenderObject);
+
 const char                  *RenderObjectGetWeaponNameFromId(int RenderObjectId);
 const char                  *RenderObjectGetStringFromType(RenderObjectType_t RenderObjectType);
 #endif // __RENDER_OBJECT_H_

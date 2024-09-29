@@ -386,7 +386,7 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
         }
     }
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20,"Loading all RenderObjects");
-    BSDPack->RenderObjectList = BSDLoadAllAnimatedRenderObjects(File,&BSDPack->GameVersion);
+    BSDPack->RenderObjectList = BSDLoadRenderObjects(File,&BSDPack->GameVersion);
     if( !BSDPack->RenderObjectList ) {
         DPrintf("RenderObjectManagerLoadBSD:Failed to load render objects from file\n");
         ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_NO_ANIMATED_RENDEROBJECTS;

@@ -33,7 +33,7 @@ typedef struct BSD_s {
 
 typedef struct Camera_s Camera_t;
 
-RenderObject_t       *BSDLoadAllAnimatedRenderObjects(const char *FName,int *GameVersion);
+RenderObject_t          *BSDLoadRenderObjects(const char *FName,int *GameVersion);
 void                    BSDDrawRenderObjectList(RenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void                    BSDDrawRenderObject(RenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void                    BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
