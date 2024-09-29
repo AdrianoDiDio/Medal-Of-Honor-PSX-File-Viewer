@@ -887,20 +887,40 @@ void RenderObjectGenerateVAO(RenderObject_t *RenderObject)
 
 }
 
-void RenderObjectDraw(RenderObject_t *RenderObject,const VRAM_t *VRAM,const RenderObjectShader_t *RenderObjectShader,
-                      bool EnableAmbientLight,bool EnableWireFrameMode,bool EnableFog,mat4 ModelMatrix,mat4 ViewMatrix,mat4 ProjectionMatrix)
+void RenderObjectGetModelMatrix(RenderObject_t *RenderObject,mat4 ModelMatrix)
+{
+    vec3 Temp;
+    glm_mat4_identity(ModelMatrix);
+    
+    glm_vec3_copy(RenderObject->Position,Temp);
+    glm_vec3_rotate(Temp, DEGTORAD(180.f), GLM_XUP);    
+    glm_translate(ModelMatrix,Temp);
+    
+    glm_vec3_copy(RenderObject->Rotation,Temp);
+    Temp[0] = 0;
+    Temp[1] = 1;
+    Temp[2] = 0;
+    glm_rotate(ModelMatrix,glm_rad(-RenderObject->Rotation[1]), Temp);
+    Temp[0] = 1;
+    Temp[1] = 0;
+    Temp[2] = 0;
+    glm_rotate(ModelMatrix,glm_rad(RenderObject->Rotation[0]), Temp);
+    Temp[0] = 0;
+    Temp[1] = 0;
+    Temp[2] = 1;
+    glm_rotate(ModelMatrix,glm_rad(RenderObject->Rotation[2]), Temp);
+    glm_scale(ModelMatrix,RenderObject->Scale);
+}
+
+void RenderObjectBeginDraw(const VRAM_t *VRAM,const RenderObjectShader_t *RenderObjectShader,
+                      bool EnableAmbientLight,bool EnableWireFrameMode,bool EnableFog)
 {
     int EnableLightingId;
     int PaletteTextureId;
     int TextureIndexId;
     int MVPMatrixId;
-    vec3 Temp;
-    mat4 ModelViewMatrix;
-    mat4 MVPMatrix;
-    
-    if( !RenderObject ) {
-        return;
-    }
+
+
     
     if( !RenderObjectShader ) {
         return;
@@ -912,13 +932,6 @@ void RenderObjectDraw(RenderObject_t *RenderObject,const VRAM_t *VRAM,const Rend
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     
-    glm_mat4_identity(ModelViewMatrix);
-    glm_mat4_identity(MVPMatrix);
-    glm_mat4_mul(ViewMatrix,ModelMatrix,ModelViewMatrix);
-    glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
-    //Emulate PSX Coordinate system...
-    glm_rotate_x(ModelViewMatrix,glm_rad(180.f), ModelViewMatrix);
-    glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
 
     glUseProgram(RenderObjectShader->Shader->ProgramId);
     glActiveTexture(GL_TEXTURE0 + 0);
@@ -927,10 +940,29 @@ void RenderObjectDraw(RenderObject_t *RenderObject,const VRAM_t *VRAM,const Rend
     glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
     glUniform1i(RenderObjectShader->EnableLightingId, EnableAmbientLight ? 1 : 0);
     glUniform1i(RenderObjectShader->EnableFogId, EnableFog ? 1 : 0);
+}
+void RenderObjectDraw(RenderObject_t *RenderObject,const RenderObjectShader_t *RenderObjectShader,mat4 ModelMatrix,mat4 ViewMatrix,mat4 ProjectionMatrix)
+{
+    mat4 ModelViewMatrix;
+    mat4 MVPMatrix;
+    
+    glm_mat4_identity(ModelViewMatrix);
+    glm_mat4_identity(MVPMatrix);
+    glm_mat4_mul(ViewMatrix,ModelMatrix,ModelViewMatrix);
+    glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
+    //Emulate PSX Coordinate system...
+    glm_rotate_x(ModelViewMatrix,glm_rad(180.f), ModelViewMatrix);
+    glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+    
     glUniformMatrix4fv(RenderObjectShader->MVMatrixId,1,false,&ModelViewMatrix[0][0]);
     glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
+
     glBindVertexArray(RenderObject->VAO->VAOId[0]);
     glDrawArrays(GL_TRIANGLES, 0, RenderObject->VAO->Count);
+}
+
+void RenderObjectEndDraw(bool EnableWireFrameMode)
+{
     glBindVertexArray(0);
     glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D,0);

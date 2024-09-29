@@ -27,17 +27,6 @@
 #include "../Common/BSDUtils.h"
 #include "../Common/RenderObject.h"
 
-
-//TODO: CLEANUP
-typedef struct BSDRenderObject_s {
-    BSDRenderObjectElement_t *Data;
-    BSDPosition_t  *Vertex;
-    Color1i_t      *Color;
-    BSDFace_t      *Face;
-    int             NumFaces;
-    VAO_t          *VAO;
-} BSDRenderObject_t;
-
 typedef struct BSDRenderObjectDrawable_s {
     RenderObject_t                      *RenderObject;
     vec3                                Position;

@@ -75,7 +75,9 @@ typedef struct RenderObject_s {
     BSDColor_t                  *ColorList;
     BSDFace_t                   *StaticFaceList;
 
+    vec3                        Position;
     vec3                        Scale;
+    vec3                        Rotation;
     vec3                        Center;
     VAO_t                       *VAO;
     
@@ -102,9 +104,12 @@ RenderObject_t              *RenderObjectLoadAllFromTable(BSDEntryTable_t EntryT
 
 RenderObject_t              *RenderObjectLoad(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t EntryTable,
                                               BSDRenderObjectTable_t RenderObjectTable,FILE *BSDFile,int GameVersion);
-void                        RenderObjectDraw(RenderObject_t *RenderObject,const VRAM_t *VRAM,const RenderObjectShader_t *RenderObjectShader,
-                                             bool EnableAmbientLight,bool EnableWireFrameMode,bool EnableFog,mat4 ModelMatrix,mat4 ViewMatrix,
-                                             mat4 ProjectionMatrix);
+void                        RenderObjectBeginDraw(const VRAM_t *VRAM,const RenderObjectShader_t *RenderObjectShader,
+                                                  bool EnableAmbientLight,bool EnableWireFrameMode,bool EnableFog);
+void                        RenderObjectDraw(RenderObject_t *RenderObject,const RenderObjectShader_t *RenderObjectShader,
+                                             mat4 ModelMatrix,mat4 ViewMatrix,mat4 ProjectionMatrix);
+void                        RenderObjectEndDraw(bool EnableWireFrameMode);
+
 
 
 void                        RenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame);

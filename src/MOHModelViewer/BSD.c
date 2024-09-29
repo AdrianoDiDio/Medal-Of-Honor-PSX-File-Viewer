@@ -116,6 +116,10 @@ BSD_t *BSDLoad(FILE *BSDFile,int *GameVersion)
     
     BSD = malloc(sizeof(BSD_t));
     
+    if( !BSD ) {
+        goto Failure;
+    }
+    
     if( !BSDReadEntryTableBlock(BSDFile, &BSD->EntryTable) ) {
         goto Failure;
     }

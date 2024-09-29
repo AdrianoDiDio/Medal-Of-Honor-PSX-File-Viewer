@@ -376,11 +376,11 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
     TAFFile = NULL;
     
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,0,"Loading all images");
-    TAFFile = SwitchExt(File,".TAF");
+    TAFFile = SwitchExt(File,"0.TAF");
     BSDPack->ImageList = TIMLoadAllImages(TAFFile,NULL);
     if( !BSDPack->ImageList ) {
         free(TAFFile);
-        TAFFile = SwitchExt(File,"0.TAF");
+        TAFFile = SwitchExt(File,"1.TAF");
         BSDPack->ImageList = TIMLoadAllImages(TAFFile,NULL);
         if( !BSDPack->ImageList ) {
             DPrintf("RenderObjectManagerLoadBSD:Failed to load images from TAF file %s\n",TAFFile);
@@ -514,9 +514,9 @@ void RenderObjectManagerDrawPack(BSDRenderObjectPack_t *RenderObjectPack,RenderO
     Temp[2] = 0;
     glm_rotate(ModelMatrix,glm_rad(-90), Temp);
     glm_scale(ModelMatrix,RenderObject->Scale);
-    
-    RenderObjectDraw(RenderObjectPack->SelectedRenderObject,RenderObjectPack->VRAM,RenderObjectShader,EnableAmbientLight->IValue,
-                     EnableWireFrameMode->IValue,false,ModelMatrix,Camera->ViewMatrix,ProjectionMatrix);
+    RenderObjectBeginDraw(RenderObjectPack->VRAM,RenderObjectShader,EnableAmbientLight->IValue,EnableWireFrameMode->IValue,false);
+    RenderObjectDraw(RenderObjectPack->SelectedRenderObject,RenderObjectShader,ModelMatrix,Camera->ViewMatrix,ProjectionMatrix);
+    RenderObjectEndDraw(EnableWireFrameMode->IValue);
 }
 void RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
