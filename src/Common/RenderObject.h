@@ -21,6 +21,7 @@
 #define __RENDER_OBJECT_H_ 
 
 #include "BSDUtils.h"
+#include "ShaderManager.h"
 
 typedef enum {
     RENDER_OBJECT_CARRY_AUX_ELEMENTS = 0, //Contains all the RenderObject that can be carried such as enemy helmet,grenade,rocket, etc.
@@ -85,6 +86,8 @@ typedef struct RenderObject_s {
 
 RenderObject_t              *RenderObjectLoad(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t EntryTable,
                                               BSDRenderObjectTable_t RenderObjectTable,FILE *BSDFile,int GameVersion);
+void                        RenderObjectDraw(RenderObject_t *RenderObject,const VRAM_t *VRAM,bool EnableAmbientLight,bool EnableWireFrameMode,
+                                             mat4 ViewMatrix,mat4 ProjectionMatrix);
 
 void                        RenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame);
 bool                        RenderObjectSetAnimationPose(RenderObject_t *RenderObject,int AnimationIndex,int FrameIndex,int Override);

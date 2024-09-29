@@ -493,7 +493,8 @@ void RenderObjectManagerDrawPack(BSDRenderObjectPack_t *RenderObjectPack,Camera_
     if( !RenderObjectPack->SelectedRenderObject ) {
         return;
     }
-    BSDDrawRenderObject(RenderObjectPack->SelectedRenderObject,RenderObjectPack->VRAM,Camera,ProjectionMatrix);
+    RenderObjectDraw(RenderObjectPack->SelectedRenderObject,RenderObjectPack->VRAM,EnableAmbientLight->IValue,EnableWireFrameMode->IValue,
+                     Camera->ViewMatrix,ProjectionMatrix);
 }
 void RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem)
 {

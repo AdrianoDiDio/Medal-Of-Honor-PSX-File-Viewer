@@ -619,6 +619,83 @@ void RenderObjectGenerateVAO(RenderObject_t *RenderObject)
 
 }
 
+void RenderObjectDraw(RenderObject_t *RenderObject,const VRAM_t *VRAM,bool EnableAmbientLight,bool EnableWireFrameMode,
+                      mat4 ViewMatrix,mat4 ProjectionMatrix)
+{
+    int EnableLightingId;
+    int PaletteTextureId;
+    int TextureIndexId;
+    int MVPMatrixId;
+    vec3 Temp;
+    mat4 ModelMatrix;
+    mat4 ModelViewMatrix;
+    mat4 MVPMatrix;
+    Shader_t *Shader;
+    
+    if( !RenderObject ) {
+        return;
+    }
+    
+    Shader = ShaderCache("BSDRenderObjectShader","Shaders/BSDRenderObjectVertexShader.glsl",
+                         "Shaders/BSDRenderObjectFragmentShader.glsl");
+    if( !Shader ) {
+        return;
+    }
+    
+    if( EnableWireFrameMode ) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    } else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+    
+    glm_mat4_identity(ModelMatrix);
+    glm_mat4_identity(ModelViewMatrix);
+
+    Temp[0] = -RenderObject->Center[0];
+    Temp[1] = -RenderObject->Center[1];
+    Temp[2] = -RenderObject->Center[2];
+    glm_vec3_rotate(Temp, DEGTORAD(180.f), GLM_XUP);    
+    glm_translate(ModelMatrix,Temp);
+    Temp[0] = 0;
+    Temp[1] = 1;
+    Temp[2] = 0;
+    glm_rotate(ModelMatrix,glm_rad(-90), Temp);
+    glm_scale(ModelMatrix,RenderObject->Scale);
+    
+ 
+    glm_mat4_mul(ViewMatrix,ModelMatrix,ModelViewMatrix);
+    glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
+    //Emulate PSX Coordinate system...
+    glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
+
+    glUseProgram(Shader->ProgramId);
+    MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+    glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+    EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
+    PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
+    TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+    glUniform1i(TextureIndexId, 0);
+    glUniform1i(PaletteTextureId,  1);
+    glUniform1i(EnableLightingId, EnableAmbientLight ? 1 : 0);
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
+
+    glDisable(GL_BLEND);
+    glBindVertexArray(RenderObject->VAO->VAOId[0]);
+    glDrawArrays(GL_TRIANGLES, 0, RenderObject->VAO->Count);
+    glBindVertexArray(0);
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D,0);
+    glDisable(GL_BLEND);
+    glBlendColor(1.f, 1.f, 1.f, 1.f);
+    glUseProgram(0);
+    if( EnableWireFrameMode ) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+}
+
 
 int RenderObjectLoadStaticVertexAndColorData(RenderObject_t *RenderObject,BSDRenderObjectElement_t RenderObjectElement,FILE *BSDFile)
 {
