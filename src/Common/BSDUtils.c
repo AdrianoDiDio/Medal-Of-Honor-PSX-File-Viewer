@@ -297,16 +297,16 @@ bool BSDReadPropertySetFileBlock(FILE *BSDFile, BSDPropertySetFile_t *PropertySe
     fseek(BSDFile, BSDGetRealOffset(PropertySetFileOffset), SEEK_SET);
     fread(&PropertySetFile->NumProperties,sizeof(PropertySetFile->NumProperties),1,BSDFile);
     DPrintf("BSDReadPropertySetFile:Reading %i properties at %i (%i).\n",PropertySetFile->NumProperties,
-            GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+            GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - BSD_HEADER_SIZE);
     PropertySetFile->NumProperties++;
     PropertySetFile->Property = malloc(sizeof(BSDProperty_t) * PropertySetFile->NumProperties);
     if( !PropertySetFile->Property ) {
         DPrintf("BSDReadPropertySetFileBlock:Couldn't allocate memory for Property array\n");
-        return 0;
+        return false;
     }
     for( i = 0; i < PropertySetFile->NumProperties; i++ ) {
         DPrintf("BSDReadPropertySetFileBlock:Reading property %i at %i (%i)\n",i,GetCurrentFilePosition(BSDFile),
-            GetCurrentFilePosition(BSDFile) - 2048
+            GetCurrentFilePosition(BSDFile) - BSD_HEADER_SIZE
         );
         fread(&PropertySetFile->Property[i].NumNodes,sizeof(PropertySetFile->Property[i].NumNodes),1,BSDFile);
         PropertySetFile->Property[i].NumNodes = (255 - PropertySetFile->Property[i].NumNodes) /*<< 1*/;
@@ -316,7 +316,7 @@ bool BSDReadPropertySetFileBlock(FILE *BSDFile, BSDPropertySetFile_t *PropertySe
         PropertySetFile->Property[i].NodeList = malloc(PropertySetFile->Property[i].NumNodes * sizeof(unsigned short));
         if( !PropertySetFile->Property[i].NodeList ) {
             DPrintf("BSDReadPropertySetFileBlock:Couldn't allocate memory for Property node array\n");
-            return 0;
+            return false;
         }
         DPrintf("BSDReadPropertySetFileBlock:Reading %li bytes.\n",PropertySetFile->Property[i].NumNodes * sizeof(unsigned short));
         for( j = 0; j <  PropertySetFile->Property[i].NumNodes; j++ ) {
@@ -324,8 +324,8 @@ bool BSDReadPropertySetFileBlock(FILE *BSDFile, BSDPropertySetFile_t *PropertySe
             DPrintf("Short %u\n", PropertySetFile->Property[i].NodeList[j]);
         }
     }
-    DPrintf("BSDReadPropertySetFileBlock:Property end at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
-    return 1;
+    DPrintf("BSDReadPropertySetFileBlock:Property end at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - BSD_HEADER_SIZE);
+    return true;
 }
 
 bool BSDReadNodeInfoBlock(FILE *BSDFile,int NodeInfoOffset, BSDNodeInfo_t *NodeInfo)
@@ -382,7 +382,7 @@ bool BSDReadNodeInfoBlock(FILE *BSDFile,int NodeInfoOffset, BSDNodeInfo_t *NodeI
     }
     for( i = 0; i < NodeInfo->Header.NumNodes; i++ ) {
         NodeFilePosition = GetCurrentFilePosition(BSDFile);
-        DPrintf(" -- NODE %i (Pos %i PosNoHeader %i)-- \n",i,NodeFilePosition,NodeFilePosition - 2048);
+        DPrintf(" -- NODE %i (Pos %i PosNoHeader %i)-- \n",i,NodeFilePosition,NodeFilePosition - BSD_HEADER_SIZE);
         assert(GetCurrentFilePosition(BSDFile) == (NodeInfo->Table[i].Offset + NodeTableEnd));
         fread(&NodeInfo->Node[i].Id,sizeof(NodeInfo->Node[i].Id),1,BSDFile);
         fread(&NodeInfo->Node[i].Size,sizeof(NodeInfo->Node[i].Size),1,BSDFile);
@@ -536,7 +536,7 @@ bool BSDReadEntryTableBlock(FILE *BSDFile,BSDEntryTable_t *EntryTable)
     }
     
     assert(sizeof(BSDEntryTable_t) == 80);
-    DPrintf("BSDReadEntryTableBlock: Reading EntryTable at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+    DPrintf("BSDReadEntryTableBlock: Reading EntryTable at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - BSD_HEADER_SIZE);
     fread(EntryTable,sizeof(BSDEntryTable_t),1,BSDFile);
     DPrintf("Node table is at %i (%i)\n",EntryTable->NodeTableOffset,EntryTable->NodeTableOffset + BSD_HEADER_SIZE);
     DPrintf("Unknown data is at %i (%i)\n",EntryTable->UnknownDataOffset,EntryTable->UnknownDataOffset + BSD_HEADER_SIZE);
@@ -602,12 +602,12 @@ bool BSDReadAnimatedLightTableBlock(FILE *BSDFile, BSDAnimatedLightTable_t *Anim
         }
         DPrintf("BSDReadAnimatedLightTableBlock: Reading Animated Light %i...\n",i);
         DPrintf("StartingColorOffset:%i\n",AnimatedLight->StartingColorOffset);
-        DPrintf("StartingColorOffset No Header:%i\n",AnimatedLight->StartingColorOffset + 2048);
+        DPrintf("StartingColorOffset No Header:%i\n",BSDGetRealOffset(AnimatedLight->StartingColorOffset));
         DPrintf("CurrentColor:%i\n",AnimatedLight->CurrentColor);
         DPrintf("ColorIndex:%i\n",AnimatedLight->ColorIndex);
         DPrintf("Delay:%i\n",AnimatedLight->Delay);
         PreviousFilePosition = GetCurrentFilePosition(BSDFile);
-        fseek(BSDFile,AnimatedLight->StartingColorOffset + 2048,SEEK_SET);
+        fseek(BSDFile,BSDGetRealOffset(AnimatedLight->StartingColorOffset),SEEK_SET);
         DPrintf("Reading color at %i\n",GetCurrentFilePosition(BSDFile));
         for( j = 0; j < AnimatedLight->NumColors; j++ ) {
             fread(&AnimatedLight->ColorList[j],sizeof(AnimatedLight->ColorList[j]),1,BSDFile);

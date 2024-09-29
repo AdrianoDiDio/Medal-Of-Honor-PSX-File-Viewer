@@ -26,21 +26,6 @@
 #include "../Common/ShaderManager.h"
 #include "../Common/BSDUtils.h"
 
-typedef enum {
-    BSD_COLLISION_VOLUME_TYPE_SPHERE,
-    BSD_COLLISION_VOLUME_TYPE_CYLINDER,
-    BSD_COLLISION_VOLUME_TYPE_BOX,
-    BSD_COLLISION_VOLUME_MAX_VALUE
-} BSDCollisionVolumeType_t;
-
-
-typedef struct BSDTSPStreamNode_s {
-    short TSPNumberRenderList[4];
-    vec3 Position;
-    struct BSDTSPStreamNode_s *Next;
-} BSDTSPStreamNode_t;
-
-
 
 //TODO: CLEANUP
 typedef struct BSDRenderObject_s {
@@ -78,9 +63,6 @@ typedef struct BSD_s {
     VAO_t                       *RenderObjectPointVAO;
     VAO_t                       *CollisionVolumeVAO[BSD_COLLISION_VOLUME_MAX_VALUE];
     int                         NumRenderObjectPoint;
-    //Easy lookup to see if the camera is in that node position so that
-    //we can update the TSPNumberRenderList.
-    BSDTSPStreamNode_t *TSPStreamNodeList;  
     
 } BSD_t;
 

@@ -51,6 +51,12 @@
 #define BSD_ENTRY_TABLE_FILE_POSITION 0x53C
 #define BSD_SKY_DATA_FILE_POSITION 0x58C
 
+typedef enum {
+    BSD_COLLISION_VOLUME_TYPE_SPHERE,
+    BSD_COLLISION_VOLUME_TYPE_CYLINDER,
+    BSD_COLLISION_VOLUME_TYPE_BOX,
+    BSD_COLLISION_VOLUME_MAX_VALUE
+} BSDCollisionVolumeType_t;
 
 typedef enum  {
     //NOTE(Adriano): Spawn node has an additional attribute at 0x34(52) indicating if it is the first or the second.

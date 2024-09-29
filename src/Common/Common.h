@@ -77,6 +77,15 @@
 #define MIN( x, y ) ( ( ( x ) < ( y ) ) ? ( x ) : ( y ) )
 #endif
 
+
+#ifdef _DEBUG
+#define DPrintf(...) LocalDPrintf(__VA_ARGS__ )
+#else
+#define DPrintf(...) do{ } while ( 0 )
+#endif
+
+
+
 typedef enum
 {
     MOH_GAME_STANDARD,
@@ -85,7 +94,7 @@ typedef enum
 
 void        CommonInit(const char *ApplicationName);
 void        CommonShutdown();
-void        DPrintf(const char *Fmt, ...) Attribute((format(printf,1,2)));
+void        LocalDPrintf(const char *Fmt, ...) Attribute((format(printf,1,2)));
 int         asprintf(char **Strp, const char *Fmt, ...);
 char        *StringCopy(const char *From);
 char        *StringAppend(const char *FirstString,const char *SecondString);

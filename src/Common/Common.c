@@ -317,7 +317,7 @@ int SysMilliseconds()
     return SDL_GetTicks64();
 }
 
-void DPrintf(const char *Fmt, ...)
+void LocalDPrintf(const char *Fmt, ...)
 {
     char Temp[1000];
     va_list arglist;
@@ -329,6 +329,7 @@ void DPrintf(const char *Fmt, ...)
 #endif
     va_end(arglist);
 }
+
 
 void SysHideCursor()
 {

@@ -352,7 +352,6 @@ void BSDRenderObjectListCleanUp(BSD_t *BSD)
 
 void BSDFree(BSD_t *BSD)
 {
-    BSDTSPStreamNode_t *Temp;
     BSDRenderObjectDrawable_t *Drawable;
     BSDAnimatedLight_t *AnimatedLight;
     int i;
@@ -406,12 +405,6 @@ void BSDFree(BSD_t *BSD)
         Drawable = BSD->RenderObjectDrawableList;
         BSD->RenderObjectDrawableList = BSD->RenderObjectDrawableList->Next;
         free(Drawable);
-    }
-    
-    while( BSD->TSPStreamNodeList ) {
-        Temp = BSD->TSPStreamNodeList;
-        BSD->TSPStreamNodeList = BSD->TSPStreamNodeList->Next;
-        free(Temp);
     }
     
     free(BSD);
@@ -2257,7 +2250,6 @@ int BSDGetTSPDynamicIndexOffsetFromNodeType(int Type)
 
 void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,FILE *BSDFile)
 {
-    BSDTSPStreamNode_t *StreamNode;
     int Offset;
     int NodeNumReferencedRenderObjectIdOffset;
     int NumReferencedRenderObjectId;
@@ -2265,6 +2257,7 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,FILE *BSDFil
     vec3 NodePosition;
     vec3 NodeRotation;
     int PrevPos;
+    short CompartmentNumber;
     int i;
 
     int DynamicIndexOffset;
@@ -2351,16 +2344,11 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,FILE *BSDFil
         fseek(BSDFile,Node->FilePosition + Offset,SEEK_SET);
         if( Node->Id == BSD_TSP_LOAD_TRIGGER ) {
             DPrintf("Node is a BSD_TSP_LOAD_TRIGGER.\n");
-            StreamNode = malloc(sizeof(BSDTSPStreamNode_t));
-            glm_vec3_copy(NodePosition,StreamNode->Position);
             for( i = 0; i < 4; i++ ) {
-                StreamNode->TSPNumberRenderList[i] = -1;
-                fread(&StreamNode->TSPNumberRenderList[i],sizeof(short),1,BSDFile);
-                assert(StreamNode->TSPNumberRenderList[i] != -1);
-                DPrintf("Node will ask TSP to draw Compartment %i\n",StreamNode->TSPNumberRenderList[i]);
+                fread(&CompartmentNumber,sizeof(short),1,BSDFile);
+                assert(CompartmentNumber != -1);
+                DPrintf("Node will ask TSP to draw Compartment %i\n",CompartmentNumber);
             }
-            StreamNode->Next = BSD->TSPStreamNodeList;
-            BSD->TSPStreamNodeList = StreamNode;
         } else {
             fread(&NodeNumReferencedRenderObjectIdOffset,sizeof(NodeNumReferencedRenderObjectIdOffset),1,BSDFile);
             DPrintf("Node has RenderObject offset %i.\n",NodeNumReferencedRenderObjectIdOffset);
@@ -2476,7 +2464,6 @@ FILE *BSDEarlyInit(BSD_t **BSD,const char *MissionPath,int MissionNumber,int Lev
         return NULL;
     }
     
-    LocalBSD->TSPStreamNodeList = NULL;
 //     BSD->RenderObjectRealList = NULL;
     LocalBSD->RenderObjectList = NULL;
     LocalBSD->RenderObjectDrawableList = NULL;
