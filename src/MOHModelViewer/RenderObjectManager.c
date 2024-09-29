@@ -38,7 +38,7 @@ void RenderObjectManagerFreeBSDRenderObjectPack(BSDRenderObjectPack_t *BSDRender
     if( BSDRenderObjectPack->Name ) {
         free(BSDRenderObjectPack->Name);
     }
-    BSDFreeRenderObjectList(BSDRenderObjectPack->RenderObjectList);
+    RenderObjectFreeList(BSDRenderObjectPack->RenderObjectList);
     free(BSDRenderObjectPack);
 }
 
@@ -154,7 +154,7 @@ void RenderObjectManagerExportSelectedModelToPly(RenderObjectManager_t *RenderOb
     ProgressBarSetDialogTitle(ProgressBar,"Exporting Current Pose to Ply...");
     ProgressBarIncrement(ProgressBar,VideoSystem,10,"Writing BSD data.");
     if( ExportCurrentAnimation ) {
-        BSDRenderObjectExportCurrentAnimationToPly(CurrentRenderObject,CurrentBSDPack->VRAM,Directory,EngineName);
+        RenderObjectExportCurrentAnimationToPly(CurrentRenderObject,CurrentBSDPack->VRAM,Directory,EngineName);
     } else {
         DPrintf("RenderObjectManagerExportCurrentPoseToPly:Dumping it...%s\n",PlyFile);
         OutFile = fopen(PlyFile,"w");
@@ -162,7 +162,7 @@ void RenderObjectManagerExportSelectedModelToPly(RenderObjectManager_t *RenderOb
             DPrintf("RenderObjectManagerExportCurrentPoseToPly:Failed to open %s for writing\n",PlyFile);
             return;
         }
-        BSDRenderObjectExportCurrentPoseToPly(CurrentRenderObject,CurrentBSDPack->VRAM,OutFile);
+        RenderObjectExportCurrentPoseToPly(CurrentRenderObject,CurrentBSDPack->VRAM,OutFile);
         fclose(OutFile);
     }
     ProgressBarIncrement(ProgressBar,VideoSystem,95,"Exporting VRAM.");

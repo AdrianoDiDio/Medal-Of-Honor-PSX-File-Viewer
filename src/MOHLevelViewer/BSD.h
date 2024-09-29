@@ -25,6 +25,7 @@
 #include "../Common/VRAM.h"
 #include "../Common/ShaderManager.h"
 #include "../Common/BSDUtils.h"
+#include "../Common/RenderObject.h"
 
 
 //TODO: CLEANUP
@@ -56,7 +57,7 @@ typedef struct BSD_s {
     BSDNodeInfo_t               NodeData;
     BSDPropertySetFile_t        PropertySetFile;
     
-    BSDRenderObject_t           *RenderObjectList;
+    RenderObject_t              *RenderObjectList;
     BSDRenderObjectDrawable_t   *RenderObjectDrawableList;
 
     VAO_t                       *NodeVAO;

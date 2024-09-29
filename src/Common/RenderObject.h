@@ -94,14 +94,14 @@ bool                        RenderObjectSetAnimationPose(RenderObject_t *RenderO
 
 BSDAnimationFrame_t         *RenderObjectGetCurrentFrame(const RenderObject_t *RenderObject);
 
-
-//TODO: This may not be required to be exposed
-void                        RenderObjectRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
-                                                                     BSDVertexTable_t *VertexTable,mat4 TransformMatrix);
-
-
 void                        RenderObjectGenerateVAO(RenderObject_t *RenderObject);
 
+void                        RenderObjectExportCurrentPoseToPly(RenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile);
+void                        RenderObjectExportCurrentAnimationToPly(RenderObject_t *RenderObject,VRAM_t *VRAM,const char *Directory,
+                                                                    const char *EngineName);
+
+
+void                        RenderObjectFreeList(RenderObject_t *RenderObjectList);
 void                        RenderObjectFree(RenderObject_t *RenderObject);
 
 const char                  *RenderObjectGetWeaponNameFromId(int RenderObjectId);
