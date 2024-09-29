@@ -19,12 +19,13 @@
 ===========================================================================
 */ 
 #include "MOHModelViewer.h"
+#include "../Common/RenderObject.h"
 #include "../Common/ShaderManager.h"
 
 void ApplicationCheckEvents(Application_t *Application)
 {
     SDL_Event Event;
-    BSDRenderObject_t *CurrentRenderObject;
+    RenderObject_t *CurrentRenderObject;
     int NextFrame;
     int NextPose;
     

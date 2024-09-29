@@ -24,34 +24,7 @@
 #include "../Common/VAO.h"
 #include "../Common/VRAM.h"
 #include "../Common/BSDUtils.h"
-
-typedef struct BSDRenderObject_s {
-    int                         Id;
-    int                         ReferencedRenderObjectId;
-    int                         Type;
-    BSDVertexTable_t            *VertexTable;
-    BSDVertexTable_t            *CurrentVertexTable;
-    int                         NumVertexTables;
-    BSDAnimatedModelFace_t      *FaceList;
-    int                         NumFaces;
-    BSDHierarchyBone_t          *HierarchyDataRoot;
-    BSDAnimation_t              *AnimationList;
-    int                         NumAnimations;
-    int                         CurrentAnimationIndex;
-    int                         CurrentFrameIndex;
-    
-    BSDVertex_t                 *VertexList;
-    BSDColor_t                  *ColorList;
-    BSDFace_t                   *StaticFaceList;
-
-    vec3                        Scale;
-    vec3                        Center;
-    VAO_t                       *VAO;
-    
-    bool                        IsStatic;
-
-    struct BSDRenderObject_s *Next;
-} BSDRenderObject_t;
+#include "../Common/RenderObject.h"
 
 typedef struct BSD_s {
     BSDEntryTable_t         EntryTable;
@@ -60,22 +33,22 @@ typedef struct BSD_s {
 
 typedef struct Camera_s Camera_t;
 
-BSDRenderObject_t       *BSDLoadAllAnimatedRenderObjects(const char *FName,int *GameVersion);
-void                    BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
-void                    BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
+RenderObject_t       *BSDLoadAllAnimatedRenderObjects(const char *FName,int *GameVersion);
+void                    BSDDrawRenderObjectList(RenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
+void                    BSDDrawRenderObject(RenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix);
 void                    BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
                                                     BSDVertexTable_t *VertexTable,mat4 TransformMatrix);
-int                     BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex,int FrameIndex,int Override);
-BSDAnimationFrame_t     *BSDRenderObjectGetCurrentFrame(BSDRenderObject_t *RenderObject);
+int                     BSDRenderObjectSetAnimationPose(RenderObject_t *RenderObject,int AnimationIndex,int FrameIndex,int Override);
+BSDAnimationFrame_t     *BSDRenderObjectGetCurrentFrame(RenderObject_t *RenderObject);
 void                    BSDRenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame);
 
-void                    BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject);
-void                    BSDRenderObjectGenerateStaticVAO(BSDRenderObject_t *RenderObject);
-void                    BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile);
-void                    BSDRenderObjectExportCurrentAnimationToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,const char *Directory,
+void                    BSDRenderObjectGenerateVAO(RenderObject_t *RenderObject);
+void                    BSDRenderObjectGenerateStaticVAO(RenderObject_t *RenderObject);
+void                    BSDRenderObjectExportCurrentPoseToPly(RenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile);
+void                    BSDRenderObjectExportCurrentAnimationToPly(RenderObject_t *RenderObject,VRAM_t *VRAM,const char *Directory,
                                                                    const char *EngineName);
 void                    BSDFree(BSD_t *BSD);
-void                    BSDFreeRenderObjectList(BSDRenderObject_t *RenderObjectList);
+void                    BSDFreeRenderObjectList(RenderObject_t *RenderObjectList);
 
 
 #endif //__BSD_H_

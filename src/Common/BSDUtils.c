@@ -20,6 +20,7 @@
 */
 
 #include "BSDUtils.h"
+#include "RenderObject.h"
 
 void BSDRenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame)
 {
@@ -133,71 +134,6 @@ int BSDGetRenderObjectIndexById(const BSDRenderObjectTable_t *RenderObjectTable,
         }
     }
     return -1;
-}
-
-const char *BSDRenderObjectGetStringFromType(int RenderObjectType)
-{
-    switch( RenderObjectType ) {
-        case BSD_RENDER_OBJECT_CARRY_AUX_ELEMENTS:
-            return "Carry Aux Elements";
-        case BSD_RENDER_OBJECT_PICKUP_AND_EXPLOSIVE:
-            return "Pickup And Explosive";
-        case BSD_RENDER_OBJECT_ENEMY:
-            return "Enemy Render Object";
-        case BSD_RENDER_OBJECT_PLANE:
-            return "Airplane";
-        case BSD_RENDER_OBJECT_MG42:
-            return "MG42";
-        case BSD_RENDER_OBJECT_DOOR:
-            return "Door";
-        case BSD_RENDER_OBJECT_UNKNOWN1:
-            return "Unknown1";
-        case BSD_RENDER_OBJECT_DESTRUCTIBLE_WINDOW:
-            return "Destructible Window";
-        case BSD_RENDER_OBJECT_VALVE:
-            return "Valve";
-        case BSD_RENDER_OBJECT_RADIO:
-            return "Radio";
-        case BSD_RENDER_OBJECT_EXPLOSIVE_CHARGE:
-            return "Explosive Charge";
-        default:
-            return "Unknown";
-    }
-}
-
-const char *BSDRenderObjectGetWeaponNameFromId(int RenderObjectId)
-{
-    switch( RenderObjectId ) {
-        case BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_1:
-            return "Pistol Type 1";
-        case BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_1:
-            return "SubMachineGun Type 1";
-        case BSD_RENDER_OBJECT_WEAPON_BAZOOKA:
-            return "Bazooka";
-        case BSD_RENDER_OBJECT_WEAPON_AMERICAN_GRENADE:
-            return "American Grenade";
-        case BSD_RENDER_OBJECT_WEAPON_SHOTGUN:
-            return "Shotgun";
-        case BSD_RENDER_OBJECT_WEAPON_SNIPER_RIFLE:
-            return "Sniper Rifle";
-        case BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_2:
-            return "SubMachineGun Type 2";
-        case BSD_RENDER_OBJECT_WEAPON_DOCUMENT_PAPERS:
-            return "Document Papers";
-        case BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_2:
-            return "Pistol Type 2";
-        case BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_3:
-            return "Pistol Type 3";
-        case BSD_RENDER_OBJECT_WEAPON_GERMAN_GRENADE:
-            return "German Grenade";
-        case BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_3:
-            return "SubMachineGun Type 3";
-        case BSD_RENDER_OBJECT_WEAPON_M1_GARAND:
-            return "M1 Garand";
-        default:
-            //Should never happen!
-            return "Unknown";
-    }
 }
 
 /*
@@ -449,10 +385,10 @@ bool BSDReadRenderObjectTable(FILE *BSDFile,int GameEngine, BSDRenderObjectTable
         DPrintf("RenderObject Id:%i\n",RenderObjectTable->RenderObject[i].Id);
         if( RenderObjectTable->RenderObject[i].Type == 1 ) {
             DPrintf("RenderObject Type:%i | %s\n",RenderObjectTable->RenderObject[i].Type,
-                    BSDRenderObjectGetWeaponNameFromId(RenderObjectTable->RenderObject[i].Id));
+                    RenderObjectGetWeaponNameFromId(RenderObjectTable->RenderObject[i].Id));
         } else {
             DPrintf("RenderObject Type:%i | %s\n",RenderObjectTable->RenderObject[i].Type,
-                    BSDRenderObjectGetStringFromType(RenderObjectTable->RenderObject[i].Type));
+                    RenderObjectGetStringFromType(RenderObjectTable->RenderObject[i].Type));
         }
         DPrintf("RenderObject Element Vertex Offset: %i (%i)\n",RenderObjectTable->RenderObject[i].VertexOffset,
                 RenderObjectTable->RenderObject[i].VertexOffset + BSD_HEADER_SIZE);

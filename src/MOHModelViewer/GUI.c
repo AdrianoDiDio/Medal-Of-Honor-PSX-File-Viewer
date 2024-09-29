@@ -110,8 +110,8 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
 void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,VideoSystem_t *VideoSystem,Camera_t *Camera)
 {
     BSDRenderObjectPack_t *PackIterator;
-    BSDRenderObject_t *RenderObjectIterator;
-    BSDRenderObject_t *CurrentRenderObject;
+    RenderObject_t *RenderObjectIterator;
+    RenderObject_t *CurrentRenderObject;
     BSDAnimationFrame_t *CurrentFrame;
     ImVec2 ZeroSize;
     int IsSelected;

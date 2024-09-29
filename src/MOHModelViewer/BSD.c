@@ -19,7 +19,8 @@
 ===========================================================================
 */
 #include "BSD.h"
-#include "MOHModelViewer.h" 
+#include "MOHModelViewer.h"
+#include "../Common/RenderObject.h"
 #include "../Common/ShaderManager.h"
 
 void BSDRecusivelyFreeHierarchyBone(BSDHierarchyBone_t *Bone)
@@ -31,7 +32,7 @@ void BSDRecusivelyFreeHierarchyBone(BSDHierarchyBone_t *Bone)
     BSDRecusivelyFreeHierarchyBone(Bone->Child1);
     free(Bone);
 }
-void BSDFreeRenderObject(BSDRenderObject_t *RenderObject)
+void BSDFreeRenderObject(RenderObject_t *RenderObject)
 {
     int i;
     int j;
@@ -86,9 +87,9 @@ void BSDFreeRenderObject(BSDRenderObject_t *RenderObject)
     free(RenderObject);
 }
 
-void BSDFreeRenderObjectList(BSDRenderObject_t *RenderObjectList)
+void BSDFreeRenderObjectList(RenderObject_t *RenderObjectList)
 {
-    BSDRenderObject_t *Temp;
+    RenderObject_t *Temp;
     while( RenderObjectList ) {
         Temp = RenderObjectList;
         RenderObjectList = RenderObjectList->Next;
@@ -107,7 +108,7 @@ void BSDFree(BSD_t *BSD)
 }
 
 
-void BSDRenderObjectExportPoseToPly(BSDRenderObject_t *RenderObject,BSDVertexTable_t *VertexTable,VRAM_t *VRAM,FILE *OutFile)
+void BSDRenderObjectExportPoseToPly(RenderObject_t *RenderObject,BSDVertexTable_t *VertexTable,VRAM_t *VRAM,FILE *OutFile)
 {
     char Buffer[256];
     float TextureWidth;
@@ -217,7 +218,7 @@ void BSDRenderObjectExportPoseToPly(BSDRenderObject_t *RenderObject,BSDVertexTab
         fwrite(Buffer,strlen(Buffer),1,OutFile);
     }
 }
-void BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile)
+void BSDRenderObjectExportCurrentPoseToPly(RenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile)
 {    
     if( !RenderObject || !OutFile ) {
         bool InvalidFile = (OutFile == NULL ? true : false);
@@ -231,7 +232,7 @@ void BSDRenderObjectExportCurrentPoseToPly(BSDRenderObject_t *RenderObject,VRAM_
     }
     BSDRenderObjectExportPoseToPly(RenderObject,RenderObject->CurrentVertexTable,VRAM,OutFile);
 }
-void BSDRenderObjectExportCurrentAnimationToPly(BSDRenderObject_t *RenderObject,VRAM_t *VRAM,const char *Directory,const char *EngineName)
+void BSDRenderObjectExportCurrentAnimationToPly(RenderObject_t *RenderObject,VRAM_t *VRAM,const char *Directory,const char *EngineName)
 {
     BSDVertexTable_t *TempVertexTable;
     FILE *OutFile;
@@ -311,7 +312,7 @@ void BSDFillFaceVertexBuffer(int *Buffer,int *BufferSize,BSDVertex_t Vertex,int 
     *BufferSize += 11;
 }
 
-void BSDRenderObjectGenerateStaticVAO(BSDRenderObject_t *RenderObject)
+void BSDRenderObjectGenerateStaticVAO(RenderObject_t *RenderObject)
 {
     BSDFace_t *CurrentFace;
     int Vert0;
@@ -398,7 +399,7 @@ void BSDRenderObjectGenerateStaticVAO(BSDRenderObject_t *RenderObject)
     free(VertexData);
 }
 
-void BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject)
+void BSDRenderObjectGenerateVAO(RenderObject_t *RenderObject)
 {
     BSDAnimatedModelFace_t *CurrentFace;
     int VertexOffset;
@@ -478,7 +479,7 @@ void BSDRenderObjectGenerateVAO(BSDRenderObject_t *RenderObject)
                                         ColorOffset,CLUTOffset,ColorModeOffset,RenderObject->NumFaces * 3);
     free(VertexData);
 }
-void BSDRenderObjectUpdateVAO(BSDRenderObject_t *RenderObject)
+void BSDRenderObjectUpdateVAO(RenderObject_t *RenderObject)
 {
     BSDAnimatedModelFace_t *CurrentFace;
     int Stride;
@@ -522,7 +523,7 @@ void BSDRenderObjectUpdateVAO(BSDRenderObject_t *RenderObject)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void BSDRenderObjectResetVertexTable(BSDRenderObject_t *RenderObject)
+void BSDRenderObjectResetVertexTable(RenderObject_t *RenderObject)
 {
     int i;
 
@@ -538,7 +539,7 @@ void BSDRenderObjectResetVertexTable(BSDRenderObject_t *RenderObject)
     }
 }
 
-BSDAnimationFrame_t *BSDRenderObjectGetCurrentFrame(BSDRenderObject_t *RenderObject)
+BSDAnimationFrame_t *BSDRenderObjectGetCurrentFrame(RenderObject_t *RenderObject)
 {
     if( !RenderObject ) {
         return NULL;
@@ -555,7 +556,7 @@ BSDAnimationFrame_t *BSDRenderObjectGetCurrentFrame(BSDRenderObject_t *RenderObj
  If the VAO is NULL a new one is created otherwise it will be updated to reflect the pose that was applied to the model.
  If Override is true then the pose will be set again in case the AnimationIndex and FrameIndex did not change.
  */
-int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int AnimationIndex,int FrameIndex,int Override)
+int BSDRenderObjectSetAnimationPose(RenderObject_t *RenderObject,int AnimationIndex,int FrameIndex,int Override)
 {
     BSDQuaternion_t *QuaternionList;
     versor FromQuaternion;
@@ -663,7 +664,7 @@ int BSDRenderObjectSetAnimationPose(BSDRenderObject_t *RenderObject,int Animatio
     return 1;
 }
 
-void BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
+void BSDDrawRenderObject(RenderObject_t *RenderObject,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
 {
     int EnableLightingId;
     int PaletteTextureId;
@@ -740,9 +741,9 @@ void BSDDrawRenderObject(BSDRenderObject_t *RenderObject,const VRAM_t *VRAM,Came
     }
 }
 
-void BSDDrawRenderObjectList(BSDRenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
+void BSDDrawRenderObjectList(RenderObject_t *RenderObjectList,const VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
 {
-    BSDRenderObject_t *Iterator;
+    RenderObject_t *Iterator;
     int i;
     if( !RenderObjectList ) {
         return;
@@ -843,9 +844,9 @@ int BSDReadEntryTableChunk(BSD_t *BSD,FILE *BSDFile)
     return 1;
 }
 
-void BSDAppendRenderObjectToList(BSDRenderObject_t **List,BSDRenderObject_t *Node)
+void BSDAppendRenderObjectToList(RenderObject_t **List,RenderObject_t *Node)
 {
-    BSDRenderObject_t *LastNode;
+    RenderObject_t *LastNode;
     if( !*List ) {
         *List = Node;
     } else {
@@ -857,7 +858,7 @@ void BSDAppendRenderObjectToList(BSDRenderObject_t **List,BSDRenderObject_t *Nod
     }
 }
 
-int BSDLoadStaticVertexAndColorData(BSDRenderObject_t *RenderObject,BSDRenderObjectElement_t RenderObjectElement,FILE *BSDFile)
+int BSDLoadStaticVertexAndColorData(RenderObject_t *RenderObject,BSDRenderObjectElement_t RenderObjectElement,FILE *BSDFile)
 {
     int i;
     int Size;
@@ -913,7 +914,7 @@ int BSDLoadStaticVertexAndColorData(BSDRenderObject_t *RenderObject,BSDRenderObj
     return 1;
 }
 
-int BSDParseRenderObjectStaticFaceData(BSDRenderObject_t *RenderObject,BSDRenderObjectElement_t RenderObjectElement,FILE *BSDFile)
+int BSDParseRenderObjectStaticFaceData(RenderObject_t *RenderObject,BSDRenderObjectElement_t RenderObjectElement,FILE *BSDFile)
 {
     unsigned int   Vert0;
     unsigned int   Vert1;
@@ -980,7 +981,7 @@ int BSDParseRenderObjectStaticFaceData(BSDRenderObject_t *RenderObject,BSDRender
     return 1;
 }
 
-int BSDParseRenderObjectStaticFaceDataV2(BSDRenderObject_t *RenderObject,BSDRenderObjectElement_t RenderObjectElement,int RenderObjectIndex,
+int BSDParseRenderObjectStaticFaceDataV2(RenderObject_t *RenderObject,BSDRenderObjectElement_t RenderObjectElement,int RenderObjectIndex,
                                          int ReferencedRenderObjectIndex,FILE *BSDFile)
 {
     int FaceListSize;
@@ -1109,7 +1110,7 @@ int BSDParseRenderObjectStaticFaceDataV2(BSDRenderObject_t *RenderObject,BSDRend
 }
 
 
-int BSDLoadStaticFaceData(BSDRenderObject_t *RenderObject,BSDRenderObjectElement_t RenderObjectElement,int RenderObjectIndex,
+int BSDLoadStaticFaceData(RenderObject_t *RenderObject,BSDRenderObjectElement_t RenderObjectElement,int RenderObjectIndex,
                           int ReferencedRenderObjectIndex,int GameVersion,FILE *BSDFile)
 {
     assert(sizeof(BSDFace_t) == 24);
@@ -1132,7 +1133,7 @@ int BSDLoadStaticFaceData(BSDRenderObject_t *RenderObject,BSDRenderObjectElement
     return 1;
 }
 
-int BSDLoadAnimationVertexData(BSDRenderObject_t *RenderObject,int VertexTableIndexOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
+int BSDLoadAnimationVertexData(RenderObject_t *RenderObject,int VertexTableIndexOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
 {
     int VertexTableOffset;
     int i;
@@ -1249,7 +1250,7 @@ void BSDPrintAnimatedModelFace(BSDAnimatedModelFace_t Face)
  * Data at 0x106 contains the number of faces that we need to load while the offset at 0x108 contains the local offset that must
  * be added to the global one in order to obtain the final face data position inside the BSD file.
  */
-int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset,int RenderObjectIndex,
+int BSDLoadMOHUndergroundAnimationFaceData(RenderObject_t *RenderObject,int FaceTableOffset,int RenderObjectIndex,
                                            int ReferencedRenderObjectIndex,BSDEntryTable_t EntryTable,FILE *BSDFile)
 {
     int GlobalFaceOffset;
@@ -1358,7 +1359,7 @@ int BSDLoadMOHUndergroundAnimationFaceData(BSDRenderObject_t *RenderObject,int F
     assert(CurrentFaceIndex == NumFaces);
     return 1;
 }
-int BSDLoadAnimationFaceData(BSDRenderObject_t *RenderObject,int FaceTableOffset,int RenderObjectIndex,int ReferencedRenderObjectIndex,
+int BSDLoadAnimationFaceData(RenderObject_t *RenderObject,int FaceTableOffset,int RenderObjectIndex,int ReferencedRenderObjectIndex,
                              BSDEntryTable_t EntryTable,FILE *BSDFile,int GameVersion)
 {
     int GlobalFaceTableOffset;
@@ -1447,7 +1448,7 @@ BSDHierarchyBone_t *BSDRecursivelyLoadHierarchyData(int BoneDataStartingPosition
     return Bone;
 }
 
-int BSDLoadAnimationHierarchyData(BSDRenderObject_t *RenderObject,int HierarchyDataRootOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
+int BSDLoadAnimationHierarchyData(RenderObject_t *RenderObject,int HierarchyDataRootOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
 {
     if( !RenderObject || !BSDFile ) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
@@ -1482,7 +1483,7 @@ void BSDDecodeQuaternions(int QuatPart0,int QuatPart1,int QuatPart2,BSDQuaternio
         OutQuaternion2->z = ( (QuatPart2 >> 0x1C) << 0x8 | (QuatPart2 & 0xF ) << 0x4 | ( (QuatPart1 >> 0x10) & 0xF ) ) * 2;
     }
 }
-int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
+int BSDLoadAnimationData(RenderObject_t *RenderObject,int AnimationDataOffset,BSDEntryTable_t EntryTable,FILE *BSDFile)
 {
     short NumAnimationOffset;
     unsigned short Pad;
@@ -1700,18 +1701,18 @@ int BSDLoadAnimationData(BSDRenderObject_t *RenderObject,int AnimationDataOffset
     free(AnimationTableEntry);
     return 1;
 }
-BSDRenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t BSDEntryTable,FILE *BSDFile,
+RenderObject_t *BSDLoadAnimatedRenderObject(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t BSDEntryTable,FILE *BSDFile,
                                                int RenderObjectIndex,int ReferencedRenderObjectIndex,int GameVersion
 )
 {
-    BSDRenderObject_t *RenderObject;
+    RenderObject_t *RenderObject;
     
     RenderObject = NULL;
     if( !BSDFile ) {
         DPrintf("BSDLoadAnimatedRenderObject:Invalid BSD file\n");
         goto Failure;
     }
-    RenderObject = malloc(sizeof(BSDRenderObject_t));
+    RenderObject = malloc(sizeof(RenderObject_t));
     if( !RenderObject ) {
         DPrintf("BSDLoadAnimatedRenderObject:Failed to allocate memory for RenderObject\n");
         goto Failure;
@@ -1764,18 +1765,18 @@ Failure:
     return NULL;
 }
 
-BSDRenderObject_t *BSDLoadStaticRenderObject(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t BSDEntryTable,FILE *BSDFile,
+RenderObject_t *BSDLoadStaticRenderObject(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t BSDEntryTable,FILE *BSDFile,
                                                int RenderObjectIndex,int ReferencedRenderObjectIndex,int GameVersion
 )
 {
-    BSDRenderObject_t *RenderObject;
+    RenderObject_t *RenderObject;
     
     RenderObject = NULL;
     if( !BSDFile ) {
         DPrintf("BSDLoadStaticRenderObject:Invalid BSD file\n");
         goto Failure;
     }
-    RenderObject = malloc(sizeof(BSDRenderObject_t));
+    RenderObject = malloc(sizeof(RenderObject_t));
     if( !RenderObject ) {
         DPrintf("BSDLoadStaticRenderObject:Failed to allocate memory for RenderObject\n");
         goto Failure;
@@ -1851,13 +1852,13 @@ Failure:
     return NULL;
 }
 
-BSDRenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName,int *GameVersion)
+RenderObject_t *BSDLoadAllAnimatedRenderObjects(const char *FName,int *GameVersion)
 {
     FILE *BSDFile;
     BSD_t *BSD;
     int LocalGameVersion;
-    BSDRenderObject_t *RenderObjectList;
-    BSDRenderObject_t *RenderObject;
+    RenderObject_t *RenderObjectList;
+    RenderObject_t *RenderObject;
     int i;
     int ReferencedRenderObjectIndex;
     

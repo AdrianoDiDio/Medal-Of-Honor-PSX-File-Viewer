@@ -3,7 +3,7 @@ project(Common)
 
 set(COMMON_SOURCE_FILES Common.c Config.c Video.c RSC.c Sound.c Engine.c
                     ShaderManager.c VAO.c IMGUIUtils.c 
-                    TIM.c VRAM.c GFX.c BSDUtils.c
+                    TIM.c VRAM.c GFX.c RenderObject.c BSDUtils.c
 )
 
 add_library(${PROJECT_NAME} STATIC ${COMMON_SOURCE_FILES})

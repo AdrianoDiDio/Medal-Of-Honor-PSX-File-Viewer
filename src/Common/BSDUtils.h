@@ -73,37 +73,6 @@ typedef enum  {
 } BSDNodeId_t;
 
 typedef enum {
-    BSD_RENDER_OBJECT_CARRY_AUX_ELEMENTS = 0, //Contains all the RenderObject that can be carried such as enemy helmet,grenade,rocket, etc.
-    BSD_RENDER_OBJECT_ENEMY = 5122,
-    BSD_RENDER_OBJECT_PICKUP_AND_EXPLOSIVE = 6000, //Contains Barrels,Boxes and also MedPacks!
-    BSD_RENDER_OBJECT_PLANE = 6001,
-    BSD_RENDER_OBJECT_MG42 = 6002,
-    BSD_RENDER_OBJECT_DOOR = 6006,
-    BSD_RENDER_OBJECT_UNKNOWN1 = 5125,
-    BSD_RENDER_OBJECT_DESTRUCTIBLE_WINDOW = 6007,
-    BSD_RENDER_OBJECT_VALVE = 6005,
-    BSD_RENDER_OBJECT_EXPLOSIVE_CHARGE = 6008,
-    BSD_RENDER_OBJECT_RADIO = 6009,
-    BSD_RENDER_OBJECT_V2_ROCKET = 6004
-} BSDRenderObjectType_t;
-
-typedef enum {
-    BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_1 = 1878462241,
-    BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_1 = 1631105660,
-    BSD_RENDER_OBJECT_WEAPON_BAZOOKA = 509069799,
-    BSD_RENDER_OBJECT_WEAPON_AMERICAN_GRENADE = 424281247,
-    BSD_RENDER_OBJECT_WEAPON_SHOTGUN = 2634331343,
-    BSD_RENDER_OBJECT_WEAPON_SNIPER_RIFLE = 4284575011,
-    BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_2 = 2621329551,
-    BSD_RENDER_OBJECT_WEAPON_DOCUMENT_PAPERS = 3147228851,
-    BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_2 = 860498661,
-    BSD_RENDER_OBJECT_WEAPON_PISTOL_TYPE_3 = 1609048829,
-    BSD_RENDER_OBJECT_WEAPON_GERMAN_GRENADE = 3097846808,
-    BSD_RENDER_OBJECT_WEAPON_SMG_TYPE_3 = 2691923848,
-    BSD_RENDER_OBJECT_WEAPON_M1_GARAND = 1326598003
-} BSDRenderObjectWeaponId_t;
-
-typedef enum {
     BSD_NODE_TABLE,
     BSD_UNKNOWN
 } BSDEntryType_t;
@@ -406,8 +375,7 @@ bool                        BSDReadPropertySetFileBlock(FILE *BSDFile, BSDProper
 
 BSDRenderObjectElement_t    *BSDGetRenderObjectById(const BSDRenderObjectTable_t *RenderObjectTable,unsigned int RenderObjectId);
 int                         BSDGetRenderObjectIndexById(const BSDRenderObjectTable_t *RenderObjectTable,unsigned int RenderObjectId);
-const char                  *BSDRenderObjectGetWeaponNameFromId(int RenderObjectId);
-const char                  *BSDRenderObjectGetStringFromType(int RenderObjectType);
+
 int                         BSDGetRenderObjectTableOffset(int GameEngine);
 int                         BSDGetRealOffset(int RelativeOffset);
 

@@ -76,7 +76,7 @@ void RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager)
 }
 void RenderObjectManagerAdvanceSelectedRenderObjectAnimationFrame(RenderObjectManager_t *RenderObjectManager)
 {
-    BSDRenderObject_t *CurrentRenderObject;
+    RenderObject_t *CurrentRenderObject;
     int NextFrame;
     
     CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(RenderObjectManager);
@@ -88,7 +88,7 @@ void RenderObjectManagerAdvanceSelectedRenderObjectAnimationFrame(RenderObjectMa
 }
 void RenderObjectManagerAdvanceSelectedRenderObjectAnimationPose(RenderObjectManager_t *RenderObjectManager)
 {
-    BSDRenderObject_t *CurrentRenderObject;
+    RenderObject_t *CurrentRenderObject;
     int NextPose;
     CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(RenderObjectManager);
     if( CurrentRenderObject != NULL && !CurrentRenderObject->IsStatic && CurrentRenderObject->NumAnimations > 1) {
@@ -130,7 +130,7 @@ void RenderObjectManagerExportSelectedModelToPly(RenderObjectManager_t *RenderOb
     char *BSDName;
     FILE *OutFile;
     BSDRenderObjectPack_t *CurrentBSDPack;
-    BSDRenderObject_t *CurrentRenderObject;
+    RenderObject_t *CurrentRenderObject;
     
     if( !RenderObjectManager ) {
         DPrintf("RenderObjectManagerExportCurrentPoseToPly:Invalid RenderObjectManager\n");
@@ -237,7 +237,7 @@ BSDRenderObjectPack_t *RenderObjectManagerGetSelectedBSDPack(RenderObjectManager
     return RenderObjectManager->SelectedBSDPack;
 
 }
-BSDRenderObject_t *RenderObjectManagerGetSelectedRenderObject(RenderObjectManager_t *RenderObjectManager)
+RenderObject_t *RenderObjectManagerGetSelectedRenderObject(RenderObjectManager_t *RenderObjectManager)
 {
     BSDRenderObjectPack_t *SelectedBSDPack;
     if( !RenderObjectManager ) {
@@ -251,7 +251,7 @@ BSDRenderObject_t *RenderObjectManagerGetSelectedRenderObject(RenderObjectManage
     return SelectedBSDPack->SelectedRenderObject;
 }
 void RenderObjectManagerSetSelectedRenderObject(RenderObjectManager_t *RenderObjectManager,BSDRenderObjectPack_t *SelectedBSDPack,
-                                                BSDRenderObject_t *SelectedRenderObject)
+                                                RenderObject_t *SelectedRenderObject)
 {
     if( !RenderObjectManager ) {
         DPrintf("RenderObjectManagerSetSelectedRenderObject:Invalid RenderObjectManager\n");
@@ -339,7 +339,7 @@ BSDRenderObjectPack_t *RenderObjectManagerGetBSDPack(RenderObjectManager_t *Rend
 int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *File)
 {
     BSDRenderObjectPack_t *BSDPack;
-    BSDRenderObject_t *Iterator;
+    RenderObject_t *Iterator;
     char *TAFFile;
     int ErrorCode;
     
@@ -519,7 +519,7 @@ void RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManage
 }
 void RenderObjectManagerUpdate(RenderObjectManager_t *RenderObjectManager)
 {
-    BSDRenderObject_t *CurrentRenderObject;
+    RenderObject_t *CurrentRenderObject;
     int NextFrame;
     int Now;
     if( !RenderObjectManager ) {

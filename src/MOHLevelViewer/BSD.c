@@ -20,6 +20,7 @@
 */ 
 
 #include "BSD.h"
+#include "../Common/RenderObject.h"
 #include "MOHLevelViewer.h"
 
 Color3b_t StarsColors[8] = {
@@ -580,42 +581,42 @@ void BSDCreateRenderObjectPointListVAO(BSD_t *BSD)
         RenderObjectData[RenderObjectDataPointer+1] = Iterator->Position[1];
         RenderObjectData[RenderObjectDataPointer+2] = Iterator->Position[2];
         RenderObjectElement = BSD->RenderObjectTable.RenderObject[Iterator->RenderObjectIndex];
-        if( RenderObjectElement.Type == BSD_RENDER_OBJECT_ENEMY ) {
+        if( RenderObjectElement.Type == RENDER_OBJECT_ENEMY ) {
             // BLUE
             RenderObjectData[RenderObjectDataPointer+3] = 0.f;
             RenderObjectData[RenderObjectDataPointer+4] = 0.f;
             RenderObjectData[RenderObjectDataPointer+5] = 1.f;
-        } else if (RenderObjectElement.Type == BSD_RENDER_OBJECT_DOOR ) {
+        } else if (RenderObjectElement.Type == RENDER_OBJECT_DOOR ) {
             // GREEN
             RenderObjectData[RenderObjectDataPointer+3] = 0.f;
             RenderObjectData[RenderObjectDataPointer+4] = 1.f;
             RenderObjectData[RenderObjectDataPointer+5] = 0.f;
-        } else if( RenderObjectElement.Type == BSD_RENDER_OBJECT_MG42 ) {
+        } else if( RenderObjectElement.Type == RENDER_OBJECT_MG42 ) {
             // Yellow
             RenderObjectData[RenderObjectDataPointer+3] = 1.f;
             RenderObjectData[RenderObjectDataPointer+4] = 1.f;
             RenderObjectData[RenderObjectDataPointer+5] = 0.f;
-        } else if( RenderObjectElement.Type == BSD_RENDER_OBJECT_PLANE ) {
+        } else if( RenderObjectElement.Type == RENDER_OBJECT_PLANE ) {
             // Fuchsia -- Plane.
             RenderObjectData[RenderObjectDataPointer+3] = 1.f;
             RenderObjectData[RenderObjectDataPointer+4] = 0.f;
             RenderObjectData[RenderObjectDataPointer+5] = 1.f;
-        } else if ( RenderObjectElement.Type == BSD_RENDER_OBJECT_UNKNOWN1 ) {
+        } else if ( RenderObjectElement.Type == RENDER_OBJECT_UNKNOWN1 ) {
             // Maroon
             RenderObjectData[RenderObjectDataPointer+3] = 0.5f;
             RenderObjectData[RenderObjectDataPointer+4] = 0.f;
             RenderObjectData[RenderObjectDataPointer+5] = 0.f;
-        } else if( RenderObjectElement.Type == BSD_RENDER_OBJECT_DESTRUCTIBLE_WINDOW ) {
+        } else if( RenderObjectElement.Type == RENDER_OBJECT_DESTRUCTIBLE_WINDOW ) {
             // saddlebrown -- 
             RenderObjectData[RenderObjectDataPointer+3] = 0.54f;
             RenderObjectData[RenderObjectDataPointer+4] = 0.27f;
             RenderObjectData[RenderObjectDataPointer+5] = 0.07f;
-        } else if( RenderObjectElement.Type == BSD_RENDER_OBJECT_VALVE ) {
+        } else if( RenderObjectElement.Type == RENDER_OBJECT_VALVE ) {
             // White -- 
             RenderObjectData[RenderObjectDataPointer+3] = 1.f;
             RenderObjectData[RenderObjectDataPointer+4] = 1.f;
             RenderObjectData[RenderObjectDataPointer+5] = 1.f;
-        } else if( RenderObjectElement.Type == BSD_RENDER_OBJECT_EXPLOSIVE_CHARGE ) {
+        } else if( RenderObjectElement.Type == RENDER_OBJECT_EXPLOSIVE_CHARGE ) {
             // Pink
             RenderObjectData[RenderObjectDataPointer+3] = 1.f;
             RenderObjectData[RenderObjectDataPointer+4] = 0.f;

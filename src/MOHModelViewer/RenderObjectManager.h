@@ -21,6 +21,7 @@
 
 #include "GUI.h"
 #include "BSD.h"
+#include "../Common/RenderObject.h"
 #include "../Common/VRAM.h"
 #include "../Common/TIM.h"
 #include "Camera.h"
@@ -46,8 +47,8 @@ typedef struct BSDRenderObjectPack_s {
     int                             GameVersion;
     VRAM_t                          *VRAM;
     TIMImage_t                      *ImageList;
-    BSDRenderObject_t               *RenderObjectList;
-    BSDRenderObject_t               *SelectedRenderObject;
+    RenderObject_t               *RenderObjectList;
+    RenderObject_t               *SelectedRenderObject;
     int                             LastUpdateTime;
     struct BSDRenderObjectPack_s    *Next;
 } BSDRenderObjectPack_t;
@@ -56,7 +57,7 @@ typedef struct RenderObjectManager_s {
     BSDRenderObjectPack_t   *BSDList;
     
     BSDRenderObjectPack_t   *SelectedBSDPack;
-    BSDRenderObject_t       *SelectedRenderObject;
+    RenderObject_t       *SelectedRenderObject;
     
     FileDialog_t            *BSDFileDialog;
     FileDialog_t            *ExportFileDialog;
@@ -90,7 +91,7 @@ void                    RenderObjectManagerAdvanceSelectedRenderObjectAnimationP
 void                    RenderObjectManagerSetAnimationPlay(RenderObjectManager_t *RenderObjectManager,int Play);
 int                     RenderObjectManagerIsAnimationPlaying(RenderObjectManager_t *RenderObjectManager);
 BSDRenderObjectPack_t   *RenderObjectManagerGetSelectedBSDPack(RenderObjectManager_t *RenderObjectManager);
-BSDRenderObject_t       *RenderObjectManagerGetSelectedRenderObject(RenderObjectManager_t *RenderObjectManager);
+RenderObject_t       *RenderObjectManagerGetSelectedRenderObject(RenderObjectManager_t *RenderObjectManager);
 void                    RenderObjectManagerSetSelectedRenderObject(RenderObjectManager_t *RenderObjectManager,BSDRenderObjectPack_t *SelectedBSDPack,
-                                                BSDRenderObject_t *SelectedRenderObject);
+                                                RenderObject_t *SelectedRenderObject);
 #endif//__RENDER_OBJECT_MANAGER_H_
