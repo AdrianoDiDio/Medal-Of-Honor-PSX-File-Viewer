@@ -152,6 +152,474 @@ const char *RenderObjectGetWeaponNameFromId(int RenderObjectId)
     }
 }
 
+void RenderObjectFillFaceVertexBuffer(int *Buffer,int *BufferSize,BSDVertex_t Vertex,int U0,int V0,BSDColor_t Color,int CLUTX,int CLUTY,int ColorMode)
+{
+    if( !Buffer ) {
+        DPrintf("RenderObjectFillFaceVertexBuffer:Invalid Buffer\n");
+        return;
+    }
+    if( !BufferSize ) {
+        DPrintf("RenderObjectFillFaceVertexBuffer:Invalid BufferSize\n");
+        return;
+    }
+    Buffer[*BufferSize] =   Vertex.x;
+    Buffer[*BufferSize+1] = Vertex.y;
+    Buffer[*BufferSize+2] = Vertex.z;
+    Buffer[*BufferSize+3] = U0;
+    Buffer[*BufferSize+4] = V0;
+    Buffer[*BufferSize+5] = Color.r;
+    Buffer[*BufferSize+6] = Color.g;
+    Buffer[*BufferSize+7] = Color.b;
+    Buffer[*BufferSize+8] = CLUTX;
+    Buffer[*BufferSize+9] = CLUTY;
+    Buffer[*BufferSize+10] = ColorMode;
+    *BufferSize += 11;
+}
+
+
+void RenderObjectGenerateAnimatedVAO(RenderObject_t *RenderObject)
+{
+        BSDAnimatedModelFace_t *CurrentFace;
+    int VertexOffset;
+    int TextureOffset;
+    int ColorOffset;
+    int CLUTOffset;
+    int ColorModeOffset;
+    int Stride;
+    int *VertexData;
+    int VertexSize;
+    int VertexPointer;
+    int VRAMPage;
+    int ColorMode;
+    int CLUTPage;
+    int CLUTPosX;
+    int CLUTPosY;
+    int CLUTDestX;
+    int CLUTDestY;
+    int U0;
+    int V0;
+    int U1;
+    int V1;
+    int U2;
+    int V2;
+    int i;
+    
+    if( !RenderObject ) {
+        DPrintf("RenderObjectGenerateAnimatedVAO:Invalid RenderObject\n");
+        return;
+    }
+    //        XYZ UV RGB CLUT ColorMode
+    Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
+                
+    VertexOffset = 0;
+    TextureOffset = 3;
+    ColorOffset = 5;
+    CLUTOffset = 8;
+    ColorModeOffset = 10;
+    
+    VertexSize = Stride * 3 * RenderObject->NumFaces;
+    VertexData = malloc(VertexSize);
+    VertexPointer = 0;
+    DPrintf("RenderObjectGenerateAnimatedVAO:Generating for %i faces Id:%i\n",RenderObject->NumFaces,RenderObject->Id);
+    for( i = 0; i < RenderObject->NumFaces; i++ ) {
+        CurrentFace = &RenderObject->FaceList[i];
+        VRAMPage = CurrentFace->TexInfo & 0x1F;
+        ColorMode = (CurrentFace->TexInfo >> 7) & 0x3;
+        CLUTPosX = (CurrentFace->CLUT << 4) & 0x3F0;
+        CLUTPosY = (CurrentFace->CLUT >> 6) & 0x1ff;
+        CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
+        CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
+        CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
+        CLUTDestX += VRAMGetTexturePageX(CLUTPage);
+ 
+        U0 = CurrentFace->UV0.u + VRAMGetTexturePageX(VRAMPage);
+        V0 = CurrentFace->UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+        U1 = CurrentFace->UV1.u + VRAMGetTexturePageX(VRAMPage);
+        V1 = CurrentFace->UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+        U2 = CurrentFace->UV2.u + VRAMGetTexturePageX(VRAMPage);
+        V2 = CurrentFace->UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+
+        
+        RenderObjectFillFaceVertexBuffer(VertexData,&VertexPointer,
+                                RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0],
+                                U0,V0,CurrentFace->RGB0,CLUTDestX,CLUTDestY,ColorMode
+                               );
+        RenderObjectFillFaceVertexBuffer(VertexData,&VertexPointer,
+                                RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1],
+                                U1,V1,CurrentFace->RGB1,CLUTDestX,CLUTDestY,ColorMode
+                               );
+        RenderObjectFillFaceVertexBuffer(VertexData,&VertexPointer,
+                                RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2],
+                                U2,V2,CurrentFace->RGB2,CLUTDestX,CLUTDestY,ColorMode
+                               );
+    }
+    RenderObject->VAO = VAOInitXYZUVRGBCLUTColorModeInteger(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,
+                                        ColorOffset,CLUTOffset,ColorModeOffset,RenderObject->NumFaces * 3);
+    free(VertexData);
+}
+
+void RenderObjectGenerateStaticVAO(RenderObject_t *RenderObject)
+{
+    BSDFace_t *CurrentFace;
+    int Vert0;
+    int Vert1;
+    int Vert2;
+    int VertexOffset;
+    int TextureOffset;
+    int ColorOffset;
+    int CLUTOffset;
+    int ColorModeOffset;
+    int Stride;
+    int *VertexData;
+    int VertexSize;
+    int VertexPointer;
+    int VRAMPage;
+    int ColorMode;
+    int CLUTPage;
+    int CLUTPosX;
+    int CLUTPosY;
+    int CLUTDestX;
+    int CLUTDestY;
+    int U0;
+    int V0;
+    int U1;
+    int V1;
+    int U2;
+    int V2;
+    int i;
+    
+    if( !RenderObject ) {
+        DPrintf("RenderObjectGenerateStaticVAO:Invalid RenderObject\n");
+        return;
+    }
+    //        XYZ UV RGB CLUT ColorMode
+    Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
+                
+    VertexOffset = 0;
+    TextureOffset = 3;
+    ColorOffset = 5;
+    CLUTOffset = 8;
+    ColorModeOffset = 10;
+    
+    VertexSize = Stride * 3 * RenderObject->NumFaces;
+    VertexData = malloc(VertexSize);
+    VertexPointer = 0;
+    DPrintf("RenderObjectGenerateStaticVAO:Generating for %i faces Id:%i\n",RenderObject->NumFaces,RenderObject->Id);
+    for( i = 0; i < RenderObject->NumFaces; i++ ) {
+        CurrentFace = &RenderObject->StaticFaceList[i];
+        
+        
+        Vert0 = CurrentFace->Vert0;
+        Vert1 = CurrentFace->Vert1;
+        Vert2 = CurrentFace->Vert2;
+        
+        VRAMPage = CurrentFace->TexInfo & 0x1F;
+        ColorMode = (CurrentFace->TexInfo >> 7) & 0x3;
+        CLUTPosX = (CurrentFace->CBA << 4) & 0x3F0;
+        CLUTPosY = (CurrentFace->CBA >> 6) & 0x1ff;
+        CLUTPage = VRAMGetCLUTPage(CLUTPosX,CLUTPosY);
+        CLUTDestX = VRAMGetCLUTPositionX(CLUTPosX,CLUTPosY,CLUTPage);
+        CLUTDestY = CLUTPosY + VRAMGetCLUTOffsetY(ColorMode);
+        CLUTDestX += VRAMGetTexturePageX(CLUTPage);
+ 
+        U0 = CurrentFace->UV0.u + VRAMGetTexturePageX(VRAMPage);
+        V0 = CurrentFace->UV0.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+        U1 = CurrentFace->UV1.u + VRAMGetTexturePageX(VRAMPage);
+        V1 = CurrentFace->UV1.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+        U2 = CurrentFace->UV2.u + VRAMGetTexturePageX(VRAMPage);
+        V2 = CurrentFace->UV2.v + VRAMGetTexturePageY(VRAMPage,ColorMode);
+
+        
+        RenderObjectFillFaceVertexBuffer(VertexData,&VertexPointer,RenderObject->VertexList[Vert0],
+                                U0,V0,RenderObject->ColorList[Vert0],CLUTDestX,CLUTDestY,ColorMode
+                               );
+        RenderObjectFillFaceVertexBuffer(VertexData,&VertexPointer,RenderObject->VertexList[Vert1],
+                                U1,V1,RenderObject->ColorList[Vert1],CLUTDestX,CLUTDestY,ColorMode
+                               );
+        RenderObjectFillFaceVertexBuffer(VertexData,&VertexPointer,RenderObject->VertexList[Vert2],
+                                U2,V2,RenderObject->ColorList[Vert2],CLUTDestX,CLUTDestY,ColorMode
+                               );
+    }
+    RenderObject->VAO = VAOInitXYZUVRGBCLUTColorModeInteger(VertexData,VertexSize,Stride,VertexOffset,TextureOffset,
+                                        ColorOffset,CLUTOffset,ColorModeOffset,RenderObject->NumFaces * 3);
+    free(VertexData);
+}
+
+void RenderObjectUpdateVAO(RenderObject_t *RenderObject)
+{
+    BSDAnimatedModelFace_t *CurrentFace;
+    int Stride;
+    int BaseOffset;
+    int VertexData[3];
+    int i;
+    
+    if( !RenderObject ) {
+        DPrintf("RenderObjectUpdateVAO:Invalid RenderObject\n");
+        return;
+    }
+    if( !RenderObject->VAO ) {
+        DPrintf("RenderObjectUpdateVAO:Invalid VAO\n");
+        return;
+    }
+    
+    Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
+    glBindBuffer(GL_ARRAY_BUFFER, RenderObject->VAO->VBOId[0]);
+    
+    for( i = 0; i < RenderObject->NumFaces; i++ ) {
+        BaseOffset = (i * Stride * 3);
+        CurrentFace = &RenderObject->FaceList[i];
+        VertexData[0] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0].x;
+        VertexData[1] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0].y;
+        VertexData[2] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0&0x1F].VertexList[CurrentFace->VertexTableDataIndex0].z;
+
+        glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 0), 3 * sizeof(int), &VertexData);
+        
+        VertexData[0] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1].x;
+        VertexData[1] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1].y;
+        VertexData[2] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex1&0x1F].VertexList[CurrentFace->VertexTableDataIndex1].z;
+
+        glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 1), 3 * sizeof(int), &VertexData);
+        
+        VertexData[0] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2].x;
+        VertexData[1] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2].y;
+        VertexData[2] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex2&0x1F].VertexList[CurrentFace->VertexTableDataIndex2].z;
+
+        glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (Stride * 2), 3 * sizeof(int), &VertexData);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+BSDAnimationFrame_t *RenderObjectGetCurrentFrame(const RenderObject_t *RenderObject)
+{
+    if( !RenderObject ) {
+        return NULL;
+    }
+    if( RenderObject->CurrentAnimationIndex == -1 || RenderObject->CurrentFrameIndex == -1 ) {
+        return NULL;
+    }
+    return &RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[RenderObject->CurrentFrameIndex];
+}
+
+void RenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame)
+{
+    if( !Frame ) {
+        return;
+    }
+    memcpy(Frame->CurrentQuaternionList,Frame->QuaternionList,Frame->NumQuaternions * sizeof(BSDQuaternion_t));
+}
+
+void RenderObjectRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,BSDVertexTable_t *VertexTable,
+                                     mat4 TransformMatrix)
+{
+    versor Quaternion;
+    mat4 LocalRotationMatrix;
+    mat4 LocalTranslationMatrix;
+    mat4 LocalTransformMatrix;
+    vec3 TransformedBonePosition;
+    vec3 TransformedVertexPosition;
+    vec3 Temp;
+    int i;
+    
+    if( !Bone ) {
+        DPrintf("RenderObjectRecursivelyApplyHierachyData:NULL Bone.\n");
+        return;
+    }
+    
+    if( !QuaternionList ) {
+        DPrintf("RenderObjectRecursivelyApplyHierachyData:Invalid Quaternion List.\n");
+        return;
+    }
+    if( !VertexTable ) {
+        DPrintf("RenderObjectRecursivelyApplyHierachyData:Invalid Vertex Table.\n");
+        return;
+    }
+
+    glm_mat4_identity(LocalRotationMatrix);
+    glm_mat4_identity(LocalTranslationMatrix);
+    glm_mat4_identity(LocalTransformMatrix);
+    
+    Quaternion[0] = QuaternionList[Bone->VertexTableIndex].x / 4096.f;
+    Quaternion[1] = QuaternionList[Bone->VertexTableIndex].y / 4096.f;
+    Quaternion[2] = QuaternionList[Bone->VertexTableIndex].z / 4096.f;
+    Quaternion[3] = QuaternionList[Bone->VertexTableIndex].w / 4096.f;
+    
+    glm_quat_mat4t(Quaternion,LocalRotationMatrix);
+    
+    Temp[0] = Bone->Position.x;
+    Temp[1] = Bone->Position.y;
+    Temp[2] = Bone->Position.z;
+    
+    glm_mat4_mulv3(TransformMatrix,Temp,1.f,TransformedBonePosition);
+    glm_translate_make(LocalTranslationMatrix,TransformedBonePosition);
+    glm_mat4_mul(LocalTranslationMatrix,LocalRotationMatrix,LocalTransformMatrix);
+
+    if( VertexTable[Bone->VertexTableIndex].Offset != -1 && VertexTable[Bone->VertexTableIndex].NumVertex != 0 ) {
+        for( i = 0; i < VertexTable[Bone->VertexTableIndex].NumVertex; i++ ) {
+            Temp[0] = VertexTable[Bone->VertexTableIndex].VertexList[i].x;
+            Temp[1] = VertexTable[Bone->VertexTableIndex].VertexList[i].y;
+            Temp[2] = VertexTable[Bone->VertexTableIndex].VertexList[i].z;
+            glm_mat4_mulv3(LocalTransformMatrix,Temp,1.f,TransformedVertexPosition);
+            VertexTable[Bone->VertexTableIndex].VertexList[i].x = TransformedVertexPosition[0];
+            VertexTable[Bone->VertexTableIndex].VertexList[i].y = TransformedVertexPosition[1];
+            VertexTable[Bone->VertexTableIndex].VertexList[i].z = TransformedVertexPosition[2];
+        }
+    }
+
+    if( Bone->Child2 ) {
+        RenderObjectRecursivelyApplyHierachyData(Bone->Child2,QuaternionList,VertexTable,TransformMatrix);
+    }
+    if( Bone->Child1 ) {
+        RenderObjectRecursivelyApplyHierachyData(Bone->Child1,QuaternionList,VertexTable,LocalTransformMatrix);
+    }
+}
+
+void RenderObjectResetVertexTable(RenderObject_t *RenderObject)
+{
+    int i;
+
+    if( !RenderObject ) {
+        DPrintf("RenderObjectResetVertexTable:Invalid RenderObject\n");
+        return;
+    }
+    for( i = 0; i < RenderObject->NumVertexTables; i++ ) {
+        RenderObject->CurrentVertexTable[i].Offset = RenderObject->VertexTable[i].Offset;
+        RenderObject->CurrentVertexTable[i].NumVertex = RenderObject->VertexTable[i].NumVertex;
+        memcpy(RenderObject->CurrentVertexTable[i].VertexList,
+               RenderObject->VertexTable[i].VertexList,sizeof(BSDVertex_t) * RenderObject->VertexTable[i].NumVertex);
+    }
+}
+
+/*
+ Set the RenderObject to a specific pose, given AnimationIndex and FrameIndex.
+ Returns 0 if the pose was not valid ( pose was already set,pose didn't exists), 1 otherwise.
+ NOTE that calling this function will modify the RenderObject's VAO.
+ If the VAO is NULL a new one is created otherwise it will be updated to reflect the pose that was applied to the model.
+ If Override is true then the pose will be set again in case the AnimationIndex and FrameIndex did not change.
+ */
+bool RenderObjectSetAnimationPose(RenderObject_t *RenderObject,int AnimationIndex,int FrameIndex,int Override)
+{
+    BSDQuaternion_t *QuaternionList;
+    versor FromQuaternion;
+    versor ToQuaternion;
+    versor DestQuaternion;
+    mat4 TransformMatrix;
+    vec3 Translation;
+    int NumVertices;
+    int i;
+
+    if( !RenderObject ) {
+        DPrintf("RenderObjectSetAnimationPose:Failed to set pose RenderObject is not valid\n");
+        return false;
+    }
+    
+    if( RenderObject->IsStatic ) {
+        DPrintf("RenderObjectSetAnimationPose:Failed to set pose RenderObject is not animated\n");
+        return false;
+    }
+    if( AnimationIndex < 0 || AnimationIndex > RenderObject->NumAnimations ) {
+        DPrintf("RenderObjectSetAnimationPose:Failed to set pose using index %i...Index is out of bounds\n",AnimationIndex);
+        return false;
+    }
+    if( (AnimationIndex == RenderObject->CurrentAnimationIndex && FrameIndex == RenderObject->CurrentFrameIndex ) && !Override) {
+        DPrintf("RenderObjectSetAnimationPose:Pose is already set\n");
+        return false;
+    }
+    if( !RenderObject->AnimationList[AnimationIndex].NumFrames ) {
+        DPrintf("RenderObjectSetAnimationPose:Failed to set pose using index %i...animation has no frames\n",AnimationIndex);
+        return false;
+    }
+    if( FrameIndex < 0 || FrameIndex > RenderObject->AnimationList[AnimationIndex].NumFrames ) {
+        DPrintf("RenderObjectSetAnimationPose:Failed to set pose using frame %i...Frame Index is out of bounds\n",FrameIndex);
+        return false;
+    }
+    RenderObjectResetVertexTable(RenderObject);
+    glm_vec3_zero(RenderObject->Center);
+    glm_mat4_identity(TransformMatrix);
+    Translation[0] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.x / 4096.f;
+    Translation[1] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.y / 4096.f;
+    Translation[2] = RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].Vector.z / 4096.f;
+    glm_translate_make(TransformMatrix,Translation);
+    //NOTE(Adriano):Interpolate only between frames of the same animation and not in-between two different one.
+    //              Also do not interpolate if the frame is the same as the previous one.
+    if( RenderObject->CurrentAnimationIndex == AnimationIndex && RenderObject->CurrentFrameIndex != -1 && 
+        RenderObject->CurrentFrameIndex != FrameIndex
+    ) {
+        assert(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions == 
+            RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[RenderObject->CurrentFrameIndex].NumQuaternions
+        );
+        QuaternionList = malloc(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions * sizeof(BSDQuaternion_t));
+        for( i = 0; i < RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions; i++ ) {
+            FromQuaternion[0] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
+                Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].x / 4096.f;
+            FromQuaternion[1] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
+                Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].y / 4096.f;
+            FromQuaternion[2] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
+                Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].z / 4096.f;
+            FromQuaternion[3] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].
+                Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].w / 4096.f;
+            ToQuaternion[0] = RenderObject->AnimationList[AnimationIndex].
+                Frame[FrameIndex].QuaternionList[i].x / 4096.f;
+            ToQuaternion[1] = RenderObject->AnimationList[AnimationIndex].
+                Frame[FrameIndex].QuaternionList[i].y / 4096.f;
+            ToQuaternion[2] = RenderObject->AnimationList[AnimationIndex].
+                Frame[FrameIndex].QuaternionList[i].z / 4096.f;
+            ToQuaternion[3] = RenderObject->AnimationList[AnimationIndex].
+                Frame[FrameIndex].QuaternionList[i].w / 4096.f;
+            glm_quat_nlerp(FromQuaternion,
+                ToQuaternion,
+                0.5f,
+                DestQuaternion
+            );
+            QuaternionList[i].x = DestQuaternion[0] * 4096.f;
+            QuaternionList[i].y = DestQuaternion[1] * 4096.f;
+            QuaternionList[i].z = DestQuaternion[2] * 4096.f;
+            QuaternionList[i].w = DestQuaternion[3] * 4096.f;
+        }
+        RenderObjectRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,QuaternionList,
+                                    RenderObject->CurrentVertexTable,TransformMatrix);
+        free(QuaternionList);
+    } else {
+        RenderObjectRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,
+                                    RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].CurrentQuaternionList,
+                                    RenderObject->CurrentVertexTable,TransformMatrix);
+    }
+    RenderObject->CurrentAnimationIndex = AnimationIndex;
+    RenderObject->CurrentFrameIndex = FrameIndex;
+    
+    NumVertices = 0;
+    for( int i = 0; i < RenderObject->NumVertexTables; i++ ) {
+        for( int j = 0; j < RenderObject->CurrentVertexTable[i].NumVertex; j++ ) {
+            RenderObject->Center[0] += RenderObject->CurrentVertexTable[i].VertexList[j].x;
+            RenderObject->Center[1] += RenderObject->CurrentVertexTable[i].VertexList[j].y;
+            RenderObject->Center[2] += RenderObject->CurrentVertexTable[i].VertexList[j].z;
+            NumVertices++;
+        }
+    }
+    glm_vec3_scale(RenderObject->Center,1.f/NumVertices,RenderObject->Center);
+    if( !RenderObject->VAO ) {
+        RenderObjectGenerateAnimatedVAO(RenderObject);
+    } else {
+        RenderObjectUpdateVAO(RenderObject);
+    }
+    return true;
+}
+
+void RenderObjectGenerateVAO(RenderObject_t *RenderObject)
+{
+    if( !RenderObject ) {
+        DPrintf("RenderObjectGenerateVAO:Invalid RenderObject\n");
+        return;
+    }
+    
+    if( RenderObject->IsStatic ) {
+        RenderObjectGenerateStaticVAO(RenderObject);
+    } else {
+        RenderObjectSetAnimationPose(RenderObject,0,0,0);
+    }
+
+}
+
+
 int RenderObjectLoadStaticVertexAndColorData(RenderObject_t *RenderObject,BSDRenderObjectElement_t RenderObjectElement,FILE *BSDFile)
 {
     int i;
@@ -945,7 +1413,7 @@ bool RenderObjectLoadAnimationData(RenderObject_t *RenderObject,int AnimationDat
                 }
                 DPrintf("Decoded %i out of %i\n",NumDecodedQuaternions,RenderObject->AnimationList[i].Frame[j].NumQuaternions);
                 assert(NumDecodedQuaternions == RenderObject->AnimationList[i].Frame[j].NumQuaternions);
-                BSDRenderObjectResetFrameQuaternionList(&RenderObject->AnimationList[i].Frame[j]);
+                RenderObjectResetFrameQuaternionList(&RenderObject->AnimationList[i].Frame[j]);
             } else {
                 DPrintf("QuaternionListOffset is not valid...\n");
             }
@@ -990,7 +1458,7 @@ bool RenderObjectLoadAnimationData(RenderObject_t *RenderObject,int AnimationDat
                 RenderObject->AnimationList[i].Frame[j].QuaternionList[q].z = DestQuaternion[2] * 4096.f;
                 RenderObject->AnimationList[i].Frame[j].QuaternionList[q].w = DestQuaternion[3] * 4096.f;
             }
-            BSDRenderObjectResetFrameQuaternionList(&RenderObject->AnimationList[i].Frame[j]);
+            RenderObjectResetFrameQuaternionList(&RenderObject->AnimationList[i].Frame[j]);
         }
     }
     free(AnimationOffsetTable);

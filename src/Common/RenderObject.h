@@ -86,6 +86,19 @@ typedef struct RenderObject_s {
 RenderObject_t              *RenderObjectLoad(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t EntryTable,
                                               BSDRenderObjectTable_t RenderObjectTable,FILE *BSDFile,int GameVersion);
 
+void                        RenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame);
+bool                        RenderObjectSetAnimationPose(RenderObject_t *RenderObject,int AnimationIndex,int FrameIndex,int Override);
+
+BSDAnimationFrame_t         *RenderObjectGetCurrentFrame(const RenderObject_t *RenderObject);
+
+
+//TODO: This may not be required to be exposed
+void                        RenderObjectRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
+                                                                     BSDVertexTable_t *VertexTable,mat4 TransformMatrix);
+
+
+void                        RenderObjectGenerateVAO(RenderObject_t *RenderObject);
+
 void                        RenderObjectFree(RenderObject_t *RenderObject);
 
 const char                  *RenderObjectGetWeaponNameFromId(int RenderObjectId);

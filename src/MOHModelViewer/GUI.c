@@ -218,7 +218,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
         if( !CurrentRenderObject ) {
             igText("No RenderObject selected.");
         } else {
-            CurrentFrame = BSDRenderObjectGetCurrentFrame(CurrentRenderObject);
+            CurrentFrame = RenderObjectGetCurrentFrame(CurrentRenderObject);
             igText("Id:%i",CurrentRenderObject->Id);
             igText("Type:%i",CurrentRenderObject->Type);
             igText("Scale:%f;%f;%f",CurrentRenderObject->Scale[0],CurrentRenderObject->Scale[1],CurrentRenderObject->Scale[2]);
@@ -241,7 +241,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                         }
                         if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
                             if( CurrentRenderObject->CurrentAnimationIndex != i ) {
-                                if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,i,0,0) ) {
+                                if( !RenderObjectSetAnimationPose(CurrentRenderObject,i,0,0) ) {
                                     ErrorMessageDialogSet(GUI->ErrorMessageDialog,"Failed to set animation pose");
                                 }
                             }
@@ -262,7 +262,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                         sprintf(SmallBuffer,"Frame %i",i + 1);
                         if (igSelectable_Bool(SmallBuffer, IsSelected,0,ZeroSize)) {
                             if( CurrentRenderObject->CurrentFrameIndex != i ) {
-                                if( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,i,0) ) {
+                                if( !RenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,i,0) ) {
                                     ErrorMessageDialogSet(GUI->ErrorMessageDialog,"Failed to set animation pose");
                                 }
                             }
@@ -278,8 +278,8 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                     igText("Changes to an input-field can be undo by pressing CTRL-Z.\n");
                     igText("Note that numbers are in fixed point math where 4096 is equals to 1\n");
                     if( igButton("Reset",ZeroSize) ) {
-                        BSDRenderObjectResetFrameQuaternionList(CurrentFrame);
-                        BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,
+                        RenderObjectResetFrameQuaternionList(CurrentFrame);
+                        RenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,
                                                                 CurrentRenderObject->CurrentFrameIndex,1);
 
                     }
@@ -333,7 +333,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                                                     CurrentQuaternionList[i].w,NULL,NULL,NULL,InputTextFlags);
                             igPopID();
                             if( Changed ) {
-                                BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,
+                                RenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,
                                                                 CurrentRenderObject->CurrentFrameIndex,1);
                             }
                         }

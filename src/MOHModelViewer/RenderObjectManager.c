@@ -83,7 +83,7 @@ void RenderObjectManagerAdvanceSelectedRenderObjectAnimationFrame(RenderObjectMa
     if( CurrentRenderObject != NULL && !CurrentRenderObject->IsStatic ) {
         NextFrame = (CurrentRenderObject->CurrentFrameIndex + 1) % 
             CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames;
-        BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame,0);
+        RenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame,0);
     }
 }
 void RenderObjectManagerAdvanceSelectedRenderObjectAnimationPose(RenderObjectManager_t *RenderObjectManager)
@@ -95,7 +95,7 @@ void RenderObjectManagerAdvanceSelectedRenderObjectAnimationPose(RenderObjectMan
         NextPose = (CurrentRenderObject->CurrentAnimationIndex + 1) % 
         CurrentRenderObject->NumAnimations;
         //NOTE(Adriano): Scan through the available pose until we find one that it's valid and can be set
-        while( !BSDRenderObjectSetAnimationPose(CurrentRenderObject,NextPose,0,0) ) {
+        while( !RenderObjectSetAnimationPose(CurrentRenderObject,NextPose,0,0) ) {
             NextPose = (NextPose + 1 ) % CurrentRenderObject->NumAnimations;
         }                
     }
@@ -406,11 +406,7 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
     }
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,90,"Setting default pose");
     for( Iterator = BSDPack->RenderObjectList; Iterator; Iterator = Iterator->Next ) {
-        if( Iterator->IsStatic ) {
-            BSDRenderObjectGenerateStaticVAO(Iterator);
-        } else {
-            BSDRenderObjectSetAnimationPose(Iterator,0,0,0);
-        }
+        RenderObjectGenerateVAO(Iterator);
     }
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,100,"Done");
     RenderObjectManagerAppendBSDPack(RenderObjectManager,BSDPack);
@@ -548,7 +544,7 @@ void RenderObjectManagerUpdate(RenderObjectManager_t *RenderObjectManager)
     }
     NextFrame = (CurrentRenderObject->CurrentFrameIndex + 1) % 
                     CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames;
-    BSDRenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame,0);
+    RenderObjectSetAnimationPose(CurrentRenderObject,CurrentRenderObject->CurrentAnimationIndex,NextFrame,0);
     RenderObjectManager->SelectedBSDPack->LastUpdateTime = Now;
 }
 void RenderObjectManagerDraw(RenderObjectManager_t *RenderObjectManager,Camera_t *Camera)
