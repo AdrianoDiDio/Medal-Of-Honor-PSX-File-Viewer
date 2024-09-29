@@ -72,6 +72,9 @@ void RenderObjectManagerCleanUp(RenderObjectManager_t *RenderObjectManager)
     if( FileDialogIsOpen(RenderObjectManager->ExportFileDialog) ) {
         RenderObjectManagerFreeDialogData(RenderObjectManager->ExportFileDialog);
     }
+    if( RenderObjectManager->RenderObjectShader ) {
+        RenderObjectFreeShader(RenderObjectManager->RenderObjectShader);
+    }
     free(RenderObjectManager);
 }
 void RenderObjectManagerAdvanceSelectedRenderObjectAnimationFrame(RenderObjectManager_t *RenderObjectManager)
@@ -484,17 +487,36 @@ void RenderObjectManagerOnBSDFileDialogCancel(FileDialog_t *FileDialog)
     RenderObjectManagerCloseDialog(FileDialog);
 }
 
-void RenderObjectManagerDrawPack(BSDRenderObjectPack_t *RenderObjectPack,Camera_t *Camera,
+void RenderObjectManagerDrawPack(BSDRenderObjectPack_t *RenderObjectPack,RenderObjectShader_t *RenderObjectShader,Camera_t *Camera,
                                  mat4 ProjectionMatrix)
 {
+    RenderObject_t *RenderObject;
+    mat4 ModelMatrix;
+    vec3 Temp;
+    
     if( !RenderObjectPack ) {
         return;
     }
     if( !RenderObjectPack->SelectedRenderObject ) {
         return;
     }
-    RenderObjectDraw(RenderObjectPack->SelectedRenderObject,RenderObjectPack->VRAM,EnableAmbientLight->IValue,EnableWireFrameMode->IValue,
-                     Camera->ViewMatrix,ProjectionMatrix);
+    
+    RenderObject = RenderObjectPack->SelectedRenderObject;
+    
+    glm_mat4_identity(ModelMatrix);
+    Temp[0] = -RenderObject->Center[0];
+    Temp[1] = -RenderObject->Center[1];
+    Temp[2] = -RenderObject->Center[2];
+    glm_vec3_rotate(Temp, DEGTORAD(180.f), GLM_XUP);    
+    glm_translate(ModelMatrix,Temp);
+    Temp[0] = 0;
+    Temp[1] = 1;
+    Temp[2] = 0;
+    glm_rotate(ModelMatrix,glm_rad(-90), Temp);
+    glm_scale(ModelMatrix,RenderObject->Scale);
+    
+    RenderObjectDraw(RenderObjectPack->SelectedRenderObject,RenderObjectPack->VRAM,RenderObjectShader,EnableAmbientLight->IValue,
+                     EnableWireFrameMode->IValue,false,ModelMatrix,Camera->ViewMatrix,ProjectionMatrix);
 }
 void RenderObjectManagerOpenFileDialog(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
@@ -558,7 +580,7 @@ void RenderObjectManagerDraw(RenderObjectManager_t *RenderObjectManager,Camera_t
     glViewport(0,0,VidConfigWidth->IValue,VidConfigHeight->IValue);
     if( RenderObjectManager->SelectedBSDPack ) {
         glm_perspective(glm_rad(90.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);
-        RenderObjectManagerDrawPack(RenderObjectManager->SelectedBSDPack,Camera,ProjectionMatrix);
+        RenderObjectManagerDrawPack(RenderObjectManager->SelectedBSDPack,RenderObjectManager->RenderObjectShader,Camera,ProjectionMatrix);
     }
 }
 
@@ -577,6 +599,14 @@ RenderObjectManager_t *RenderObjectManagerInit(GUI_t *GUI)
     }
     RenderObjectManager->BSDList = NULL;
     RenderObjectManager->SelectedBSDPack = NULL;
+    RenderObjectManager->RenderObjectShader = NULL;
+    
+    RenderObjectManager->RenderObjectShader = RenderObjectInitShader();
+    if( !RenderObjectManager->RenderObjectShader ) {
+        DPrintf("RenderObjectManagerInit:Couldn't load RenderObjectShader\n");
+        free(RenderObjectManager);
+        return NULL;
+    }
 
     RenderObjectManager->BSDFileDialog = FileDialogRegister("Open BSD File",
                                                                "BSD files(*.BSD){.BSD}",

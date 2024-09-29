@@ -4,12 +4,18 @@ out vec4 FragColor;
 in vec3 ourColor;
 in vec2 TexCoord;
 in float LightingEnabled;
+in float FogEnabled;
+in float FogFactor;
+in float ourFogNear;
+in vec3  ourFogColor;
 in vec2 CLUTCoord;
 flat in int ourColorMode;
 flat in int STPMode;
 
 uniform usampler2D ourIndexTexture;
 uniform sampler2D ourPaletteTexture;
+        
+const float FogMax = 6000.f;
 
 uint InternalToPsxColor(vec4 c) {
     uint a = uint(floor(c.a + 0.5));
@@ -26,6 +32,8 @@ void main()
     vec4 CLUTTexel;
     uint CLUTX;
     uint CLUTY;
+    float FogMin;
+    float InterpolationFactor;
 
     //NOTE(Adriano):16-bpp mode textures are encoded directly into CLUT.
     if( ourColorMode == 2 ) {
@@ -46,5 +54,12 @@ void main()
         CLUTTexel.g = clamp(CLUTTexel.g * ourColor.g * 2.f, 0.f, 1.f);
         CLUTTexel.b = clamp(CLUTTexel.b * ourColor.b * 2.f, 0.f, 1.f);
     }
+    
+    if( FogEnabled > 0.5 ) {
+        FogMin = (ourFogNear / 4096.f) * 20.f;
+        InterpolationFactor = 1.0 - clamp((FogMax - FogFactor) / (FogMax - FogMin), 0.0, 1.0);
+        CLUTTexel = mix(CLUTTexel, vec4(ourFogColor,1.0), InterpolationFactor);
+    }
+    
     FragColor = CLUTTexel;
 }

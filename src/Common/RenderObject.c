@@ -21,6 +21,14 @@
 
 #include "RenderObject.h"
 
+void RenderObjectFreeShader(RenderObjectShader_t *RenderObjectShader)
+{
+    if( !RenderObjectShader ) {
+        return;
+    }
+    free(RenderObjectShader);
+}
+
 void RenderObjectRecursivelyFreeHierarchyBone(BSDHierarchyBone_t *Bone)
 {
     if( !Bone ) {
@@ -98,6 +106,22 @@ void RenderObjectFreeList(RenderObject_t *RenderObjectList)
     }
 }
 
+RenderObject_t *RenderObjectGetByIdFromList(const RenderObject_t *RenderObjectList,int RenderObjectId)
+{
+    RenderObject_t *Iterator;
+    
+    if( !RenderObjectList ) {
+        return NULL;
+    }
+    
+    for( Iterator = RenderObjectList; Iterator; Iterator = Iterator->Next ) {
+        if( Iterator->Id == RenderObjectId ) {
+            return Iterator;
+        }
+    }
+    return NULL;
+}
+
 const char *RenderObjectGetStringFromType(RenderObjectType_t RenderObjectType)
 {
     switch( RenderObjectType ) {
@@ -163,6 +187,59 @@ const char *RenderObjectGetWeaponNameFromId(int RenderObjectId)
     }
 }
 
+void RenderObjectUpdateShader(RenderObjectShader_t *RenderObjectShader, short FogNear, Color3b_t ClearColor)
+{
+    vec3 ClearColorVector;
+    if( !RenderObjectShader ) {
+        return;
+    }
+
+    glUseProgram(RenderObjectShader->Shader->ProgramId);
+    glUniform1f(RenderObjectShader->FogNearId, FogNear);
+    ClearColorVector[0] = ClearColor.r / 255.f;
+    ClearColorVector[1] = ClearColor.g / 255.f;
+    ClearColorVector[2] = ClearColor.b / 255.f;
+    glUniform3fv(RenderObjectShader->FogColorId, 1, ClearColorVector);
+    glUseProgram(0);
+}
+
+RenderObjectShader_t *RenderObjectInitShader()
+{
+    RenderObjectShader_t *RenderObjectShader;
+    Shader_t *Shader;
+    vec4 ClearColor;
+
+    Shader = ShaderCache("RenderObjectShader","Shaders/RenderObjectVertexShader.glsl","Shaders/RenderObjectFragmentShader.glsl");
+    if( !Shader ) {
+        DPrintf("RenderObjectInitShader:Couldn't cache Shader.\n");
+        return NULL;
+    }
+    RenderObjectShader = malloc(sizeof(RenderObjectShader_t));
+    if( !RenderObjectShader ) {
+        DPrintf("RenderObjectInitShader:Failed to allocate memory for shader\n");
+        return NULL;
+    }
+    RenderObjectShader->Shader = Shader;
+    glUseProgram(RenderObjectShader->Shader->ProgramId);
+    RenderObjectShader->MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+    RenderObjectShader->MVMatrixId = glGetUniformLocation(Shader->ProgramId,"MVMatrix");
+    RenderObjectShader->EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
+    RenderObjectShader->PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
+    RenderObjectShader->TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
+    RenderObjectShader->EnableFogId = glGetUniformLocation(Shader->ProgramId,"EnableFog");
+    RenderObjectShader->FogNearId = glGetUniformLocation(Shader->ProgramId,"FogNear");
+    RenderObjectShader->FogColorId = glGetUniformLocation(Shader->ProgramId,"FogColor");
+    glUniform1i(RenderObjectShader->TextureIndexId, 0);
+    glUniform1i(RenderObjectShader->PaletteTextureId,  1);
+    glUniform1i(RenderObjectShader->EnableLightingId, 0);
+    glUniform1i(RenderObjectShader->EnableFogId, 0);
+    glUniform1f(RenderObjectShader->FogNearId, 0);
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, ClearColor);
+    glUniform3fv(RenderObjectShader->FogColorId, 1, ClearColor);
+    glUseProgram(0);
+    return RenderObjectShader;
+}
+
 void RenderObjectFillFaceVertexBuffer(int *Buffer,int *BufferSize,BSDVertex_t Vertex,int U0,int V0,BSDColor_t Color,int CLUTX,int CLUTY,int ColorMode)
 {
     if( !Buffer ) {
@@ -186,7 +263,6 @@ void RenderObjectFillFaceVertexBuffer(int *Buffer,int *BufferSize,BSDVertex_t Ve
     Buffer[*BufferSize+10] = ColorMode;
     *BufferSize += 11;
 }
-
 
 void RenderObjectGenerateAnimatedVAO(RenderObject_t *RenderObject)
 {
@@ -811,26 +887,22 @@ void RenderObjectGenerateVAO(RenderObject_t *RenderObject)
 
 }
 
-void RenderObjectDraw(RenderObject_t *RenderObject,const VRAM_t *VRAM,bool EnableAmbientLight,bool EnableWireFrameMode,
-                      mat4 ViewMatrix,mat4 ProjectionMatrix)
+void RenderObjectDraw(RenderObject_t *RenderObject,const VRAM_t *VRAM,const RenderObjectShader_t *RenderObjectShader,
+                      bool EnableAmbientLight,bool EnableWireFrameMode,bool EnableFog,mat4 ModelMatrix,mat4 ViewMatrix,mat4 ProjectionMatrix)
 {
     int EnableLightingId;
     int PaletteTextureId;
     int TextureIndexId;
     int MVPMatrixId;
     vec3 Temp;
-    mat4 ModelMatrix;
     mat4 ModelViewMatrix;
     mat4 MVPMatrix;
-    Shader_t *Shader;
     
     if( !RenderObject ) {
         return;
     }
     
-    Shader = ShaderCache("RenderObjectShader","Shaders/RenderObjectVertexShader.glsl",
-                         "Shaders/RenderObjectFragmentShader.glsl");
-    if( !Shader ) {
+    if( !RenderObjectShader ) {
         return;
     }
     
@@ -840,47 +912,28 @@ void RenderObjectDraw(RenderObject_t *RenderObject,const VRAM_t *VRAM,bool Enabl
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     
-    glm_mat4_identity(ModelMatrix);
     glm_mat4_identity(ModelViewMatrix);
-
-    Temp[0] = -RenderObject->Center[0];
-    Temp[1] = -RenderObject->Center[1];
-    Temp[2] = -RenderObject->Center[2];
-    glm_vec3_rotate(Temp, DEGTORAD(180.f), GLM_XUP);    
-    glm_translate(ModelMatrix,Temp);
-    Temp[0] = 0;
-    Temp[1] = 1;
-    Temp[2] = 0;
-    glm_rotate(ModelMatrix,glm_rad(-90), Temp);
-    glm_scale(ModelMatrix,RenderObject->Scale);
-    
- 
+    glm_mat4_identity(MVPMatrix);
     glm_mat4_mul(ViewMatrix,ModelMatrix,ModelViewMatrix);
     glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
     //Emulate PSX Coordinate system...
+    glm_rotate_x(ModelViewMatrix,glm_rad(180.f), ModelViewMatrix);
     glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
 
-    glUseProgram(Shader->ProgramId);
-    MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-    glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
-    EnableLightingId = glGetUniformLocation(Shader->ProgramId,"EnableLighting");
-    PaletteTextureId = glGetUniformLocation(Shader->ProgramId,"ourPaletteTexture");
-    TextureIndexId = glGetUniformLocation(Shader->ProgramId,"ourIndexTexture");
-    glUniform1i(TextureIndexId, 0);
-    glUniform1i(PaletteTextureId,  1);
-    glUniform1i(EnableLightingId, EnableAmbientLight ? 1 : 0);
+    glUseProgram(RenderObjectShader->Shader->ProgramId);
     glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
     glActiveTexture(GL_TEXTURE0 + 1);
     glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
-
-    glDisable(GL_BLEND);
+    glUniform1i(RenderObjectShader->EnableLightingId, EnableAmbientLight ? 1 : 0);
+    glUniform1i(RenderObjectShader->EnableFogId, EnableFog ? 1 : 0);
+    glUniformMatrix4fv(RenderObjectShader->MVMatrixId,1,false,&ModelViewMatrix[0][0]);
+    glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
     glBindVertexArray(RenderObject->VAO->VAOId[0]);
     glDrawArrays(GL_TRIANGLES, 0, RenderObject->VAO->Count);
     glBindVertexArray(0);
     glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D,0);
-    glDisable(GL_BLEND);
     glBlendColor(1.f, 1.f, 1.f, 1.f);
     glUseProgram(0);
     if( EnableWireFrameMode ) {
@@ -1735,6 +1788,21 @@ bool RenderObjectLoadAnimationData(RenderObject_t *RenderObject,int AnimationDat
     return true;
 }
 
+void RenderObjectAppendToList(RenderObject_t **List,RenderObject_t *Node)
+{
+    RenderObject_t *LastNode;
+    
+    if( !*List ) {
+        *List = Node;
+    } else {
+        LastNode = *List;
+        while( LastNode->Next ) {
+            LastNode = LastNode->Next;
+        }
+        LastNode->Next = Node;
+    }
+}
+
 RenderObject_t *RenderObjectLoad(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t EntryTable,
                                  BSDRenderObjectTable_t RenderObjectTable,FILE *BSDFile,int GameVersion)
 {
@@ -1767,6 +1835,7 @@ RenderObject_t *RenderObjectLoad(BSDRenderObjectElement_t RenderObjectElement,BS
     RenderObject->CurrentAnimationIndex = -1;
     RenderObject->CurrentFrameIndex = -1;
     RenderObject->Next = NULL;
+    RenderObject->Data = &RenderObjectElement;
     RenderObject->IsStatic = RenderObjectElement.AnimationDataOffset == -1;
 
     RenderObject->Scale[0] = (float) (RenderObjectElement.ScaleX  / 16 ) / 4096.f;
@@ -1824,5 +1893,34 @@ Failure:
     RenderObjectFree(RenderObject);
     return NULL;
 }
+/*
+ Loads all the render objects from the table found in the BSD file
+ If 'KeepTableOrder' is set to true then the list will reflect the order of the RenderObjectTable,
+ otherwise the last element of the table will be the first in the resulting list.
+ Returns the linked list containing all the loaded objects (Animated or statics) or NULL if any error occurs.
+ */
+RenderObject_t *RenderObjectLoadAllFromTable(BSDEntryTable_t EntryTable,BSDRenderObjectTable_t RenderObjectTable,FILE *BSDFile,
+                                             int GameVersion,bool KeepTableOrder)
+{
+    RenderObject_t *RenderObjectList;
+    RenderObject_t *RenderObject;
+    int i;
+    
+    RenderObjectList = NULL;
+    for( i = 0; i < RenderObjectTable.NumRenderObject; i++ ) {
+        RenderObject = RenderObjectLoad(RenderObjectTable.RenderObject[i],EntryTable,RenderObjectTable,BSDFile,GameVersion);
 
+        if( !RenderObject ) {
+            DPrintf("RenderObjectLoadAllFromTable:Failed to load RenderObject with Id:%i\n",RenderObjectTable.RenderObject[i].Id);
+            continue;
+        }
+        if( KeepTableOrder ) {
+            RenderObjectAppendToList(&RenderObjectList,RenderObject);
+        } else {
+            RenderObject->Next = RenderObjectList;
+            RenderObjectList = RenderObject;
+        }
+    }
+    return RenderObjectList;
+}
 

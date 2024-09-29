@@ -44,17 +44,6 @@ typedef struct Mission_s {
     MissionLevel_t *Levels;
 } Mission_t;
 
-typedef struct RenderObjectShader_s {
-    int             MVPMatrixId;
-    int             MVMatrixId;
-    int             EnableLightingId;
-    int             EnableFogId;
-    int             FogNearId;
-    int             FogColorId;
-    int             PaletteTextureId;
-    int             TextureIndexId;
-    Shader_t        *Shader;
-} RenderObjectShader_t;
 
 typedef struct LevelManager_s {
     char                    *BasePath;

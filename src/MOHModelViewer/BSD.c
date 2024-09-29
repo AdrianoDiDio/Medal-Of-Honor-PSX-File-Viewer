@@ -146,12 +146,10 @@ RenderObject_t *BSDLoadRenderObjects(const char *FName,int *GameVersion)
     BSD_t *BSD;
     int LocalGameVersion;
     RenderObject_t *RenderObjectList;
-    RenderObject_t *RenderObject;
-    int i;
     
     BSDFile = fopen(FName,"rb");
     if( BSDFile == NULL ) {
-        DPrintf("Failed opening BSD File %s.\n",FName);
+        DPrintf("BSDLoadRenderObjects:Failed opening BSD File %s.\n",FName);
         return NULL;
     }
     BSD = BSDLoad(BSDFile,&LocalGameVersion);
@@ -159,18 +157,15 @@ RenderObject_t *BSDLoadRenderObjects(const char *FName,int *GameVersion)
         fclose(BSDFile);
         return NULL;
     }
-    RenderObjectList = NULL;
+    RenderObjectList = RenderObjectLoadAllFromTable(BSD->EntryTable,BSD->RenderObjectTable,BSDFile,LocalGameVersion,true);
     
-    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        RenderObject = RenderObjectLoad(BSD->RenderObjectTable.RenderObject[i],
-                                                   BSD->EntryTable,BSD->RenderObjectTable,BSDFile,LocalGameVersion);
-
-        if( !RenderObject ) {
-            DPrintf("BSDLoadRenderObjects:Failed to load RenderObject with Id:%i\n",BSD->RenderObjectTable.RenderObject[i].Id);
-            continue;
-        }
-        BSDAppendRenderObjectToList(&RenderObjectList,RenderObject);
+    if( !RenderObjectList ) {
+        DPrintf("BSDLoadRenderObjects: Failed to load render objects...\n"); 
+        BSDFree(BSD);
+        fclose(BSDFile);
+        return NULL;
     }
+    
     if( GameVersion ) {
         *GameVersion = LocalGameVersion;
     }

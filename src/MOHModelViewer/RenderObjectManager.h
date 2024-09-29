@@ -57,10 +57,13 @@ typedef struct RenderObjectManager_s {
     BSDRenderObjectPack_t   *BSDList;
     
     BSDRenderObjectPack_t   *SelectedBSDPack;
-    RenderObject_t       *SelectedRenderObject;
+    RenderObject_t          *SelectedRenderObject;
     
     FileDialog_t            *BSDFileDialog;
     FileDialog_t            *ExportFileDialog;
+    
+    RenderObjectShader_t    *RenderObjectShader;
+
     
     int                     PlayAnimation;
 } RenderObjectManager_t;

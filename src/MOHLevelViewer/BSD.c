@@ -580,7 +580,7 @@ void BSDCreateRenderObjectPointListVAO(BSD_t *BSD)
         RenderObjectData[RenderObjectDataPointer] =   Iterator->Position[0];
         RenderObjectData[RenderObjectDataPointer+1] = Iterator->Position[1];
         RenderObjectData[RenderObjectDataPointer+2] = Iterator->Position[2];
-        RenderObjectElement = BSD->RenderObjectTable.RenderObject[Iterator->RenderObjectIndex];
+        RenderObjectElement = *Iterator->RenderObject->Data;
         if( RenderObjectElement.Type == RENDER_OBJECT_ENEMY ) {
             // BLUE
             RenderObjectData[RenderObjectDataPointer+3] = 0.f;
@@ -638,7 +638,7 @@ void BSDAddNodeToRenderObjecDrawableList(BSD_t *BSD,int IsMultiplayer,int NodeId
 {
     BSDRenderObjectDrawable_t *Object;
     int RenderObjectId;
-    int RenderObjectIndex;
+    RenderObject_t *RenderObject;
 
     if( IsMultiplayer ) {
         RenderObjectId = BSDMPNodeIdToRenderObjectId(NodeId);
@@ -646,27 +646,25 @@ void BSDAddNodeToRenderObjecDrawableList(BSD_t *BSD,int IsMultiplayer,int NodeId
         RenderObjectId = BSDNodeIdToRenderObjectId(NodeId);
     }
 
-    RenderObjectIndex = BSDGetRenderObjectIndexById(&BSD->RenderObjectTable,RenderObjectId);
+    RenderObject = RenderObjectGetByIdFromList(BSD->RenderObjectList,RenderObjectId);
 
-    if( RenderObjectIndex == -1 ) {
-        DPrintf("Failed adding new object...Id %i doesn't match any.\n",RenderObjectId);
+    if( !RenderObject ) {
+        DPrintf("BSDAddNodeToRenderObjecDrawableList:Failed adding new object...Id %i doesn't match any.\n",RenderObjectId);
         return;
     }
-    DPrintf("RenderObjectId %i for node %i Index %i\n",RenderObjectId,NodeId,RenderObjectIndex);
+    DPrintf("RenderObjectId %i for node %i\n",RenderObjectId,NodeId);
 
     Object = malloc(sizeof(BSDRenderObjectDrawable_t));
-    Object->RenderObjectIndex = RenderObjectIndex;
+    Object->RenderObject = RenderObject;
     glm_vec3_copy(Position,Object->Position);
     //PSX GTE Uses 4096 as unit value only when dealing with fixed math operation.
     //When dealing with rotation then 4096 = 360 degrees.
     //We need to map it back to OpenGL standard format [0;360].
     glm_vec3_scale(Rotation, 360.f / 4096.f, Object->Rotation);
-//     Object->Rotation[0] = (Rotation.x  / 4096) * 360.f;
-//     Object->Rotation[1] = (Rotation.y  / 4096) * 360.f;
-//     Object->Rotation[2] = (Rotation.z  / 4096) * 360.f;
-    Object->Scale[0] = (float) (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleX  / 16 ) / 4096.f;
-    Object->Scale[1] = (float) (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleY  / 16 ) / 4096.f;
-    Object->Scale[2] = (float) (BSD->RenderObjectTable.RenderObject[RenderObjectIndex].ScaleZ  / 16 ) / 4096.f;
+
+//     DPrintf("RenderObject->Data->ScaleX:%i\n",RenderObject->Data->ScaleX);
+//     assert(1!=1);
+    glm_vec3_copy(RenderObject->Scale,Object->Scale);
     
     Object->Next = BSD->RenderObjectDrawableList;
     BSD->RenderObjectDrawableList = Object;
@@ -1776,6 +1774,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *Rend
     mat4 ModelViewMatrix;
     mat4 ModelMatrix;
     vec3 PSpawn;
+    vec3 Temp;
 //     RenderObjectShader_t *RenderObjectShader;
     int MVPMatrixId;
     int i;
@@ -1816,77 +1815,27 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *Rend
     
     
     if( LevelDrawBSDRenderObjects->IValue ) {
-        if( RenderObjectShader ) {
-            glUseProgram(RenderObjectShader->Shader->ProgramId);
-            glActiveTexture(GL_TEXTURE0 + 0);
-            glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
-            glActiveTexture(GL_TEXTURE0 + 1);
-            glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
-            glUniform1i(RenderObjectShader->EnableLightingId, LevelEnableAmbientLight->IValue);
-            glUniform1i(RenderObjectShader->EnableFogId, LevelEnableFog->IValue);
-            for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; 
-                RenderObjectIterator = RenderObjectIterator->Next ) {
-                glm_mat4_identity(ModelViewMatrix);
-                BSDGetObjectMatrix(RenderObjectIterator,ModelMatrix);
-                glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
-                glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);            
-                glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
-                glm_rotate_x(ModelViewMatrix,glm_rad(180.f), MVMatrix);
-                glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
-                glUniformMatrix4fv(RenderObjectShader->MVMatrixId,1,false,&MVMatrix[0][0]);
-//                 for( VAOIterator = BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].VAO; VAOIterator; 
-//                     VAOIterator = VAOIterator->Next ) {
-//                     glBindVertexArray(VAOIterator->VAOId[0]);
-//                     glDrawArrays(GL_TRIANGLES, 0, VAOIterator->Count);
-//                     glBindVertexArray(0);
-//                 }
-            }
-            glActiveTexture(GL_TEXTURE0 + 0);
-            glBindTexture(GL_TEXTURE_2D,0);
-            glUseProgram(0);
+        for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; 
+            RenderObjectIterator = RenderObjectIterator->Next ) {
+            glm_mat4_identity(ModelMatrix);
+            BSDGetObjectMatrix(RenderObjectIterator,ModelMatrix);
+            RenderObjectDraw(RenderObjectIterator->RenderObject,VRAM,RenderObjectShader,LevelEnableAmbientLight->IValue,
+                             LevelEnableWireFrameMode->IValue,false,ModelMatrix,Camera->ViewMatrix,ProjectionMatrix);
         }
     }
     
     if( LevelDrawBSDShowcase->IValue ) {
-        if( RenderObjectShader ) {
-            glUseProgram(RenderObjectShader->Shader->ProgramId);
-            glUniform1i(RenderObjectShader->EnableLightingId, LevelEnableAmbientLight->IValue);
-            glUniform1i(RenderObjectShader->EnableFogId, LevelEnableFog->IValue);
-            glActiveTexture(GL_TEXTURE0 + 0);
-            glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
-            glActiveTexture(GL_TEXTURE0 + 1);
-            glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
-            BSDGetPlayerSpawn(BSD,0,PSpawn,NULL);
-        
-            for( RenderObjectIterator2 = BSD->RenderObjectList; RenderObjectIterator2; RenderObjectIterator2 = RenderObjectIterator2->Next ) {
-                    RenderObjectDraw(RenderObjectIterator2,VRAM,LevelEnableAmbientLight->IValue,LevelEnableWireFrameMode->IValue,
-                     Camera->ViewMatrix,ProjectionMatrix);
-            }
-//             for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-//                 vec3 temp;
-//                 glm_mat4_identity(ModelViewMatrix);
-//                 glm_mat4_identity(ModelMatrix);
-//                 temp[0] = ((PSpawn[0] - (i * 200.f)));
-//                 temp[1] = (-PSpawn[1]);
-//                 temp[2] = (PSpawn[2]);
-//                 glm_translate(ModelMatrix,temp);
-//                 glm_mat4_mul(Camera->ViewMatrix,ModelMatrix,ModelViewMatrix);
-//                 glm_mat4_mul(ProjectionMatrix,ModelViewMatrix,MVPMatrix);
-//                 
-//                 //Emulate PSX Coordinate system...
-//                 glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
-//                 glm_rotate_x(ModelViewMatrix,glm_rad(180.f), MVMatrix);
-//                 glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
-//                 glUniformMatrix4fv(RenderObjectShader->MVMatrixId,1,false,&MVMatrix[0][0]);
-//                 for( VAOIterator = BSD->RenderObjectList[i].VAO; VAOIterator; VAOIterator = VAOIterator->Next ) {
-//                     glBindVertexArray(VAOIterator->VAOId[0]);
-//                     glDrawArrays(GL_TRIANGLES, 0, VAOIterator->Count);
-//                     glBindVertexArray(0);
-//                 }
-//             }
-//             glActiveTexture(GL_TEXTURE0 + 0);
-//             glBindTexture(GL_TEXTURE_2D,0);
-//             glUseProgram(0);
+        BSDGetPlayerSpawn(BSD,0,PSpawn,NULL);
+        i = 0;
+        for( RenderObjectIterator2 = BSD->RenderObjectList; RenderObjectIterator2; RenderObjectIterator2 = RenderObjectIterator2->Next ) {
+            glm_mat4_identity(ModelMatrix);
+            Temp[0] = ((PSpawn[0] - (i * 200.f)));
+            Temp[1] = (-PSpawn[1]);
+            Temp[2] = (PSpawn[2]);
+            glm_translate(ModelMatrix,Temp);
+            RenderObjectDraw(RenderObjectIterator2,VRAM,RenderObjectShader,LevelEnableAmbientLight->IValue,
+                                     LevelEnableWireFrameMode->IValue,false,ModelMatrix,Camera->ViewMatrix,ProjectionMatrix);
+            i++;
         }
     }
     BSDDrawCollisionVolumes(BSD,Camera,ProjectionMatrix);
@@ -2202,31 +2151,14 @@ int BSDLoadRenderObjectFaceData(BSDRenderObject_t *RenderObject,BSD_t *BSD,int R
     }
     return 1;
 }
-int BSDParseRenderObjectData(BSD_t *BSD,FILE *BSDFile,int FirstRenderObjectFilePosition,int GameEngine)
+bool BSDParseRenderObjectData(BSD_t *BSD,FILE *BSDFile,int GameEngine)
 {
-    RenderObject_t *RenderObject;
-    int i;
-//     BSD->RenderObjectList = malloc(BSD->RenderObjectTable.NumRenderObject * sizeof(RenderObject_t));
-//     if( !BSD->RenderObjectList ) {
-//         DPrintf("BSDParseRenderObjectData:Failed to allocate memory for RenderObjectList\n");
-//         return 0;
-//     }
-//     memset(BSD->RenderObjectList,0,BSD->RenderObjectTable.NumRenderObject * sizeof(BSDRenderObject_t));
-    
-    BSD->RenderObjectList = NULL;
-    for( i = 0; i < BSD->RenderObjectTable.NumRenderObject; i++ ) {
-        RenderObject = RenderObjectLoad(BSD->RenderObjectTable.RenderObject[i],
-                                        BSD->EntryTable,BSD->RenderObjectTable,BSDFile,GameEngine);
-
-        if( !RenderObject ) {
-            DPrintf("BSDLoadRenderObjects:Failed to load RenderObject with Id:%i\n",BSD->RenderObjectTable.RenderObject[i].Id);
-            continue;
-        }
-        
-        RenderObject->Next = BSD->RenderObjectList;
-        BSD->RenderObjectList = RenderObject;
+    BSD->RenderObjectList = RenderObjectLoadAllFromTable(BSD->EntryTable,BSD->RenderObjectTable,BSDFile,GameEngine,false);
+    if( !BSD->RenderObjectList ) {
+        DPrintf("BSDParseRenderObjectData: Failed to load render objects...\n"); 
+        return false;
     }
-    return 1;
+    return true;
 }
 /*
     NOTE(Adriano): 
@@ -2422,10 +2354,8 @@ int BSDLoad(BSD_t *BSD,int GameEngine,int IsMultiplayer,FILE *BSDFile)
     if( !BSDReadRenderObjectTable(BSDFile,GameEngine, &BSD->RenderObjectTable) ) {
         return 0;
     }
-    
-    //NOTE(Adriano): The first render object can be found at the starting table block offset plus 4 (the size of the
-    //int that is immediately found at that offset.
-    BSDParseRenderObjectData(BSD,BSDFile,BSDGetRealOffset(BSDGetRenderObjectTableOffset(GameEngine) + 4),GameEngine);
+
+    BSDParseRenderObjectData(BSD,BSDFile,GameEngine);
 
     if( !BSDReadNodeInfoBlock(BSDFile,BSD->EntryTable.NodeTableOffset,&BSD->NodeData) ) {
         return 0;

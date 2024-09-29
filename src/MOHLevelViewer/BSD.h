@@ -39,11 +39,11 @@ typedef struct BSDRenderObject_s {
 } BSDRenderObject_t;
 
 typedef struct BSDRenderObjectDrawable_s {
-    int     RenderObjectIndex;
-    vec3    Position;
-    vec3    Rotation;
-    vec3    Scale;
-    struct BSDRenderObjectDrawable_s *Next;
+    RenderObject_t                      *RenderObject;
+    vec3                                Position;
+    vec3                                Rotation;
+    vec3                                Scale;
+    struct BSDRenderObjectDrawable_s    *Next;
 } BSDRenderObjectDrawable_t;
 
 

@@ -84,15 +84,40 @@ typedef struct RenderObject_s {
     struct RenderObject_s *Next;
 } RenderObject_t;
 
+
+typedef struct RenderObjectShader_s {
+    int             MVPMatrixId;
+    int             MVMatrixId;
+    int             EnableLightingId;
+    int             EnableFogId;
+    int             FogNearId;
+    int             FogColorId;
+    int             PaletteTextureId;
+    int             TextureIndexId;
+    Shader_t        *Shader;
+} RenderObjectShader_t;
+
+RenderObject_t              *RenderObjectLoadAllFromTable(BSDEntryTable_t EntryTable,BSDRenderObjectTable_t RenderObjectTable,FILE *BSDFile,
+                                             int GameVersion,bool KeepTableOrder);
+
 RenderObject_t              *RenderObjectLoad(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t EntryTable,
                                               BSDRenderObjectTable_t RenderObjectTable,FILE *BSDFile,int GameVersion);
-void                        RenderObjectDraw(RenderObject_t *RenderObject,const VRAM_t *VRAM,bool EnableAmbientLight,bool EnableWireFrameMode,
-                                             mat4 ViewMatrix,mat4 ProjectionMatrix);
+void                        RenderObjectDraw(RenderObject_t *RenderObject,const VRAM_t *VRAM,const RenderObjectShader_t *RenderObjectShader,
+                                             bool EnableAmbientLight,bool EnableWireFrameMode,bool EnableFog,mat4 ModelMatrix,mat4 ViewMatrix,
+                                             mat4 ProjectionMatrix);
+
 
 void                        RenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame);
 bool                        RenderObjectSetAnimationPose(RenderObject_t *RenderObject,int AnimationIndex,int FrameIndex,int Override);
 
 BSDAnimationFrame_t         *RenderObjectGetCurrentFrame(const RenderObject_t *RenderObject);
+RenderObject_t              *GetRenderObjectByIdFromList(const RenderObject_t *RenderObjectList,unsigned int RenderObjectId);
+
+
+RenderObjectShader_t        *RenderObjectInitShader();
+void                        RenderObjectUpdateShader(RenderObjectShader_t *RenderObjectShader, short FogNear, Color3b_t ClearColor);
+void                        RenderObjectFreeShader(RenderObjectShader_t *RenderObjectShader);
+
 
 void                        RenderObjectGenerateVAO(RenderObject_t *RenderObject);
 
@@ -103,6 +128,8 @@ void                        RenderObjectExportCurrentAnimationToPly(RenderObject
 
 void                        RenderObjectFreeList(RenderObject_t *RenderObjectList);
 void                        RenderObjectFree(RenderObject_t *RenderObject);
+
+RenderObject_t              *RenderObjectGetByIdFromList(const RenderObject_t *RenderObjectList,int RenderObjectId);
 
 const char                  *RenderObjectGetWeaponNameFromId(int RenderObjectId);
 const char                  *RenderObjectGetStringFromType(RenderObjectType_t RenderObjectType);
