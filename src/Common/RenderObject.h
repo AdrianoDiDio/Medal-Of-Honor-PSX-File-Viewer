@@ -102,7 +102,7 @@ typedef struct RenderObjectShader_s {
 RenderObject_t              *RenderObjectLoadAllFromTable(BSDEntryTable_t EntryTable,BSDRenderObjectTable_t RenderObjectTable,FILE *BSDFile,
                                              int GameVersion,bool KeepTableOrder);
 
-RenderObject_t              *RenderObjectLoad(BSDRenderObjectElement_t RenderObjectElement,BSDEntryTable_t EntryTable,
+RenderObject_t              *RenderObjectLoad(BSDRenderObjectElement_t *RenderObjectElement,BSDEntryTable_t EntryTable,
                                               BSDRenderObjectTable_t RenderObjectTable,FILE *BSDFile,int GameVersion);
 void                        RenderObjectBeginDraw(const VRAM_t *VRAM,const RenderObjectShader_t *RenderObjectShader,
                                                   bool EnableAmbientLight,bool EnableWireFrameMode,bool EnableFog);
@@ -125,6 +125,9 @@ void                        RenderObjectFreeShader(RenderObjectShader_t *RenderO
 
 
 void                        RenderObjectGenerateVAO(RenderObject_t *RenderObject);
+
+void                        RenderObjectExportStaticFaceDataToObjFile(RenderObject_t *RenderObject,mat4 ModelMatrix,VRAM_t *VRAM,FILE *OutFile);
+void                        RenderObjectExportStaticFaceDataToPlyFile(RenderObject_t *RenderObject,mat4 ModelMatrix,VRAM_t *VRAM,FILE *OutFile);
 
 void                        RenderObjectExportCurrentPoseToPly(RenderObject_t *RenderObject,VRAM_t *VRAM,FILE *OutFile);
 void                        RenderObjectExportCurrentAnimationToPly(RenderObject_t *RenderObject,VRAM_t *VRAM,const char *Directory,

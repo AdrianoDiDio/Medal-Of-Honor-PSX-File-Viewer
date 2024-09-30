@@ -33,7 +33,7 @@ int BSDGetRenderObjectTableOffset(int GameEngine)
     return GameEngine == MOH_GAME_STANDARD ? BSD_RENDER_OBJECT_STARTING_OFFSET : BSD_MOH_UNDERGROUND_RENDER_OBJECT_STARTING_OFFSET;
 }
 
-BSDRenderObjectElement_t *BSDGetRenderObjectById(const BSDRenderObjectTable_t *RenderObjectTable,unsigned int RenderObjectId)
+BSDRenderObjectElement_t *BSDGetRenderObjectById(const BSDRenderObjectTable_t *RenderObjectTable,int RenderObjectId)
 {
     int i;
     
@@ -49,7 +49,7 @@ BSDRenderObjectElement_t *BSDGetRenderObjectById(const BSDRenderObjectTable_t *R
     return NULL;
 }
 
-int BSDGetRenderObjectIndexById(const BSDRenderObjectTable_t *RenderObjectTable,unsigned int RenderObjectId)
+int BSDGetRenderObjectIndexById(const BSDRenderObjectTable_t *RenderObjectTable,int RenderObjectId)
 {
     int i;
     

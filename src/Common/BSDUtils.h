@@ -373,8 +373,8 @@ bool                        BSDReadRenderObjectTable(FILE *BSDFile,int GameEngin
 bool                        BSDReadNodeInfoBlock(FILE *BSDFile,int NodeInfoOffset,BSDNodeInfo_t *NodeInfo);
 bool                        BSDReadPropertySetFileBlock(FILE *BSDFile, BSDPropertySetFile_t *PropertySetFile);
 
-BSDRenderObjectElement_t    *BSDGetRenderObjectById(const BSDRenderObjectTable_t *RenderObjectTable,unsigned int RenderObjectId);
-int                         BSDGetRenderObjectIndexById(const BSDRenderObjectTable_t *RenderObjectTable,unsigned int RenderObjectId);
+BSDRenderObjectElement_t    *BSDGetRenderObjectById(const BSDRenderObjectTable_t *RenderObjectTable,int RenderObjectId);
+int                         BSDGetRenderObjectIndexById(const BSDRenderObjectTable_t *RenderObjectTable,int RenderObjectId);
 
 int                         BSDGetRenderObjectTableOffset(int GameEngine);
 int                         BSDGetRealOffset(int RelativeOffset);

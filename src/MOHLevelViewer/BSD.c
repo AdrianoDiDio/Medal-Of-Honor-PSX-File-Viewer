@@ -53,78 +53,74 @@ void BSDDumpProperty(BSD_t *BSD,int PropertyIndex)
     }
 }
 
-void BSDDumpFaceDataToObjFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,VRAM_t *VRAM,FILE *OutFile)
+void BSDGetObjectMatrix(BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 Result)
 {
-    char Buffer[256];
-    RenderObject_t *RenderObject;
-    vec3 VertPos;
-    vec3 OutVector;
-    BSDColor_t Color;
-    float TextureWidth;
-    float TextureHeight;
-    int i;
+    vec3 temp;
+    glm_mat4_identity(Result);
     
-    RenderObject = RenderObjectDrawable->RenderObject;
-    TextureWidth = VRAM->Page.Width;
-    TextureHeight = VRAM->Page.Height;
+    glm_vec3_copy(RenderObjectDrawable->Position,temp);
+    glm_vec3_rotate(temp, DEGTORAD(180.f), GLM_XUP);    
+    glm_translate(Result,temp);
     
-    for( i = RenderObject->Data->NumVertex - 1; i >= 0; i-- ) {
-        VertPos[0] = RenderObject->VertexList[i].x;
-        VertPos[1] = RenderObject->VertexList[i].y;
-        VertPos[2] = RenderObject->VertexList[i].z;
-        Color = RenderObject->ColorList[i];
-        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"v %f %f %f %f %f %f\n",
-                (OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f,
-                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,
-                (OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
-                Color.r / 255.f,Color.g / 255.f,Color.b / 255.f
+    temp[0] = 0;
+    temp[1] = 1;
+    temp[2] = 0;
+    glm_rotate(Result,glm_rad(-RenderObjectDrawable->Rotation[1]), temp);
+    temp[0] = 1;
+    temp[1] = 0;
+    temp[2] = 0;
+    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation[0]), temp);
+    temp[0] = 0;
+    temp[1] = 0;
+    temp[2] = 1;
+    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation[2]), temp);
+    glm_scale(Result,RenderObjectDrawable->Scale);
+}
 
-        );
-        fwrite(Buffer,strlen(Buffer),1,OutFile); 
-    }
-    for( i = RenderObject->NumFaces - 1; i >= 0 ; i-- ) {
-        int VRAMPage = RenderObject->StaticFaceList[i].TexInfo & 0x1F;
-        int ColorMode = (RenderObject->StaticFaceList[i].TexInfo & 0xC0) >> 7;
-        float U0 = (((float)RenderObject->StaticFaceList[i].UV0.u + 
-            VRAMGetTexturePageX(VRAMPage))/TextureWidth);
-        float V0 = 1.f - (((float)RenderObject->StaticFaceList[i].UV0.v +
-                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        float U1 = (((float)RenderObject->StaticFaceList[i].UV1.u + 
-            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-        float V1 = 1.f - (((float)RenderObject->StaticFaceList[i].UV1.v + 
-                    VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
-        float U2 = (((float)RenderObject->StaticFaceList[i].UV2.u + 
-            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-        float V2 = 1.f - (((float)RenderObject->StaticFaceList[i].UV2.v + 
-                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
-        fwrite(Buffer,strlen(Buffer),1,OutFile);
-    }
-    for( i = 0; i < RenderObject->NumFaces; i++ ) {
-        unsigned short Vert0;
-        unsigned short Vert1;
-        unsigned short Vert2;
-        int BaseFaceUV;
-        Vert0 = RenderObject->StaticFaceList[i].Vert0;
-        Vert1 = RenderObject->StaticFaceList[i].Vert1;
-        Vert2 = RenderObject->StaticFaceList[i].Vert2;
+void BSDGetObjectExportMatrix(BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 Result)
+{
+    vec3 RotationAxis;
+    vec3 Temp;
+    mat4 RotationMatrix;
+    mat4 ScaleMatrix;
+    mat4 TranslationMatrix;
+    mat4 RotScale;
+    
+    glm_mat4_identity(Result);
+    glm_mat4_identity(TranslationMatrix);
+    glm_vec3_copy(RenderObjectDrawable->Position,Temp);
+    glm_vec3_rotate(Temp, DEGTORAD(180.f), GLM_XUP);    
+    glm_translate(TranslationMatrix,Temp);
+    
+    glm_mat4_identity(RotationMatrix);
+        
+    RotationAxis[0] = 1;
+    RotationAxis[1] = 0;
+    RotationAxis[2] = 0;
+    glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);
+    RotationAxis[0] = 0;
+    RotationAxis[1] = 1;
+    RotationAxis[2] = 0;
+    glm_rotate(RotationMatrix,glm_rad(RenderObjectDrawable->Rotation[1]), RotationAxis);
+    RotationAxis[0] = 1;
+    RotationAxis[1] = 0;
+    RotationAxis[2] = 0;
+    glm_rotate(RotationMatrix,glm_rad(RenderObjectDrawable->Rotation[0]), RotationAxis);
+    RotationAxis[0] = 0;
+    RotationAxis[1] = 0;
+    RotationAxis[2] = 1;
+    glm_rotate(RotationMatrix,glm_rad(RenderObjectDrawable->Rotation[2]), RotationAxis);
+    
+    glm_scale_make(ScaleMatrix,RenderObjectDrawable->Scale);
+    glm_mat4_mul(RotationMatrix,ScaleMatrix,RotScale);
+    glm_mat4_mul(TranslationMatrix,RotScale,Result);
 
-        sprintf(Buffer,"usemtl vram\n");
-        fwrite(Buffer,strlen(Buffer),1,OutFile);
-        BaseFaceUV = i * 3;
-        sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),-(BaseFaceUV+3),-(Vert1+1),-(BaseFaceUV+2),-(Vert2+1),-(BaseFaceUV+1));
-        fwrite(Buffer,strlen(Buffer),1,OutFile);
-    }
 }
 
 void BSDDumpDataToObjFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
 {
     char Buffer[256];
     BSDRenderObjectDrawable_t *RenderObjectIterator;
-    vec3 RotationAxis;
-    mat4 RotationMatrix;
-    mat4 ScaleMatrix;
     mat4 ModelMatrix;
 
     
@@ -140,100 +136,21 @@ void BSDDumpDataToObjFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
     }
 
     for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
+        if( !RenderObjectIterator->RenderObject->IsStatic ) {
+            continue;
+        }
         sprintf(Buffer,"o BSD%i\n",RenderObjectIterator->RenderObject->Id);
         fwrite(Buffer,strlen(Buffer),1,OutFile);
-        glm_mat4_identity(RotationMatrix);
         
-        RotationAxis[0] = 1;
-        RotationAxis[1] = 0;
-        RotationAxis[2] = 0;
-        glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);
-        RotationAxis[0] = 0;
-        RotationAxis[1] = 1;
-        RotationAxis[2] = 0;
-        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[1]), RotationAxis);
-        RotationAxis[0] = 1;
-        RotationAxis[1] = 0;
-        RotationAxis[2] = 0;
-        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[0]), RotationAxis);
-        RotationAxis[0] = 0;
-        RotationAxis[1] = 0;
-        RotationAxis[2] = 1;
-        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[2]), RotationAxis);
         
-        glm_scale_make(ScaleMatrix,RenderObjectIterator->Scale);
-
-        glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
-
-        BSDDumpFaceDataToObjFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
+        glm_mat4_identity(ModelMatrix);
+        BSDGetObjectMatrix(RenderObjectIterator,ModelMatrix);
+        RenderObjectExportStaticFaceDataToObjFile(RenderObjectIterator->RenderObject,ModelMatrix,VRAM,OutFile);
     }
 
 }
 
-void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,VRAM_t *VRAM,FILE *OutFile)
-{
-    char Buffer[256];
-    vec3 VertPos;
-    vec3 OutVector;
-    BSDColor_t Color;
-    float TextureWidth;
-    float TextureHeight;
-    int i;
-    RenderObject_t *RenderObject;
-        
-    TextureWidth = VRAM->Page.Width;
-    TextureHeight = VRAM->Page.Height;
-    
-    RenderObject = RenderObjectDrawable->RenderObject;
-    
-    for( i = 0 ; i < RenderObject->NumFaces; i++ ) {
-        int VRAMPage = RenderObject->StaticFaceList[i].TexInfo;
-        int ColorMode = (RenderObject->StaticFaceList[i].TexInfo & 0xC0) >> 7;
-        float U0 = (((float)RenderObject->StaticFaceList[i].UV0.u + 
-            VRAMGetTexturePageX(VRAMPage))/TextureWidth);
-        float V0 = 1.f - (((float)RenderObject->StaticFaceList[i].UV0.v +
-                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        float U1 = (((float)RenderObject->StaticFaceList[i].UV1.u + 
-            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-        float V1 = 1.f - (((float)RenderObject->StaticFaceList[i].UV1.v + 
-                    VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
-        float U2 = (((float)RenderObject->StaticFaceList[i].UV2.u + 
-            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-        float V2 = 1.f - (((float)RenderObject->StaticFaceList[i].UV2.v + 
-                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-        int Vert0 = RenderObject->StaticFaceList[i].Vert0;
-        int Vert1 = RenderObject->StaticFaceList[i].Vert1;
-        int Vert2 = RenderObject->StaticFaceList[i].Vert2;
-        
-        VertPos[0] = RenderObject->VertexList[Vert0].x;
-        VertPos[1] = RenderObject->VertexList[Vert0].y;
-        VertPos[2] = RenderObject->VertexList[Vert0].z;
-        Color = RenderObject->ColorList[Vert0];
-        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
-                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f, (OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
-                Color.r / 255.f,Color.g / 255.f,Color.b / 255.f,U0,V0);
-        fwrite(Buffer,strlen(Buffer),1,OutFile);
-        Color = RenderObject->ColorList[Vert1];
-        VertPos[0] = RenderObject->VertexList[Vert1].x;
-        VertPos[1] = RenderObject->VertexList[Vert1].y;
-        VertPos[2] = RenderObject->VertexList[Vert1].z;
-        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
-                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
-                Color.r / 255.f,Color.g / 255.f,Color.b / 255.f,U1,V1);
-        fwrite(Buffer,strlen(Buffer),1,OutFile);
-        Color = RenderObject->ColorList[Vert2];
-        VertPos[0] = RenderObject->VertexList[Vert2].x;
-        VertPos[1] = RenderObject->VertexList[Vert2].y;
-        VertPos[2] = RenderObject->VertexList[Vert2].z;
-        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
-                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
-                Color.r / 255.f,Color.g / 255.f,Color.b / 255.f,U2,V2);
-        fwrite(Buffer,strlen(Buffer),1,OutFile);
-    }
-}
+
 void BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
 {
     char Buffer[256];
@@ -258,6 +175,9 @@ void BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
     fwrite(Buffer,strlen(Buffer),1,OutFile);
     FaceCount = 0;
     for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
+        if( !RenderObjectIterator->RenderObject->IsStatic ) {
+            continue;
+        }
         FaceCount += RenderObjectIterator->RenderObject->NumFaces;
     }
     
@@ -267,30 +187,12 @@ void BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
     sprintf(Buffer,"element face %i\nproperty list uchar int vertex_indices\nend_header\n",FaceCount);
     fwrite(Buffer,strlen(Buffer),1,OutFile);
     for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
-        glm_mat4_identity(RotationMatrix);
-        
-        RotationAxis[0] = 1;
-        RotationAxis[1] = 0;
-        RotationAxis[2] = 0;
-        glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);
-        RotationAxis[0] = 0;
-        RotationAxis[1] = 1;
-        RotationAxis[2] = 0;
-        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[1]), RotationAxis);
-        RotationAxis[0] = 1;
-        RotationAxis[1] = 0;
-        RotationAxis[2] = 0;
-        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[0]), RotationAxis);
-        RotationAxis[0] = 0;
-        RotationAxis[1] = 0;
-        RotationAxis[2] = 1;
-        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[2]), RotationAxis);
-        
-        glm_scale_make(ScaleMatrix,RenderObjectIterator->Scale);
-
-        glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
-        
-        BSDDumpFaceDataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
+        if( !RenderObjectIterator->RenderObject->IsStatic ) {
+            continue;
+        }
+        glm_mat4_identity(ModelMatrix);
+        BSDGetObjectExportMatrix(RenderObjectIterator,ModelMatrix);
+        RenderObjectExportStaticFaceDataToPlyFile(RenderObjectIterator->RenderObject,ModelMatrix,VRAM,OutFile);
     }
     VertexOffset = 0;
     for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
@@ -1452,30 +1354,7 @@ int BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD,Camera_t *Camera)
     }
     return -1;
 }
-void BSDGetObjectMatrix(BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 Result)
-{
-    vec3 temp;
-    glm_mat4_identity(Result);
-    
-    glm_vec3_copy(RenderObjectDrawable->Position,temp);
-    glm_vec3_rotate(temp, DEGTORAD(180.f), GLM_XUP);    
-    glm_translate(Result,temp);
-    
-    glm_vec3_copy(RenderObjectDrawable->Rotation,temp);
-    temp[0] = 0;
-    temp[1] = 1;
-    temp[2] = 0;
-    glm_rotate(Result,glm_rad(-RenderObjectDrawable->Rotation[1]), temp);
-    temp[0] = 1;
-    temp[1] = 0;
-    temp[2] = 0;
-    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation[0]), temp);
-    temp[0] = 0;
-    temp[1] = 0;
-    temp[2] = 1;
-    glm_rotate(Result,glm_rad(RenderObjectDrawable->Rotation[2]), temp);
-    glm_scale(Result,RenderObjectDrawable->Scale);
-}
+
 void BSDDrawSphereCollisionVolume(BSDNode_t *Node,mat4 ViewMatrix,mat4 ProjectionMatrix,int MVPMatrixId,int ColorId,int IndexCount)
 {
     mat4 ModelMatrix;
