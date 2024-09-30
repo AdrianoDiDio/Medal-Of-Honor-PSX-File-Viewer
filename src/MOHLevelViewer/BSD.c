@@ -55,253 +55,254 @@ void BSDDumpProperty(BSD_t *BSD,int PropertyIndex)
 
 void BSDDumpFaceDataToObjFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,VRAM_t *VRAM,FILE *OutFile)
 {
-//     char Buffer[256];
-//     BSDRenderObjectElement_t *RenderObjectElement;
-//     vec3 VertPos;
-//     vec3 OutVector;
-//     Color1i_t Color;
-//     float TextureWidth;
-//     float TextureHeight;
-//     int i;
-//     
-//     RenderObjectElement = &BSD->RenderObjectTable.RenderObject[RenderObjectDrawable->RenderObjectIndex];
-//     TextureWidth = VRAM->Page.Width;
-//     TextureHeight = VRAM->Page.Height;
-//     
-//     for( i = RenderObjectElement->NumVertex - 1; i >= 0; i-- ) {
-//         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].x;
-//         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].y;
-//         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Vertex[i].z;
-//         Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Color[i];
-//         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-//         sprintf(Buffer,"v %f %f %f %f %f %f\n",
-//                 (OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f,
-//                 (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,
-//                 (OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
-//                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f
-// 
-//         );
-//         fwrite(Buffer,strlen(Buffer),1,OutFile); 
-//     }
-//     for( i = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].NumFaces - 1; i >= 0 ; i-- ) {
-//         int VRAMPage = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].TexInfo & 0x1F;
-//         int ColorMode = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].TexInfo & 0xC0) >> 7;
-//         float U0 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV0.u + 
-//             VRAMGetTexturePageX(VRAMPage))/TextureWidth);
-//         float V0 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV0.v +
-//                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-//         float U1 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV1.u + 
-//             VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-//         float V1 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV1.v + 
-//                     VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
-//         float U2 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV2.u + 
-//             VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-//         float V2 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].UV2.v + 
-//                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-//         sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
-//         fwrite(Buffer,strlen(Buffer),1,OutFile);
-//     }
-//     for( i = 0; i < BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].NumFaces; i++ ) {
-//         unsigned short Vert0;
-//         unsigned short Vert1;
-//         unsigned short Vert2;
-//         int BaseFaceUV;
-//         Vert0 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].Vert0;
-//         Vert1 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].Vert1;
-//         Vert2 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].Face[i].Vert2;
-// 
-//         sprintf(Buffer,"usemtl vram\n");
-//         fwrite(Buffer,strlen(Buffer),1,OutFile);
-//         BaseFaceUV = i * 3;
-//         sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),-(BaseFaceUV+3),-(Vert1+1),-(BaseFaceUV+2),-(Vert2+1),-(BaseFaceUV+1));
-//         fwrite(Buffer,strlen(Buffer),1,OutFile);
-//     }
+    char Buffer[256];
+    RenderObject_t *RenderObject;
+    vec3 VertPos;
+    vec3 OutVector;
+    BSDColor_t Color;
+    float TextureWidth;
+    float TextureHeight;
+    int i;
+    
+    RenderObject = RenderObjectDrawable->RenderObject;
+    TextureWidth = VRAM->Page.Width;
+    TextureHeight = VRAM->Page.Height;
+    
+    for( i = RenderObject->Data->NumVertex - 1; i >= 0; i-- ) {
+        VertPos[0] = RenderObject->VertexList[i].x;
+        VertPos[1] = RenderObject->VertexList[i].y;
+        VertPos[2] = RenderObject->VertexList[i].z;
+        Color = RenderObject->ColorList[i];
+        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
+        sprintf(Buffer,"v %f %f %f %f %f %f\n",
+                (OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f,
+                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,
+                (OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
+                Color.r / 255.f,Color.g / 255.f,Color.b / 255.f
+
+        );
+        fwrite(Buffer,strlen(Buffer),1,OutFile); 
+    }
+    for( i = RenderObject->NumFaces - 1; i >= 0 ; i-- ) {
+        int VRAMPage = RenderObject->StaticFaceList[i].TexInfo & 0x1F;
+        int ColorMode = (RenderObject->StaticFaceList[i].TexInfo & 0xC0) >> 7;
+        float U0 = (((float)RenderObject->StaticFaceList[i].UV0.u + 
+            VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+        float V0 = 1.f - (((float)RenderObject->StaticFaceList[i].UV0.v +
+                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+        float U1 = (((float)RenderObject->StaticFaceList[i].UV1.u + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        float V1 = 1.f - (((float)RenderObject->StaticFaceList[i].UV1.v + 
+                    VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
+        float U2 = (((float)RenderObject->StaticFaceList[i].UV2.u + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        float V2 = 1.f - (((float)RenderObject->StaticFaceList[i].UV2.v + 
+                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+        sprintf(Buffer,"vt %f %f\nvt %f %f\nvt %f %f\n",U0,V0,U1,V1,U2,V2);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+    }
+    for( i = 0; i < RenderObject->NumFaces; i++ ) {
+        unsigned short Vert0;
+        unsigned short Vert1;
+        unsigned short Vert2;
+        int BaseFaceUV;
+        Vert0 = RenderObject->StaticFaceList[i].Vert0;
+        Vert1 = RenderObject->StaticFaceList[i].Vert1;
+        Vert2 = RenderObject->StaticFaceList[i].Vert2;
+
+        sprintf(Buffer,"usemtl vram\n");
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+        BaseFaceUV = i * 3;
+        sprintf(Buffer,"f %i/%i %i/%i %i/%i\n",-(Vert0+1),-(BaseFaceUV+3),-(Vert1+1),-(BaseFaceUV+2),-(Vert2+1),-(BaseFaceUV+1));
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+    }
 }
 
 void BSDDumpDataToObjFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
 {
-//     char Buffer[256];
-//     BSDRenderObjectDrawable_t *RenderObjectIterator;
-//     BSDRenderObjectElement_t *RenderObjectElement;
-//     vec3 RotationAxis;
-//     mat4 RotationMatrix;
-//     mat4 ScaleMatrix;
-//     mat4 ModelMatrix;
-// 
-//     
-//     if( !BSD || !OutFile ) {
-//         bool InvalidFile = (OutFile == NULL ? true : false);
-//         DPrintf("BSDDumpDataToFile: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
-//         return;
-//     }
-//     
-//     if( !VRAM ) {
-//         DPrintf("BSDDumpDataToObjFile:Invalid VRAM data\n");
-//         return;
-//     }
-// 
-//     for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
-//         RenderObjectElement = &BSD->RenderObjectTable.RenderObject[RenderObjectIterator->RenderObjectIndex];
-//         sprintf(Buffer,"o BSD%i\n",RenderObjectElement->Id);
-//         fwrite(Buffer,strlen(Buffer),1,OutFile);
-//         glm_mat4_identity(RotationMatrix);
-//         
-//         RotationAxis[0] = 1;
-//         RotationAxis[1] = 0;
-//         RotationAxis[2] = 0;
-//         glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);
-//         RotationAxis[0] = 0;
-//         RotationAxis[1] = 1;
-//         RotationAxis[2] = 0;
-//         glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[1]), RotationAxis);
-//         RotationAxis[0] = 1;
-//         RotationAxis[1] = 0;
-//         RotationAxis[2] = 0;
-//         glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[0]), RotationAxis);
-//         RotationAxis[0] = 0;
-//         RotationAxis[1] = 0;
-//         RotationAxis[2] = 1;
-//         glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[2]), RotationAxis);
-//         
-//         glm_scale_make(ScaleMatrix,RenderObjectIterator->Scale);
-// 
-//         glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
-// 
-//         BSDDumpFaceDataToObjFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
-//     }
+    char Buffer[256];
+    BSDRenderObjectDrawable_t *RenderObjectIterator;
+    vec3 RotationAxis;
+    mat4 RotationMatrix;
+    mat4 ScaleMatrix;
+    mat4 ModelMatrix;
+
+    
+    if( !BSD || !OutFile ) {
+        bool InvalidFile = (OutFile == NULL ? true : false);
+        DPrintf("BSDDumpDataToFile: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
+        return;
+    }
+    
+    if( !VRAM ) {
+        DPrintf("BSDDumpDataToObjFile:Invalid VRAM data\n");
+        return;
+    }
+
+    for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
+        sprintf(Buffer,"o BSD%i\n",RenderObjectIterator->RenderObject->Id);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+        glm_mat4_identity(RotationMatrix);
+        
+        RotationAxis[0] = 1;
+        RotationAxis[1] = 0;
+        RotationAxis[2] = 0;
+        glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);
+        RotationAxis[0] = 0;
+        RotationAxis[1] = 1;
+        RotationAxis[2] = 0;
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[1]), RotationAxis);
+        RotationAxis[0] = 1;
+        RotationAxis[1] = 0;
+        RotationAxis[2] = 0;
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[0]), RotationAxis);
+        RotationAxis[0] = 0;
+        RotationAxis[1] = 0;
+        RotationAxis[2] = 1;
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[2]), RotationAxis);
+        
+        glm_scale_make(ScaleMatrix,RenderObjectIterator->Scale);
+
+        glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
+
+        BSDDumpFaceDataToObjFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
+    }
 
 }
 
 void BSDDumpFaceDataToPlyFile(BSD_t *BSD,BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 ModelMatrix,VRAM_t *VRAM,FILE *OutFile)
 {
-//     char Buffer[256];
-//     vec3 VertPos;
-//     vec3 OutVector;
-//     Color1i_t Color;
-//     float TextureWidth;
-//     float TextureHeight;
-//     int i;
-//         
-//     TextureWidth = VRAM->Page.Width;
-//     TextureHeight = VRAM->Page.Height;
-//     
-//     for( i = 0 ; i < BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].NumFaces; i++ ) {
-//         int VRAMPage = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].StaticFaceList[i].TexInfo;
-//         int ColorMode = (BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].StaticFaceList[i].TexInfo & 0xC0) >> 7;
-//         float U0 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].StaticFaceList[i].UV0.u + 
-//             VRAMGetTexturePageX(VRAMPage))/TextureWidth);
-//         float V0 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].StaticFaceList[i].UV0.v +
-//                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-//         float U1 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].StaticFaceList[i].UV1.u + 
-//             VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-//         float V1 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].StaticFaceList[i].UV1.v + 
-//                     VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
-//         float U2 = (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].StaticFaceList[i].UV2.u + 
-//             VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
-//         float V2 = /*255 -*/1.f - (((float)BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].StaticFaceList[i].UV2.v + 
-//                     VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
-//         int Vert0 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].StaticFaceList[i].Vert0;
-//         int Vert1 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].StaticFaceList[i].Vert1;
-//         int Vert2 = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].StaticFaceList[i].Vert2;
-//         
-//         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].VertexList[Vert0].x;
-//         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].VertexList[Vert0].y;
-//         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].VertexList[Vert0].z;
-//         Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].ColorList[Vert0];
-//         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-//         sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
-//                 (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f, (OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
-//                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U0,V0);
-//         fwrite(Buffer,strlen(Buffer),1,OutFile);
-//         Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].ColorList[Vert1];
-//         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].VertexList[Vert1].x;
-//         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].VertexList[Vert1].y;
-//         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].VertexList[Vert1].z;
-//         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-//         sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
-//                 (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
-//                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U1,V1);
-//         fwrite(Buffer,strlen(Buffer),1,OutFile);
-//         Color = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].ColorList[Vert2];
-//         VertPos[0] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].VertexList[Vert2].x;
-//         VertPos[1] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].VertexList[Vert2].y;
-//         VertPos[2] = BSD->RenderObjectList[RenderObjectDrawable->RenderObjectIndex].VertexList[Vert2].z;
-//         glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
-//         sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
-//                 (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
-//                 Color.rgba[0] / 255.f,Color.rgba[1] / 255.f,Color.rgba[2] / 255.f,U2,V2);
-//         fwrite(Buffer,strlen(Buffer),1,OutFile);
-//     }
+    char Buffer[256];
+    vec3 VertPos;
+    vec3 OutVector;
+    BSDColor_t Color;
+    float TextureWidth;
+    float TextureHeight;
+    int i;
+    RenderObject_t *RenderObject;
+        
+    TextureWidth = VRAM->Page.Width;
+    TextureHeight = VRAM->Page.Height;
+    
+    RenderObject = RenderObjectDrawable->RenderObject;
+    
+    for( i = 0 ; i < RenderObject->NumFaces; i++ ) {
+        int VRAMPage = RenderObject->StaticFaceList[i].TexInfo;
+        int ColorMode = (RenderObject->StaticFaceList[i].TexInfo & 0xC0) >> 7;
+        float U0 = (((float)RenderObject->StaticFaceList[i].UV0.u + 
+            VRAMGetTexturePageX(VRAMPage))/TextureWidth);
+        float V0 = 1.f - (((float)RenderObject->StaticFaceList[i].UV0.v +
+                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+        float U1 = (((float)RenderObject->StaticFaceList[i].UV1.u + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        float V1 = 1.f - (((float)RenderObject->StaticFaceList[i].UV1.v + 
+                    VRAMGetTexturePageY(VRAMPage,ColorMode)) /TextureHeight);
+        float U2 = (((float)RenderObject->StaticFaceList[i].UV2.u + 
+            VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        float V2 = 1.f - (((float)RenderObject->StaticFaceList[i].UV2.v + 
+                    VRAMGetTexturePageY(VRAMPage,ColorMode)) / TextureHeight);
+        int Vert0 = RenderObject->StaticFaceList[i].Vert0;
+        int Vert1 = RenderObject->StaticFaceList[i].Vert1;
+        int Vert2 = RenderObject->StaticFaceList[i].Vert2;
+        
+        VertPos[0] = RenderObject->VertexList[Vert0].x;
+        VertPos[1] = RenderObject->VertexList[Vert0].y;
+        VertPos[2] = RenderObject->VertexList[Vert0].z;
+        Color = RenderObject->ColorList[Vert0];
+        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f, (OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
+                Color.r / 255.f,Color.g / 255.f,Color.b / 255.f,U0,V0);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+        Color = RenderObject->ColorList[Vert1];
+        VertPos[0] = RenderObject->VertexList[Vert1].x;
+        VertPos[1] = RenderObject->VertexList[Vert1].y;
+        VertPos[2] = RenderObject->VertexList[Vert1].z;
+        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
+                Color.r / 255.f,Color.g / 255.f,Color.b / 255.f,U1,V1);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+        Color = RenderObject->ColorList[Vert2];
+        VertPos[0] = RenderObject->VertexList[Vert2].x;
+        VertPos[1] = RenderObject->VertexList[Vert2].y;
+        VertPos[2] = RenderObject->VertexList[Vert2].z;
+        glm_mat4_mulv3(ModelMatrix,VertPos,1.f,OutVector);
+        sprintf(Buffer,"%f %f %f %f %f %f %f %f\n",(OutVector[0] + RenderObjectDrawable->Position[0]) / 4096.f, 
+                (OutVector[1] - RenderObjectDrawable->Position[1]) / 4096.f,(OutVector[2] - RenderObjectDrawable->Position[2]) / 4096.f,
+                Color.r / 255.f,Color.g / 255.f,Color.b / 255.f,U2,V2);
+        fwrite(Buffer,strlen(Buffer),1,OutFile);
+    }
 }
 void BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
 {
-//     char Buffer[256];
-//     BSDRenderObjectDrawable_t *RenderObjectIterator;
-//     vec3 RotationAxis;
-//     mat4 RotationMatrix;
-//     mat4 ScaleMatrix;
-//     mat4 ModelMatrix;
-//     int FaceCount;
-//     int VertexOffset;
-//     int i;
-//     if( !BSD || !OutFile ) {
-//         bool InvalidFile = (OutFile == NULL ? true : false);
-//         DPrintf("BSDDumpDataToPlyFile: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
-//         return;
-//     }
-//     if( !VRAM ) {
-//         DPrintf("BSDDumpDataToPlyFile:Invalid VRAM data\n");
-//         return;
-//     }
-//     sprintf(Buffer,"ply\nformat ascii 1.0\n");
-//     fwrite(Buffer,strlen(Buffer),1,OutFile);
-//     FaceCount = 0;
-//     for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
-//         FaceCount += BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].NumFaces;
-//     }
-//     
-//     sprintf(Buffer,
-//         "element vertex %i\nproperty float x\nproperty float y\nproperty float z\nproperty float red\nproperty float green\nproperty float blue\nproperty float s\nproperty float t\n",FaceCount * 3);
-//     fwrite(Buffer,strlen(Buffer),1,OutFile);
-//     sprintf(Buffer,"element face %i\nproperty list uchar int vertex_indices\nend_header\n",FaceCount);
-//     fwrite(Buffer,strlen(Buffer),1,OutFile);
-//     for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
-//         glm_mat4_identity(RotationMatrix);
-//         
-//         RotationAxis[0] = 1;
-//         RotationAxis[1] = 0;
-//         RotationAxis[2] = 0;
-//         glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);
-//         RotationAxis[0] = 0;
-//         RotationAxis[1] = 1;
-//         RotationAxis[2] = 0;
-//         glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[1]), RotationAxis);
-//         RotationAxis[0] = 1;
-//         RotationAxis[1] = 0;
-//         RotationAxis[2] = 0;
-//         glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[0]), RotationAxis);
-//         RotationAxis[0] = 0;
-//         RotationAxis[1] = 0;
-//         RotationAxis[2] = 1;
-//         glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[2]), RotationAxis);
-//         
-//         glm_scale_make(ScaleMatrix,RenderObjectIterator->Scale);
-// 
-//         glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
-//         
-//         BSDDumpFaceDataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
-//     }
-//     VertexOffset = 0;
-//     for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
-//         for( i = 0; i < BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].NumFaces; i++ ) {
-//             int Vert0 = VertexOffset + (i * 3) + 0;
-//             int Vert1 = VertexOffset + (i * 3) + 1;
-//             int Vert2 = VertexOffset + (i * 3) + 2;
-//             sprintf(Buffer,"3 %i %i %i\n",Vert0,Vert1,Vert2);
-//             fwrite(Buffer,strlen(Buffer),1,OutFile);
-//         }
-//         VertexOffset += BSD->RenderObjectList[RenderObjectIterator->RenderObjectIndex].NumFaces * 3;
-//     }
+    char Buffer[256];
+    BSDRenderObjectDrawable_t *RenderObjectIterator;
+    vec3 RotationAxis;
+    mat4 RotationMatrix;
+    mat4 ScaleMatrix;
+    mat4 ModelMatrix;
+    int FaceCount;
+    int VertexOffset;
+    int i;
+    if( !BSD || !OutFile ) {
+        bool InvalidFile = (OutFile == NULL ? true : false);
+        DPrintf("BSDDumpDataToPlyFile: Invalid %s\n",InvalidFile ? "file" : "bsd struct");
+        return;
+    }
+    if( !VRAM ) {
+        DPrintf("BSDDumpDataToPlyFile:Invalid VRAM data\n");
+        return;
+    }
+    sprintf(Buffer,"ply\nformat ascii 1.0\n");
+    fwrite(Buffer,strlen(Buffer),1,OutFile);
+    FaceCount = 0;
+    for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
+        FaceCount += RenderObjectIterator->RenderObject->NumFaces;
+    }
+    
+    sprintf(Buffer,"element vertex %i\nproperty float x\nproperty float y\nproperty float z\nproperty float red\nproperty float green\n"
+            "property float blue\nproperty float s\nproperty float t\n",FaceCount * 3);
+    fwrite(Buffer,strlen(Buffer),1,OutFile);
+    sprintf(Buffer,"element face %i\nproperty list uchar int vertex_indices\nend_header\n",FaceCount);
+    fwrite(Buffer,strlen(Buffer),1,OutFile);
+    for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
+        glm_mat4_identity(RotationMatrix);
+        
+        RotationAxis[0] = 1;
+        RotationAxis[1] = 0;
+        RotationAxis[2] = 0;
+        glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);
+        RotationAxis[0] = 0;
+        RotationAxis[1] = 1;
+        RotationAxis[2] = 0;
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[1]), RotationAxis);
+        RotationAxis[0] = 1;
+        RotationAxis[1] = 0;
+        RotationAxis[2] = 0;
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[0]), RotationAxis);
+        RotationAxis[0] = 0;
+        RotationAxis[1] = 0;
+        RotationAxis[2] = 1;
+        glm_rotate(RotationMatrix,glm_rad(RenderObjectIterator->Rotation[2]), RotationAxis);
+        
+        glm_scale_make(ScaleMatrix,RenderObjectIterator->Scale);
+
+        glm_mat4_mul(RotationMatrix,ScaleMatrix,ModelMatrix);
+        
+        BSDDumpFaceDataToPlyFile(BSD,RenderObjectIterator,ModelMatrix,VRAM,OutFile);
+    }
+    VertexOffset = 0;
+    for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next) {
+        for( i = 0; i < RenderObjectIterator->RenderObject->NumFaces; i++ ) {
+            int Vert0 = VertexOffset + (i * 3) + 0;
+            int Vert1 = VertexOffset + (i * 3) + 1;
+            int Vert2 = VertexOffset + (i * 3) + 2;
+            sprintf(Buffer,"3 %i %i %i\n",Vert0,Vert1,Vert2);
+            fwrite(Buffer,strlen(Buffer),1,OutFile);
+        }
+        VertexOffset += RenderObjectIterator->RenderObject->NumFaces * 3;
+    }
 }
 
 void BSDFixRenderObjectPosition(Level_t *Level)
