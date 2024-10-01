@@ -155,9 +155,6 @@ void BSDDumpDataToPlyFile(BSD_t *BSD,VRAM_t *VRAM,int GameEngine,FILE *OutFile)
 {
     char Buffer[256];
     BSDRenderObjectDrawable_t *RenderObjectIterator;
-    vec3 RotationAxis;
-    mat4 RotationMatrix;
-    mat4 ScaleMatrix;
     mat4 ModelMatrix;
     int FaceCount;
     int VertexOffset;
@@ -938,8 +935,6 @@ void BSDCreateCollisionVolumeVAOs(BSD_t *BSD)
 void BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM)
 {
     RenderObject_t *RenderObjectIterator;
-    int i;
-
   
     for( RenderObjectIterator = BSD->RenderObjectList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next ) {
         RenderObjectGenerateVAO(RenderObjectIterator);
@@ -1517,17 +1512,12 @@ void BSDDrawCollisionVolumes(BSD_t *BSD,Camera_t *Camera,mat4 ProjectionMatrix)
 void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *RenderObjectShader,mat4 ProjectionMatrix)
 {
     Shader_t *Shader;
-    BSDRenderObjectDrawable_t *RenderObjectIterator;
-    //TODO: Just for testing, need clean up
-    RenderObject_t *RenderObjectIterator2;
-    VAO_t *VAOIterator;
+    BSDRenderObjectDrawable_t *RenderObjectDrawableIterator;
+    RenderObject_t *RenderObjectIterator;
     mat4 MVPMatrix;
-    mat4 MVMatrix;
-    mat4 ModelViewMatrix;
     mat4 ModelMatrix;
-    vec3 PSpawn;
     vec3 Temp;
-//     RenderObjectShader_t *RenderObjectShader;
+    vec3 PSpawn;
     int MVPMatrixId;
     int i;
     
@@ -1569,11 +1559,11 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *Rend
     if( LevelDrawBSDRenderObjects->IValue ) {
         RenderObjectBeginDraw(VRAM,RenderObjectShader,LevelEnableAmbientLight->IValue,
                               LevelEnableWireFrameMode->IValue,false);
-        for( RenderObjectIterator = BSD->RenderObjectDrawableList; RenderObjectIterator; 
-            RenderObjectIterator = RenderObjectIterator->Next ) {
+        for( RenderObjectDrawableIterator = BSD->RenderObjectDrawableList; RenderObjectDrawableIterator; 
+            RenderObjectDrawableIterator = RenderObjectDrawableIterator->Next ) {
             glm_mat4_identity(ModelMatrix);
-            BSDGetObjectMatrix(RenderObjectIterator,ModelMatrix);
-            RenderObjectDraw(RenderObjectIterator->RenderObject,RenderObjectShader,ModelMatrix,Camera->ViewMatrix,ProjectionMatrix);
+            BSDGetObjectMatrix(RenderObjectDrawableIterator,ModelMatrix);
+            RenderObjectDraw(RenderObjectDrawableIterator->RenderObject,RenderObjectShader,ModelMatrix,Camera->ViewMatrix,ProjectionMatrix);
         }
         RenderObjectEndDraw(LevelEnableWireFrameMode->IValue);
     }
@@ -1583,13 +1573,13 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *Rend
         i = 0;
         RenderObjectBeginDraw(VRAM,RenderObjectShader,LevelEnableAmbientLight->IValue,
                               LevelEnableWireFrameMode->IValue,false);
-        for( RenderObjectIterator2 = BSD->RenderObjectList; RenderObjectIterator2; RenderObjectIterator2 = RenderObjectIterator2->Next ) {
+        for( RenderObjectIterator = BSD->RenderObjectList; RenderObjectIterator; RenderObjectIterator = RenderObjectIterator->Next ) {
             glm_mat4_identity(ModelMatrix);
             Temp[0] = ((PSpawn[0] - (i * 200.f)));
             Temp[1] = (-PSpawn[1]);
             Temp[2] = (PSpawn[2]);
             glm_translate(ModelMatrix,Temp);
-            RenderObjectDraw(RenderObjectIterator->RenderObject,RenderObjectShader,ModelMatrix,Camera->ViewMatrix,ProjectionMatrix);
+            RenderObjectDraw(RenderObjectIterator,RenderObjectShader,ModelMatrix,Camera->ViewMatrix,ProjectionMatrix);
             i++;
         }
         RenderObjectEndDraw(LevelEnableWireFrameMode->IValue);
@@ -1813,9 +1803,6 @@ void BSDParseNodeChunk(BSDNode_t *Node,BSD_t *BSD,int IsMultiplayer,FILE *BSDFil
 }
 int BSDParseNodes(BSD_t *BSD,int IsMultiplayer,FILE *BSDFile)
 {
-    int NodeFilePosition;
-    int NodeTableEnd;
-    int NextNodeOffset;
     int i;
     
     if( !BSD || !BSDFile ) {

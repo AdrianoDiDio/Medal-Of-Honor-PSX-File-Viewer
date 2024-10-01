@@ -231,7 +231,7 @@ void RenderObjectExportStaticFaceDataToPlyFile(RenderObject_t *RenderObject,mat4
     }
 }
 
-RenderObject_t *RenderObjectGetByIdFromList(const RenderObject_t *RenderObjectList,int RenderObjectId)
+RenderObject_t *RenderObjectGetByIdFromList(RenderObject_t *RenderObjectList,int RenderObjectId)
 {
     RenderObject_t *Iterator;
     

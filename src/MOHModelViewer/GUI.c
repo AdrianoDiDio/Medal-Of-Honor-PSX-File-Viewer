@@ -218,12 +218,12 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
         if( !CurrentRenderObject ) {
             igText("No RenderObject selected.");
         } else {
-            CurrentFrame = RenderObjectGetCurrentFrame(CurrentRenderObject);
             igText("Id:%i",CurrentRenderObject->Id);
             igText("Type:%i",CurrentRenderObject->Type);
             igText("Scale:%f;%f;%f",CurrentRenderObject->Scale[0],CurrentRenderObject->Scale[1],CurrentRenderObject->Scale[2]);
             igText("References RenderObject Id:%i",CurrentRenderObject->ReferencedRenderObjectId);
             if( !CurrentRenderObject->IsStatic ) {
+                CurrentFrame = RenderObjectGetCurrentFrame(CurrentRenderObject);
                 igText("Current Animation Index:%i",CurrentRenderObject->CurrentAnimationIndex);
                 igText("Current Frame Index:%i/%i",CurrentRenderObject->CurrentFrameIndex,
                    CurrentRenderObject->AnimationList[CurrentRenderObject->CurrentAnimationIndex].NumFrames);
@@ -353,14 +353,14 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                     RenderObjectManagerSetAnimationPlay(RenderObjectManager,0);
                 }
                 igSeparator();
-            }
-            igText("Export selected model");
-            if( igButton("Export current pose to Ply",ZeroSize) ) {
-                RenderObjectManagerExportSelectedModel(RenderObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY,false);
-            }
-            igSameLine(0.f,10.f);
-            if( igButton("Export current animation to Ply",ZeroSize) ) {
-                RenderObjectManagerExportSelectedModel(RenderObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY,true);
+                igText("Export selected model");
+                if( igButton("Export current pose to Ply",ZeroSize) ) {
+                    RenderObjectManagerExportSelectedModel(RenderObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY,false);
+                }
+                igSameLine(0.f,10.f);
+                if( igButton("Export current animation to Ply",ZeroSize) ) {
+                    RenderObjectManagerExportSelectedModel(RenderObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY,true);
+                }
             }
         }
     }

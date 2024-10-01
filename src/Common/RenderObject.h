@@ -137,7 +137,7 @@ void                        RenderObjectExportCurrentAnimationToPly(RenderObject
 void                        RenderObjectFreeList(RenderObject_t *RenderObjectList);
 void                        RenderObjectFree(RenderObject_t *RenderObject);
 
-RenderObject_t              *RenderObjectGetByIdFromList(const RenderObject_t *RenderObjectList,int RenderObjectId);
+RenderObject_t              *RenderObjectGetByIdFromList(RenderObject_t *RenderObjectList,int RenderObjectId);
 
 const char                  *RenderObjectGetWeaponNameFromId(int RenderObjectId);
 const char                  *RenderObjectGetStringFromType(RenderObjectType_t RenderObjectType);
