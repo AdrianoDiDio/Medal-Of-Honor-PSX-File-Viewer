@@ -155,15 +155,14 @@ void LevelUpdate(Level_t *Level,Camera_t *Camera)
     }
     if( LevelEnableAnimatedSurfaces->IValue ) {
 
-        BSDClearNodesFlag(Level->BSD);
+        BSDClearNodesFlag(&Level->BSD->NodeData);
     
-        while( (DynamicData = BSDGetCurrentCameraNodeDynamicData(Level->BSD,Camera) ) != -1 ) {
+        while( (DynamicData = BSDGetNodeDynamicDataFromPosition(Level->BSD->NodeData,Camera->Position) ) != -1 ) {
             TSPUpdateDynamicFaces(Level->TSPList,Camera,DynamicData);
         }
     }
     if( LevelEnableAnimatedLights->IValue ) {
-        BSDUpdateAnimatedLights(Level->BSD);
-//         TSPUpdateAnimatedFaces(Level->TSPList,Level->BSD,Camera,0);
+        BSDUpdateAnimatedLights(&Level->BSD->AnimatedLightsTable);
     }
     
 
@@ -184,7 +183,7 @@ void LevelDraw(Level_t *Level,Camera_t *Camera,RenderObjectShader_t *RenderObjec
 
 void LevelGetPlayerSpawn(Level_t *Level,int SpawnIndex,vec3 Position,vec3 Rotation)
 {
-    BSDGetPlayerSpawn(Level->BSD,SpawnIndex,Position,Rotation);
+    BSDGetPlayerSpawn(Level->BSD->NodeData,SpawnIndex,Position,Rotation);
 }
 void LevelLoadDefaultSettings()
 {

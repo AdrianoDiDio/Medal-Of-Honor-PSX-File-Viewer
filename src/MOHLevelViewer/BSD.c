@@ -22,37 +22,6 @@
 #include "BSD.h"
 #include "MOHLevelViewer.h"
 
-Color3b_t StarsColors[8] = {
-    {128,128,128},
-    {240,96,64},
-    {128,128,32},
-    {240,64,64},
-    {96,96,240},
-    {255,255,255},
-    {255,128,64},
-    {128,64,255},
-};
-
-void BSDPositionToGLMVec3(BSDPosition_t In,vec3 Out)
-{
-    Out[0] = In.x;
-    Out[1] = In.y;
-    Out[2] = In.z;
-}
-void BSDDumpProperty(BSD_t *BSD,int PropertyIndex)
-{
-    int i;
-    if( BSD == NULL ) {
-        DPrintf("BSDDumpProperty:Invalid BSD File\n");
-        return;
-    }
-    DPrintf("BSDDumpProperty:Property %i has %i nodes\n",PropertyIndex,BSD->PropertySetFile.Property[PropertyIndex].NumNodes);
-    for( i = 0; i <  BSD->PropertySetFile.Property[PropertyIndex].NumNodes; i++ ) {
-        DPrintf("BSDDumpProperty Property Node %i\n", BSD->PropertySetFile.Property[PropertyIndex].NodeList[i]);
-//            assert(BSD->PropertySetFile.Property[i].Data[j] < 158);
-    }
-}
-
 void BSDGetObjectMatrix(BSDRenderObjectDrawable_t *RenderObjectDrawable,mat4 Result)
 {
     vec3 temp;
@@ -222,7 +191,7 @@ void BSDFixRenderObjectPosition(Level_t *Level)
         Delta = abs(RenderObjectIterator->Position[1] - OutY);
         DPrintf("Delta is %i (Limit 55) PropertySetIndex:%i Original Position:%f OutY:%i\n",Delta,PropertySetIndex,
                 RenderObjectIterator->Position[1],OutY);
-        BSDDumpProperty(Level->BSD,PropertySetIndex);
+        BSDGetProperty(Level->BSD->PropertySetFile,PropertySetIndex);
         if( Delta < 55 ) {
             RenderObjectIterator->Position[1] = OutY;
         }
@@ -277,11 +246,11 @@ void BSDFree(BSD_t *BSD)
     for( i = 0; i < BSD_COLLISION_VOLUME_MAX_VALUE; i++ ) {
         VAOFree(BSD->CollisionVolumeVAO[i]);
     }
-    if( BSDIsMoonEnabled(BSD) ) {
+    if( BSDIsMoonEnabled(BSD->SkyData) ) {
         VAOFree(BSD->SkyData.MoonVAO);
     }
     
-    if( BSDAreStarsEnabled(BSD) ) {
+    if( BSDAreStarsEnabled(BSD->SkyData) ) {
         VAOFree(BSD->SkyData.StarsVAO);
     }
     
@@ -294,128 +263,6 @@ void BSDFree(BSD_t *BSD)
     free(BSD);
 }
 
-int BSDIsMoonEnabled(BSD_t *BSD)
-{
-    return BSD->SkyData.MoonZ != 0;
-}
-
-int BSDAreStarsEnabled(BSD_t *BSD)
-{
-    return BSD->SkyData.StarRadius != 0;
-}
-
-void BSDUpdateAnimatedLights(BSD_t *BSD)
-{
-    BSDAnimatedLight_t *AnimatedLight;
-    int Now;
-    int i;
-    for( i = 0; i < BSD->AnimatedLightsTable.NumAnimatedLights; i++ ) {
-        AnimatedLight = &BSD->AnimatedLightsTable.AnimatedLightsList[i];
-        if( !AnimatedLight->NumColors ) {
-            continue;
-        }
-        Now = SysMilliseconds();
-        //NOTE(Adriano):Avoid running too fast...
-        if( (Now - AnimatedLight->LastUpdateTime ) < 30 ) {
-            continue;
-        }
-        AnimatedLight->LastUpdateTime = Now;
-        AnimatedLight->Delay--;
-        if( AnimatedLight->Delay <= 0 ) {
-            AnimatedLight->ColorIndex++;
-            if( AnimatedLight->ColorIndex >= AnimatedLight->NumColors ) {
-                AnimatedLight->ColorIndex = 0;
-            }
-            AnimatedLight->Delay = AnimatedLight->ColorList[AnimatedLight->ColorIndex].rgba[3];
-            AnimatedLight->CurrentColor = AnimatedLight->ColorList[AnimatedLight->ColorIndex].c;
-        }
-    }
-}
-
-void BSDUpdateStarsColors(BSD_t *BSD)
-{
-    float Data[3];
-    float DataSize;
-    int BaseOffset;
-    int Stride;
-    int Random;
-    int i;
-    Color1i_t StarColor;
-    
-    DataSize = 3 * sizeof(float);
-    Stride = (3 + 3) * sizeof(float);
-
-    glBindBuffer(GL_ARRAY_BUFFER, BSD->SkyData.StarsVAO->VBOId[0]);
-    
-    for( i = 0; i < BSD_SKY_MAX_STARS_NUMBER; i++ ) {
-        Random = rand();
-        BaseOffset = (i * Stride);
-        StarColor = BSD->SkyData.StarsColors[i];
-        Data[0] = StarColor.rgba[0];
-        Data[1] = StarColor.rgba[1];
-        Data[2] = StarColor.rgba[2];
-        if( (Random & 3 ) != 0 ) {
-            if( StarColor.rgba[0] >= 33 ) {
-                Data[0] -= 32;
-            }
-            if( StarColor.rgba[1] >= 33 ) {
-                Data[1] -= 32;
-            }
-            if( StarColor.rgba[2] >= 33 ) {
-                Data[2] -= 32;
-            }
-        }
-        Data[0] /= 255.f;
-        Data[1] /= 255.f;
-        Data[2] /= 255.f;
-        glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (3*sizeof(float)), DataSize, &Data);
-    }
-     glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-int BSDGetCurrentAnimatedLightColorByIndex(BSD_t *BSD,int Index)
-{
-    if( Index < 0 || Index >= BSD_ANIMATED_LIGHTS_TABLE_SIZE ) {
-        DPrintf("BSDGetCurrentAnimatedLightColorByIndex:Invalid index %i\n",Index);
-        return 0;
-    }
-    return BSD->AnimatedLightsTable.AnimatedLightsList[Index].CurrentColor;
-}
-void BSDGetNodeColorById(int NodeId,vec3 OutColor)
-{
-    switch( NodeId ) {
-        case BSD_TSP_LOAD_TRIGGER:
-            OutColor[0] = 0;
-            OutColor[1] = 0;
-            OutColor[2] = 1;
-            break;
-        case BSD_PLAYER_SPAWN:
-            OutColor[0] = 0;
-            OutColor[1] = 1;
-            OutColor[2] = 0;
-            break;
-        case BSD_NODE_SCRIPT:
-            OutColor[0] = 1;
-            OutColor[1] = 1;
-            OutColor[2] = 0;
-            break;
-        case BSD_ANIMATED_OBJECT:
-            OutColor[0] = 1;
-            OutColor[1] = 0;
-            OutColor[2] = 1;
-            break;
-        case BSD_LADDER:
-            OutColor[0] = 0;
-            OutColor[1] = 0.64f;
-            OutColor[2] = 0;
-            break;
-        default:
-            OutColor[0] = 1;
-            OutColor[1] = 0;
-            OutColor[2] = 0;
-            break;
-    }
-}
 void BSDCreatePointListVAO(BSD_t *BSD)
 {
     float *NodeData;
@@ -571,7 +418,7 @@ void BSDCreateMoonVAO(BSD_t *BSD,VRAM_t *VRAM)
     vec3 MoonPosition;
     
     
-    if( !BSDIsMoonEnabled(BSD) ) {
+    if( !BSDIsMoonEnabled(BSD->SkyData) ) {
         DPrintf("Moon is not enabled...\n");
         return;
     }
@@ -662,7 +509,7 @@ void BSDCreateStarsVAO(BSD_t *BSD)
     int StarColorIndex;
     Color3b_t StarColor;
 
-    if( !BSDAreStarsEnabled(BSD) ) {
+    if( !BSDAreStarsEnabled(BSD->SkyData) ) {
         DPrintf("Stars are not enabled...\n");
         return;
     }
@@ -676,7 +523,7 @@ void BSDCreateStarsVAO(BSD_t *BSD)
         R = (BSD->SkyData.StarRadius*256) * sqrt(Rand01());
         Theta = Rand01() * 2 * M_PI;
         Phi = acos(2.0 * Rand01() - 1.0);/*BSDRand01() * M_PI;*/
-        StarColor = StarsColors[StarColorIndex];
+        StarColor = BSDStarsColors[StarColorIndex];
         StarColorIndex = (StarColorIndex + 1) & 7;
         BSD->SkyData.StarsColors[i].rgba[0] = StarColor.r;
         BSD->SkyData.StarsColors[i].rgba[1] = StarColor.g;
@@ -945,411 +792,6 @@ void BSDCreateVAOs(BSD_t *BSD,int GameEngine,VRAM_t *VRAM)
     BSDCreateCollisionVolumeVAOs(BSD);
 }
 
-
-
-void BSDGetPlayerSpawn(BSD_t *BSD,int SpawnIndex,vec3 Position,vec3 Rotation)
-{
-    vec3 LocalRotation;
-
-    int i;
-    
-    glm_vec3_zero(Position);
-    
-    if( !BSD ) {
-        DPrintf("BSDGetPlayerSpawn:Invalid BSD\n");
-        return;
-    }
-    
-    for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
-        if( BSD->NodeData.Node[i].Id != BSD_PLAYER_SPAWN ) {
-            continue;
-        }
-        if( BSD->NodeData.Node[i].SpawnIndex != SpawnIndex ) {
-            continue;
-        }
-        BSDPositionToGLMVec3(BSD->NodeData.Node[i].Position,Position);
-        glm_vec3_rotate(Position, DEGTORAD(180.f), GLM_XUP);
-        if( Rotation ) {
-            BSDPositionToGLMVec3(BSD->NodeData.Node[i].Rotation,LocalRotation);
-            glm_vec3_scale(LocalRotation,360.f/4096.f,Rotation);
-        }
-        break;
-    }
-    return;
-}
-
-
-
-int BSDNodeIdToRenderObjectId(int NodeId)
-{
-    int RenderObjectId;
-//  1821346472 -> 519275822
-//  935865828 -> 2278882431
-//  149114796 -> 1686008476
-//  4262665218 -> 1771441436
-//  2622993903 -> 1771441436
-//  3832727321 -> 1335595487
-//  3815705185 -> 137063914
-//  1730263601 -> 1771441436
-//  3363099888 -> 1771441436
-//  648959524 -> 1771441436
-//  427407355 -> 1771441436
-//  2966651809 -> 1771441436
-//  1444155995 -> 137063914
-//  1088149327 -> 1771441436
-//  1696717421 -> 1771441436
-//  633670612 -> 3487282118
-//  2470021088 -> 1909080654
-//  2522430033 -> 2018764808
-//  1247503060 -> 4294967295
-//  3545379694 -> 4294967295
-    switch ( NodeId ) {
-        case 1821346472:
-            RenderObjectId = 519275822;
-            break;
-        case 935865828:
-            RenderObjectId = 2278882431;
-            break;
-        case 149114796:
-            RenderObjectId = 1686008476;
-            break;
-        case 4262665218:
-            RenderObjectId = 1771441436;
-            break;
-        case 2622993903:
-            RenderObjectId = 1771441436;
-            break;
-        case 3832727321:
-            RenderObjectId = 1335595487;
-            break;
-        case 3815705185:
-        case 1444155995:
-            RenderObjectId = 137063914;
-            break;
-        case 1730263601:
-            RenderObjectId = 1771441436;
-            break;
-        case 3363099888:
-            RenderObjectId = 1771441436;
-            break;
-        case 648959524:
-            RenderObjectId = 1771441436;
-            break;
-        case 427407355:
-            RenderObjectId = 1771441436;
-            break;
-        case 2966651809:
-            RenderObjectId = 1771441436;
-            break;
-        case 1088149327:
-            RenderObjectId = 1771441436;
-            break;
-        case 1696717421:
-            RenderObjectId = 1771441436;
-            break;
-        case 633670612:
-            RenderObjectId = 3487282118;
-            break;
-        case 2470021088:
-            RenderObjectId = 1909080654;
-            break;
-        case 2522430033:
-            RenderObjectId = 2018764808;
-            break;
-        case 1247503060:
-        case 3545379694:
-            RenderObjectId = 4294967295;
-            break;
-        case 0:
-            RenderObjectId = 0;
-            break;
-        default:
-            DPrintf("RenderObjectId was not in the mapping table...assuming it is the NodeId itself.\n");
-            RenderObjectId = NodeId;
-            break;
-    }
-    return RenderObjectId;
-}
-
-int BSDMPNodeIdToRenderObjectId(int NodeId)
-{
-    int RenderObjectId;
-    switch( NodeId ) {
-        //NEW
-        case 3815705185:
-            //Bazooka Ammo.
-            RenderObjectId = 3139577012;
-            break;
-        case 3832727321:
-            //SMG Ammo.
-            RenderObjectId = 3158305228;
-            break;
-        case 2622993903:
-            //Pistol Ammo.
-            RenderObjectId = 523223373;
-            break;
-        case 1730263601:
-            //Grenade Ammo.
-            RenderObjectId = 1064080612;
-            break;
-        case 3363099888:
-            //Shotgun Ammo.
-            RenderObjectId = 1322820526;
-            break;
-        case 648959524:
-            //Rifle Ammo.
-            RenderObjectId = 414830070;
-            break;
-        case 1444155995:
-            //Silencer Ammo.
-            RenderObjectId = 1479327691;
-            break;
-        case 1088149327:
-            //German Grenade Ammo.
-            RenderObjectId = 1529087242;
-            break;
-        case 1696717421:
-            //BAR Ammo.
-            RenderObjectId = 1857331800;
-            break;
-        case 427407355:
-            //Salute Ammo.
-            RenderObjectId = 1008432070;
-            break;
-        //Undefined but found....
-        case 1656540076:
-            RenderObjectId = 1771441436;
-            break;
-        case 475277581:
-            RenderObjectId = 1771441436;
-            break;
-        case 1587751891:
-            RenderObjectId = 1771441436;
-            break;
-        case 2044083958:
-            RenderObjectId = 1771441436;
-            break;
-        case 1271113291:
-            RenderObjectId = 1771441436;
-            break;
-        case 2774162518:
-            RenderObjectId = 1771441436;
-            break;
-        case 586892869:
-            RenderObjectId = 1771441436;
-            break;
-        case 807017850:
-            //HEALTH
-            RenderObjectId = 2278882431;
-            break;
-        case 254902066:
-            RenderObjectId = 1686008476;
-            break;
-        case 1801304630:
-            RenderObjectId = 519275822;
-            break;
-        case 3482129947:
-            RenderObjectId = 1771441436;
-            break;
-        case 3538476007:
-            RenderObjectId = 1771441436;
-            break;
-        case 3364936547:
-            RenderObjectId = 1771441436;
-            break;
-        default:
-            RenderObjectId = NodeId;
-            break;
-    }
-    return RenderObjectId;
-}
-
-bool BSDIsRenderObjectPresent(BSD_t *BSD,int RenderObjectId) {
-    if( BSDGetRenderObjectIndexById(&BSD->RenderObjectTable,RenderObjectId) == -1 ) {
-        DPrintf("Render Object Id %i not found..\n",RenderObjectId);
-        return false;
-    }
-    return true;
-}
-const char *BSDNodeGetEnumStringFromNodeId(int NodeId)
-{
-    switch( NodeId ) {
-        case BSD_PLAYER_SPAWN:
-            return "Player Spawn";
-        case BSD_TSP_LOAD_TRIGGER:
-            return "TSP Trigger";
-        case BSD_ENEMY_SPAWN:
-            return "Enemy Spawn";
-        case BSD_DOOR:
-            return "Door";
-        case BSD_LADDER:
-            return "Ladder";
-        case BSD_PICKUP_OBJECT:
-            return "Pickup Object";
-        case BSD_NODE_SCRIPT:
-            return "Scripted Node";
-        case BSD_ANIMATED_OBJECT:
-            return "Animated Object";
-        case BSD_DESTRUCTIBLE_WINDOW:
-            return "Destructible Window";
-        default:
-            return "Unknown";
-    }
-}
-
-
-
-
-char *BSDGetCollisionVolumeStringFromType(int CollisionVolumeType)
-{
-    switch( CollisionVolumeType ) {
-        case BSD_COLLISION_VOLUME_TYPE_SPHERE:
-            return "Sphere";
-        case BSD_COLLISION_VOLUME_TYPE_CYLINDER:
-            return "Cylinder";
-        case BSD_COLLISION_VOLUME_TYPE_BOX:
-        default:
-            return "Box";
-    }
-}
-
-bool BSDPointInSphere(vec3 Point,BSDPosition_t Center,float Radius)
-{
-    vec3  NodePosition;
-    BSDPositionToGLMVec3(Center,NodePosition);
-    glm_vec3_rotate(NodePosition, DEGTORAD(180.f), GLM_XUP);
-    return (  glm_vec3_distance2(Point,NodePosition) <= Radius*Radius );
-}
-
-/*
-    Cylinder is described using:
-    Center Point
-    Radius
-    MinY/MaxY: Bottom and Top Y coordinate of the cylinder from the center position.
-*/
-bool BSDPointInCylinder(vec3 Point,BSDPosition_t Center,float Radius,float MinY,float MaxY)
-{
-    vec3  NodePosition;
-    float DeltaX;
-    float DeltaY;
-    float DeltaZ;
-    float Temp;
-  
-    BSDPositionToGLMVec3(Center,NodePosition);
-    glm_vec3_rotate(NodePosition, DEGTORAD(180.f), GLM_XUP);
-
-    //Make sure Min/Max are not swapped out.
-    if( MaxY < MinY ) {
-        Temp = MaxY;
-        MaxY = MinY;
-        MinY = Temp;
-    }
-    
-    DeltaX = Point[0] - NodePosition[0];
-    DeltaY = Point[1] - NodePosition[1];
-    DeltaZ = Point[2] - NodePosition[2];
-    
-    if( DeltaX * DeltaX + DeltaZ * DeltaZ <= Radius * Radius ) {
-        if( DeltaY >= MinY && DeltaY <= MaxY ) {
-            return true;
-        } 
-    }
-    return false;
-}
-
-bool BSDPointInBox(vec3 Point,BSDPosition_t Center,BSDPosition_t NodeRotation,float Width,float Height,float Depth)
-{
-    vec3 NodePosition;
-    vec3 Delta;
-    float HalfSizeX;
-    float HalfSizeY;
-    float HalfSizeZ;
-    vec3  Axis;
-    vec3  LocalRotation;
-    mat4  RotationMatrix;
-  
-    BSDPositionToGLMVec3(Center,NodePosition);
-    glm_vec3_rotate(NodePosition, DEGTORAD(180.f), GLM_XUP);
-    
-    HalfSizeX = fabs(Width) / 2.f;
-    HalfSizeY = fabs(Height)/ 2.f;
-    HalfSizeZ = fabs(Depth) / 2.f;
-
-    Delta[0] = Point[0] - NodePosition[0];
-    Delta[1] = Point[1] - NodePosition[1];
-    Delta[2] = Point[2] - NodePosition[2];
-
-    if( NodeRotation.x != 0 || NodeRotation.y != 0 || NodeRotation.z != 0 ) {
-//         OOB Test...
-        BSDPositionToGLMVec3(NodeRotation,LocalRotation);
-        glm_vec3_scale(LocalRotation,360.f/4096.f,LocalRotation);
-        glm_mat4_identity(RotationMatrix);
-        Axis[0] = 0;
-        Axis[1] = 1;
-        Axis[2] = 0;
-        glm_rotate(RotationMatrix,glm_rad(-LocalRotation[1]), Axis);
-        Axis[0] = 1;
-        Axis[1] = 0;
-        Axis[2] = 0;
-        glm_rotate(RotationMatrix,glm_rad(LocalRotation[0]), Axis);
-        Axis[0] = 0;
-        Axis[1] = 0;
-        Axis[2] = 1;
-        glm_rotate(RotationMatrix,glm_rad(LocalRotation[2]), Axis);
-        glm_mat4_mulv3(RotationMatrix, Delta, 1, Delta);
-    }
-    
-    if( fabs(Delta[0]) <= HalfSizeX && fabs(Delta[1]) <= HalfSizeY && fabs(Delta[2]) <= HalfSizeZ ) {
-        return true;
-    }
-    return false;
-}
-
-bool BSDPointInNode(vec3 Position,const BSDNode_t *Node)
-{
-    switch( Node->CollisionVolumeType ) {
-        case BSD_COLLISION_VOLUME_TYPE_SPHERE:
-            return BSDPointInSphere(Position,Node->Position,Node->CollisionInfo0);
-        case BSD_COLLISION_VOLUME_TYPE_CYLINDER:
-            return BSDPointInCylinder(Position,Node->Position,Node->CollisionInfo0,Node->CollisionInfo1,Node->CollisionInfo2);
-        case BSD_COLLISION_VOLUME_TYPE_BOX:
-            return BSDPointInBox(Position,Node->Position,Node->Rotation,Node->CollisionInfo0,Node->CollisionInfo1,Node->CollisionInfo2);
-        default:
-            DPrintf("Unknown CollisionVolumeType %i for node %i\n",Node->CollisionVolumeType,Node->Id);
-            return false;
-    }
-}
-
-void BSDClearNodesFlag(BSD_t *BSD)
-{
-    int i;
-    for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
-        BSD->NodeData.Node[i].Visited = 0;
-    }
-}
-
-int BSDGetCurrentCameraNodeDynamicData(BSD_t *BSD,Camera_t *Camera)
-{
-    int i;
-    for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
-        if( BSD->NodeData.Node[i].Visited ) {
-            continue;
-        }
-        if( BSD->NodeData.Node[i].MessageData == -1 ) {
-            continue;
-        }
-        
-        if( BSDPointInNode(Camera->Position,&BSD->NodeData.Node[i]) ) {
-            if( BSD->NodeData.Node[i].Type == 5 /*BSD->NodeData.Node[i].Type == 3 || BSD->NodeData.Node[i].Type == 5 ||
-                BSD->NodeData.Node[i].Type == 6*/ ) {
-                BSD->NodeData.Node[i].Visited = 1;
-                return BSD->NodeData.Node[i].DynamicBlockIndex;
-            }
-        }
-    }
-    return -1;
-}
-
 void BSDDrawSphereCollisionVolume(BSDNode_t *Node,mat4 ViewMatrix,mat4 ProjectionMatrix,int MVPMatrixId,int ColorId,int IndexCount)
 {
     mat4 ModelMatrix;
@@ -1569,7 +1011,7 @@ void BSDDraw(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *Rend
     }
     
     if( LevelDrawBSDShowcase->IValue ) {
-        BSDGetPlayerSpawn(BSD,0,PSpawn,NULL);
+        BSDGetPlayerSpawn(BSD->NodeData,0,PSpawn,NULL);
         i = 0;
         RenderObjectBeginDraw(VRAM,RenderObjectShader,LevelEnableAmbientLight->IValue,
                               LevelEnableWireFrameMode->IValue,false);
@@ -1606,7 +1048,7 @@ void BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
     glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
     
     glDepthMask(0);
-    if( BSDIsMoonEnabled(BSD) ) {
+    if( BSDIsMoonEnabled(BSD->SkyData) ) {
         Shader = ShaderCache("MoonShader","Shaders/MoonVertexShader.glsl","Shaders/MoonFragmentShader.glsl");
         if( Shader ) {
             glUseProgram(Shader->ProgramId);
@@ -1623,8 +1065,8 @@ void BSDDrawSky(BSD_t *BSD,VRAM_t *VRAM,Camera_t *Camera,mat4 ProjectionMatrix)
             glUseProgram(0);
         }
     }
-    if( BSDAreStarsEnabled(BSD) ) {
-        BSDUpdateStarsColors(BSD);
+    if( BSDAreStarsEnabled(BSD->SkyData) ) {
+        BSDUpdateStarsColors(&BSD->SkyData);
         Shader = ShaderCache("StarsShader","Shaders/StarsVertexShader.glsl","Shaders/StarsFragmentShader.glsl");
         if( Shader ) {
             glUseProgram(Shader->ProgramId);

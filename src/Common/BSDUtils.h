@@ -31,6 +31,7 @@
 #define BSD_ANIMATION_FRAME_DATA_SIZE 20
 #define BSD_ANIMATED_LIGHTS_TABLE_SIZE 40
 #define BSD_SKY_MAX_STARS_NUMBER 255
+#define BSD_SKY_MAX_STAR_COLORS_NUMBER 8
 
 #define BSD_MOON_VRAM_PAGE 15
 #define BSD_MOON_WIDTH 32
@@ -375,13 +376,33 @@ bool                        BSDReadPropertySetFileBlock(FILE *BSDFile, BSDProper
 
 BSDRenderObjectElement_t    *BSDGetRenderObjectById(const BSDRenderObjectTable_t *RenderObjectTable,int RenderObjectId);
 int                         BSDGetRenderObjectIndexById(const BSDRenderObjectTable_t *RenderObjectTable,int RenderObjectId);
+bool                        BSDIsRenderObjectPresent(BSDRenderObjectTable_t RenderObjectTable,int RenderObjectId);
+int                         BSDMPNodeIdToRenderObjectId(int NodeId);
+int                         BSDNodeIdToRenderObjectId(int NodeId);
+
+
+void                        BSDUpdateAnimatedLights(BSDAnimatedLightTable_t *AnimatedLightsTable);
+void                        BSDUpdateStarsColors(BSDSky_t *SkyData);
+void                        BSDClearNodesFlag(BSDNodeInfo_t *NodeData);
 
 int                         BSDGetRenderObjectTableOffset(int GameEngine);
 int                         BSDGetRealOffset(int RelativeOffset);
+bool                        BSDIsMoonEnabled(BSDSky_t SkyData);
+bool                        BSDAreStarsEnabled(BSDSky_t SkyData);
+void                        BSDGetNodeColorById(int NodeId,vec3 OutColor);
+int                         BSDGetCurrentAnimatedLightColorByIndex(BSDAnimatedLightTable_t AnimatedLightTable,int Index);
+void                        BSDPositionToGLMVec3(BSDPosition_t In,vec3 Out);
+void                        BSDGetProperty(BSDPropertySetFile_t PropertySetFile,int PropertyIndex);
+int                         BSDGetNodeDynamicDataFromPosition(BSDNodeInfo_t NodeData,vec3 Position);
+bool                        BSDPointInNode(vec3 Position,const BSDNode_t *Node);
+bool                        BSDPointInBox(vec3 Point,BSDPosition_t Center,BSDPosition_t NodeRotation,float Width,float Height,float Depth);
+bool                        BSDPointInCylinder(vec3 Point,BSDPosition_t Center,float Radius,float MinY,float MaxY);
+bool                        BSDPointInSphere(vec3 Point,BSDPosition_t Center,float Radius);
+const char                  *BSDGetCollisionVolumeStringFromType(int CollisionVolumeType);
+const char                  *BSDNodeGetEnumStringFromNodeId(int NodeId);
+void                        BSDGetPlayerSpawn(BSDNodeInfo_t NodeData,int SpawnIndex,vec3 Position,vec3 Rotation);
 
 
-void                        BSDRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone,const BSDQuaternion_t *QuaternionList,
-                                                            BSDVertexTable_t *VertexTable,mat4 TransformMatrix);
-void                        BSDRenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame);
+extern Color3b_t BSDStarsColors[BSD_SKY_MAX_STAR_COLORS_NUMBER];
 
 #endif //__BSD_UTILS_H_

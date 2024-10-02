@@ -1121,12 +1121,12 @@ int RenderObjectLoadStaticVertexAndColorData(RenderObject_t *RenderObject,FILE *
         return false;
     } 
     memset(RenderObject->VertexList,0,Size);
-    fseek(BSDFile,RenderObject->Data->VertexOffset + 2048,SEEK_SET);
+    fseek(BSDFile,BSDGetRealOffset(RenderObject->Data->VertexOffset),SEEK_SET);
     DPrintf("RenderObjectLoadStaticVertexAndColorData:Reading Vertex definition at %i (Current:%i)\n",
-            RenderObject->Data->VertexOffset + 2048,GetCurrentFilePosition(BSDFile)); 
+            BSDGetRealOffset(RenderObject->Data->VertexOffset),GetCurrentFilePosition(BSDFile)); 
     for( i = 0; i < RenderObject->Data->NumVertex; i++ ) {
         DPrintf("RenderObjectLoadStaticVertexAndColorData:Reading Vertex at %i (%i)\n",
-                GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
+                GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - BSD_HEADER_SIZE);
         fread(&RenderObject->VertexList[i],sizeof(BSDVertex_t),1,BSDFile);
         DPrintf("RenderObjectLoadStaticVertexAndColorData:Vertex %i;%i;%i %i\n",RenderObject->VertexList[i].x,
                 RenderObject->VertexList[i].y,RenderObject->VertexList[i].z,
@@ -1142,9 +1142,9 @@ int RenderObjectLoadStaticVertexAndColorData(RenderObject_t *RenderObject,FILE *
             return false;
         } 
         memset(RenderObject->ColorList,0,Size);
-        fseek(BSDFile,RenderObject->Data->ColorOffset + 2048,SEEK_SET);
+        fseek(BSDFile,BSDGetRealOffset(RenderObject->Data->ColorOffset),SEEK_SET);
         DPrintf("RenderObjectLoadStaticVertexAndColorData:Reading Color definition at %i (Current:%i)\n",
-                RenderObject->Data->ColorOffset + 2048,GetCurrentFilePosition(BSDFile)); 
+                BSDGetRealOffset(RenderObject->Data->ColorOffset),GetCurrentFilePosition(BSDFile)); 
         for( i = 0; i < RenderObject->Data->NumVertex; i++ ) {
             DPrintf("RenderObjectLoadStaticVertexAndColorData:Reading Color at %i (%i)\n",GetCurrentFilePosition(BSDFile),
                     GetCurrentFilePosition(BSDFile) - 2048);
@@ -1176,7 +1176,7 @@ bool RenderObjectParseStaticFaceData(RenderObject_t *RenderObject,FILE *BSDFile)
         return false;
     }
     
-    fseek(BSDFile,RenderObject->Data->FaceOffset + 2048,SEEK_SET);
+    fseek(BSDFile,BSDGetRealOffset(RenderObject->Data->FaceOffset),SEEK_SET);
     fread(&RenderObject->NumFaces,sizeof(int),1,BSDFile);
     DPrintf("RenderObjectParseStaticFaceData:Reading %i faces\n",RenderObject->NumFaces);
     FaceListSize = RenderObject->NumFaces * sizeof(BSDFace_t);
@@ -1187,7 +1187,7 @@ bool RenderObjectParseStaticFaceData(RenderObject_t *RenderObject,FILE *BSDFile)
     }
     memset(RenderObject->StaticFaceList,0,FaceListSize);
     DPrintf("RenderObjectParseStaticFaceData:Reading Face definition at %i (Current:%i)\n",
-            RenderObject->Data->FaceOffset + 2048,GetCurrentFilePosition(BSDFile)); 
+            BSDGetRealOffset(RenderObject->Data->FaceOffset),GetCurrentFilePosition(BSDFile)); 
     for( i = 0; i < RenderObject->NumFaces; i++ ) {
         DPrintf("RenderObjectParseStaticFaceData:Reading Face at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - 2048);
         
@@ -1258,7 +1258,7 @@ bool RenderObjectParseStaticFaceDataV2(RenderObject_t *RenderObject,int RenderOb
         fseek(BSDFile,FaceOffset,SEEK_SET);
         fread(&RenderObject->NumFaces,sizeof(RenderObject->NumFaces),1,BSDFile);
     }
-    fseek(BSDFile,RenderObject->Data->FaceOffset + 2048,SEEK_SET);
+    fseek(BSDFile,BSDGetRealOffset(RenderObject->Data->FaceOffset),SEEK_SET);
 
     FaceListSize = RenderObject->NumFaces * sizeof(BSDFace_t);
     RenderObject->StaticFaceList = malloc(FaceListSize);
