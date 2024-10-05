@@ -1237,7 +1237,7 @@ bool RenderObjectParseStaticFaceDataV2(RenderObject_t *RenderObject,int RenderOb
     int Vert2;
     unsigned int Marker;
     BSDFace_t TempFace;
-    int FaceOffset;
+    int NumFaceOffset;
     
     if( !RenderObject ) {
         DPrintf("RenderObjectParseStaticFaceDataV2:Invalid RenderObject!\n");
@@ -1248,16 +1248,24 @@ bool RenderObjectParseStaticFaceDataV2(RenderObject_t *RenderObject,int RenderOb
         return false;
     }
     
-    FaceOffset =   
-        ( BSD_RENDER_OBJECT_STARTING_OFFSET + BSD_HEADER_SIZE + 20 + (RenderObjectIndex * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) ) + 260;
-    fseek(BSDFile,FaceOffset,SEEK_SET);
+    NumFaceOffset =   
+        ( BSD_MOH_UNDERGROUND_RENDER_OBJECT_STARTING_OFFSET + BSD_HEADER_SIZE + (RenderObjectIndex * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) ) + 264;
+    fseek(BSDFile,NumFaceOffset,SEEK_SET);
     fread(&RenderObject->NumFaces,sizeof(RenderObject->NumFaces),1,BSDFile);
-    if( !RenderObject->NumFaces ) {
-        FaceOffset =   
-            ( BSD_RENDER_OBJECT_STARTING_OFFSET + BSD_HEADER_SIZE + 20 + (ReferencedRenderObjectIndex * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) ) + 260;
-        fseek(BSDFile,FaceOffset,SEEK_SET);
+    if( !RenderObject->NumFaces && ReferencedRenderObjectIndex != -1) {
+        NumFaceOffset =   
+            ( BSD_MOH_UNDERGROUND_RENDER_OBJECT_STARTING_OFFSET + BSD_HEADER_SIZE + 16 + 
+                (ReferencedRenderObjectIndex * MOH_UNDERGROUND_RENDER_OBJECT_SIZE) ) + 264;
+        fseek(BSDFile,NumFaceOffset,SEEK_SET);
         fread(&RenderObject->NumFaces,sizeof(RenderObject->NumFaces),1,BSDFile);
     }
+    
+    if( !RenderObject->NumFaces ) {
+        return false;
+    }
+    
+    DPrintf("RenderObjectParseStaticFaceDataV2:Moving to %i with %i faces since it references %i!\n",
+            BSDGetRealOffset(RenderObject->Data->FaceOffset), RenderObject->NumFaces, ReferencedRenderObjectIndex);
     fseek(BSDFile,BSDGetRealOffset(RenderObject->Data->FaceOffset),SEEK_SET);
 
     FaceListSize = RenderObject->NumFaces * sizeof(BSDFace_t);
