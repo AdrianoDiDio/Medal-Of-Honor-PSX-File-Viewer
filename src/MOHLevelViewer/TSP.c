@@ -1000,60 +1000,30 @@ void TSPPrintColor(Color1i_t Color)
     DPrintf("RGBA:(%i;%i;%i;%i)\n",Color.rgba[0],Color.rgba[1],Color.rgba[2],Color.rgba[3]);
 }
 
-void TSPDrawNodeBBox(TSPNode_t *Node,mat4 MVPMatrix)
+void TSPDrawNodeBBox(TSPNode_t *Node)
 {
-    Shader_t *Shader;
-    int MVPMatrixId;
-    
-    Shader = ShaderCache("TSPBBoxShader","Shaders/TSPBBoxVertexShader.glsl","Shaders/TSPBBoxFragmentShader.glsl");
-    
-    if( !Shader ) {
-        DPrintf("TSPDrawNodeBBox:Invalid Shader\n");
-        return;
-    }
-    glUseProgram(Shader->ProgramId);
-    
-    MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-    glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
-    
     glBindVertexArray(Node->BBoxVAO->VAOId[0]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Node->BBoxVAO->IBOId[0]);
     glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, 0);
     glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, (GLvoid*)(4*sizeof(unsigned short)));
     glDrawElements(GL_LINES, 8, GL_UNSIGNED_SHORT, (GLvoid*)(8*sizeof(unsigned short)));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-    glUseProgram(0);
 }
 
-void TSPDrawCollisionData(TSP_t *TSP,mat4 MVPMatrix)
+void TSPDrawCollisionData(TSP_t *TSP)
 {
     VAO_t *Iterator;
-    Shader_t *Shader;
-    int MVPMatrixId;
     
     if( !TSP ) {
         DPrintf("TSPDrawCollisionData:Invalid TSP...\n");
         return;
     }
     
-    Shader = ShaderCache("TSPCollisionShader","Shaders/TSPCollisionVertexShader.glsl","Shaders/TSPCollisionFragmentShader.glsl");
-    
-    if( !Shader ) {
-        DPrintf("TSPDrawCollisionData:Invalid Shader\n");
-        return;
-    }
-    glUseProgram(Shader->ProgramId);
-
-    MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
-    glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
-    
     for( Iterator = TSP->CollisionVAOList; Iterator; Iterator = Iterator->Next ) {
         glBindVertexArray(Iterator->VAOId[0]);
         glDrawArrays(GL_TRIANGLES, 0, Iterator->Count);
         glBindVertexArray(0);
     }
-    glUseProgram(0);
-
 }
 bool IsTSPInRenderArray(Level_t *Level,int TSPNumber)
 {
@@ -1066,7 +1036,7 @@ bool IsTSPInRenderArray(Level_t *Level,int TSPNumber)
     return false;
 }
 
-void TSPDrawNode(TSPNode_t *Node,RenderObjectShader_t *RenderObjectShader,VRAM_t *VRAM,mat4 MVPMatrix)
+void TSPDrawNode(TSPNode_t *Node,mat4 MVPMatrix)
 {    
     if( !Node ) {
         return;
@@ -1075,42 +1045,15 @@ void TSPDrawNode(TSPNode_t *Node,RenderObjectShader_t *RenderObjectShader,VRAM_t
     if( LevelEnableFrustumCulling->IValue && !TSPBoxInFrustum(Node->BBox,MVPMatrix) ) {
         return;
     }
-    
-    if( LevelDrawTSPTree->IValue ) {
-        TSPDrawNodeBBox(Node,MVPMatrix);
-    }
 
     if( Node->NumFaces != 0 ) {
-        if( LevelDrawSurfaces->IValue ) {
-            if( RenderObjectShader ) {
-                if( LevelEnableWireFrameMode->IValue ) {
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                } else {
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                }
-                glUseProgram(RenderObjectShader->Shader->ProgramId);
-                glActiveTexture(GL_TEXTURE0 + 0);
-                glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
-                glActiveTexture(GL_TEXTURE0 + 1);
-                glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
-
-                glDisable(GL_BLEND);
-                glBindVertexArray(Node->OpaqueFacesVAO->VAOId[0]);
-                glDrawArrays(GL_TRIANGLES, 0, Node->OpaqueFacesVAO->Count);
-                glBindVertexArray(0);
-                glActiveTexture(GL_TEXTURE0 + 0);
-                glBindTexture(GL_TEXTURE_2D,0);
-                glDisable(GL_BLEND);
-                glBlendColor(1.f, 1.f, 1.f, 1.f);
-                if( LevelEnableWireFrameMode->IValue ) {
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                }
-            }
-        }
+        glBindVertexArray(Node->OpaqueFacesVAO->VAOId[0]);
+        glDrawArrays(GL_TRIANGLES, 0, Node->OpaqueFacesVAO->Count);
+        glBindVertexArray(0);
     } else {
-        TSPDrawNode(Node->Child[1],RenderObjectShader,VRAM,MVPMatrix);
-        TSPDrawNode(Node->Child[2],RenderObjectShader,VRAM,MVPMatrix);
-        TSPDrawNode(Node->Child[0],RenderObjectShader,VRAM,MVPMatrix);
+        TSPDrawNode(Node->Child[1],MVPMatrix);
+        TSPDrawNode(Node->Child[2],MVPMatrix);
+        TSPDrawNode(Node->Child[0],MVPMatrix);
 
     }
 }
@@ -1407,7 +1350,7 @@ void TSPUpdateAnimatedFaces(TSP_t *TSPList,BSD_t *BSD,Camera_t *Camera,mat4 Proj
         TSPUpdateTransparentAnimatedFaces(Iterator,BSD,Reset);
     }
 }
-void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM)
+void TSPDrawTransparentFaces(TSP_t *TSP)
 {
     TSPRenderingFace_t *TransparentFaceIterator;
 
@@ -1415,15 +1358,6 @@ void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM)
         return;
     }
     
-    if( LevelEnableWireFrameMode->IValue ) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    } else {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
-    glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
-    glActiveTexture(GL_TEXTURE0 + 1);
-    glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
     glBindVertexArray(TSP->TransparentVAO->VAOId[0]);
     if( !LevelEnableSemiTransparency->IValue ) {
         glDrawArrays(GL_TRIANGLES, 0, TSP->TransparentVAO->Count);
@@ -1447,18 +1381,16 @@ void TSPDrawTransparentFaces(TSP_t *TSP,VRAM_t *VRAM)
     }
     glBindVertexArray(0);
     glDepthMask(1);
-    glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D,0);
     glDisable(GL_BLEND);
-    if( LevelEnableWireFrameMode->IValue ) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
 }
 void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader_t *RenderObjectShader,mat4 ProjectionMatrix)
 {
     TSP_t *Iterator;
     mat4 MVPMatrix;
     mat4 MVMatrix;
+    Shader_t *Shader;
+    int MVPMatrixId;
+    int i;
     
     if( !TSPList ) {
         DPrintf("TSPDrawList:Invalid TSP data\n");
@@ -1474,28 +1406,79 @@ void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader
     //Emulate PSX Coordinate system...
     glm_rotate_x(MVPMatrix,glm_rad(180.f), MVPMatrix);
     glm_rotate_x(Camera->ViewMatrix,glm_rad(180.f), MVMatrix);
-    glUseProgram(RenderObjectShader->Shader->ProgramId);
-    glUniform1i(RenderObjectShader->EnableLightingId, LevelEnableAmbientLight->IValue);
-    glUniform1i(RenderObjectShader->EnableFogId, LevelEnableFog->IValue);
-    glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
-    glUniformMatrix4fv(RenderObjectShader->MVMatrixId,1,false,&MVMatrix[0][0]);
-    for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
-        TSPDrawNode(&Iterator->Node[0],RenderObjectShader,VRAM,MVPMatrix);
+    if( LevelDrawSurfaces->IValue ) {
+        if( LevelEnableWireFrameMode->IValue ) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        
+        glUseProgram(RenderObjectShader->Shader->ProgramId);
+        glUniform1i(RenderObjectShader->EnableLightingId, LevelEnableAmbientLight->IValue);
+        glUniform1i(RenderObjectShader->EnableFogId, LevelEnableFog->IValue);
+        glUniformMatrix4fv(RenderObjectShader->MVPMatrixId,1,false,&MVPMatrix[0][0]);
+        glUniformMatrix4fv(RenderObjectShader->MVMatrixId,1,false,&MVMatrix[0][0]);
+
+        glActiveTexture(GL_TEXTURE0 + 0);
+        glBindTexture(GL_TEXTURE_2D, VRAM->TextureIndexPage.TextureId);
+        glActiveTexture(GL_TEXTURE0 + 1);
+        glBindTexture(GL_TEXTURE_2D, VRAM->PalettePage.TextureId);
+        glDisable(GL_BLEND);
+        for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+            TSPDrawNode(&Iterator->Node[0],MVPMatrix);
+        }
+        glEnable(GL_BLEND);
+        glBlendColor(1.f, 1.f, 1.f, 1.f);
+        // Alpha pass.
+        for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+            TSPDrawTransparentFaces(Iterator);
+        }
+        if( LevelEnableWireFrameMode->IValue ) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        glUseProgram(0);
     }
-    // Alpha pass.
-    for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
-        TSPDrawTransparentFaces(Iterator,VRAM);
+
+    
+    if( LevelDrawTSPTree->IValue ) {
+        Shader = ShaderCache("TSPBBoxShader","Shaders/TSPBBoxVertexShader.glsl","Shaders/TSPBBoxFragmentShader.glsl");
+        if( !Shader ) {
+            DPrintf("TSPDrawNodeBBox:Invalid Shader\n");
+            return;
+        }
+        glUseProgram(Shader->ProgramId);
+        
+        MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+        glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+        for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+            for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
+                if( LevelEnableFrustumCulling->IValue && !TSPBoxInFrustum(Iterator->Node[i].BBox,MVPMatrix) ) {
+                    continue;
+                }
+                TSPDrawNodeBBox(&Iterator->Node[i]);
+            }
+        }
+        glUseProgram(0);
     }
-    glUseProgram(0);
+    
     if( LevelDrawCollisionData->IValue ) {
         if( LevelEnableWireFrameMode->IValue ) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         } else {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
-        for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
-            TSPDrawCollisionData(Iterator,MVPMatrix);
+        Shader = ShaderCache("TSPCollisionShader","Shaders/TSPCollisionVertexShader.glsl","Shaders/TSPCollisionFragmentShader.glsl");
+        if( !Shader ) {
+            DPrintf("TSPDrawCollisionData:Invalid Shader\n");
+            return;
         }
+        glUseProgram(Shader->ProgramId);
+        MVPMatrixId = glGetUniformLocation(Shader->ProgramId,"MVPMatrix");
+        glUniformMatrix4fv(MVPMatrixId,1,false,&MVPMatrix[0][0]);
+        for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+            TSPDrawCollisionData(Iterator);
+        }
+        glUseProgram(0);
         if( LevelEnableWireFrameMode->IValue ) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
