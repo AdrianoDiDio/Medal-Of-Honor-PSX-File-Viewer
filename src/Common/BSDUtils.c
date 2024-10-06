@@ -689,6 +689,22 @@ void BSDPatchRenderObjects(FILE *BSDFile,BSDRenderObjectTable_t *RenderObjectTab
         if( CurrentRenderObject->Type == -1 ) {
             CurrentRenderObject->Type = ReferencedRenderObject->Type;
         }
+        
+        if( CurrentRenderObject->FaceV2Offset == -1 ) {
+            CurrentRenderObject->FaceV2Offset = ReferencedRenderObject->FaceV2Offset;
+        }
+        
+        if( CurrentRenderObject->NumV2Faces == 0 ) {
+            CurrentRenderObject->NumV2Faces = ReferencedRenderObject->NumV2Faces;
+        }
+        
+        if( CurrentRenderObject->NumV2AnimatedFaces == 0 ) {
+            CurrentRenderObject->NumV2AnimatedFaces = ReferencedRenderObject->NumV2AnimatedFaces;
+        }
+        
+        if( CurrentRenderObject->AnimatedV2FaceOffset == -1 ) {
+            CurrentRenderObject->AnimatedV2FaceOffset = ReferencedRenderObject->AnimatedV2FaceOffset;
+        }
     }
 }
 
@@ -834,6 +850,7 @@ bool BSDReadRenderObjectTable(FILE *BSDFile,int GameEngine, BSDRenderObjectTable
     int Result;
     int i;
     int TableOffset;
+    int RenderObjectSize;
     
     if( !BSDFile ) {
         DPrintf("BSDReadRenderObjectTable: Invalid file\n");
@@ -855,22 +872,17 @@ bool BSDReadRenderObjectTable(FILE *BSDFile,int GameEngine, BSDRenderObjectTable
     FirstRenderObjectFilePosition = GetCurrentFilePosition(BSDFile);
     
     DPrintf("BSDReadRenderObjectTable:Reading %i RenderObject Elements...\n",RenderObjectTable->NumRenderObject);
-    
-    assert(sizeof(BSDRenderObjectElement_t) == MOH_RENDER_OBJECT_SIZE);
-    
+        
     RenderObjectTable->RenderObject = malloc(RenderObjectTable->NumRenderObject * sizeof(BSDRenderObjectElement_t));
     if( !RenderObjectTable->RenderObject ) {
         DPrintf("BSDReadRenderObjectTable:Failed to allocate memory for RenderObject Array\n");
         return 0;
     }
+    RenderObjectSize = GameEngine == MOH_GAME_UNDERGROUND ? MOH_UNDERGROUND_RENDER_OBJECT_SIZE : MOH_RENDER_OBJECT_SIZE;
     for( i = 0; i < RenderObjectTable->NumRenderObject; i++ ) {
-        if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectFilePosition + (i * MOH_UNDERGROUND_RENDER_OBJECT_SIZE));
-        } else {
-            assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectFilePosition + (i * MOH_RENDER_OBJECT_SIZE));
-        }
+        assert(GetCurrentFilePosition(BSDFile) == FirstRenderObjectFilePosition + (i * RenderObjectSize));
         DPrintf("BSDReadRenderObjectTable:Reading RenderObject %i at %i...\n",i,GetCurrentFilePosition(BSDFile));
-        fread(&RenderObjectTable->RenderObject[i],sizeof(RenderObjectTable->RenderObject[i]),1,BSDFile);
+        fread(&RenderObjectTable->RenderObject[i],RenderObjectSize,1,BSDFile);
         DPrintf("RenderObject Id:%i\n",RenderObjectTable->RenderObject[i].Id);
         if( RenderObjectTable->RenderObject[i].Type == 1 ) {
             DPrintf("RenderObject Type:%i | %s\n",RenderObjectTable->RenderObject[i].Type,
@@ -901,12 +913,15 @@ bool BSDReadRenderObjectTable(FILE *BSDFile,int GameEngine, BSDRenderObjectTable
             DPrintf("RenderObject No Reference set...\n");
         }
         if( GameEngine == MOH_GAME_UNDERGROUND ) {
-            if( RenderObjectTable->RenderObject[i].FaceOffset == 0 ) {
-                fread(&RenderObjectTable->RenderObject[i].FaceOffset,sizeof(int),1,BSDFile);
-                SkipFileSection(16,BSDFile);
-            } else {
-                SkipFileSection(20,BSDFile);
-            }
+            DPrintf("RenderObject FaceV2Offset: %i (%i)\n",RenderObjectTable->RenderObject[i].FaceV2Offset,
+                RenderObjectTable->RenderObject[i].FaceV2Offset + BSD_HEADER_SIZE);
+            DPrintf("RenderObject NumV2Faces: %i\n",RenderObjectTable->RenderObject[i].NumV2Faces);
+            DPrintf("RenderObject NumAnimatedFaces for V2: %i\n",RenderObjectTable->RenderObject[i].NumV2AnimatedFaces);
+            DPrintf("RenderObject Animated FaceOffset V2: %i (%i)\n",RenderObjectTable->RenderObject[i].AnimatedV2FaceOffset,
+                RenderObjectTable->RenderObject[i].AnimatedV2FaceOffset + BSD_HEADER_SIZE);
+            DPrintf("RenderObject Unknown1 and 2: %i %i\n",RenderObjectTable->RenderObject[i].Unknown1,
+                RenderObjectTable->RenderObject[i].Unknown2);
+
         }
     }
     // Patch up the data using the referenced renderobjects ids...

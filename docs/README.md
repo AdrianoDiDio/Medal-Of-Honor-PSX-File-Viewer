@@ -879,6 +879,16 @@ NULL or contains an offset to the data stored inside the BSD file.
 
 Medal Of Honor:Underground adds different new fields to the RenderObject
 structure increasing the size to 276.  
+
+| Type           | Size     | Description                                                        |
+| -------------- | -------- | ------------------------------------------------------------------ |
+| int            | 4 bytes  | Face Offset V2                                                     |
+| short          | 2 bytes  | Number of V2 faces                                                 |
+| short          | 2 bytes  | Number of Animated V2 Faces                                        |
+| int            | 4 bytes  | Animated Face Offset V2                                            |
+| int            | 4 bytes  | Unknown                                                            |
+| int            | 4 bytes  | Unknown                                                            |
+
 In order to load the faces from these objects in MOH:Underground we need to
 read both offset 256 and 260 in order to get the Face Offset and  the
 Number of faces that needs to be drawn.  

@@ -276,6 +276,14 @@ typedef struct BSDRenderObjectElement_s {
     int             ReferencedRenderObjectId;
     char            Pad3[16];
     int             Type;
+    // Required by MOH:Underground
+    int             FaceV2Offset;
+    short           NumV2Faces;
+    short           NumV2AnimatedFaces;
+    int             AnimatedV2FaceOffset;
+    int             Unknown1;
+    int             Unknown2;
+    
 } BSDRenderObjectElement_t;
 
 typedef struct BSDRenderObjectTable_s {
