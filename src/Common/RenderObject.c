@@ -23,8 +23,7 @@
 
 void RenderObjectFreeShader(RenderObjectShader_t *RenderObjectShader)
 {
-    if (!RenderObjectShader)
-    {
+    if (!RenderObjectShader) {
         return;
     }
     free(RenderObjectShader);
@@ -32,8 +31,7 @@ void RenderObjectFreeShader(RenderObjectShader_t *RenderObjectShader)
 
 void RenderObjectRecursivelyFreeHierarchyBone(BSDHierarchyBone_t *Bone)
 {
-    if (!Bone)
-    {
+    if (!Bone) {
         return;
     }
     RenderObjectRecursivelyFreeHierarchyBone(Bone->Child2);
@@ -46,62 +44,46 @@ void RenderObjectFree(RenderObject_t *RenderObject)
     int i;
     int j;
 
-    if (!RenderObject)
-    {
+    if (!RenderObject) {
         return;
     }
-    if (RenderObject->VertexTable)
-    {
-        for (i = 0; i < RenderObject->NumVertexTables; i++)
-        {
-            if (RenderObject->VertexTable[i].VertexList)
-            {
+    if (RenderObject->VertexTable) {
+        for (i = 0; i < RenderObject->NumVertexTables; i++) {
+            if (RenderObject->VertexTable[i].VertexList) {
                 free(RenderObject->VertexTable[i].VertexList);
             }
-            if (RenderObject->CurrentVertexTable[i].VertexList)
-            {
+            if (RenderObject->CurrentVertexTable[i].VertexList) {
                 free(RenderObject->CurrentVertexTable[i].VertexList);
             }
         }
         free(RenderObject->VertexTable);
         free(RenderObject->CurrentVertexTable);
     }
-    if (RenderObject->FaceList)
-    {
+    if (RenderObject->FaceList) {
         free(RenderObject->FaceList);
     }
-    if (RenderObject->StaticFaceList)
-    {
+    if (RenderObject->StaticFaceList) {
         free(RenderObject->StaticFaceList);
     }
-    if (RenderObject->VertexList)
-    {
+    if (RenderObject->VertexList) {
         free(RenderObject->VertexList);
     }
-    if (RenderObject->ColorList)
-    {
+    if (RenderObject->ColorList) {
         free(RenderObject->ColorList);
     }
-    if (RenderObject->HierarchyDataRoot)
-    {
+    if (RenderObject->HierarchyDataRoot) {
         RenderObjectRecursivelyFreeHierarchyBone(RenderObject->HierarchyDataRoot);
     }
-    if (RenderObject->AnimationList)
-    {
-        for (i = 0; i < RenderObject->NumAnimations; i++)
-        {
-            for (j = 0; j < RenderObject->AnimationList[i].NumFrames; j++)
-            {
-                if (RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList)
-                {
+    if (RenderObject->AnimationList) {
+        for (i = 0; i < RenderObject->NumAnimations; i++) {
+            for (j = 0; j < RenderObject->AnimationList[i].NumFrames; j++) {
+                if (RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList) {
                     free(RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList);
                 }
-                if (RenderObject->AnimationList[i].Frame[j].QuaternionList)
-                {
+                if (RenderObject->AnimationList[i].Frame[j].QuaternionList) {
                     free(RenderObject->AnimationList[i].Frame[j].QuaternionList);
                 }
-                if (RenderObject->AnimationList[i].Frame[j].CurrentQuaternionList)
-                {
+                if (RenderObject->AnimationList[i].Frame[j].CurrentQuaternionList) {
                     free(RenderObject->AnimationList[i].Frame[j].CurrentQuaternionList);
                 }
             }
@@ -116,8 +98,7 @@ void RenderObjectFree(RenderObject_t *RenderObject)
 void RenderObjectFreeList(RenderObject_t *RenderObjectList)
 {
     RenderObject_t *Temp;
-    while (RenderObjectList)
-    {
+    while (RenderObjectList) {
         Temp = RenderObjectList;
         RenderObjectList = RenderObjectList->Next;
         RenderObjectFree(Temp);
@@ -137,8 +118,7 @@ void RenderObjectExportStaticFaceDataToObjFile(RenderObject_t *RenderObject, mat
     TextureWidth = VRAM->Page.Width;
     TextureHeight = VRAM->Page.Height;
 
-    for (i = RenderObject->Data->NumVertex - 1; i >= 0; i--)
-    {
+    for (i = RenderObject->Data->NumVertex - 1; i >= 0; i--) {
         VertPos[0] = RenderObject->VertexList[i].x;
         VertPos[1] = RenderObject->VertexList[i].y;
         VertPos[2] = RenderObject->VertexList[i].z;
@@ -153,8 +133,7 @@ void RenderObjectExportStaticFaceDataToObjFile(RenderObject_t *RenderObject, mat
         );
         fwrite(Buffer, strlen(Buffer), 1, OutFile);
     }
-    for (i = RenderObject->NumFaces - 1; i >= 0; i--)
-    {
+    for (i = RenderObject->NumFaces - 1; i >= 0; i--) {
         int VRAMPage = RenderObject->StaticFaceList[i].TexInfo & 0x1F;
         int ColorMode = (RenderObject->StaticFaceList[i].TexInfo & 0xC0) >> 7;
         float U0 = (((float)RenderObject->StaticFaceList[i].UV0.u +
@@ -178,8 +157,7 @@ void RenderObjectExportStaticFaceDataToObjFile(RenderObject_t *RenderObject, mat
         sprintf(Buffer, "vt %f %f\nvt %f %f\nvt %f %f\n", U0, V0, U1, V1, U2, V2);
         fwrite(Buffer, strlen(Buffer), 1, OutFile);
     }
-    for (i = 0; i < RenderObject->NumFaces; i++)
-    {
+    for (i = 0; i < RenderObject->NumFaces; i++) {
         unsigned short Vert0;
         unsigned short Vert1;
         unsigned short Vert2;
@@ -209,8 +187,7 @@ void RenderObjectExportStaticFaceDataToPlyFile(RenderObject_t *RenderObject, mat
     TextureWidth = VRAM->Page.Width;
     TextureHeight = VRAM->Page.Height;
 
-    for (i = 0; i < RenderObject->NumFaces; i++)
-    {
+    for (i = 0; i < RenderObject->NumFaces; i++) {
         int VRAMPage = RenderObject->StaticFaceList[i].TexInfo;
         int ColorMode = (RenderObject->StaticFaceList[i].TexInfo & 0xC0) >> 7;
         float U0 = (((float)RenderObject->StaticFaceList[i].UV0.u +
@@ -269,15 +246,12 @@ RenderObject_t *RenderObjectGetByIdFromList(RenderObject_t *RenderObjectList, in
 {
     RenderObject_t *Iterator;
 
-    if (!RenderObjectList)
-    {
+    if (!RenderObjectList) {
         return NULL;
     }
 
-    for (Iterator = RenderObjectList; Iterator; Iterator = Iterator->Next)
-    {
-        if (Iterator->Id == RenderObjectId)
-        {
+    for (Iterator = RenderObjectList; Iterator; Iterator = Iterator->Next) {
+        if (Iterator->Id == RenderObjectId) {
             return Iterator;
         }
     }
@@ -286,76 +260,73 @@ RenderObject_t *RenderObjectGetByIdFromList(RenderObject_t *RenderObjectList, in
 
 const char *RenderObjectGetStringFromType(RenderObjectType_t RenderObjectType)
 {
-    switch (RenderObjectType)
-    {
-    case RENDER_OBJECT_CARRY_AUX_ELEMENTS:
-        return "Carry Aux Elements";
-    case RENDER_OBJECT_PICKUP_AND_EXPLOSIVE:
-        return "Pickup And Explosive";
-    case RENDER_OBJECT_ENEMY:
-        return "Enemy Render Object";
-    case RENDER_OBJECT_PLANE:
-        return "Airplane";
-    case RENDER_OBJECT_MG42:
-        return "MG42";
-    case RENDER_OBJECT_DOOR:
-        return "Door";
-    case RENDER_OBJECT_UNKNOWN1:
-        return "Unknown1";
-    case RENDER_OBJECT_DESTRUCTIBLE_WINDOW:
-        return "Destructible Window";
-    case RENDER_OBJECT_VALVE:
-        return "Valve";
-    case RENDER_OBJECT_RADIO:
-        return "Radio";
-    case RENDER_OBJECT_EXPLOSIVE_CHARGE:
-        return "Explosive Charge";
-    default:
-        return "Unknown";
+    switch (RenderObjectType) {
+        case RENDER_OBJECT_CARRY_AUX_ELEMENTS:
+            return "Carry Aux Elements";
+        case RENDER_OBJECT_PICKUP_AND_EXPLOSIVE:
+            return "Pickup And Explosive";
+        case RENDER_OBJECT_ENEMY:
+            return "Enemy Render Object";
+        case RENDER_OBJECT_PLANE:
+            return "Airplane";
+        case RENDER_OBJECT_MG42:
+            return "MG42";
+        case RENDER_OBJECT_DOOR:
+            return "Door";
+        case RENDER_OBJECT_UNKNOWN1:
+            return "Unknown1";
+        case RENDER_OBJECT_DESTRUCTIBLE_WINDOW:
+            return "Destructible Window";
+        case RENDER_OBJECT_VALVE:
+            return "Valve";
+        case RENDER_OBJECT_RADIO:
+            return "Radio";
+        case RENDER_OBJECT_EXPLOSIVE_CHARGE:
+            return "Explosive Charge";
+        default:
+            return "Unknown";
     }
 }
 
 const char *RenderObjectGetWeaponNameFromId(int RenderObjectId)
 {
-    switch (RenderObjectId)
-    {
-    case RENDER_OBJECT_WEAPON_PISTOL_TYPE_1:
-        return "Pistol Type 1";
-    case RENDER_OBJECT_WEAPON_SMG_TYPE_1:
-        return "SubMachineGun Type 1";
-    case RENDER_OBJECT_WEAPON_BAZOOKA:
-        return "Bazooka";
-    case RENDER_OBJECT_WEAPON_AMERICAN_GRENADE:
-        return "American Grenade";
-    case RENDER_OBJECT_WEAPON_SHOTGUN:
-        return "Shotgun";
-    case RENDER_OBJECT_WEAPON_SNIPER_RIFLE:
-        return "Sniper Rifle";
-    case RENDER_OBJECT_WEAPON_SMG_TYPE_2:
-        return "SubMachineGun Type 2";
-    case RENDER_OBJECT_WEAPON_DOCUMENT_PAPERS:
-        return "Document Papers";
-    case RENDER_OBJECT_WEAPON_PISTOL_TYPE_2:
-        return "Pistol Type 2";
-    case RENDER_OBJECT_WEAPON_PISTOL_TYPE_3:
-        return "Pistol Type 3";
-    case RENDER_OBJECT_WEAPON_GERMAN_GRENADE:
-        return "German Grenade";
-    case RENDER_OBJECT_WEAPON_SMG_TYPE_3:
-        return "SubMachineGun Type 3";
-    case RENDER_OBJECT_WEAPON_M1_GARAND:
-        return "M1 Garand";
-    default:
-        // Should never happen!
-        return "Unknown";
+    switch (RenderObjectId) {
+        case RENDER_OBJECT_WEAPON_PISTOL_TYPE_1:
+            return "Pistol Type 1";
+        case RENDER_OBJECT_WEAPON_SMG_TYPE_1:
+            return "SubMachineGun Type 1";
+        case RENDER_OBJECT_WEAPON_BAZOOKA:
+            return "Bazooka";
+        case RENDER_OBJECT_WEAPON_AMERICAN_GRENADE:
+            return "American Grenade";
+        case RENDER_OBJECT_WEAPON_SHOTGUN:
+            return "Shotgun";
+        case RENDER_OBJECT_WEAPON_SNIPER_RIFLE:
+            return "Sniper Rifle";
+        case RENDER_OBJECT_WEAPON_SMG_TYPE_2:
+            return "SubMachineGun Type 2";
+        case RENDER_OBJECT_WEAPON_DOCUMENT_PAPERS:
+            return "Document Papers";
+        case RENDER_OBJECT_WEAPON_PISTOL_TYPE_2:
+            return "Pistol Type 2";
+        case RENDER_OBJECT_WEAPON_PISTOL_TYPE_3:
+            return "Pistol Type 3";
+        case RENDER_OBJECT_WEAPON_GERMAN_GRENADE:
+            return "German Grenade";
+        case RENDER_OBJECT_WEAPON_SMG_TYPE_3:
+            return "SubMachineGun Type 3";
+        case RENDER_OBJECT_WEAPON_M1_GARAND:
+            return "M1 Garand";
+        default:
+            // Should never happen!
+            return "Unknown";
     }
 }
 
 void RenderObjectUpdateShader(RenderObjectShader_t *RenderObjectShader, short FogNear, Color3b_t ClearColor)
 {
     vec3 ClearColorVector;
-    if (!RenderObjectShader)
-    {
+    if (!RenderObjectShader) {
         return;
     }
 
@@ -375,14 +346,12 @@ RenderObjectShader_t *RenderObjectInitShader()
     vec4 ClearColor;
 
     Shader = ShaderCache("RenderObjectShader", "Shaders/RenderObjectVertexShader.glsl", "Shaders/RenderObjectFragmentShader.glsl");
-    if (!Shader)
-    {
+    if (!Shader) {
         DPrintf("RenderObjectInitShader:Couldn't cache Shader.\n");
         return NULL;
     }
     RenderObjectShader = malloc(sizeof(RenderObjectShader_t));
-    if (!RenderObjectShader)
-    {
+    if (!RenderObjectShader) {
         DPrintf("RenderObjectInitShader:Failed to allocate memory for shader\n");
         return NULL;
     }
@@ -409,13 +378,11 @@ RenderObjectShader_t *RenderObjectInitShader()
 
 void RenderObjectFillFaceVertexBuffer(int *Buffer, int *BufferSize, BSDVertex_t Vertex, int U0, int V0, BSDColor_t Color, int CLUTX, int CLUTY, int ColorMode)
 {
-    if (!Buffer)
-    {
+    if (!Buffer) {
         DPrintf("RenderObjectFillFaceVertexBuffer:Invalid Buffer\n");
         return;
     }
-    if (!BufferSize)
-    {
+    if (!BufferSize) {
         DPrintf("RenderObjectFillFaceVertexBuffer:Invalid BufferSize\n");
         return;
     }
@@ -460,8 +427,7 @@ void RenderObjectGenerateAnimatedVAO(RenderObject_t *RenderObject)
     int V2;
     int i;
 
-    if (!RenderObject)
-    {
+    if (!RenderObject) {
         DPrintf("RenderObjectGenerateAnimatedVAO:Invalid RenderObject\n");
         return;
     }
@@ -478,8 +444,7 @@ void RenderObjectGenerateAnimatedVAO(RenderObject_t *RenderObject)
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
     DPrintf("RenderObjectGenerateAnimatedVAO:Generating for %i faces Id:%i\n", RenderObject->NumFaces, RenderObject->Id);
-    for (i = 0; i < RenderObject->NumFaces; i++)
-    {
+    for (i = 0; i < RenderObject->NumFaces; i++) {
         CurrentFace = &RenderObject->FaceList[i];
         VRAMPage = CurrentFace->TexInfo & 0x1F;
         ColorMode = (CurrentFace->TexInfo >> 7) & 0x3;
@@ -542,8 +507,7 @@ void RenderObjectGenerateStaticVAO(RenderObject_t *RenderObject)
     int V2;
     int i;
 
-    if (!RenderObject)
-    {
+    if (!RenderObject) {
         DPrintf("RenderObjectGenerateStaticVAO:Invalid RenderObject\n");
         return;
     }
@@ -560,8 +524,7 @@ void RenderObjectGenerateStaticVAO(RenderObject_t *RenderObject)
     VertexData = malloc(VertexSize);
     VertexPointer = 0;
     DPrintf("RenderObjectGenerateStaticVAO:Generating for %i faces Id:%i\n", RenderObject->NumFaces, RenderObject->Id);
-    for (i = 0; i < RenderObject->NumFaces; i++)
-    {
+    for (i = 0; i < RenderObject->NumFaces; i++) {
         CurrentFace = &RenderObject->StaticFaceList[i];
 
         Vert0 = CurrentFace->Vert0;
@@ -604,13 +567,11 @@ void RenderObjectUpdateVAO(RenderObject_t *RenderObject)
     int VertexData[3];
     int i;
 
-    if (!RenderObject)
-    {
+    if (!RenderObject) {
         DPrintf("RenderObjectUpdateVAO:Invalid RenderObject\n");
         return;
     }
-    if (!RenderObject->VAO)
-    {
+    if (!RenderObject->VAO) {
         DPrintf("RenderObjectUpdateVAO:Invalid VAO\n");
         return;
     }
@@ -618,8 +579,7 @@ void RenderObjectUpdateVAO(RenderObject_t *RenderObject)
     Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
     glBindBuffer(GL_ARRAY_BUFFER, RenderObject->VAO->VBOId[0]);
 
-    for (i = 0; i < RenderObject->NumFaces; i++)
-    {
+    for (i = 0; i < RenderObject->NumFaces; i++) {
         BaseOffset = (i * Stride * 3);
         CurrentFace = &RenderObject->FaceList[i];
         VertexData[0] = RenderObject->CurrentVertexTable[CurrentFace->VertexTableIndex0 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex0].x;
@@ -645,12 +605,10 @@ void RenderObjectUpdateVAO(RenderObject_t *RenderObject)
 
 BSDAnimationFrame_t *RenderObjectGetCurrentFrame(const RenderObject_t *RenderObject)
 {
-    if (!RenderObject)
-    {
+    if (!RenderObject) {
         return NULL;
     }
-    if (RenderObject->CurrentAnimationIndex == -1 || RenderObject->CurrentFrameIndex == -1)
-    {
+    if (RenderObject->CurrentAnimationIndex == -1 || RenderObject->CurrentFrameIndex == -1) {
         return NULL;
     }
     return &RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[RenderObject->CurrentFrameIndex];
@@ -658,8 +616,7 @@ BSDAnimationFrame_t *RenderObjectGetCurrentFrame(const RenderObject_t *RenderObj
 
 void RenderObjectResetFrameQuaternionList(BSDAnimationFrame_t *Frame)
 {
-    if (!Frame)
-    {
+    if (!Frame) {
         return;
     }
     memcpy(Frame->CurrentQuaternionList, Frame->QuaternionList, Frame->NumQuaternions * sizeof(BSDQuaternion_t));
@@ -677,19 +634,16 @@ void RenderObjectRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone, co
     vec3 Temp;
     int i;
 
-    if (!Bone)
-    {
+    if (!Bone) {
         DPrintf("RenderObjectRecursivelyApplyHierachyData:NULL Bone.\n");
         return;
     }
 
-    if (!QuaternionList)
-    {
+    if (!QuaternionList) {
         DPrintf("RenderObjectRecursivelyApplyHierachyData:Invalid Quaternion List.\n");
         return;
     }
-    if (!VertexTable)
-    {
+    if (!VertexTable) {
         DPrintf("RenderObjectRecursivelyApplyHierachyData:Invalid Vertex Table.\n");
         return;
     }
@@ -713,10 +667,8 @@ void RenderObjectRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone, co
     glm_translate_make(LocalTranslationMatrix, TransformedBonePosition);
     glm_mat4_mul(LocalTranslationMatrix, LocalRotationMatrix, LocalTransformMatrix);
 
-    if (VertexTable[Bone->VertexTableIndex].Offset != -1 && VertexTable[Bone->VertexTableIndex].NumVertex != 0)
-    {
-        for (i = 0; i < VertexTable[Bone->VertexTableIndex].NumVertex; i++)
-        {
+    if (VertexTable[Bone->VertexTableIndex].Offset != -1 && VertexTable[Bone->VertexTableIndex].NumVertex != 0) {
+        for (i = 0; i < VertexTable[Bone->VertexTableIndex].NumVertex; i++) {
             Temp[0] = VertexTable[Bone->VertexTableIndex].VertexList[i].x;
             Temp[1] = VertexTable[Bone->VertexTableIndex].VertexList[i].y;
             Temp[2] = VertexTable[Bone->VertexTableIndex].VertexList[i].z;
@@ -727,12 +679,10 @@ void RenderObjectRecursivelyApplyHierachyData(const BSDHierarchyBone_t *Bone, co
         }
     }
 
-    if (Bone->Child2)
-    {
+    if (Bone->Child2) {
         RenderObjectRecursivelyApplyHierachyData(Bone->Child2, QuaternionList, VertexTable, TransformMatrix);
     }
-    if (Bone->Child1)
-    {
+    if (Bone->Child1) {
         RenderObjectRecursivelyApplyHierachyData(Bone->Child1, QuaternionList, VertexTable, LocalTransformMatrix);
     }
 }
@@ -759,15 +709,13 @@ void RenderObjectExportPoseToPly(RenderObject_t *RenderObject, BSDVertexTable_t 
     mat4 ModelMatrix;
     BSDAnimatedModelFace_t *CurrentFace;
 
-    if (!RenderObject || !OutFile)
-    {
+    if (!RenderObject || !OutFile) {
         bool InvalidFile = (OutFile == NULL ? true : false);
         DPrintf("RenderObjectExportPoseToPly: Invalid %s\n", InvalidFile ? "file" : "bsd struct");
         return;
     }
 
-    if (!VRAM)
-    {
+    if (!VRAM) {
         DPrintf("RenderObjectExportPoseToPly:Invalid VRAM data\n");
         return;
     }
@@ -797,8 +745,7 @@ void RenderObjectExportPoseToPly(RenderObject_t *RenderObject, BSDVertexTable_t 
     sprintf(Buffer, "element face %i\nproperty list uchar int vertex_indices\nend_header\n", RenderObject->NumFaces);
     fwrite(Buffer, strlen(Buffer), 1, OutFile);
 
-    for (i = 0; i < RenderObject->NumFaces; i++)
-    {
+    for (i = 0; i < RenderObject->NumFaces; i++) {
         CurrentFace = &RenderObject->FaceList[i];
         VRAMPage = CurrentFace->TexInfo;
         ColorMode = (CurrentFace->TexInfo & 0xC0) >> 7;
@@ -848,8 +795,7 @@ void RenderObjectExportPoseToPly(RenderObject_t *RenderObject, BSDVertexTable_t 
                 CurrentFace->RGB1.r / 255.f, CurrentFace->RGB1.g / 255.f, CurrentFace->RGB1.b / 255.f, U2, V2);
         fwrite(Buffer, strlen(Buffer), 1, OutFile);
     }
-    for (i = 0; i < RenderObject->NumFaces; i++)
-    {
+    for (i = 0; i < RenderObject->NumFaces; i++) {
         int Vert0 = (i * 3) + 0;
         int Vert1 = (i * 3) + 1;
         int Vert2 = (i * 3) + 2;
@@ -859,15 +805,13 @@ void RenderObjectExportPoseToPly(RenderObject_t *RenderObject, BSDVertexTable_t 
 }
 void RenderObjectExportCurrentPoseToPly(RenderObject_t *RenderObject, VRAM_t *VRAM, FILE *OutFile)
 {
-    if (!RenderObject || !OutFile)
-    {
+    if (!RenderObject || !OutFile) {
         bool InvalidFile = (OutFile == NULL ? true : false);
         DPrintf("RenderObjectExportCurrentPoseToPly: Invalid %s\n", InvalidFile ? "file" : "bsd struct");
         return;
     }
 
-    if (!VRAM)
-    {
+    if (!VRAM) {
         DPrintf("RenderObjectExportCurrentPoseToPly:Invalid VRAM data\n");
         return;
     }
@@ -884,28 +828,22 @@ void RenderObjectExportCurrentAnimationToPly(RenderObject_t *RenderObject, VRAM_
     char *PlyFile;
     int VertexTableSize;
 
-    if (RenderObject->CurrentAnimationIndex == -1)
-    {
+    if (RenderObject->CurrentAnimationIndex == -1) {
         DPrintf("RenderObjectExportCurrentAnimationToPly:Invalid animation index\n");
         return;
     }
     VertexTableSize = RenderObject->NumVertexTables * sizeof(BSDVertexTable_t);
     TempVertexTable = malloc(VertexTableSize);
     // Prepare the copy of the vertex table that will be used by the exporter
-    for (i = 0; i < RenderObject->NumVertexTables; i++)
-    {
+    for (i = 0; i < RenderObject->NumVertexTables; i++) {
         TempVertexTable[i].NumVertex = RenderObject->VertexTable[i].NumVertex;
-        if (RenderObject->VertexTable[i].Offset == -1)
-        {
+        if (RenderObject->VertexTable[i].Offset == -1) {
             TempVertexTable[i].VertexList = NULL;
-        }
-        else
-        {
+        } else {
             TempVertexTable[i].VertexList = malloc(RenderObject->VertexTable[i].NumVertex * sizeof(BSDVertex_t));
         }
     }
-    for (i = 0; i < RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].NumFrames; i++)
-    {
+    for (i = 0; i < RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].NumFrames; i++) {
         asprintf(&PlyFile, "%s%cRenderObject-%u-%i-%i-%s.ply", Directory, PATH_SEPARATOR, RenderObject->Id,
                  RenderObject->CurrentAnimationIndex, i, EngineName);
         OutFile = fopen(PlyFile, "w");
@@ -929,10 +867,8 @@ void RenderObjectExportCurrentAnimationToPly(RenderObject_t *RenderObject, VRAM_
         fclose(OutFile);
         free(PlyFile);
     }
-    for (i = 0; i < RenderObject->NumVertexTables; i++)
-    {
-        if (TempVertexTable[i].VertexList)
-        {
+    for (i = 0; i < RenderObject->NumVertexTables; i++) {
+        if (TempVertexTable[i].VertexList) {
             free(TempVertexTable[i].VertexList);
         }
     }
@@ -943,13 +879,11 @@ void RenderObjectResetVertexTable(RenderObject_t *RenderObject)
 {
     int i;
 
-    if (!RenderObject)
-    {
+    if (!RenderObject) {
         DPrintf("RenderObjectResetVertexTable:Invalid RenderObject\n");
         return;
     }
-    for (i = 0; i < RenderObject->NumVertexTables; i++)
-    {
+    for (i = 0; i < RenderObject->NumVertexTables; i++) {
         RenderObject->CurrentVertexTable[i].Offset = RenderObject->VertexTable[i].Offset;
         RenderObject->CurrentVertexTable[i].NumVertex = RenderObject->VertexTable[i].NumVertex;
         memcpy(RenderObject->CurrentVertexTable[i].VertexList,
@@ -975,34 +909,28 @@ bool RenderObjectSetAnimationPose(RenderObject_t *RenderObject, int AnimationInd
     int NumVertices;
     int i;
 
-    if (!RenderObject)
-    {
+    if (!RenderObject) {
         DPrintf("RenderObjectSetAnimationPose:Failed to set pose RenderObject is not valid\n");
         return false;
     }
 
-    if (RenderObject->IsStatic)
-    {
+    if (RenderObject->IsStatic) {
         DPrintf("RenderObjectSetAnimationPose:Failed to set pose RenderObject is not animated\n");
         return false;
     }
-    if (AnimationIndex < 0 || AnimationIndex > RenderObject->NumAnimations)
-    {
+    if (AnimationIndex < 0 || AnimationIndex > RenderObject->NumAnimations) {
         DPrintf("RenderObjectSetAnimationPose:Failed to set pose using index %i...Index is out of bounds\n", AnimationIndex);
         return false;
     }
-    if ((AnimationIndex == RenderObject->CurrentAnimationIndex && FrameIndex == RenderObject->CurrentFrameIndex) && !Override)
-    {
+    if ((AnimationIndex == RenderObject->CurrentAnimationIndex && FrameIndex == RenderObject->CurrentFrameIndex) && !Override) {
         DPrintf("RenderObjectSetAnimationPose:Pose is already set\n");
         return false;
     }
-    if (!RenderObject->AnimationList[AnimationIndex].NumFrames)
-    {
+    if (!RenderObject->AnimationList[AnimationIndex].NumFrames) {
         DPrintf("RenderObjectSetAnimationPose:Failed to set pose using index %i...animation has no frames\n", AnimationIndex);
         return false;
     }
-    if (FrameIndex < 0 || FrameIndex > RenderObject->AnimationList[AnimationIndex].NumFrames)
-    {
+    if (FrameIndex < 0 || FrameIndex > RenderObject->AnimationList[AnimationIndex].NumFrames) {
         DPrintf("RenderObjectSetAnimationPose:Failed to set pose using frame %i...Frame Index is out of bounds\n", FrameIndex);
         return false;
     }
@@ -1016,13 +944,11 @@ bool RenderObjectSetAnimationPose(RenderObject_t *RenderObject, int AnimationInd
     // NOTE(Adriano):Interpolate only between frames of the same animation and not in-between two different one.
     //               Also do not interpolate if the frame is the same as the previous one.
     if (RenderObject->CurrentAnimationIndex == AnimationIndex && RenderObject->CurrentFrameIndex != -1 &&
-        RenderObject->CurrentFrameIndex != FrameIndex)
-    {
+        RenderObject->CurrentFrameIndex != FrameIndex) {
         assert(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions ==
                RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[RenderObject->CurrentFrameIndex].NumQuaternions);
         QuaternionList = malloc(RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions * sizeof(BSDQuaternion_t));
-        for (i = 0; i < RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions; i++)
-        {
+        for (i = 0; i < RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].NumQuaternions; i++) {
             FromQuaternion[0] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].x / 4096.f;
             FromQuaternion[1] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].y / 4096.f;
             FromQuaternion[2] = RenderObject->AnimationList[RenderObject->CurrentAnimationIndex].Frame[RenderObject->CurrentFrameIndex].QuaternionList[i].z / 4096.f;
@@ -1043,9 +969,7 @@ bool RenderObjectSetAnimationPose(RenderObject_t *RenderObject, int AnimationInd
         RenderObjectRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot, QuaternionList,
                                                  RenderObject->CurrentVertexTable, TransformMatrix);
         free(QuaternionList);
-    }
-    else
-    {
+    } else {
         RenderObjectRecursivelyApplyHierachyData(RenderObject->HierarchyDataRoot,
                                                  RenderObject->AnimationList[AnimationIndex].Frame[FrameIndex].CurrentQuaternionList,
                                                  RenderObject->CurrentVertexTable, TransformMatrix);
@@ -1054,10 +978,8 @@ bool RenderObjectSetAnimationPose(RenderObject_t *RenderObject, int AnimationInd
     RenderObject->CurrentFrameIndex = FrameIndex;
 
     NumVertices = 0;
-    for (int i = 0; i < RenderObject->NumVertexTables; i++)
-    {
-        for (int j = 0; j < RenderObject->CurrentVertexTable[i].NumVertex; j++)
-        {
+    for (int i = 0; i < RenderObject->NumVertexTables; i++) {
+        for (int j = 0; j < RenderObject->CurrentVertexTable[i].NumVertex; j++) {
             RenderObject->Center[0] += RenderObject->CurrentVertexTable[i].VertexList[j].x;
             RenderObject->Center[1] += RenderObject->CurrentVertexTable[i].VertexList[j].y;
             RenderObject->Center[2] += RenderObject->CurrentVertexTable[i].VertexList[j].z;
@@ -1065,12 +987,9 @@ bool RenderObjectSetAnimationPose(RenderObject_t *RenderObject, int AnimationInd
         }
     }
     glm_vec3_scale(RenderObject->Center, 1.f / NumVertices, RenderObject->Center);
-    if (!RenderObject->VAO)
-    {
+    if (!RenderObject->VAO) {
         RenderObjectGenerateAnimatedVAO(RenderObject);
-    }
-    else
-    {
+    } else {
         RenderObjectUpdateVAO(RenderObject);
     }
     return true;
@@ -1078,18 +997,14 @@ bool RenderObjectSetAnimationPose(RenderObject_t *RenderObject, int AnimationInd
 
 void RenderObjectGenerateVAO(RenderObject_t *RenderObject)
 {
-    if (!RenderObject)
-    {
+    if (!RenderObject) {
         DPrintf("RenderObjectGenerateVAO:Invalid RenderObject\n");
         return;
     }
 
-    if (RenderObject->IsStatic)
-    {
+    if (RenderObject->IsStatic) {
         RenderObjectGenerateStaticVAO(RenderObject);
-    }
-    else
-    {
+    } else {
         RenderObjectSetAnimationPose(RenderObject, 0, 0, 0);
     }
 }
@@ -1127,17 +1042,13 @@ void RenderObjectBeginDraw(const VRAM_t *VRAM, const RenderObjectShader_t *Rende
     int TextureIndexId;
     int MVPMatrixId;
 
-    if (!RenderObjectShader)
-    {
+    if (!RenderObjectShader) {
         return;
     }
 
-    if (EnableWireFrameMode)
-    {
+    if (EnableWireFrameMode) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    }
-    else
-    {
+    } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
@@ -1149,7 +1060,8 @@ void RenderObjectBeginDraw(const VRAM_t *VRAM, const RenderObjectShader_t *Rende
     glUniform1i(RenderObjectShader->EnableLightingId, EnableAmbientLight ? 1 : 0);
     glUniform1i(RenderObjectShader->EnableFogId, EnableFog ? 1 : 0);
 }
-void RenderObjectDraw(RenderObject_t *RenderObject, const RenderObjectShader_t *RenderObjectShader, mat4 ModelMatrix, mat4 ViewMatrix, mat4 ProjectionMatrix)
+void RenderObjectDraw(RenderObject_t *RenderObject, const RenderObjectShader_t *RenderObjectShader, mat4 ModelMatrix, mat4 ViewMatrix, 
+                      mat4 ProjectionMatrix)
 {
     mat4 ModelViewMatrix;
     mat4 MVPMatrix;
@@ -1176,8 +1088,7 @@ void RenderObjectEndDraw(bool EnableWireFrameMode)
     glBindTexture(GL_TEXTURE_2D, 0);
     glBlendColor(1.f, 1.f, 1.f, 1.f);
     glUseProgram(0);
-    if (EnableWireFrameMode)
-    {
+    if (EnableWireFrameMode) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 }
@@ -1187,22 +1098,19 @@ int RenderObjectLoadStaticVertexAndColorData(RenderObject_t *RenderObject, FILE 
     int i;
     int Size;
 
-    if (!RenderObject || !BSDFile)
-    {
+    if (!RenderObject || !BSDFile) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         printf("RenderObjectLoadStaticVertexAndColorData: Invalid %s\n", InvalidFile ? "file" : "RenderObject struct");
         return false;
     }
-    if (RenderObject->Data->VertexOffset == 0)
-    {
+    if (RenderObject->Data->VertexOffset == 0) {
         DPrintf("RenderObjectLoadStaticVertexAndColorData:Invalid Vertex Offset\n");
         return false;
     }
 
     Size = RenderObject->Data->NumVertex * sizeof(BSDVertex_t);
     RenderObject->VertexList = malloc(Size);
-    if (!RenderObject->VertexList)
-    {
+    if (!RenderObject->VertexList) {
         DPrintf("RenderObjectLoadStaticVertexAndColorData:Failed to allocate memory for VertexData\n");
         return false;
     }
@@ -1210,8 +1118,7 @@ int RenderObjectLoadStaticVertexAndColorData(RenderObject_t *RenderObject, FILE 
     fseek(BSDFile, BSDGetRealOffset(RenderObject->Data->VertexOffset), SEEK_SET);
     DPrintf("RenderObjectLoadStaticVertexAndColorData:Reading Vertex definition at %i (Current:%i)\n",
             BSDGetRealOffset(RenderObject->Data->VertexOffset), GetCurrentFilePosition(BSDFile));
-    for (i = 0; i < RenderObject->Data->NumVertex; i++)
-    {
+    for (i = 0; i < RenderObject->Data->NumVertex; i++) {
         DPrintf("RenderObjectLoadStaticVertexAndColorData:Reading Vertex at %i (%i)\n",
                 GetCurrentFilePosition(BSDFile), GetCurrentFilePosition(BSDFile) - BSD_HEADER_SIZE);
         fread(&RenderObject->VertexList[i], sizeof(BSDVertex_t), 1, BSDFile);
@@ -1220,12 +1127,10 @@ int RenderObjectLoadStaticVertexAndColorData(RenderObject_t *RenderObject, FILE 
                 RenderObject->VertexList[i].Pad);
     }
 
-    if (RenderObject->Data->ColorOffset != 0)
-    {
+    if (RenderObject->Data->ColorOffset != 0) {
         Size = RenderObject->Data->NumVertex * sizeof(BSDColor_t);
         RenderObject->ColorList = malloc(Size);
-        if (!RenderObject->ColorList)
-        {
+        if (!RenderObject->ColorList) {
             DPrintf("RenderObjectLoadStaticVertexAndColorData:Failed to allocate memory for ColorData\n");
             return false;
         }
@@ -1233,8 +1138,7 @@ int RenderObjectLoadStaticVertexAndColorData(RenderObject_t *RenderObject, FILE 
         fseek(BSDFile, BSDGetRealOffset(RenderObject->Data->ColorOffset), SEEK_SET);
         DPrintf("RenderObjectLoadStaticVertexAndColorData:Reading Color definition at %i (Current:%i)\n",
                 BSDGetRealOffset(RenderObject->Data->ColorOffset), GetCurrentFilePosition(BSDFile));
-        for (i = 0; i < RenderObject->Data->NumVertex; i++)
-        {
+        for (i = 0; i < RenderObject->Data->NumVertex; i++) {
             DPrintf("RenderObjectLoadStaticVertexAndColorData:Reading Color at %i (%i)\n", GetCurrentFilePosition(BSDFile),
                     GetCurrentFilePosition(BSDFile) - 2048);
             fread(&RenderObject->ColorList[i], sizeof(Color1i_t), 1, BSDFile);
@@ -1255,13 +1159,11 @@ bool RenderObjectParseStaticFaceData(RenderObject_t *RenderObject, FILE *BSDFile
     int FaceListSize;
     int i;
 
-    if (!RenderObject)
-    {
+    if (!RenderObject) {
         DPrintf("RenderObjectParseStaticFaceData:Invalid RenderObject!\n");
         return false;
     }
-    if (RenderObject->Data->FaceOffset == 0)
-    {
+    if (RenderObject->Data->FaceOffset == 0) {
         DPrintf("RenderObjectParseStaticFaceData:Invalid FaceOffset!\n");
         return false;
     }
@@ -1271,16 +1173,14 @@ bool RenderObjectParseStaticFaceData(RenderObject_t *RenderObject, FILE *BSDFile
     DPrintf("RenderObjectParseStaticFaceData:Reading %i faces\n", RenderObject->NumFaces);
     FaceListSize = RenderObject->NumFaces * sizeof(BSDFace_t);
     RenderObject->StaticFaceList = malloc(FaceListSize);
-    if (!RenderObject->StaticFaceList)
-    {
+    if (!RenderObject->StaticFaceList) {
         DPrintf("RenderObjectParseStaticFaceData:Failed to allocate memory for face array\n");
         return false;
     }
     memset(RenderObject->StaticFaceList, 0, FaceListSize);
     DPrintf("RenderObjectParseStaticFaceData:Reading Face definition at %i (Current:%i)\n",
             BSDGetRealOffset(RenderObject->Data->FaceOffset), GetCurrentFilePosition(BSDFile));
-    for (i = 0; i < RenderObject->NumFaces; i++)
-    {
+    for (i = 0; i < RenderObject->NumFaces; i++) {
         DPrintf("RenderObjectParseStaticFaceData:Reading Face at %i (%i)\n", GetCurrentFilePosition(BSDFile), GetCurrentFilePosition(BSDFile) - 2048);
 
         fread(&RenderObject->StaticFaceList[i].UV0, sizeof(RenderObject->StaticFaceList[i].UV0), 1, BSDFile);
@@ -1330,19 +1230,16 @@ bool RenderObjectParseStaticFaceDataV2(RenderObject_t *RenderObject, FILE *BSDFi
     BSDFace_t TempFace;
     int NumFaceOffset;
 
-    if (!RenderObject)
-    {
+    if (!RenderObject) {
         DPrintf("RenderObjectParseStaticFaceDataV2:Invalid RenderObject!\n");
         return false;
     }
-    if (RenderObject->Data->FaceV2Offset == 0)
-    {
+    if (RenderObject->Data->FaceV2Offset == 0) {
         DPrintf("RenderObjectParseStaticFaceDataV2:Invalid FaceOffset!\n");
         return false;
     }
 
-    if (!RenderObject->Data->NumV2Faces)
-    {
+    if (!RenderObject->Data->NumV2Faces) {
         DPrintf("RenderObjectParseStaticFaceDataV2:No faces to load!\n");
         return false;
     }
@@ -1352,15 +1249,13 @@ bool RenderObjectParseStaticFaceDataV2(RenderObject_t *RenderObject, FILE *BSDFi
 
     FaceListSize = RenderObject->NumFaces * sizeof(BSDFace_t);
     RenderObject->StaticFaceList = malloc(FaceListSize);
-    if (!RenderObject->StaticFaceList)
-    {
+    if (!RenderObject->StaticFaceList) {
         DPrintf("RenderObjectParseStaticFaceDataV2:Failed to allocate memory for face array\n");
         return false;
     }
     memset(RenderObject->StaticFaceList, 0, FaceListSize);
     CurrentFaceIndex = 0;
-    while (CurrentFaceIndex < RenderObject->NumFaces)
-    {
+    while (CurrentFaceIndex < RenderObject->NumFaces) {
         DPrintf("RenderObjectParseStaticFaceDataV2:Reading Face at %i (%i)\n", GetCurrentFilePosition(BSDFile), GetCurrentFilePosition(BSDFile) - 2048);
         fread(&V0V1, sizeof(V0V1), 1, BSDFile);
         fread(&V2, sizeof(V2), 1, BSDFile);
@@ -1395,26 +1290,21 @@ bool RenderObjectParseStaticFaceDataV2(RenderObject_t *RenderObject, FILE *BSDFi
         TempFace.UV1 = RenderObject->StaticFaceList[CurrentFaceIndex].UV1;
         TempFace.UV2 = RenderObject->StaticFaceList[CurrentFaceIndex].UV2;
         CurrentFaceIndex++;
-        while (1)
-        {
+        while (1) {
             DPrintf("RenderObjectParseStaticFaceDataV2:Reading additional face %i \n", CurrentFaceIndex);
             fread(&Marker, sizeof(Marker), 1, BSDFile);
             DPrintf("RenderObjectParseStaticFaceDataV2:Found Marker %u (Vertex %i) Texture:%u Mask %i\n", Marker, Marker & 0x1FFF, Marker >> 16, 0x1FFF);
-            if ((Marker & 0x1FFF) == 0x1FFF || Marker == 0x1fff1fff)
-            {
+            if ((Marker & 0x1FFF) == 0x1FFF || Marker == 0x1fff1fff) {
                 DPrintf("RenderObjectParseStaticFaceDataV2:Aborting since a marker was found\n");
                 break;
             }
             RenderObject->StaticFaceList[CurrentFaceIndex].TexInfo = TempFace.TexInfo;
             RenderObject->StaticFaceList[CurrentFaceIndex].CBA = TempFace.CBA;
 
-            if ((Marker & 0x8000) != 0)
-            {
+            if ((Marker & 0x8000) != 0) {
                 TempFace.Vert0 = TempFace.Vert2;
                 TempFace.UV0 = TempFace.UV2;
-            }
-            else
-            {
+            } else {
                 TempFace.Vert0 = TempFace.Vert1;
                 TempFace.UV0 = TempFace.UV1;
                 TempFace.Vert1 = TempFace.Vert2;
@@ -1440,8 +1330,7 @@ bool RenderObjectParseStaticFaceDataV2(RenderObject_t *RenderObject, FILE *BSDFi
                     TempFace.Vert2);
             CurrentFaceIndex++;
         }
-        if (Marker == 0x1fff1fff)
-        {
+        if (Marker == 0x1fff1fff) {
             DPrintf("RenderObjectParseStaticFaceDataV2:Sentinel Face found Done reading faces for renderobject %i\n", RenderObject->Data->Id);
             DPrintf("RenderObjectParseStaticFaceDataV2:Loaded %i faces (Expected %i)\n", CurrentFaceIndex, RenderObject->NumFaces);
             assert(CurrentFaceIndex == RenderObject->NumFaces);
@@ -1455,22 +1344,16 @@ bool RenderObjectLoadStaticFaceData(RenderObject_t *RenderObject, int GameVersio
 {
     assert(sizeof(BSDFace_t) == 24);
 
-    if (RenderObject->Data->FaceOffset == 0 && RenderObject->Data->FaceV2Offset == 0)
-    {
+    if (RenderObject->Data->FaceOffset == 0 && RenderObject->Data->FaceV2Offset == 0) {
         return false;
     }
 
-    if (GameVersion == MOH_GAME_UNDERGROUND)
-    {
-        if (!RenderObjectParseStaticFaceDataV2(RenderObject, BSDFile))
-        {
+    if (GameVersion == MOH_GAME_UNDERGROUND) {
+        if (!RenderObjectParseStaticFaceDataV2(RenderObject, BSDFile)) {
             return false;
         }
-    }
-    else
-    {
-        if (!RenderObjectParseStaticFaceData(RenderObject, BSDFile))
-        {
+    } else {
+        if (!RenderObjectParseStaticFaceData(RenderObject, BSDFile)) {
             return false;
         }
     }
@@ -1483,14 +1366,12 @@ bool RenderObjectLoadAnimationVertexData(RenderObject_t *RenderObject, int Verte
     int i;
     int j;
 
-    if (!RenderObject || !BSDFile)
-    {
+    if (!RenderObject || !BSDFile) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         printf("RenderObjectLoadAnimationVertexData: Invalid %s\n", InvalidFile ? "file" : "RenderObject struct");
         return false;
     }
-    if (VertexTableIndexOffset == -1)
-    {
+    if (VertexTableIndexOffset == -1) {
         DPrintf("RenderObjectLoadAnimationVertexData:Invalid Vertex Table Index Offset\n");
         return false;
     }
@@ -1504,19 +1385,16 @@ bool RenderObjectLoadAnimationVertexData(RenderObject_t *RenderObject, int Verte
 
     RenderObject->VertexTable = malloc(RenderObject->NumVertexTables * sizeof(BSDVertexTable_t));
 
-    if (!RenderObject->VertexTable)
-    {
+    if (!RenderObject->VertexTable) {
         DPrintf("RenderObjectLoadAnimationVertexData:Failed to allocate memory for VertexTable.\n");
         return false;
     }
     RenderObject->CurrentVertexTable = malloc(RenderObject->NumVertexTables * sizeof(BSDVertexTable_t));
-    if (!RenderObject->CurrentVertexTable)
-    {
+    if (!RenderObject->CurrentVertexTable) {
         DPrintf("RenderObjectLoadAnimationVertexData:Failed to allocate memory for VertexTable.\n");
         return false;
     }
-    for (i = 0; i < RenderObject->NumVertexTables; i++)
-    {
+    for (i = 0; i < RenderObject->NumVertexTables; i++) {
         fread(&RenderObject->VertexTable[i].Offset, sizeof(RenderObject->VertexTable[i].Offset), 1, BSDFile);
         fread(&RenderObject->VertexTable[i].NumVertex, sizeof(RenderObject->VertexTable[i].NumVertex), 1, BSDFile);
         DPrintf("Table Index %i has %i vertices\n", i, RenderObject->VertexTable[i].NumVertex);
@@ -1528,17 +1406,14 @@ bool RenderObjectLoadAnimationVertexData(RenderObject_t *RenderObject, int Verte
     }
 
     fseek(BSDFile, EntryTable.AnimationVertexDataOffset + BSD_HEADER_SIZE, SEEK_SET);
-    for (i = 0; i < RenderObject->NumVertexTables; i++)
-    {
-        if (RenderObject->VertexTable[i].Offset == -1)
-        {
+    for (i = 0; i < RenderObject->NumVertexTables; i++) {
+        if (RenderObject->VertexTable[i].Offset == -1) {
             continue;
         }
         fseek(BSDFile, EntryTable.AnimationVertexDataOffset + RenderObject->VertexTable[i].Offset + BSD_HEADER_SIZE, SEEK_SET);
         RenderObject->VertexTable[i].VertexList = malloc(RenderObject->VertexTable[i].NumVertex * sizeof(BSDVertex_t));
         RenderObject->CurrentVertexTable[i].VertexList = malloc(RenderObject->VertexTable[i].NumVertex * sizeof(BSDVertex_t));
-        for (j = 0; j < RenderObject->VertexTable[i].NumVertex; j++)
-        {
+        for (j = 0; j < RenderObject->VertexTable[i].NumVertex; j++) {
             fread(&RenderObject->VertexTable[i].VertexList[j], sizeof(BSDVertex_t), 1, BSDFile);
             RenderObject->CurrentVertexTable[i].VertexList[j] = RenderObject->VertexTable[i].VertexList[j];
         }
@@ -1547,8 +1422,7 @@ bool RenderObjectLoadAnimationVertexData(RenderObject_t *RenderObject, int Verte
 }
 void RenderObjectCopyAnimatedModelFace(BSDAnimatedModelFace_t Src, BSDAnimatedModelFace_t *Dest)
 {
-    if (!Dest)
-    {
+    if (!Dest) {
         DPrintf("RenderObjectCopyAnimatedModelFace:Invalid Destination\n");
         return;
     }
@@ -1616,8 +1490,7 @@ bool RenderObjectLoadMOHUndergroundAnimationFaceData(RenderObject_t *RenderObjec
     BSDColor_t ColorData;
     BSDAnimatedModelFace_t TempFace;
 
-    if (!RenderObject || !BSDFile)
-    {
+    if (!RenderObject || !BSDFile) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         printf("RenderObjectLoadMOHUndergroundAnimationFaceData: Invalid %s\n", InvalidFile ? "file" : "RenderObject struct");
         return 0;
@@ -1625,8 +1498,7 @@ bool RenderObjectLoadMOHUndergroundAnimationFaceData(RenderObject_t *RenderObjec
     fseek(BSDFile, BSD_RENDER_OBJECT_STARTING_OFFSET + BSD_HEADER_SIZE, SEEK_SET);
     fread(&GlobalFaceOffset, sizeof(GlobalFaceOffset), 1, BSDFile);
     
-    if (!RenderObject->Data->NumV2AnimatedFaces)
-    {
+    if (!RenderObject->Data->NumV2AnimatedFaces) {
         DPrintf("RenderObjectLoadMOHUndergroundAnimationFaceData:Invalid number of faces.\n");
         return false;
     }
@@ -1637,14 +1509,12 @@ bool RenderObjectLoadMOHUndergroundAnimationFaceData(RenderObject_t *RenderObjec
 
     RenderObject->FaceList = malloc(RenderObject->Data->NumV2AnimatedFaces * sizeof(BSDAnimatedModelFace_t));
     RenderObject->NumFaces = RenderObject->Data->NumV2AnimatedFaces;
-    if (!RenderObject->FaceList)
-    {
+    if (!RenderObject->FaceList) {
         DPrintf("RenderObjectLoadMOHUndergroundAnimationFaceData:Failed to allocate memory for face list.\n");
         return false;
     }
     CurrentFaceIndex = 0;
-    while (CurrentFaceIndex < RenderObject->Data->NumV2AnimatedFaces)
-    {
+    while (CurrentFaceIndex < RenderObject->Data->NumV2AnimatedFaces) {
         DPrintf("Reading it at %li\n", ftell(BSDFile) - 2048);
         fread(&TempFace, sizeof(BSDAnimatedModelFace_t), 1, BSDFile);
 
@@ -1653,8 +1523,7 @@ bool RenderObjectLoadMOHUndergroundAnimationFaceData(RenderObject_t *RenderObjec
         DPrintf(" -- FACE %i --\n", CurrentFaceIndex);
         RenderObjectPrintAnimatedModelFace(RenderObject->FaceList[CurrentFaceIndex]);
         CurrentFaceIndex++;
-        while (1)
-        {
+        while (1) {
             // NOTE(Adriano):
             // Data is split into two shorts.
             // First one (Marker1) contains data that references the VertexTable while the
@@ -1662,22 +1531,18 @@ bool RenderObjectLoadMOHUndergroundAnimationFaceData(RenderObject_t *RenderObjec
             fread(&Marker1, sizeof(Marker1), 1, BSDFile);
             fread(&Marker2, sizeof(Marker2), 1, BSDFile);
 
-            if (Marker1 == 0x1FFF)
-            {
+            if (Marker1 == 0x1FFF) {
                 DPrintf("RenderObjectLoadMOHUndergroundAnimationFaceData:Aborting since a marker was found\n");
                 break;
             }
             fread(&ColorData, sizeof(ColorData), 1, BSDFile);
 
-            if ((Marker1 & 0x80) != 0)
-            {
+            if ((Marker1 & 0x80) != 0) {
                 TempFace.VertexTableIndex0 = TempFace.VertexTableIndex2;
                 TempFace.VertexTableDataIndex0 = TempFace.VertexTableDataIndex2;
                 TempFace.UV0 = TempFace.UV2;
                 TempFace.RGB0 = TempFace.RGB2;
-            }
-            else
-            {
+            } else {
                 TempFace.VertexTableIndex0 = TempFace.VertexTableIndex1;
                 TempFace.VertexTableDataIndex0 = TempFace.VertexTableDataIndex1;
                 TempFace.VertexTableIndex1 = TempFace.VertexTableIndex2;
@@ -1698,8 +1563,7 @@ bool RenderObjectLoadMOHUndergroundAnimationFaceData(RenderObject_t *RenderObjec
             CurrentFaceIndex++;
         }
         // NOTE(Adriano):Last Data is identified by the two marker being set to 0x1FFF
-        if ((Marker1 == 0x1fff && Marker2 == 0x1fff))
-        {
+        if ((Marker1 == 0x1fff && Marker2 == 0x1fff)) {
             DPrintf("RenderObjectLoadMOHUndergroundAnimationFaceData:Sentinel Face found Done reading faces for RenderObject\n");
             DPrintf("RenderObjectLoadMOHUndergroundAnimationFaceData:Loaded %i faces (Expected %i)\n", CurrentFaceIndex, 
                     RenderObject->Data->NumV2AnimatedFaces);
@@ -1717,21 +1581,16 @@ bool RenderObjectLoadAnimationFaceData(RenderObject_t *RenderObject, int FaceTab
     int NumFaces;
     int i;
 
-    if (!RenderObject || !BSDFile)
-    {
+    if (!RenderObject || !BSDFile) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         printf("RenderObjectLoadAnimationFaceData: Invalid %s\n", InvalidFile ? "file" : "RenderObject struct");
         return false;
     }
-    if (FaceTableOffset == -1)
-    {
-        if (GameVersion == MOH_GAME_UNDERGROUND)
-        {
+    if (FaceTableOffset == -1) {
+        if (GameVersion == MOH_GAME_UNDERGROUND) {
             DPrintf("RenderObjectLoadAnimationFaceData:Game is MOH:Underground...attempting to use a different face loader.\n");
             return RenderObjectLoadMOHUndergroundAnimationFaceData(RenderObject, FaceTableOffset,EntryTable, BSDFile);
-        }
-        else
-        {
+        } else {
             DPrintf("RenderObjectLoadAnimationFaceData:Invalid Face Table Index Offset\n");
             return false;
         }
@@ -1745,14 +1604,12 @@ bool RenderObjectLoadAnimationFaceData(RenderObject_t *RenderObject, int FaceTab
     assert(sizeof(BSDAnimatedModelFace_t) == 28);
     RenderObject->FaceList = malloc(NumFaces * sizeof(BSDAnimatedModelFace_t));
     RenderObject->NumFaces = NumFaces;
-    if (!RenderObject->FaceList)
-    {
+    if (!RenderObject->FaceList) {
         DPrintf("RenderObjectLoadAnimationFaceData:Failed to allocate memory for face list.\n");
         return false;
     }
     DPrintf("RenderObjectLoadAnimationFaceData:Loading %i faces\n", NumFaces);
-    for (i = 0; i < NumFaces; i++)
-    {
+    for (i = 0; i < NumFaces; i++) {
         fread(&RenderObject->FaceList[i], sizeof(BSDAnimatedModelFace_t), 1, BSDFile);
         DPrintf(" -- FACE %i --\n", i);
         RenderObjectPrintAnimatedModelFace(RenderObject->FaceList[i]);
@@ -1766,16 +1623,14 @@ BSDHierarchyBone_t *RenderObjectRecursivelyLoadHierarchyData(int BoneDataStartin
     int Child1Offset;
     int Child2Offset;
 
-    if (!BSDFile)
-    {
+    if (!BSDFile) {
         DPrintf("RenderObjectRecursivelyLoadHierarchyData:Invalid Bone Table file\n");
         return NULL;
     }
 
     Bone = malloc(sizeof(BSDHierarchyBone_t));
 
-    if (!Bone)
-    {
+    if (!Bone) {
         DPrintf("RenderObjectRecursivelyLoadHierarchyData:Failed to allocate bone data\n");
         return NULL;
     }
@@ -1795,12 +1650,10 @@ BSDHierarchyBone_t *RenderObjectRecursivelyLoadHierarchyData(int BoneDataStartin
 
     assert(Bone->Pad == -12851);
 
-    if (Child2Offset != -1)
-    {
+    if (Child2Offset != -1) {
         Bone->Child2 = RenderObjectRecursivelyLoadHierarchyData(BoneDataStartingPosition, Child2Offset, BSDFile);
     }
-    if (Child1Offset != -1)
-    {
+    if (Child1Offset != -1) {
         Bone->Child1 = RenderObjectRecursivelyLoadHierarchyData(BoneDataStartingPosition, Child1Offset, BSDFile);
     }
     return Bone;
@@ -1808,22 +1661,19 @@ BSDHierarchyBone_t *RenderObjectRecursivelyLoadHierarchyData(int BoneDataStartin
 
 int RenderObjectLoadAnimationHierarchyData(RenderObject_t *RenderObject, int HierarchyDataRootOffset, BSDEntryTable_t EntryTable, FILE *BSDFile)
 {
-    if (!RenderObject || !BSDFile)
-    {
+    if (!RenderObject || !BSDFile) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         printf("RenderObject: Invalid %s\n", InvalidFile ? "file" : "RenderObject struct");
         return false;
     }
-    if (HierarchyDataRootOffset == -1)
-    {
+    if (HierarchyDataRootOffset == -1) {
         DPrintf("RenderObject:Invalid Face Table Index Offset\n");
         return false;
     }
 
     RenderObject->HierarchyDataRoot = RenderObjectRecursivelyLoadHierarchyData(EntryTable.AnimationHierarchyDataOffset, HierarchyDataRootOffset, BSDFile);
 
-    if (!RenderObject->HierarchyDataRoot)
-    {
+    if (!RenderObject->HierarchyDataRoot) {
         DPrintf("RenderObject:Couldn't load hierarchy data\n");
         return false;
     }
@@ -1831,15 +1681,13 @@ int RenderObjectLoadAnimationHierarchyData(RenderObject_t *RenderObject, int Hie
 }
 void RenderObjectDecodeQuaternions(int QuatPart0, int QuatPart1, int QuatPart2, BSDQuaternion_t *OutQuaternion1, BSDQuaternion_t *OutQuaternion2)
 {
-    if (OutQuaternion1)
-    {
+    if (OutQuaternion1) {
         OutQuaternion1->x = ((QuatPart0 << 0x10) >> 0x14) * 2;
         OutQuaternion1->y = (QuatPart1 << 0x14) >> 0x13;
         OutQuaternion1->z = ((((QuatPart1 >> 0xC) << 0x1C) >> 0x14) | ((QuatPart0 >> 0xC) & 0xF0) | (QuatPart0 & 0xF)) * 2;
         OutQuaternion1->w = (QuatPart0 >> 0x14) * 2;
     }
-    if (OutQuaternion2)
-    {
+    if (OutQuaternion2) {
         OutQuaternion2->x = (QuatPart1 >> 0x14) * 2;
         OutQuaternion2->y = ((QuatPart2 << 0x4) >> 0x14) * 2;
         OutQuaternion2->w = ((QuatPart2 << 0x10) >> 0x14) * 2;
@@ -1871,14 +1719,12 @@ bool RenderObjectLoadAnimationData(RenderObject_t *RenderObject, int AnimationDa
     versor ToQuaternion;
     versor DestQuaternion;
 
-    if (!RenderObject || !BSDFile)
-    {
+    if (!RenderObject || !BSDFile) {
         bool InvalidFile = (BSDFile == NULL ? true : false);
         printf("RenderObjectLoadAnimationData: Invalid %s\n", InvalidFile ? "file" : "RenderObject struct");
         return false;
     }
-    if (AnimationDataOffset == -1)
-    {
+    if (AnimationDataOffset == -1) {
         DPrintf("RenderObjectLoadAnimationData:Invalid Vertex Table Index Offset\n");
         return false;
     }
@@ -1889,21 +1735,17 @@ bool RenderObjectLoadAnimationData(RenderObject_t *RenderObject, int AnimationDa
 
     AnimationOffsetTable = malloc(NumAnimationOffset * sizeof(int));
     RenderObject->NumAnimations = NumAnimationOffset;
-    for (i = 0; i < NumAnimationOffset; i++)
-    {
+    for (i = 0; i < NumAnimationOffset; i++) {
         fread(&AnimationOffsetTable[i], sizeof(AnimationOffsetTable[i]), 1, BSDFile);
-        if (AnimationOffsetTable[i] == -1)
-        {
+        if (AnimationOffsetTable[i] == -1) {
             continue;
         }
     }
 
     AnimationTableEntry = malloc(RenderObject->NumAnimations * sizeof(BSDAnimationTableEntry_t));
-    for (i = 0; i < NumAnimationOffset; i++)
-    {
+    for (i = 0; i < NumAnimationOffset; i++) {
         DPrintf("RenderObjectLoadAnimationData:Animation Offset %i for entry %i\n", AnimationOffsetTable[i], i);
-        if (AnimationOffsetTable[i] == -1)
-        {
+        if (AnimationOffsetTable[i] == -1) {
             continue;
         }
         DPrintf("RenderObjectLoadAnimationData:Going to %i plus %i\n", EntryTable.AnimationTableOffset, AnimationOffsetTable[i]);
@@ -1917,12 +1759,10 @@ bool RenderObjectLoadAnimationData(RenderObject_t *RenderObject, int AnimationDa
         assert(AnimationTableEntry[i].Pad == 52480);
     }
     RenderObject->AnimationList = malloc(RenderObject->NumAnimations * sizeof(BSDAnimation_t));
-    for (i = 0; i < NumAnimationOffset; i++)
-    {
+    for (i = 0; i < NumAnimationOffset; i++) {
         RenderObject->AnimationList[i].Frame = NULL;
         RenderObject->AnimationList[i].NumFrames = 0;
-        if (AnimationOffsetTable[i] == -1)
-        {
+        if (AnimationOffsetTable[i] == -1) {
             continue;
         }
         DPrintf(" -- ANIMATION ENTRY %i -- \n", i);
@@ -1930,8 +1770,7 @@ bool RenderObjectLoadAnimationData(RenderObject_t *RenderObject, int AnimationDa
 
         RenderObject->AnimationList[i].Frame = malloc(AnimationTableEntry[i].NumFrames * sizeof(BSDAnimationFrame_t));
         RenderObject->AnimationList[i].NumFrames = AnimationTableEntry[i].NumFrames;
-        for (j = 0; j < AnimationTableEntry[i].NumFrames; j++)
-        {
+        for (j = 0; j < AnimationTableEntry[i].NumFrames; j++) {
             DPrintf(" -- FRAME %i/%i -- \n", j, AnimationTableEntry[i].NumFrames);
             // 20 is the sizeof an animation
             fseek(BSDFile, EntryTable.AnimationDataOffset + AnimationTableEntry[i].Offset + BSD_HEADER_SIZE + j * BSD_ANIMATION_FRAME_DATA_SIZE, SEEK_SET);
@@ -1970,22 +1809,20 @@ bool RenderObjectLoadAnimationData(RenderObject_t *RenderObject, int AnimationDa
             DPrintf("Encoded Vector is %i\n", RenderObject->AnimationList[i].Frame[j].EncodedVector);
             DPrintf("We are at %li  AnimOffset:%i LocalOffset:%i Index %i times 20 (%i)\n", ftell(BSDFile),
                     EntryTable.AnimationDataOffset, AnimationTableEntry[i].Offset, j, j * 20);
-            assert(ftell(BSDFile) - (EntryTable.AnimationDataOffset + AnimationTableEntry[i].Offset + BSD_HEADER_SIZE + j * BSD_ANIMATION_FRAME_DATA_SIZE) == BSD_ANIMATION_FRAME_DATA_SIZE);
+            assert(ftell(BSDFile) - (EntryTable.AnimationDataOffset + AnimationTableEntry[i].Offset + BSD_HEADER_SIZE + j 
+                            * BSD_ANIMATION_FRAME_DATA_SIZE) == BSD_ANIMATION_FRAME_DATA_SIZE);
             RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList = NULL;
             RenderObject->AnimationList[i].Frame[j].QuaternionList = NULL;
             RenderObject->AnimationList[i].Frame[j].CurrentQuaternionList = NULL;
-            if (QuaternionListOffset != -1)
-            {
+            if (QuaternionListOffset != -1) {
                 fseek(BSDFile, EntryTable.AnimationQuaternionDataOffset + QuaternionListOffset + BSD_HEADER_SIZE, SEEK_SET);
                 DPrintf("Reading Vector definition at %li\n", ftell(BSDFile));
                 NumEncodedQuaternions = (RenderObject->AnimationList[i].Frame[j].NumQuaternions / 2) * 3;
-                if ((RenderObject->AnimationList[i].Frame[j].NumQuaternions & 1) != 0)
-                {
+                if ((RenderObject->AnimationList[i].Frame[j].NumQuaternions & 1) != 0) {
                     NumEncodedQuaternions += 2;
                 }
                 RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList = malloc(NumEncodedQuaternions * sizeof(int));
-                for (w = 0; w < NumEncodedQuaternions; w++)
-                {
+                for (w = 0; w < NumEncodedQuaternions; w++) {
                     DPrintf("Reading Encoded quaternion at %li\n", ftell(BSDFile));
                     fread(&RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[w],
                           sizeof(RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[w]), 1, BSDFile);
@@ -1996,8 +1833,7 @@ bool RenderObjectLoadAnimationData(RenderObject_t *RenderObject, int AnimationDa
                 RenderObject->AnimationList[i].Frame[j].CurrentQuaternionList = malloc(
                     RenderObject->AnimationList[i].Frame[j].NumQuaternions * sizeof(BSDQuaternion_t));
                 NumDecodedQuaternions = 0;
-                for (q = 0; q < RenderObject->AnimationList[i].Frame[j].NumQuaternions / 2; q++)
-                {
+                for (q = 0; q < RenderObject->AnimationList[i].Frame[j].NumQuaternions / 2; q++) {
                     Base = q * 3;
                     //                     DPrintf("Generating with base %i V0:%i V1:%i V2:%i\n",q,Base,Base+1,Base+2);
                     QuatPart0 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[Base];
@@ -2009,9 +1845,7 @@ bool RenderObjectLoadAnimationData(RenderObject_t *RenderObject, int AnimationDa
                                                   &RenderObject->AnimationList[i].Frame[j].QuaternionList[NumDecodedQuaternions + 1]);
                     NumDecodedQuaternions += 2;
                 }
-                //                 DPrintf("Decoded %i quaternions out of %i\n",NumDecodedQuaternions,RenderObject->AnimationList[i].Frame[j].NumQuaternions);
-                if (NumDecodedQuaternions == (RenderObject->AnimationList[i].Frame[j].NumQuaternions - 1))
-                {
+                if (NumDecodedQuaternions == (RenderObject->AnimationList[i].Frame[j].NumQuaternions - 1)) {
                     QuatPart0 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[NumEncodedQuaternions - 2];
                     QuatPart1 = RenderObject->AnimationList[i].Frame[j].EncodedQuaternionList[NumEncodedQuaternions - 1];
                     //                     DPrintf("QuatPart0:%i QuatPart1:%i\n",QuatPart0,QuatPart1);
@@ -2024,23 +1858,17 @@ bool RenderObjectLoadAnimationData(RenderObject_t *RenderObject, int AnimationDa
                 DPrintf("Decoded %i out of %i\n", NumDecodedQuaternions, RenderObject->AnimationList[i].Frame[j].NumQuaternions);
                 assert(NumDecodedQuaternions == RenderObject->AnimationList[i].Frame[j].NumQuaternions);
                 RenderObjectResetFrameQuaternionList(&RenderObject->AnimationList[i].Frame[j]);
-            }
-            else
-            {
+            } else {
                 DPrintf("QuaternionListOffset is not valid...\n");
             }
         }
     }
-    for (i = 0; i < RenderObject->NumAnimations; i++)
-    {
-        if (AnimationOffsetTable[i] == -1)
-        {
+    for (i = 0; i < RenderObject->NumAnimations; i++) {
+        if (AnimationOffsetTable[i] == -1) {
             continue;
         }
-        for (j = 0; j < AnimationTableEntry[i].NumFrames; j++)
-        {
-            if (RenderObject->AnimationList[i].Frame[j].QuaternionList != NULL)
-            {
+        for (j = 0; j < AnimationTableEntry[i].NumFrames; j++) {
+            if (RenderObject->AnimationList[i].Frame[j].QuaternionList != NULL) {
                 continue;
             }
             RenderObject->AnimationList[i].Frame[j].QuaternionList = malloc(sizeof(BSDQuaternion_t) *
@@ -2055,8 +1883,7 @@ bool RenderObjectLoadAnimationData(RenderObject_t *RenderObject, int AnimationDa
             DPrintf("Previous FrameIndex:%i\n", PrevFrame);
             DPrintf("Jump:%i\n", Jump);
             DPrintf("NumQuaternions:%i\n", RenderObject->AnimationList[i].Frame[j].NumQuaternions);
-            for (q = 0; q < RenderObject->AnimationList[i].Frame[j].NumQuaternions; q++)
-            {
+            for (q = 0; q < RenderObject->AnimationList[i].Frame[j].NumQuaternions; q++) {
                 FromQuaternion[0] = RenderObject->AnimationList[i].Frame[PrevFrame].QuaternionList[q].x / 4096.f;
                 FromQuaternion[1] = RenderObject->AnimationList[i].Frame[PrevFrame].QuaternionList[q].y / 4096.f;
                 FromQuaternion[2] = RenderObject->AnimationList[i].Frame[PrevFrame].QuaternionList[q].z / 4096.f;
@@ -2086,12 +1913,9 @@ void RenderObjectAppendToList(RenderObject_t **List, RenderObject_t *Node)
 {
     RenderObject_t *LastNode;
 
-    if (!*List)
-    {
+    if (!*List) {
         *List = Node;
-    }
-    else
-    {
+    } else {
         LastNode = *List;
         while (LastNode->Next)
         {
@@ -2108,14 +1932,12 @@ RenderObject_t *RenderObjectLoad(BSDRenderObjectElement_t *RenderObjectElement, 
     
     RenderObject = NULL;
     
-    if (!BSDFile)
-    {
+    if (!BSDFile) {
         DPrintf("RenderObjectLoad:Invalid BSD file\n");
         goto Failure;
     }
     RenderObject = malloc(sizeof(RenderObject_t));
-    if (!RenderObject)
-    {
+    if (!RenderObject) {
         DPrintf("RenderObjectLoad:Failed to allocate memory for RenderObject\n");
         goto Failure;
     }
