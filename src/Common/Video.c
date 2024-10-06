@@ -29,18 +29,15 @@ Config_t *VidConfigVSync;
 void VideoSystemShutdown(VideoSystem_t *VideoSystem)
 {
     int i;
-    for (i = 0; i < VideoSystem->NumVideoModes; i++)
-    {
+    for (i = 0; i < VideoSystem->NumVideoModes; i++) {
         free(VideoSystem->VideoModeList[i].Description);
     }
     free(VideoSystem->WindowTitle);
     free(VideoSystem->VideoModeList);
-    if (VideoSystem->GLContext)
-    {
+    if (VideoSystem->GLContext) {
         SDL_GL_DeleteContext(VideoSystem->GLContext);
     }
-    if (VideoSystem->Window)
-    {
+    if (VideoSystem->Window) {
         SDL_DestroyWindow(VideoSystem->Window);
     }
     free(VideoSystem);
@@ -77,12 +74,10 @@ SDL_DisplayMode *SDLGetCurrentDisplayMode(VideoSystem_t *VideoSystem)
 
     NumModes = SDL_GetNumDisplayModes(0);
     CurrentMode = &VideoSystem->VideoModeList[VideoSystem->CurrentVideoMode];
-    for (i = 0; i < NumModes; i++)
-    {
+    for (i = 0; i < NumModes; i++) {
         SDL_GetDisplayMode(0, i, &Result);
         if (Result.w == CurrentMode->Width && Result.h == CurrentMode->Height &&
-            SDL_BITSPERPIXEL(Result.format) == CurrentMode->BPP && Result.refresh_rate == CurrentMode->RefreshRate)
-        {
+            SDL_BITSPERPIXEL(Result.format) == CurrentMode->BPP && Result.refresh_rate == CurrentMode->RefreshRate) {
             return &Result;
         }
     }
@@ -111,24 +106,19 @@ void VideoSystemSetFullScreenVideoMode(VideoSystem_t *VideoSystem, int Preferred
     ClosestDistance = 9999;
     BestMode = -1;
 
-    if (PreferredModeIndex != -1)
-    {
+    if (PreferredModeIndex != -1) {
         TargetWidth = VideoSystem->VideoModeList[PreferredModeIndex].Width;
         TargetHeight = VideoSystem->VideoModeList[PreferredModeIndex].Height;
         TargetRefreshRate = VideoSystem->VideoModeList[PreferredModeIndex].RefreshRate;
-    }
-    else
-    {
+    } else {
         TargetWidth = VidConfigWidth->IValue;
         TargetHeight = VidConfigHeight->IValue;
         TargetRefreshRate = VidConfigRefreshRate->IValue;
     }
     DPrintf("VideoSystemSetFullScreenVideoMode:Users wants to go with %ix%i Fullscreen\n", VidConfigWidth->IValue, VidConfigHeight->IValue);
-    for (i = 0; i < VideoSystem->NumVideoModes; i++)
-    {
+    for (i = 0; i < VideoSystem->NumVideoModes; i++) {
         // Ideally we want to match the one in the config!
-        if (VideoSystem->VideoModeList[i].RefreshRate != TargetRefreshRate)
-        {
+        if (VideoSystem->VideoModeList[i].RefreshRate != TargetRefreshRate) {
             continue;
         }
         DistanceX = TargetWidth - VideoSystem->VideoModeList[i].Width;
@@ -136,14 +126,12 @@ void VideoSystemSetFullScreenVideoMode(VideoSystem_t *VideoSystem, int Preferred
 
         Delta = Square(DistanceX) + Square(DistanceY);
 
-        if (Delta < ClosestDistance)
-        {
+        if (Delta < ClosestDistance) {
             ClosestDistance = Delta;
             BestMode = i;
         }
     }
-    if (BestMode == -1)
-    {
+    if (BestMode == -1) {
         // User did not set any preference...pick the highest one from the list.
         BestMode = 0;
     }
@@ -155,14 +143,12 @@ void VideoSystemSetFullScreenVideoMode(VideoSystem_t *VideoSystem, int Preferred
 void VideoSystemSetVideoSettings(VideoSystem_t *VideoSystem, int PreferredModeIndex)
 {
     SDL_DisplayMode *SelectedMode;
-    if (SDL_GetWindowFlags(VideoSystem->Window) & SDL_WINDOW_FULLSCREEN)
-    {
+    if (SDL_GetWindowFlags(VideoSystem->Window) & SDL_WINDOW_FULLSCREEN) {
         // Was fullscreen reset it...
         SDL_SetWindowFullscreen(VideoSystem->Window, 0);
     }
     SDL_SetWindowSize(VideoSystem->Window, VidConfigWidth->IValue, VidConfigHeight->IValue);
-    if (VidConfigFullScreen->IValue)
-    {
+    if (VidConfigFullScreen->IValue) {
         VideoSystemSetFullScreenVideoMode(VideoSystem, PreferredModeIndex);
         SelectedMode = SDLGetCurrentDisplayMode(VideoSystem);
         if (SDL_SetWindowDisplayMode(VideoSystem->Window, SelectedMode) < 0)
@@ -184,8 +170,7 @@ void VideoSystemGetAvailableVideoModes(VideoSystem_t *VideoSystem)
     SDL_DisplayMode Mode;
     int i;
 
-    if (!VideoSystem)
-    {
+    if (!VideoSystem) {
         DPrintf("VideoSystemGetAvailableVideoModes:Called without valid VideoSystem data\n");
         return;
     }
@@ -193,15 +178,13 @@ void VideoSystemGetAvailableVideoModes(VideoSystem_t *VideoSystem)
     // NOTE(Adriano):We are forcing this to display 0.
     NumAvailableVideoModes = SDL_GetNumDisplayModes(0);
     VideoSystem->VideoModeList = malloc(NumAvailableVideoModes * sizeof(VideoMode_t));
-    if (!VideoSystem->VideoModeList)
-    {
+    if (!VideoSystem->VideoModeList) {
         DPrintf("VideoSystemGetAvailableVideoModes:Unable to allocate memory for video mode list.\n");
         return;
     }
     // Pickup the maximum supported resolution as the default one.
     VideoSystem->CurrentVideoMode = 0;
-    for (i = 0; i < NumAvailableVideoModes; i++)
-    {
+    for (i = 0; i < NumAvailableVideoModes; i++) {
         SDL_GetDisplayMode(0, i, &Mode);
         VideoSystem->VideoModeList[i].Width = Mode.w;
         VideoSystem->VideoModeList[i].Height = Mode.h;
@@ -220,8 +203,7 @@ void VideoSystemSwapBuffers(VideoSystem_t *VideoSystem)
 
 int VideoSystemSetSwapInterval(int Value)
 {
-    if (Value < -1 || Value > 1)
-    {
+    if (Value < -1 || Value > 1) {
         Value = 1;
     }
     ConfigSetNumber("VideoVSync", Value);
@@ -250,21 +232,17 @@ int VideoSystemOpenWindow(VideoSystem_t *VideoSystem)
     VideoSystemSetVideoSettings(VideoSystem, -1);
     VideoSystem->GLContext = SDL_GL_CreateContext(VideoSystem->Window);
     VideoSystem->DPIScale = 1.f;
-    if (!SDL_GetDisplayDPI(0, NULL, &VideoSystem->DPIScale, NULL))
-    {
+    if (!SDL_GetDisplayDPI(0, NULL, &VideoSystem->DPIScale, NULL)) {
         VideoSystem->DPIScale /= 96.f;
     }
-    if (VidConfigVSync->IValue < -1 || VidConfigVSync->IValue > 1)
-    {
+    if (VidConfigVSync->IValue < -1 || VidConfigVSync->IValue > 1) {
         ConfigSetNumber("VideoVSync", 1);
     }
     Result = VideoSystemSetSwapInterval(VidConfigVSync->IValue);
-    if (Result == -1)
-    {
+    if (Result == -1) {
         DPrintf("VideoSystemOpenWindow:Failed to set VSync using value %i...trying default one.\n", VidConfigVSync->IValue);
         Result = VideoSystemSetSwapInterval(1);
-        if (Result == -1)
-        {
+        if (Result == -1) {
             printf("VideoSystemOpenWindow:Cannot set vsync...\n");
             return 0;
         }
@@ -287,8 +265,7 @@ VideoSystem_t *VideoSystemInit(const char *WindowTitle)
     int GlewError;
 
     VideoSystem = malloc(sizeof(VideoSystem_t));
-    if (!VideoSystem)
-    {
+    if (!VideoSystem) {
         printf("VideoSystemInit:Failed to allocate memory for VideoSystem struct\n");
         return NULL;
     }
@@ -296,25 +273,21 @@ VideoSystem_t *VideoSystemInit(const char *WindowTitle)
     VideoSystem->VideoModeList = NULL;
     VideoSystem->GLContext = NULL;
     VideoSystem->Window = NULL;
-    if (WindowTitle)
-    {
+    if (WindowTitle) {
         VideoSystem->WindowTitle = StringCopy(WindowTitle);
     }
-    else
-    {
+    else {
         asprintf(&VideoSystem->WindowTitle, "Unknown Application");
     }
     VideoSystemLoadConfigs();
     VideoSystemGetAvailableVideoModes(VideoSystem);
-    if (!VideoSystemOpenWindow(VideoSystem))
-    {
+    if (!VideoSystemOpenWindow(VideoSystem)) {
         printf("VideoSystemInit:Failed to open window\n");
         goto Error;
     }
     glewExperimental = GL_TRUE;
     GlewError = glewInit();
-    if (GlewError != GLEW_OK)
-    {
+    if (GlewError != GLEW_OK) {
         DPrintf("VideoSystemInit:Failed to init GLEW\n");
         goto Error;
     }
