@@ -572,22 +572,22 @@ void BSDClearNodesFlag(BSDNodeInfo_t *NodeData)
     }
 }
 
-int BSDGetNodeDynamicDataFromPosition(BSDNodeInfo_t NodeData,vec3 Position)
+int BSDGetNodeDynamicDataFromPosition(BSDNodeInfo_t *NodeData,vec3 Position)
 {
     int i;
-    for( i = 0; i < NodeData.Header.NumNodes; i++ ) {
-        if( NodeData.Node[i].Visited ) {
+    for( i = 0; i < NodeData->Header.NumNodes; i++ ) {
+        if( NodeData->Node[i].Visited ) {
             continue;
         }
-        if( NodeData.Node[i].MessageData == -1 ) {
+        if( NodeData->Node[i].MessageData == -1 ) {
             continue;
         }
         
-        if( BSDPointInNode(Position,&NodeData.Node[i]) ) {
-            if( NodeData.Node[i].Type == 5 /*BSD->NodeData.Node[i].Type == 3 || BSD->NodeData.Node[i].Type == 5 ||
-                BSD->NodeData.Node[i].Type == 6*/ ) {
-                NodeData.Node[i].Visited = 1;
-                return NodeData.Node[i].DynamicBlockIndex;
+        if( BSDPointInNode(Position,&NodeData->Node[i]) ) {
+            if( NodeData->Node[i].Type == 3 || NodeData->Node[i].Type == 5 ||
+                NodeData->Node[i].Type == 6 ) {
+                NodeData->Node[i].Visited = 1;
+                return NodeData->Node[i].DynamicBlockIndex;
             }
         }
     }
