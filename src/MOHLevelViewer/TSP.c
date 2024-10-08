@@ -1436,6 +1436,8 @@ void TSPDrawList(TSP_t *TSPList,VRAM_t *VRAM,Camera_t *Camera,RenderObjectShader
         if( LevelEnableWireFrameMode->IValue ) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
+        glActiveTexture(GL_TEXTURE0 + 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
         glUseProgram(0);
     }
 
