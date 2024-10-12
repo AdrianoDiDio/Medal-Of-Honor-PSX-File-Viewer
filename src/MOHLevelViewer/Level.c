@@ -146,6 +146,18 @@ void LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int Ga
     }
     ConfigSetNumber("LevelEnableMusicTrack",SoundValue);
 }
+
+void LevelResetDynamicFaces(Level_t *Level)
+{
+    if( !Level ) {
+        return;
+    }
+
+    BSDClearNodesFlag(&Level->BSD->NodeData);
+    TSPResetDynamicFaces(Level->TSPList);
+
+}
+
 void LevelUpdate(Level_t *Level,Camera_t *Camera)
 {
     int DynamicData;
@@ -158,14 +170,12 @@ void LevelUpdate(Level_t *Level,Camera_t *Camera)
         BSDClearNodesFlag(&Level->BSD->NodeData);
     
         while( (DynamicData = BSDGetNodeDynamicDataFromPosition(&Level->BSD->NodeData,Camera->Position) ) != -1 ) {
-            TSPUpdateDynamicFaces(Level->TSPList,Camera,DynamicData);
+            TSPUpdateDynamicFaces(Level->TSPList,DynamicData);
         }
     }
     if( LevelEnableAnimatedLights->IValue ) {
         BSDUpdateAnimatedLights(&Level->BSD->AnimatedLightsTable);
     }
-    
-
 }
 void LevelDraw(Level_t *Level,Camera_t *Camera,RenderObjectShader_t *RenderObjectShader,mat4 ProjectionMatrix)
 {

@@ -1158,27 +1158,23 @@ void TSPUpdateDynamicRenderingFaces(TSP_t *TSP,TSPRenderingFace_t *Face,VAO_t *V
     free(VertexBuffer);
 }
 
-void TSPUpdateDynamicFaceNodes(TSP_t *TSP,TSPNode_t *Node,TSPDynamicData_t *DynamicData,Camera_t *Camera)
+void TSPUpdateDynamicFaceNodes(TSP_t *TSP,TSPNode_t *Node,TSPDynamicData_t *DynamicData)
 {
     TSPRenderingFace_t *Iterator;
 
     if( !Node ) {
         return;
     }
-    
-//     if( !TSPBoxInFrustum(Camera,Node->BBox) ) {
-//         return;
-//     }
-    
+
     if( Node->NumFaces != 0 ) {
         for( Iterator = Node->OpaqueFaceList; Iterator; Iterator = Iterator->Next ) {
            TSPUpdateDynamicRenderingFaces(TSP,Iterator,Node->OpaqueFacesVAO,DynamicData);
         }
 
     } else {
-        TSPUpdateDynamicFaceNodes(TSP,Node->Child[1],DynamicData,Camera);
-        TSPUpdateDynamicFaceNodes(TSP,Node->Child[2],DynamicData,Camera);
-        TSPUpdateDynamicFaceNodes(TSP,Node->Child[0],DynamicData,Camera);
+        TSPUpdateDynamicFaceNodes(TSP,Node->Child[1],DynamicData);
+        TSPUpdateDynamicFaceNodes(TSP,Node->Child[2],DynamicData);
+        TSPUpdateDynamicFaceNodes(TSP,Node->Child[0],DynamicData);
     }
 }
 void TSPUpdateDynamicTransparentFaces(TSP_t *TSP,TSPDynamicData_t *DynamicData)
@@ -1190,7 +1186,40 @@ void TSPUpdateDynamicTransparentFaces(TSP_t *TSP,TSPDynamicData_t *DynamicData)
     }
 }
 
-void TSPUpdateDynamicFaces(TSP_t *TSPList,Camera_t *Camera,int DynamicDataIndex)
+const char *TSPGetEffectNameByType(int EffectType)
+{
+    switch( EffectType ) {
+        case TSP_DYNAMIC_FACE_EFFECT_PLAY_AND_STOP_TO_LAST:
+            return "TSP_DYNAMIC_FACE_EFFECT_PLAY_AND_STOP_TO_LAST";
+        case TSP_DYNAMIC_FACE_EFFECT_JUMP_TO_LAST:
+            return "TSP_DYNAMIC_FACE_EFFECT_JUMP_TO_LAST";
+        case TSP_DYNAMIC_FACE_EFFECT_CYCLE:
+            return "TSP_DYNAMIC_FACE_EFFECT_CYCLE";
+        case TSP_DYNAMIC_FACE_EFFECT_PULSE:
+            return "TSP_DYNAMIC_FACE_EFFECT_PULSE";
+        default:
+            return "UNKNOWN";
+    }
+
+}
+
+void TSPResetDynamicFaces(TSP_t *TSPList)
+{
+    TSP_t *Iterator;
+    int i;
+    
+    for( Iterator = TSPList; Iterator; Iterator = Iterator->Next ) {
+        for( i = 0; i < Iterator->Header.NumDynamicDataBlock; i++ ) {
+            Iterator->DynamicData[i].IncrementOffset = 1;
+            Iterator->DynamicData[i].CurrentStride = 0;
+            Iterator->DynamicData[i].LastUpdateTime = 0;
+            TSPUpdateDynamicFaceNodes(Iterator,&Iterator->Node[0],&Iterator->DynamicData[i]);
+            TSPUpdateDynamicTransparentFaces(Iterator,&Iterator->DynamicData[i]);
+        }
+    }
+}
+
+void TSPUpdateDynamicFaces(TSP_t *TSPList,int DynamicDataIndex)
 {
     TSP_t *Iterator;
     int i;
@@ -1235,15 +1264,19 @@ void TSPUpdateDynamicFaces(TSP_t *TSPList,Camera_t *Camera,int DynamicDataIndex)
                             }
                         }
                         break;
+                    default:
+                        DPrintf("TSPUpdateDynamicFaces:Warning unknown effect type %i\n",Iterator->DynamicData[i].Header.EffectType);
+                        assert(1!=1);
+                        break;
                 }
 
 //                 TSPUpdateFaces(Iterator,&Iterator->DynamicData[i]);
-                DPrintf("TSP File %s:Update Dynamic Data with index %i Unk0:%i Unk1:%i CurrentStride:%i MaxStride:%i\n",
+                DPrintf("TSP File %s:Update Dynamic Data with index %i Unk0:%i Effect:%i (%s) CurrentStride:%i MaxStride:%i\n",
                         Iterator->FName,DynamicDataIndex,Iterator->DynamicData[i].Header.Unk0,
-                        Iterator->DynamicData[i].Header.EffectType,Iterator->DynamicData[i].CurrentStride,
-                        Iterator->DynamicData[i].Header.FaceDataSizeMultiplier
+                        Iterator->DynamicData[i].Header.EffectType,TSPGetEffectNameByType(Iterator->DynamicData[i].Header.EffectType),
+                        Iterator->DynamicData[i].CurrentStride,Iterator->DynamicData[i].Header.FaceDataSizeMultiplier
                 );
-                TSPUpdateDynamicFaceNodes(Iterator,&Iterator->Node[0],&Iterator->DynamicData[i],Camera);
+                TSPUpdateDynamicFaceNodes(Iterator,&Iterator->Node[0],&Iterator->DynamicData[i]);
                 TSPUpdateDynamicTransparentFaces(Iterator,&Iterator->DynamicData[i]);
             }
         }
@@ -1846,6 +1879,7 @@ int TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
         TSP->DynamicData[i].CurrentStride = 0;
         TSP->DynamicData[i].IncrementOffset = 1;
         TSP->DynamicData[i].LastUpdateTime = 0;
+        assert(TSP->DynamicData[i].Header.EffectType >= 0 && TSP->DynamicData[i].Header.EffectType <= TSP_DYNAMIC_FACE_EFFECT_PULSE);
         DPrintf("Size:%i\n",TSP->DynamicData[i].Header.Size);
         DPrintf("Unk0:%i || EffectType:%i\n",TSP->DynamicData[i].Header.Unk0,TSP->DynamicData[i].Header.EffectType);
         DPrintf("Dynamic Data Index:%i\n",TSP->DynamicData[i].Header.DynamicDataIndex);

@@ -1917,8 +1917,7 @@ void RenderObjectAppendToList(RenderObject_t **List, RenderObject_t *Node)
         *List = Node;
     } else {
         LastNode = *List;
-        while (LastNode->Next)
-        {
+        while (LastNode->Next) {
             LastNode = LastNode->Next;
         }
         LastNode->Next = Node;
@@ -1965,41 +1964,32 @@ RenderObject_t *RenderObjectLoad(BSDRenderObjectElement_t *RenderObjectElement, 
 
     glm_vec3_zero(RenderObject->Center);
 
-    if (RenderObject->IsStatic)
-    {
-        if (!RenderObjectLoadStaticVertexAndColorData(RenderObject, BSDFile))
-        {
+    if (RenderObject->IsStatic) {
+        if (!RenderObjectLoadStaticVertexAndColorData(RenderObject, BSDFile)) {
             DPrintf("RenderObjectLoad:Failed to load vertex/color data\n");
             goto Failure;
         }
-        if (!RenderObjectLoadStaticFaceData(RenderObject, GameVersion, BSDFile))
-        {
+        if (!RenderObjectLoadStaticFaceData(RenderObject, GameVersion, BSDFile)) {
             DPrintf("RenderObjectLoad:Failed to load face data\n");
             goto Failure;
         }
-    }
-    else
-    {
-        if (!RenderObjectLoadAnimationVertexData(RenderObject, RenderObject->Data->VertexTableIndexOffset, EntryTable, BSDFile))
-        {
+    } else {
+        if (!RenderObjectLoadAnimationVertexData(RenderObject, RenderObject->Data->VertexTableIndexOffset, EntryTable, BSDFile)) {
             DPrintf("RenderObjectLoad:Failed to load vertex data\n");
             goto Failure;
         }
 
-        if (!RenderObjectLoadAnimationFaceData(RenderObject, RenderObject->Data->FaceTableOffset,EntryTable, BSDFile, GameVersion))
-        {
+        if (!RenderObjectLoadAnimationFaceData(RenderObject, RenderObject->Data->FaceTableOffset,EntryTable, BSDFile, GameVersion)) {
             DPrintf("RenderObjectLoad:Failed to load face data\n");
             goto Failure;
         }
 
-        if (!RenderObjectLoadAnimationHierarchyData(RenderObject, RenderObject->Data->HierarchyDataRootOffset, EntryTable, BSDFile))
-        {
+        if (!RenderObjectLoadAnimationHierarchyData(RenderObject, RenderObject->Data->HierarchyDataRootOffset, EntryTable, BSDFile)) {
             DPrintf("RenderObjectLoad:Failed to load hierarchy data\n");
             goto Failure;
         }
 
-        if (!RenderObjectLoadAnimationData(RenderObject, RenderObject->Data->AnimationDataOffset, EntryTable, BSDFile))
-        {
+        if (!RenderObjectLoadAnimationData(RenderObject, RenderObject->Data->AnimationDataOffset, EntryTable, BSDFile)) {
             DPrintf("RenderObjectLoad:Failed to load animation data\n");
             goto Failure;
         }
@@ -2024,21 +2014,16 @@ RenderObject_t *RenderObjectLoadAllFromTable(BSDEntryTable_t EntryTable, BSDRend
     int i;
 
     RenderObjectList = NULL;
-    for (i = 0; i < RenderObjectTable.NumRenderObject; i++)
-    {
+    for (i = 0; i < RenderObjectTable.NumRenderObject; i++) {
         RenderObject = RenderObjectLoad(&RenderObjectTable.RenderObject[i], EntryTable, RenderObjectTable, BSDFile, GameVersion);
 
-        if (!RenderObject)
-        {
+        if (!RenderObject) {
             DPrintf("RenderObjectLoadAllFromTable:Failed to load RenderObject with Id:%i\n", RenderObjectTable.RenderObject[i].Id);
             continue;
         }
-        if (KeepTableOrder)
-        {
+        if (KeepTableOrder) {
             RenderObjectAppendToList(&RenderObjectList, RenderObject);
-        }
-        else
-        {
+        } else {
             RenderObject->Next = RenderObjectList;
             RenderObjectList = RenderObject;
         }

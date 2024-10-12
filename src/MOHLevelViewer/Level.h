@@ -55,6 +55,8 @@ void    LevelLoadDefaultSettings();
 void    LevelDraw(Level_t *Level,Camera_t *Camera,RenderObjectShader_t *RenderObjectShader,mat4 ProjectionMatrix);
 void    LevelGetPlayerSpawn(Level_t *Level,int SpawnIndex,vec3 Position,vec3 Rotation);
 void    LevelUpdate(Level_t *Level,Camera_t *Camera);
+void    LevelResetDynamicFaces(Level_t *Level);
+
 TSP_t   *LevelGetTSPCompartmentByPoint(Level_t *Level,vec3 Point);
 int     LevelIsLoaded(Level_t *Level);
 void    LevelSetMusicTrackSettings(Level_t *Level,SoundSystem_t *SoundSystem,int GameEngine,int SoundValue);

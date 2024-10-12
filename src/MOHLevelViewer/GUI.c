@@ -138,6 +138,9 @@ void GUIDrawDebugWindow(GUI_t *GUI,LevelManager_t *LevelManager,Camera_t *Camera
         if( LevelManagerIsLevelLoaded(LevelManager) ) {
             igText("Game:%s",LevelManager->EngineName);
             igText("Current Path:%s",LevelManager->BasePath);
+            if( igButton("Reset dynamic faces",ZeroSize) ) {
+                LevelResetDynamicFaces(LevelManager->CurrentLevel);
+            }
             igSeparator();
             if( igCollapsingHeader_TreeNodeFlags("Settings",0) ) {
                 if( GUICheckBoxWithTooltip("Show FPS",(bool *) &GUIShowFPS->IValue,GUIShowFPS->Description) ) {
