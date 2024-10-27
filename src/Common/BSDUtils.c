@@ -70,6 +70,34 @@ bool BSDAreStarsEnabled(BSDSky_t SkyData)
     return SkyData.StarRadius != 0;
 }
 
+void BSDGetObjectDefaultExportMatrix(RenderObject_t *RenderObject,mat4 Result)
+{
+    vec3 RotationAxis;
+    vec3 Temp;
+    mat4 RotationMatrix;
+    mat4 ScaleMatrix;
+    mat4 TranslationMatrix;
+    mat4 RotScale;
+    
+    if( !RenderObject ) {
+        return;
+    }
+    
+    glm_mat4_identity(Result);
+    glm_mat4_identity(TranslationMatrix);
+    glm_mat4_identity(RotationMatrix);   
+    
+    RotationAxis[0] = 1;
+    RotationAxis[1] = 0;
+    RotationAxis[2] = 0;
+    glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);
+
+    glm_scale_make(ScaleMatrix,RenderObject->Scale);
+    glm_mat4_mul(RotationMatrix,ScaleMatrix,RotScale);
+    glm_mat4_mul(TranslationMatrix,RotScale,Result);
+
+}
+
 void BSDUpdateAnimatedLights(BSDAnimatedLightTable_t *AnimatedLightsTable)
 {
     BSDAnimatedLight_t *AnimatedLight;
@@ -145,6 +173,77 @@ void BSDUpdateStarsColors(BSDSky_t *SkyData)
         glBufferSubData(GL_ARRAY_BUFFER, BaseOffset + (3*sizeof(float)), DataSize, &Data);
     }
      glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void BSDWriteRenderObjectToPlyFile(RenderObject_t *RenderObject,VRAM_t *VRAM,int GameEngine,const char *OutDirectory)
+{
+    char *EngineName;
+    char *PlyObjectFile;
+    char *ObjectFileName;
+    char *TextureFile;
+    FILE *PlyObjectOutFile;
+    char Buffer[256];
+    mat4 ModelMatrix;
+    int FaceCount;
+    int VertexOffset;
+    int Vert0;
+    int Vert1;
+    int Vert2;
+    int i;
+    
+    if( !RenderObject || !OutDirectory ) {
+        bool InvalidDirectory = (OutDirectory == NULL ? true : false);
+        DPrintf("BSDWriteRenderObjectToPlyFile: Invalid %s\n",InvalidDirectory ? "Directory" : "RenderObject");
+        return;
+    }
+    if( !VRAM ) {
+        DPrintf("BSDWriteRenderObjectToPlyFile:Invalid VRAM data\n");
+        return;
+    }
+    if( !RenderObject->IsStatic ) {
+        DPrintf("BSDWriteRenderObjectToPlyFile:RenderObject is not static...\n");
+        return;
+    }
+    
+    asprintf(&EngineName,"%s",(GameEngine == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
+    asprintf(&ObjectFileName,"%s-RenderObject-%i.ply",EngineName,RenderObject->Id);
+    asprintf(&PlyObjectFile,"%s%c%s",OutDirectory,PATH_SEPARATOR,ObjectFileName);
+    asprintf(&TextureFile,"%s%cvram.png",OutDirectory,PATH_SEPARATOR);
+    DPrintf("BSDWriteRenderObjectToPlyFile:Writing RenderObject -> %s\n",PlyObjectFile);
+
+    PlyObjectOutFile = fopen(PlyObjectFile,"w");
+    if( !PlyObjectOutFile ) {
+        DPrintf("BSDWriteRenderObjectToPlyFile:Failed to open %s for writing\n",PlyObjectFile);
+        return;
+    }
+    
+    sprintf(Buffer,"ply\nformat ascii 1.0\n");
+    fwrite(Buffer,strlen(Buffer),1,PlyObjectOutFile);
+    FaceCount = RenderObject->NumFaces;
+    
+    sprintf(Buffer,"element vertex %i\nproperty float x\nproperty float y\nproperty float z\nproperty float red\nproperty float green\n"
+            "property float blue\nproperty float s\nproperty float t\n",FaceCount * 3);
+    fwrite(Buffer,strlen(Buffer),1,PlyObjectOutFile);
+    sprintf(Buffer,"element face %i\nproperty list uchar int vertex_indices\nend_header\n",FaceCount);
+    fwrite(Buffer,strlen(Buffer),1,PlyObjectOutFile);
+
+    glm_mat4_identity(ModelMatrix);
+    BSDGetObjectDefaultExportMatrix(RenderObject,ModelMatrix);
+    RenderObjectExportStaticFaceDataToPlyFile(RenderObject,ModelMatrix,VRAM,PlyObjectOutFile);
+    
+    for( i = 0; i < RenderObject->NumFaces; i++ ) {
+        Vert0 = (i * 3) + 0;
+        Vert1 = (i * 3) + 1;
+        Vert2 = (i * 3) + 2;
+        sprintf(Buffer,"3 %i %i %i\n",Vert0,Vert1,Vert2);
+        fwrite(Buffer,strlen(Buffer),1,PlyObjectOutFile);
+    }
+    VRAMSave(VRAM,TextureFile);
+    free(EngineName);
+    free(PlyObjectFile);
+    free(ObjectFileName);
+    free(TextureFile);
+    fclose(PlyObjectOutFile);
 }
 
 int BSDGetCurrentAnimatedLightColorByIndex(BSDAnimatedLightTable_t AnimatedLightsTable,int Index)

@@ -149,6 +149,12 @@ void RenderObjectManagerExportSelectedModelToPly(RenderObjectManager_t *RenderOb
         DPrintf("RenderObjectManagerExportCurrentPoseToPly:Invalid RenderObject\n");
         return;
     }
+    
+    if( CurrentRenderObject->IsStatic ) {
+        BSDWriteRenderObjectToPlyFile(CurrentRenderObject,CurrentBSDPack->VRAM,CurrentBSDPack->GameVersion,Directory);
+        return;
+    }
+    
     asprintf(&EngineName,"%s",(CurrentBSDPack->GameVersion == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
     asprintf(&FileName,"RenderObject-%u-%i-%s.ply",CurrentRenderObject->Id,CurrentRenderObject->CurrentAnimationIndex,EngineName);
     asprintf(&PlyFile,"%s%c%s",Directory,PATH_SEPARATOR,FileName);

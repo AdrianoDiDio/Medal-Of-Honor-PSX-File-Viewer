@@ -373,6 +373,8 @@ typedef struct BSDSceneInfo_s {
     char        Unknown2[7];
 } BSDSceneInfo_t;
 
+typedef struct RenderObject_s RenderObject_t;
+
 bool                        BSDReadTSPInfoBlock(FILE *BSDFile, BSDTSPInfo_t *TSPInfo);
 bool                        BSDReadSceneInfoBlock(FILE *BSDFile, BSDSceneInfo_t *SceneInfo);
 bool                        BSDReadAnimatedLightTableBlock(FILE *BSDFile, BSDAnimatedLightTable_t *AnimatedLightTable);
@@ -392,6 +394,7 @@ int                         BSDNodeIdToRenderObjectId(int NodeId);
 void                        BSDUpdateAnimatedLights(BSDAnimatedLightTable_t *AnimatedLightsTable);
 void                        BSDUpdateStarsColors(BSDSky_t *SkyData);
 void                        BSDClearNodesFlag(BSDNodeInfo_t *NodeData);
+void                        BSDWriteRenderObjectToPlyFile(RenderObject_t *RenderObject,VRAM_t *VRAM,int GameEngine,const char *OutDirectory);
 
 int                         BSDGetRenderObjectTableOffset(int GameEngine);
 int                         BSDGetRealOffset(int RelativeOffset);

@@ -166,7 +166,7 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
         }
     }
     TreeNodeFlags = RenderObjectManager->BSDList != NULL ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_None;
-    if( igCollapsingHeader_TreeNodeFlags("Animated RenderObjects List",TreeNodeFlags) ) {
+    if( igCollapsingHeader_TreeNodeFlags("RenderObjects List",TreeNodeFlags) ) {
         for(PackIterator = RenderObjectManager->BSDList; PackIterator; PackIterator = PackIterator->Next) {
             TreeNodeFlags = ImGuiTreeNodeFlags_None;
             if(  PackIterator == RenderObjectManagerGetSelectedBSDPack(RenderObjectManager) ) {
@@ -360,6 +360,11 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                 igSameLine(0.f,10.f);
                 if( igButton("Export current animation to Ply",ZeroSize) ) {
                     RenderObjectManagerExportSelectedModel(RenderObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY,true);
+                }
+            } else {
+                igText("Export selected model");
+                if( igButton("Export to Ply",ZeroSize) ) {
+                    RenderObjectManagerExportSelectedModel(RenderObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY,false);
                 }
             }
         }
