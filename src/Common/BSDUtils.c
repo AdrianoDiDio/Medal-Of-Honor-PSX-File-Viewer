@@ -90,7 +90,7 @@ void BSDGetObjectDefaultExportMatrix(RenderObject_t *RenderObject,mat4 Result)
     RotationAxis[0] = 1;
     RotationAxis[1] = 0;
     RotationAxis[2] = 0;
-    glm_rotate(RotationMatrix,glm_rad(180.f), RotationAxis);
+    glm_rotate(RotationMatrix,glm_rad(-90.f), RotationAxis);
 
     glm_scale_make(ScaleMatrix,RenderObject->Scale);
     glm_mat4_mul(RotationMatrix,ScaleMatrix,RotScale);

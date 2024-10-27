@@ -151,7 +151,11 @@ void RenderObjectManagerExportSelectedModelToPly(RenderObjectManager_t *RenderOb
     }
     
     if( CurrentRenderObject->IsStatic ) {
+        ProgressBarSetDialogTitle(ProgressBar,"Exporting RenderObject to Ply...");
+        ProgressBarIncrement(ProgressBar,VideoSystem,30,"Initializing exporter");
+        ProgressBarIncrement(ProgressBar,VideoSystem,70,"Writing data to Ply file");
         BSDWriteRenderObjectToPlyFile(CurrentRenderObject,CurrentBSDPack->VRAM,CurrentBSDPack->GameVersion,Directory);
+        ProgressBarIncrement(ProgressBar,VideoSystem,100,"Done.");
         return;
     }
     
