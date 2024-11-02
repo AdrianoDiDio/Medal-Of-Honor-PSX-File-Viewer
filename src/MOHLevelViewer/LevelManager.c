@@ -437,11 +437,11 @@ void LevelManagerFreeDialogData(FileDialog_t *FileDialog)
     }
 }
 
-void LevelManagerCloseDialog(GUI_t *GUI,FileDialog_t *FileDialog)
+void LevelManagerCloseDialog(GUI_t *GUI,VideoSystem_t *VideoSystem,FileDialog_t *FileDialog)
 {
     LevelManagerFreeDialogData(FileDialog);
     FileDialogClose(FileDialog);
-    GUIPopWindow(GUI);
+    GUIPopWindow(GUI,VideoSystem);
 }
 
 void LevelManagerCleanUp(LevelManager_t *LevelManager)
@@ -469,11 +469,12 @@ void LevelManagerCleanUp(LevelManager_t *LevelManager)
     free(LevelManager);
 }
 
-void LevelManagerOnAudioUpdate(void *UserData,Byte *Stream,int Length)
+void LevelManagerOnAudioUpdate(void *UserData,SDL_AudioStream *Stream,int AdditionalAmount, int TotalAmount)
 {
     LevelManager_t *LevelManager;
     VBMusic_t *CurrentMusic;
     VBMusic_t **CurrentMusicAddress;
+    Byte *Data;
     int ChunkLength;
     
     LevelManager = (LevelManager_t *) UserData;
@@ -492,16 +493,20 @@ void LevelManagerOnAudioUpdate(void *UserData,Byte *Stream,int Length)
             }
         }
     }
-    memset(Stream, 0, Length);
     ChunkLength = (CurrentMusic->Size - CurrentMusic->DataPointer);
-    if( ChunkLength > Length ) {
-        ChunkLength = Length;
+    if( ChunkLength > AdditionalAmount ) {
+        ChunkLength = AdditionalAmount;
     }
     if( SoundVolume->IValue < 0 || SoundVolume->IValue > 128 ) {
         ConfigSetNumber("SoundVolume",128);
     }
-    SDL_MixAudioFormat(Stream, &CurrentMusic->Data[CurrentMusic->DataPointer], AUDIO_F32, ChunkLength, SoundVolume->IValue);
-    CurrentMusic->DataPointer += ChunkLength;
+    if( AdditionalAmount > 0 ) {
+        Data = SDL_stack_alloc(Byte, AdditionalAmount);
+        memset(Data, 0, AdditionalAmount);
+        SDL_MixAudio(Data, &CurrentMusic->Data[CurrentMusic->DataPointer], SDL_AUDIO_F32LE,ChunkLength, SoundVolume->IValue);
+        SDL_PutAudioStreamData(Stream, Data, AdditionalAmount);
+        CurrentMusic->DataPointer += ChunkLength;
+    }
 }
 
 void LevelManagerSwitchLevel(LevelManager_t *LevelManager,Level_t *NewLevel)
@@ -691,14 +696,14 @@ void LevelManagerOnExportDirSelected(FileDialog_t *FileDialog,const char *Direct
     }
         
     ProgressBarEnd(Exporter->GUI->ProgressBar,Exporter->VideoSystem);
-    LevelManagerCloseDialog(Exporter->GUI,FileDialog);
+    LevelManagerCloseDialog(Exporter->GUI,Exporter->VideoSystem,FileDialog);
 }
 
 void LevelManagerOnExportDirCancelled(FileDialog_t *FileDialog)
 {
     LevelManagerDialogData_t *LevelManagerDialogData;
     LevelManagerDialogData = (LevelManagerDialogData_t *) FileDialogGetUserData(FileDialog);
-    LevelManagerCloseDialog(LevelManagerDialogData->GUI,FileDialog);
+    LevelManagerCloseDialog(LevelManagerDialogData->GUI,LevelManagerDialogData->VideoSystem,FileDialog);
 }
 
 /*
@@ -731,7 +736,7 @@ void LevelManagerOnDirSelected(FileDialog_t *FileDialog,const char *Path,const c
     } else {
         //Close it if we managed to load it.
         ConfigSet("GameBasePath",Path);
-        LevelManagerCloseDialog(LevelManagerDialogData->GUI,FileDialog);
+        LevelManagerCloseDialog(LevelManagerDialogData->GUI,LevelManagerDialogData->VideoSystem,FileDialog);
     }
 }
 void LevelManagerOnDirSelectionCancelled(FileDialog_t *FileDialog)
@@ -739,7 +744,7 @@ void LevelManagerOnDirSelectionCancelled(FileDialog_t *FileDialog)
     LevelManagerDialogData_t *LevelManagerDialogData;
     LevelManagerDialogData = (LevelManagerDialogData_t *) FileDialogGetUserData(FileDialog);
     if( LevelManagerDialogData->LevelManager->IsPathSet ) {
-        LevelManagerCloseDialog(LevelManagerDialogData->GUI,FileDialog);
+        LevelManagerCloseDialog(LevelManagerDialogData->GUI,LevelManagerDialogData->VideoSystem,FileDialog);
     }
 }
 
@@ -767,7 +772,7 @@ void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t *V
 
     FileDialogSetTitle(LevelManager->ExportFileDialog,"Export");
     FileDialogOpen(LevelManager->ExportFileDialog,Exporter);
-    GUIPushWindow(GUI);
+    GUIPushWindow(GUI,VideoSystem);
 }
 
 void LevelManagerSpawnCamera(const LevelManager_t *LevelManager,Camera_t *Camera)
@@ -896,7 +901,7 @@ void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
     
     if( FileDialogIsOpen(LevelManager->FileDialog) ) {
         if( LevelManager->IsPathSet ) {
-            LevelManagerCloseDialog(GUI,LevelManager->FileDialog);
+            LevelManagerCloseDialog(GUI,VideoSystem,LevelManager->FileDialog);
         }
     } else {
         DialogData = malloc(sizeof(LevelManagerDialogData_t));
@@ -908,7 +913,7 @@ void LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoS
         DialogData->GUI = GUI;
         DialogData->VideoSystem = VideoSystem;
         FileDialogOpenWithUserData(LevelManager->FileDialog,LevelManager->BasePath,DialogData);
-        GUIPushWindow(GUI);
+        GUIPushWindow(GUI,VideoSystem);
     }
 }
 

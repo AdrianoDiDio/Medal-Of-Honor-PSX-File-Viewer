@@ -314,7 +314,7 @@ char *AppGetConfigPath()
 }
 int SysMilliseconds()
 {
-    return SDL_GetTicks64();
+    return SDL_GetTicks();
 }
 
 void LocalDPrintf(const char *Fmt, ...)
@@ -333,12 +333,12 @@ void LocalDPrintf(const char *Fmt, ...)
 
 void SysHideCursor()
 {
-    SDL_ShowCursor(false);
+    SDL_HideCursor();
 }
 
 void SysShowCursor()
 {
-    SDL_ShowCursor(true);
+    SDL_ShowCursor();
 }
 void CommonRegisterSettings()
 {

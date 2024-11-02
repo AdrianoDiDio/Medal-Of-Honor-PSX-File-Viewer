@@ -47,13 +47,13 @@ bool GUIIsKeyboardFree()
 }
 void GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
 {
-    ImGui_ImplSDL2_ProcessEvent(Event);
+    ImGui_ImplSDL3_ProcessEvent(Event);
 }
 
 void GUIDrawDebugWindow(GUI_t *GUI,Camera_t *Camera,VideoSystem_t *VideoSystem)
 {
-    SDL_version LinkedVersion;
-    SDL_version CompiledVersion;
+    int LinkedVersion;
+    int CompiledVersion;
     
     if( !GUI->DebugWindowHandle ) {
         return;
@@ -64,10 +64,12 @@ void GUIDrawDebugWindow(GUI_t *GUI,Camera_t *Camera,VideoSystem_t *VideoSystem)
             igText("NumActiveWindows:%i",GUI->NumActiveWindows);
             igSeparator();
             igText("OpenGL Version: %s",glGetString(GL_VERSION));
-            SDL_GetVersion(&LinkedVersion);
-            SDL_VERSION(&CompiledVersion);
-            igText("SDL Compiled Version: %u.%u.%u",CompiledVersion.major,CompiledVersion.minor,CompiledVersion.patch);
-            igText("SDL Linked Version: %u.%u.%u",LinkedVersion.major,LinkedVersion.minor,LinkedVersion.patch);
+            LinkedVersion = SDL_GetVersion();
+            CompiledVersion = SDL_VERSION;
+            igText("SDL Compiled Version: %u.%u.%u",SDL_VERSIONNUM_MAJOR(CompiledVersion),SDL_VERSIONNUM_MINOR(CompiledVersion),
+                   SDL_VERSIONNUM_MICRO(CompiledVersion));
+            igText("SDL Linked Version: %u.%u.%u",SDL_VERSIONNUM_MAJOR(LinkedVersion),SDL_VERSIONNUM_MINOR(LinkedVersion),
+                   SDL_VERSIONNUM_MICRO(LinkedVersion));
             igSeparator();
             igText("Display Informations");
             igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);

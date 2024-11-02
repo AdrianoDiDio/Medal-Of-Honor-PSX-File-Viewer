@@ -40,7 +40,7 @@ typedef struct Engine_s {
    ComTimeInfo_t            *TimeInfo;
    VideoSystem_t            *VideoSystem;
    SoundSystem_t            *SoundSystem;
-   const Byte               *KeyState;
+   const bool               *KeyState;
 } Engine_t;
 
 

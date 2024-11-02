@@ -48,11 +48,11 @@ void SSTManagerFreeDialogData(FileDialog_t *FileDialog)
     }
 }
 
-void SSTManagerCloseDialog(GUI_t *GUI,FileDialog_t *FileDialog)
+void SSTManagerCloseDialog(GUI_t *GUI,VideoSystem_t *VideoSystem,FileDialog_t *FileDialog)
 {
     SSTManagerFreeDialogData(FileDialog);
     FileDialogClose(FileDialog);
-    GUIPopWindow(GUI);
+    GUIPopWindow(GUI,VideoSystem);
 }
 void SSTManagerFreeScriptList(SST_t *ScriptList)
 {
@@ -122,7 +122,7 @@ void SSTManagerOnAudioUpdate(void *UserData,Byte *Stream,int Length)
     if( SoundVolume->IValue < 0 || SoundVolume->IValue > 128 ) {
         ConfigSetNumber("SoundVolume",128);
     }
-    SDL_MixAudioFormat(Stream, /*&CurrentMusic->Data[CurrentMusic->DataPointer]*/Stream, AUDIO_F32, ChunkLength, SoundVolume->IValue);
+    SDL_MixAudio(Stream, /*&CurrentMusic->Data[CurrentMusic->DataPointer]*/Stream, SDL_AUDIO_F32LE, ChunkLength, SoundVolume->IValue);
 //     CurrentMusic->DataPointer += ChunkLength;
 }
 
@@ -178,7 +178,7 @@ void SSTManagerOnDirSelected(FileDialog_t *FileDialog,const char *Path,const cha
     } else {
         //Close it if we managed to load it.
         ConfigSet("GameBasePath",Path);
-        SSTManagerCloseDialog(SSTManagerDialogData->GUI,FileDialog);
+        SSTManagerCloseDialog(SSTManagerDialogData->GUI,SSTManagerDialogData->VideoSystem,FileDialog);
     }
 }
 void SSTManagerOnDirSelectionCancelled(FileDialog_t *FileDialog)
@@ -186,7 +186,7 @@ void SSTManagerOnDirSelectionCancelled(FileDialog_t *FileDialog)
     SSTManagerDialogData_t *SSTManagerDialogData;
     SSTManagerDialogData = (SSTManagerDialogData_t *) FileDialogGetUserData(FileDialog);
     if( SSTManagerDialogData->SSTManager->IsPathSet ) {
-        SSTManagerCloseDialog(SSTManagerDialogData->GUI,FileDialog);
+        SSTManagerCloseDialog(SSTManagerDialogData->GUI,SSTManagerDialogData->VideoSystem,FileDialog);
     }
 }
 
@@ -340,7 +340,7 @@ void SSTManagerToggleFileDialog(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_
     
     if( FileDialogIsOpen(SSTManager->FileDialog) ) {
         if( SSTManager->IsPathSet ) {
-            SSTManagerCloseDialog(GUI,SSTManager->FileDialog);
+            SSTManagerCloseDialog(GUI,VideoSystem,SSTManager->FileDialog);
         }
     } else {
         DialogData = malloc(sizeof(SSTManagerDialogData_t));
@@ -352,7 +352,7 @@ void SSTManagerToggleFileDialog(SSTManager_t *SSTManager,GUI_t *GUI,VideoSystem_
         DialogData->GUI = GUI;
         DialogData->VideoSystem = VideoSystem;
         FileDialogOpenWithUserData(SSTManager->FileDialog,SSTManager->BasePath,DialogData);
-        GUIPushWindow(GUI);
+        GUIPushWindow(GUI,VideoSystem);
     }
 }
 

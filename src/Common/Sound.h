@@ -24,7 +24,7 @@
 #include "samplerate.h"
 
 #define SOUND_SYSTEM_FREQUENCY 44100
-#define SOUND_SYSTEM_BUFFER_FORMAT AUDIO_F32
+#define SOUND_SYSTEM_BUFFER_FORMAT SDL_AUDIO_F32LE
 #define SOUND_SYSTEM_NUM_SAMPLES 512
 #define SOUND_SYSTEM_NUM_CHANNELS 2
 
@@ -61,13 +61,11 @@ typedef struct VBMusic_s {
 } VBMusic_t;
 
 typedef struct SoundSystem_s {
-    SDL_AudioDeviceID Device;
+    SDL_AudioStream *Stream;
 } SoundSystem_t;
 
 // typedef struct LevelManager_s LevelManager_t;
-SoundSystem_t   *SoundSystemInit(SDL_AudioCallback Callback,void *UserData);
-void            SoundSystemLockDevice(SoundSystem_t *SoundSystem);
-void            SoundSystemUnlockDevice(SoundSystem_t *SoundSystem);
+SoundSystem_t   *SoundSystemInit(SDL_AudioStreamCallback Callback,void *UserData);
 void            SoundSystemPlay(SoundSystem_t *SoundSystem);
 void            SoundSystemPause(SoundSystem_t *SoundSystem);
 int             SoundSystemIsPaused(SoundSystem_t *SoundSystem);

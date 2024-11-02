@@ -44,7 +44,7 @@ int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
     if( !GUIIsActive(GUI) ) {
         return 0;
     }
-    ImGui_ImplSDL2_ProcessEvent(Event);
+    ImGui_ImplSDL3_ProcessEvent(Event);
     return 1;
 }
 
@@ -58,56 +58,56 @@ int GUIIsActive(GUI_t *GUI)
  Push => Signal that a window is visible and update the cursor status to handle it.
  Pop => Signal that a window has been closed and if there are no windows opened then it hides the cursor since it is not needed anymore.
  */
-void GUIPushWindow(GUI_t *GUI)
+void GUIPushWindow(GUI_t *GUI, VideoSystem_t *VideoSystem)
 {
     if( !GUI->NumActiveWindows ) {
         //NOTE(Adriano):We have pushed a new window to the stack release the mouse and show
         //the cursor.
-        VideoSystemGrabMouse(0);
+        VideoSystemGrabMouse(VideoSystem, 0);
     }
     GUI->NumActiveWindows++;
 }
-void GUIPopWindow(GUI_t *GUI)
+void GUIPopWindow(GUI_t *GUI, VideoSystem_t *VideoSystem)
 {
     GUI->NumActiveWindows--;
     if( !GUI->NumActiveWindows ) {
         //NOTE(Adriano):All the windows have been closed...grab the mouse!
-        VideoSystemGrabMouse(1);
+        VideoSystemGrabMouse(VideoSystem, 1);
     }
 }
 /*
  * Push or Pop a window from the stack based on the handle value.
  */
-void GUIUpdateWindowStack(GUI_t *GUI,int HandleValue)
+void GUIUpdateWindowStack(GUI_t *GUI,VideoSystem_t *VideoSystem,int HandleValue)
 {
     if( HandleValue ) {
-        GUIPushWindow(GUI);
+        GUIPushWindow(GUI,VideoSystem);
     } else {
-        GUIPopWindow(GUI);
+        GUIPopWindow(GUI,VideoSystem);
     }
 }
-void GUIToggleDebugWindow(GUI_t *GUI)
+void GUIToggleDebugWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
     GUI->DebugWindowHandle = !GUI->DebugWindowHandle;
-    GUIUpdateWindowStack(GUI,GUI->DebugWindowHandle);
+    GUIUpdateWindowStack(GUI,VideoSystem,GUI->DebugWindowHandle);
 }
-void GUIToggleVideoSettingsWindow(GUI_t *GUI)
+void GUIToggleVideoSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
     GUI->VideoSettingsWindowHandle = !GUI->VideoSettingsWindowHandle;
-    GUIUpdateWindowStack(GUI,GUI->VideoSettingsWindowHandle);
+    GUIUpdateWindowStack(GUI,VideoSystem,GUI->VideoSettingsWindowHandle);
 
 }
-void GUIToggleScriptSelectWindow(GUI_t *GUI)
+void GUIToggleScriptSelectWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
 {
     GUI->ScriptSelectWindowHandle = !GUI->ScriptSelectWindowHandle;
-    GUIUpdateWindowStack(GUI,GUI->ScriptSelectWindowHandle);
+    GUIUpdateWindowStack(GUI,VideoSystem,GUI->ScriptSelectWindowHandle);
 }
 
 void GUIDrawDebugWindow(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,VideoSystem_t *VideoSystem)
 {
     ImVec2 ZeroSize;
-    SDL_version LinkedVersion;
-    SDL_version CompiledVersion;
+    int LinkedVersion;
+    int CompiledVersion;
     int MaxLengthMinutes;
     int MaxLengthSeconds;
     int CurrentLengthMinutes;
@@ -141,10 +141,12 @@ void GUIDrawDebugWindow(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,Vid
             igText("NumActiveWindows:%i",GUI->NumActiveWindows);
             igSeparator();
             igText("OpenGL Version: %s",glGetString(GL_VERSION));
-            SDL_GetVersion(&LinkedVersion);
-            SDL_VERSION(&CompiledVersion);
-            igText("SDL Compiled Version: %u.%u.%u",CompiledVersion.major,CompiledVersion.minor,CompiledVersion.patch);
-            igText("SDL Linked Version: %u.%u.%u",LinkedVersion.major,LinkedVersion.minor,LinkedVersion.patch);
+            LinkedVersion = SDL_GetVersion();
+            CompiledVersion = SDL_VERSION;
+            igText("SDL Compiled Version: %u.%u.%u",SDL_VERSIONNUM_MAJOR(CompiledVersion),SDL_VERSIONNUM_MINOR(CompiledVersion),
+                   SDL_VERSIONNUM_MICRO(CompiledVersion));
+            igText("SDL Linked Version: %u.%u.%u",SDL_VERSIONNUM_MAJOR(LinkedVersion),SDL_VERSIONNUM_MINOR(LinkedVersion),
+                   SDL_VERSIONNUM_MICRO(LinkedVersion));
             igSeparator();
             igText("Display Informations");
             igText("Resolution:%ix%i",VidConfigWidth->IValue,VidConfigHeight->IValue);
@@ -157,7 +159,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,Vid
     }
     
     if( !GUI->DebugWindowHandle ) {
-        GUIUpdateWindowStack(GUI,GUI->DebugWindowHandle);
+        GUIUpdateWindowStack(GUI,VideoSystem,GUI->DebugWindowHandle);
     }
     igEnd();
 }
@@ -272,7 +274,7 @@ void GUIDrawScriptSelectWindow(GUI_t *GUI,SSTManager_t *SSTManager,VideoSystem_t
     }
     igEnd();
     if( !GUI->ScriptSelectWindowHandle ) {
-        GUIUpdateWindowStack(GUI,GUI->ScriptSelectWindowHandle);
+        GUIUpdateWindowStack(GUI,VideoSystem,GUI->ScriptSelectWindowHandle);
     }
 }
 
@@ -297,7 +299,7 @@ void GUIDraw(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,VideoSystem_t 
     PreviousHandleValue = GUI->VideoSettingsWindowHandle;
     GUIDrawVideoSettingsWindow(&GUI->VideoSettingsWindowHandle,VideoSystem);
     if( GUI->VideoSettingsWindowHandle != PreviousHandleValue ) {
-        GUIUpdateWindowStack(GUI,GUI->VideoSettingsWindowHandle);
+        GUIUpdateWindowStack(GUI,VideoSystem,GUI->VideoSettingsWindowHandle);
     }
     GUIDrawScriptSelectWindow(GUI,SSTManager,VideoSystem);
 //     igShowDemoWindow(NULL);

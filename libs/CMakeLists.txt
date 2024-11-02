@@ -9,8 +9,8 @@ add_subdirectory(cglm ${CMAKE_CURRENT_BINARY_DIR}/cglm EXCLUDE_FROM_ALL)
 
 add_subdirectory(libsamplerate ${CMAKE_CURRENT_BINARY_DIR}/libsamplerate EXCLUDE_FROM_ALL)
 
-set(SDL2_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
-set(SDL2_DISABLE_UNINSTALL ON CACHE BOOL "" FORCE)
+set(SDL_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
+set(SDL_DISABLE_UNINSTALL ON CACHE BOOL "" FORCE)
 add_subdirectory(SDL ${CMAKE_CURRENT_BINARY_DIR}/SDL EXCLUDE_FROM_ALL)
 
 set(GLEW_CUSTOM_OUTPUT_DIRS ON CACHE BOOL "" FORCE)
@@ -42,7 +42,7 @@ set(IMGUI_SOURCE_FILES cimgui/cimgui.cpp
                        cimgui/imgui/imgui_widgets.cpp
                        cimgui/imgui/imgui_tables.cpp
                        cimgui/imgui/backends/imgui_impl_opengl3.cpp
-                       cimgui/imgui/backends/imgui_impl_sdl2.cpp
+                       cimgui/imgui/backends/imgui_impl_sdl3.cpp
                        ImGuiFileDialog/ImGuiFileDialog.cpp
 )
 
@@ -50,7 +50,7 @@ add_library(cimgui STATIC ${IMGUI_SOURCE_FILES})
 target_compile_definitions(cimgui PRIVATE "IMGUI_USER_CONFIG=\"${PROJECT_SOURCE_DIR}/src/Common/IMGUIConfig.h\"")
 
 target_include_directories(cimgui PRIVATE cimgui/imgui)
-target_link_libraries(cimgui SDL2)
+target_link_libraries(cimgui SDL3::SDL3)
 
 if( WIN32 ) 
     target_link_libraries(cimgui -static-libstdc++ -static-libgcc -static)

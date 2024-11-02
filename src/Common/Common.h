@@ -32,7 +32,7 @@
 #include <errno.h>
 
 #include <png.h>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <GL/glew.h>
 
 #include <cglm/cglm.h>

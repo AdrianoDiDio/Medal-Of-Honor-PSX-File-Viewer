@@ -30,17 +30,17 @@ void ApplicationCheckEvents(Application_t *Application)
     int NextPose;
     
     while( SDL_PollEvent(&Event) ) {
-        if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+        if( Event.type == SDL_EVENT_WINDOW_RESIZED ) {
             ConfigSetNumber("VideoWidth",Event.window.data1);
             ConfigSetNumber("VideoHeight",Event.window.data2);
         }
-        if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
+        if( Event.type == SDL_EVENT_QUIT || (Event.type == SDL_EVENT_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
             Quit(Application);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_m ) {
+        if( Event.type == SDL_EVENT_KEYDOWN && Event.key.keysym.sym == SDLK_m ) {
             RenderObjectManagerAdvanceSelectedRenderObjectAnimationFrame(Application->RenderObjectManager);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_n ) {
+        if( Event.type == SDL_EVENT_KEYDOWN && Event.key.keysym.sym == SDLK_n ) {
             RenderObjectManagerAdvanceSelectedRenderObjectAnimationPose(Application->RenderObjectManager);
         }
         GUIProcessEvent(Application->GUI,&Event);

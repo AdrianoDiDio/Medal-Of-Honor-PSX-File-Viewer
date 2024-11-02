@@ -51,7 +51,7 @@ void SoundManagerAudioUpdate(void *UserData,Byte *Stream,int Length)
     if( SoundVolume->IValue < 0 || SoundVolume->IValue > 128 ) {
         ConfigSetNumber("SoundVolume",128);
     }
-    SDL_MixAudioFormat(Stream, &SelectedSound->Data[SelectedSound->DataPointer], AUDIO_F32, ChunkLength, SoundVolume->IValue);
+    SDL_MixAudio(Stream, &SelectedSound->Data[SelectedSound->DataPointer], SDL_AUDIO_F32LE, ChunkLength, SoundVolume->IValue);
     SelectedSound->DataPointer += ChunkLength;
 }
 

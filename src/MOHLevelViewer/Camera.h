@@ -60,7 +60,7 @@ typedef struct LevelManager_s LevelManager_t;
 
 Camera_t    *CameraInit();
 void        CameraBeginFrame(Camera_t *Camera);
-void        CameraCheckKeyEvents(Camera_t *Camera,LevelManager_t *LevelManager,const Byte *KeyState,float Delta);
+void        CameraCheckKeyEvents(Camera_t *Camera,LevelManager_t *LevelManager,const bool *KeyState,float Delta);
 void        CameraSetPosition(Camera_t *Camera,vec3 Position);
 void        CameraSetRotation(Camera_t *Camera,vec3 Rotation);
 void        CameraOnMouseEvent(Camera_t *Camera,int Dx,int Dy);

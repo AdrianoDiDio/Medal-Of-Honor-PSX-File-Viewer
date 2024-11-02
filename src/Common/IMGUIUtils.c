@@ -194,7 +194,7 @@ void GUIReleaseContext(ImGuiContext *Context)
 {    
     igSetCurrentContext(Context);
     ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
     igDestroyContext(Context);
 }
 
@@ -207,7 +207,7 @@ void GUIContextInit(ImGuiContext *Context,VideoSystem_t *VideoSystem,const char 
     
     IO = igGetIO();
     igSetCurrentContext(Context);
-    ImGui_ImplSDL2_InitForOpenGL(VideoSystem->Window, &VideoSystem->GLContext);
+    ImGui_ImplSDL3_InitForOpenGL(VideoSystem->Window, &VideoSystem->GLContext);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     igStyleColorsDark(NULL);
     if( GUIFont->Value[0] ) {
@@ -235,7 +235,7 @@ void GUIContextInit(ImGuiContext *Context,VideoSystem_t *VideoSystem,const char 
 void GUIBeginFrame()
 {
     ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL2_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
     igNewFrame();   
 }
 
@@ -319,8 +319,8 @@ void ProgressBarIncrement(ProgressBar_t *ProgressBar,VideoSystem_t *VideoSystem,
     //Process any window event that could be generated while showing the progress bar.
     //We need to make sure not to process any mouse/keyboad event otherwise when the progress bar ends the
     //queue may be empty and the GUI won't respond to events properly...
-    while( SDL_PeepEvents(&Event, 1, SDL_GETEVENT, SDL_WINDOWEVENT, SDL_WINDOWEVENT) > 0 ) {
-        ImGui_ImplSDL2_ProcessEvent(&Event);
+    while( SDL_PeepEvents(&Event, 1, SDL_GETEVENT, SDL_EVENT_WINDOW_FIRST, SDL_EVENT_WINDOW_FIRST) > 0 ) {
+        ImGui_ImplSDL3_ProcessEvent(&Event);
     }
     
     //NOTE(Adriano):Since we are checking for events these function have now an updated view of the current window size.
@@ -334,23 +334,23 @@ void ProgressBarIncrement(ProgressBar_t *ProgressBar,VideoSystem_t *VideoSystem,
     glClear(GL_COLOR_BUFFER_BIT );
     
 
-    GUIBeginFrame();
-    
-    if( !ProgressBar->IsOpen ) {
-        igOpenPopup_Str(ProgressBar->DialogTitle,0);
-        ProgressBar->IsOpen = 1;
-    }
-    
-    Size.x = 0.f;
-    Size.y = 0.f;
-    igSetNextWindowPos(ScreenCenter, ImGuiCond_Always, Pivot);
-    ProgressBar->CurrentPercentage += Increment;
-    if (igBeginPopupModal(ProgressBar->DialogTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        igProgressBar((ProgressBar->CurrentPercentage / 100.f),Size,Message);
-        igEnd();
-    }
-    GUIEndFrame();
-    VideoSystemSwapBuffers(VideoSystem);
+//     GUIBeginFrame();
+//     
+//     if( !ProgressBar->IsOpen ) {
+//         igOpenPopup_Str(ProgressBar->DialogTitle,0);
+//         ProgressBar->IsOpen = 1;
+//     }
+//     
+//     Size.x = 0.f;
+//     Size.y = 0.f;
+//     igSetNextWindowPos(ScreenCenter, ImGuiCond_Always, Pivot);
+//     ProgressBar->CurrentPercentage += Increment;
+//     if (igBeginPopupModal(ProgressBar->DialogTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+//         igProgressBar((ProgressBar->CurrentPercentage / 100.f),Size,Message);
+//         igEnd();
+//     }
+//     GUIEndFrame();
+//     VideoSystemSwapBuffers(VideoSystem);
 }
 
 ProgressBar_t *ProgressBarInitialize(VideoSystem_t *VideoSystem)

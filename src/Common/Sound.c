@@ -50,30 +50,23 @@ void SoundSystemClearMusicList(VBMusic_t *MusicList)
 }
 void SoundSystemCleanUp(SoundSystem_t *SoundSystem)
 {
-    SDL_CloseAudioDevice(SoundSystem->Device);
+    SDL_DestroyAudioStream(SoundSystem->Stream);
     free(SoundSystem);
 }
 
 void SoundSystemPause(SoundSystem_t *SoundSystem)
 {
-    SDL_PauseAudioDevice(SoundSystem->Device, 1);
+    SDL_PauseAudioDevice(SDL_GetAudioStreamDevice(SoundSystem->Stream));
 }
 void SoundSystemPlay(SoundSystem_t *SoundSystem)
 {
-    SDL_PauseAudioDevice(SoundSystem->Device, 0);
+    SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(SoundSystem->Stream));
 }
 int SoundSystemIsPaused(SoundSystem_t *SoundSystem)
 {
-    return SDL_GetAudioDeviceStatus(SoundSystem->Device) == SDL_AUDIO_PAUSED;
+    return SDL_AudioDevicePaused(SDL_GetAudioStreamDevice(SoundSystem->Stream));
 }
-void SoundSystemLockDevice(SoundSystem_t *SoundSystem)
-{
-    SDL_LockAudioDevice(SoundSystem->Device);
-}
-void SoundSystemUnlockDevice(SoundSystem_t *SoundSystem)
-{
-    SDL_UnlockAudioDevice(SoundSystem->Device);
-}
+
 float SoundSystemQuantize(double Sample)
 {
     int OutSample;
@@ -410,11 +403,10 @@ void SoundSystemAddMusicToList(VBMusic_t **MusicList,VBMusic_t *Music)
     }
 }
 
-SoundSystem_t *SoundSystemInit(SDL_AudioCallback Callback,void *UserData)
+SoundSystem_t *SoundSystemInit(SDL_AudioStreamCallback Callback,void *UserData)
 {
     SoundSystem_t *SoundSystem;
     SDL_AudioSpec DesiredAudioSpec;
-    SDL_AudioSpec ObtainedAudioSpec;
     
     SoundSystem = malloc(sizeof(SoundSystem_t));
 
@@ -429,20 +421,11 @@ SoundSystem_t *SoundSystemInit(SDL_AudioCallback Callback,void *UserData)
     DesiredAudioSpec.freq = SOUND_SYSTEM_FREQUENCY;
     DesiredAudioSpec.format = SOUND_SYSTEM_BUFFER_FORMAT;
     DesiredAudioSpec.channels = SOUND_SYSTEM_NUM_CHANNELS;
-    DesiredAudioSpec.samples = SOUND_SYSTEM_NUM_SAMPLES;
-    DesiredAudioSpec.callback = Callback;
-    DesiredAudioSpec.userdata = UserData;
     
-    SoundSystem->Device = SDL_OpenAudioDevice(NULL,0,&DesiredAudioSpec, &ObtainedAudioSpec,0);
+    SoundSystem->Stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &DesiredAudioSpec, Callback, UserData);
     
-    if( ObtainedAudioSpec.freq != DesiredAudioSpec.freq || ObtainedAudioSpec.channels != DesiredAudioSpec.channels || 
-        ObtainedAudioSpec.samples != DesiredAudioSpec.samples
-    ) {
-        printf("SoundSystemInit:Wanted a frequency of %i with %i samples and %i channels...\n",DesiredAudioSpec.freq,DesiredAudioSpec.samples,
-                DesiredAudioSpec.channels);
-        printf("...Obtained a frequency of %i with %i samples and %i channels.\n",ObtainedAudioSpec.freq,ObtainedAudioSpec.samples,
-                ObtainedAudioSpec.channels);
-        SDL_CloseAudioDevice(SoundSystem->Device);
+    if( !SoundSystem->Stream ) {
+        printf("SoundSystemInit:Failed to open audio device stream...%s\n",SDL_GetError());
         free(SoundSystem);
         return NULL;
     }

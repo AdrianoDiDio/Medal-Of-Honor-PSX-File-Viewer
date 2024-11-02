@@ -29,7 +29,7 @@ void ApplicationCheckEvents(Application_t *Application)
     int NextPose;
     
     while( SDL_PollEvent(&Event) ) {
-        if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+        if( Event.type == SDL_WINDOW_EVENT && Event.window.event == SDL_WINDOW_EVENT_SIZE_CHANGED) {
             ConfigSetNumber("VideoWidth",Event.window.data1);
             ConfigSetNumber("VideoHeight",Event.window.data2);
         }

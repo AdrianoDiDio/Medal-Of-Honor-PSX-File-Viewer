@@ -161,7 +161,7 @@ void CameraCheckForCollisions(Camera_t *Camera,LevelManager_t *LevelManager)
         }
     }
 }
-void CameraCheckKeyEvents(Camera_t *Camera,LevelManager_t *LevelManager,const Byte *KeyState,float Delta)
+void CameraCheckKeyEvents(Camera_t *Camera,LevelManager_t *LevelManager,const bool *KeyState,float Delta)
 {
     if( KeyState[SDL_SCANCODE_W] ) {
         CameraUpdate(Camera,CAMERA_DIRECTION_FORWARD,Delta);

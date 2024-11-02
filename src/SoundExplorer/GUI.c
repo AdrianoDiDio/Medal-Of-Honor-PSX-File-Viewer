@@ -35,7 +35,7 @@ void GUIFree(GUI_t *GUI)
 
 void GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
 {
-    ImGui_ImplSDL2_ProcessEvent(Event);
+    ImGui_ImplSDL3_ProcessEvent(Event);
 }
 
 void GUIDrawMenuBar(Application_t *Application)

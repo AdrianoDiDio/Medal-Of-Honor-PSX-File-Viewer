@@ -42,12 +42,12 @@ typedef struct ComTimeInfo_s ComTimeInfo_t;
 typedef struct SoundSystem_s SoundSystem_t;
 
 GUI_t           *GUIInit(VideoSystem_t *VideoSystem);
-void            GUIPushWindow(GUI_t *GUI);
-void            GUIPopWindow(GUI_t *GUI);
+void            GUIPushWindow(GUI_t *GUI, VideoSystem_t *VideoSystem);
+void            GUIPopWindow(GUI_t *GUI, VideoSystem_t *VideoSystem);
 int             GUIIsActive(GUI_t *GUI);
-void            GUIToggleDebugWindow(GUI_t *GUI);
-void            GUIToggleVideoSettingsWindow(GUI_t *GUI);
-void            GUIToggleScriptSelectWindow(GUI_t *GUI);
+void            GUIToggleDebugWindow(GUI_t *GUI,VideoSystem_t *VideoSystem);
+void            GUIToggleVideoSettingsWindow(GUI_t *GUI,VideoSystem_t *VideoSystem);
+void            GUIToggleScriptSelectWindow(GUI_t *GUI,VideoSystem_t *VideoSystem);
 int             GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
 void            GUIDraw(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,VideoSystem_t *VideoSystem,ComTimeInfo_t *TimeInfo);
 void            GUIFree(GUI_t *GUI);

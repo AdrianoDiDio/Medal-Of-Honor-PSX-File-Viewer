@@ -53,6 +53,6 @@ void            VideoSystemGetCurrentWindowSize(VideoSystem_t *VideoSystem,int *
 int             VideoSystemSetSwapInterval(int Value);
 void            VideoSystemCenterMouse(VideoSystem_t *VideoSystem);
 void            VideoSystemSwapBuffers(VideoSystem_t *VideoSystem);
-void            VideoSystemGrabMouse(bool Grab);
+void            VideoSystemGrabMouse(VideoSystem_t *VideoSystem, bool Grab);
 void            VideoSystemShutdown(VideoSystem_t *VideoSystem);
 #endif//__VIDEO_H_

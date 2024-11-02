@@ -92,7 +92,7 @@ void EngineEndFrame(Engine_t *Engine)
 
 int EngineInitSDL()
 {
-    if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0 ) {
+    if ( !SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) ) {
         return false;
     }
     return true;

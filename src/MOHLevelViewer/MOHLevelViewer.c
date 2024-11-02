@@ -26,28 +26,28 @@ void ApplicationCheckEvents(Application_t *Application)
 {
     SDL_Event Event;
     while( SDL_PollEvent(&Event) ) {
-        if( Event.type == SDL_WINDOWEVENT && Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+        if( Event.type == SDL_EVENT_WINDOW_RESIZED ) {
             ConfigSetNumber("VideoWidth",Event.window.data1);
             ConfigSetNumber("VideoHeight",Event.window.data2);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F1 ) {
-            GUIToggleDebugWindow(Application->GUI);
+        if( Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_F1 ) {
+            GUIToggleDebugWindow(Application->GUI,Application->Engine->VideoSystem);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F2 ) {
-            GUIToggleVideoSettingsWindow(Application->GUI);
+        if( Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_F2 ) {
+            GUIToggleVideoSettingsWindow(Application->GUI,Application->Engine->VideoSystem);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F3 ) {
-            GUIToggleLevelSelectWindow(Application->GUI);
+        if( Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_F3 ) {
+            GUIToggleLevelSelectWindow(Application->GUI,Application->Engine->VideoSystem);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
+        if( Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_F4 ) {
             LevelManagerToggleFileDialog(Application->LevelManager,Application->GUI,Application->Engine->VideoSystem);
         }
-        if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
+        if( Event.type == SDL_EVENT_QUIT || (Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_ESCAPE ) ) {
             Quit(Application);
         }
         
         if( !GUIProcessEvent(Application->GUI,&Event) ) {
-            if( Event.type == SDL_MOUSEMOTION ) {
+            if( Event.type == SDL_EVENT_MOUSE_MOTION ) {
                 CameraOnMouseEvent(Application->Camera,Event.motion.xrel,Event.motion.yrel);
             }
         }
@@ -202,8 +202,8 @@ void ApplicationDraw(Application_t *Application)
     }
     LevelManagerDraw(Application->LevelManager,Application->Camera);
     glDisable (GL_DEPTH_TEST);
-    GUIDraw(Application->GUI,Application->LevelManager,Application->Camera,
-            Application->Engine->VideoSystem,Application->Engine->TimeInfo);
+//     GUIDraw(Application->GUI,Application->LevelManager,Application->Camera,
+//             Application->Engine->VideoSystem,Application->Engine->TimeInfo);
     glEnable(GL_DEPTH_TEST);
 }
 void ApplicationFrame(Application_t *Application)
@@ -290,7 +290,7 @@ Application_t *ApplicationInit(int argc,char **argv)
         goto Failure;
     }
     
-    VideoSystemGrabMouse(1);
+    VideoSystemGrabMouse(Application->Engine->VideoSystem,1);
 
     //NOTE(Adriano):Allow the game path to be set using command line argument.
     //              If the path is not valid the game will discard it.

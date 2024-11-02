@@ -27,7 +27,7 @@ void VRAMFree(VRAM_t *VRAM)
     glDeleteTextures(1,&VRAM->TextureIndexPage.TextureId);
     glDeleteTextures(1,&VRAM->PalettePage.TextureId);
 
-    SDL_FreeSurface(VRAM->Page.Surface);
+    SDL_DestroySurface(VRAM->Page.Surface);
     free(VRAM);
 }
 void VRAMWritePNG(SDL_Surface *ImageSurface,const char *OutName)
@@ -231,9 +231,10 @@ void VRAMPutTexture(VRAM_t *VRAM,TIMImage_t *Image)
     SrcRect.w = Image->Width;
     SrcRect.h = Image->Height;
     Byte *Data = TIMToOpenGL32(Image);
-    Src = SDL_CreateRGBSurfaceFrom(Data,Image->Width,Image->Height,32,4 * Image->Width,0x000000FF,0x0000FF00,0x00FF0000, 0xFF000000);
-    SDL_BlitScaled(Src,NULL,VRAM->Page.Surface,&SrcRect);
-    SDL_FreeSurface(Src);
+    Src = SDL_CreateSurfaceFrom(Image->Width,Image->Height,SDL_GetPixelFormatForMasks(32,0x000000FF,0x0000FF00,0x00FF0000, 0xFF000000),
+                                Data,4 * Image->Width);
+    SDL_BlitSurfaceScaled(Src,NULL,VRAM->Page.Surface,&SrcRect,SDL_SCALEMODE_LINEAR);
+    SDL_DestroySurface(Src);
     free(Data);
 }
 void VRAMPutRawTexture(VRAM_t *VRAM,TIMImage_t *Image)
@@ -336,7 +337,7 @@ VRAM_t *VRAMInit(TIMImage_t *ImageList)
     VRAM->Page.Width = 4096.f;
     VRAM->Page.Height = 1024.f;
     
-    VRAM->Page.Surface = SDL_CreateRGBSurface(0,VRAM->Page.Width,VRAM->Page.Height,32, 0x000000FF,0x0000FF00,0x00FF0000, 0xFF000000);
+    VRAM->Page.Surface = SDL_CreateSurface(VRAM->Page.Width,VRAM->Page.Height,SDL_GetPixelFormatForMasks(32, 0x000000FF,0x0000FF00,0x00FF0000, 0xFF000000));
 
     glGenTextures(1,&VRAM->PalettePage.TextureId);
     glBindTexture(GL_TEXTURE_2D,VRAM->PalettePage.TextureId);
@@ -378,7 +379,7 @@ VRAM_t *VRAMInit(TIMImage_t *ImageList)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, VRAM->Page.Width, VRAM->Page.Height, 0, GL_RGBA,GL_UNSIGNED_BYTE, VRAM->Page.Surface->pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, VRAM->Page.Width, VRAM->Page.Height, 0, GL_RGBA ,GL_UNSIGNED_BYTE, VRAM->Page.Surface->pixels);
     glBindTexture(GL_TEXTURE_2D,0);
     return VRAM;
 }
