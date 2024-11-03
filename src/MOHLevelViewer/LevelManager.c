@@ -474,8 +474,13 @@ void LevelManagerOnAudioUpdate(void *UserData,SDL_AudioStream *Stream,int Additi
     LevelManager_t *LevelManager;
     VBMusic_t *CurrentMusic;
     VBMusic_t **CurrentMusicAddress;
+    float NormalizedVolume;
     Byte *Data;
     int ChunkLength;
+    
+    if( AdditionalAmount <= 0 ) {
+        return;
+    }
     
     LevelManager = (LevelManager_t *) UserData;
     CurrentMusic = LevelManager->CurrentLevel->CurrentMusic;
@@ -500,13 +505,12 @@ void LevelManagerOnAudioUpdate(void *UserData,SDL_AudioStream *Stream,int Additi
     if( SoundVolume->IValue < 0 || SoundVolume->IValue > 128 ) {
         ConfigSetNumber("SoundVolume",128);
     }
-    if( AdditionalAmount > 0 ) {
-        Data = SDL_stack_alloc(Byte, AdditionalAmount);
-        memset(Data, 0, AdditionalAmount);
-        SDL_MixAudio(Data, &CurrentMusic->Data[CurrentMusic->DataPointer], SDL_AUDIO_F32LE,ChunkLength, SoundVolume->IValue);
-        SDL_PutAudioStreamData(Stream, Data, AdditionalAmount);
-        CurrentMusic->DataPointer += ChunkLength;
-    }
+    NormalizedVolume = SoundVolume->IValue / 128.f;
+    Data = SDL_calloc(1, AdditionalAmount);
+    SDL_MixAudio(Data, &CurrentMusic->Data[CurrentMusic->DataPointer], SDL_AUDIO_F32LE,ChunkLength, NormalizedVolume);
+    SDL_PutAudioStreamData(Stream, Data, AdditionalAmount);
+    CurrentMusic->DataPointer += ChunkLength;
+    SDL_free(Data);
 }
 
 void LevelManagerSwitchLevel(LevelManager_t *LevelManager,Level_t *NewLevel)

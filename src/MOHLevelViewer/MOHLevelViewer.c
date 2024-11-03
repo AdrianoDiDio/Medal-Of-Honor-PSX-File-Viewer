@@ -202,8 +202,8 @@ void ApplicationDraw(Application_t *Application)
     }
     LevelManagerDraw(Application->LevelManager,Application->Camera);
     glDisable (GL_DEPTH_TEST);
-//     GUIDraw(Application->GUI,Application->LevelManager,Application->Camera,
-//             Application->Engine->VideoSystem,Application->Engine->TimeInfo);
+    GUIDraw(Application->GUI,Application->LevelManager,Application->Camera,
+            Application->Engine->VideoSystem,Application->Engine->TimeInfo);
     glEnable(GL_DEPTH_TEST);
 }
 void ApplicationFrame(Application_t *Application)

@@ -106,7 +106,7 @@ void CameraUpdate(Camera_t *Camera,int Orientation, float Delta)
             break;
     }
 }
-void CameraCheckKeyEvents(Camera_t *Camera,const Byte *KeyState,float Delta)
+void CameraCheckKeyEvents(Camera_t *Camera,const bool *KeyState,float Delta)
 {
     if( KeyState[SDL_SCANCODE_A] ) {
         CameraUpdate(Camera,CAMERA_DIRECTION_LEFTWARD,Delta);

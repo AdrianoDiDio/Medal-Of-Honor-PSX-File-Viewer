@@ -236,13 +236,17 @@ void GUIBeginFrame()
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
-    igNewFrame();   
+    igNewFrame();
 }
 
 void GUIEndFrame()
 {
     igRender();
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
+//         int LastTex;
+//     glGetIntegerv(GL_TEXTURE_BINDING_2D, &LastTex);
+//     DPrintf("GUI has rendered a frame...last texture bound is %i\n",LastTex);
+//     assert(1!=1);
 }
 
 void ProgressBarDestroy(ProgressBar_t *ProgressBar)
@@ -333,24 +337,23 @@ void ProgressBarIncrement(ProgressBar_t *ProgressBar,VideoSystem_t *VideoSystem,
 
     glClear(GL_COLOR_BUFFER_BIT );
     
-
-//     GUIBeginFrame();
-//     
-//     if( !ProgressBar->IsOpen ) {
-//         igOpenPopup_Str(ProgressBar->DialogTitle,0);
-//         ProgressBar->IsOpen = 1;
-//     }
-//     
-//     Size.x = 0.f;
-//     Size.y = 0.f;
-//     igSetNextWindowPos(ScreenCenter, ImGuiCond_Always, Pivot);
-//     ProgressBar->CurrentPercentage += Increment;
-//     if (igBeginPopupModal(ProgressBar->DialogTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-//         igProgressBar((ProgressBar->CurrentPercentage / 100.f),Size,Message);
-//         igEnd();
-//     }
-//     GUIEndFrame();
-//     VideoSystemSwapBuffers(VideoSystem);
+    GUIBeginFrame();
+    
+    if( !ProgressBar->IsOpen ) {
+        igOpenPopup_Str(ProgressBar->DialogTitle,0);
+        ProgressBar->IsOpen = 1;
+    }
+    
+    Size.x = 0.f;
+    Size.y = 0.f;
+    igSetNextWindowPos(ScreenCenter, ImGuiCond_Always, Pivot);
+    ProgressBar->CurrentPercentage += Increment;
+    if (igBeginPopupModal(ProgressBar->DialogTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        igProgressBar((ProgressBar->CurrentPercentage / 100.f),Size,Message);
+        igEnd();
+    }
+    GUIEndFrame();
+    VideoSystemSwapBuffers(VideoSystem);
 }
 
 ProgressBar_t *ProgressBarInitialize(VideoSystem_t *VideoSystem)

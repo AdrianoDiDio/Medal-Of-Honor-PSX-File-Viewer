@@ -81,7 +81,7 @@ SDL_DisplayMode *SDLGetCurrentDisplayMode(VideoSystem_t *VideoSystem)
     for (i = 0; i < NumModes; i++) {
         SDL_copyp(&Result, ModeList[i]);
         if (Result.w == CurrentMode->Width && Result.h == CurrentMode->Height &&
-            SDL_BITSPERPIXEL(Result.format) == CurrentMode->BPP && Result.refresh_rate == CurrentMode->RefreshRate) {
+            SDL_BITSPERPIXEL(Result.format) == CurrentMode->BPP && ((int) Result.refresh_rate) == CurrentMode->RefreshRate) {
             SDL_free(ModeList);
             return &Result;
         }
@@ -204,6 +204,7 @@ void VideoSystemGetAvailableVideoModes(VideoSystem_t *VideoSystem)
                  VideoSystem->VideoModeList[i].RefreshRate);
     }
     VideoSystem->NumVideoModes = NumAvailableVideoModes;
+    SDL_free(ModeList);
 }
 
 void VideoSystemSwapBuffers(VideoSystem_t *VideoSystem)
@@ -257,7 +258,7 @@ int VideoSystemOpenWindow(VideoSystem_t *VideoSystem)
     VideoSystem->DPIScale = 1.f;
     DPIScale = SDL_GetWindowDisplayScale(VideoSystem->Window);
     if( DPIScale != 0.0 ) {
-        VideoSystem->DPIScale = DPIScale * 96.f;
+        VideoSystem->DPIScale = DPIScale;
     }
     if (VidConfigVSync->IValue < -1 || VidConfigVSync->IValue > 1) {
         ConfigSetNumber("VideoVSync", 1);
@@ -315,7 +316,6 @@ VideoSystem_t *VideoSystemInit(const char *WindowTitle)
         DPrintf("VideoSystemInit:Failed to init GLEW:%s\n",glewGetErrorString(GlewError));
         goto Error;
     }
-    SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
     return VideoSystem;
 Error:
     VideoSystemShutdown(VideoSystem);
