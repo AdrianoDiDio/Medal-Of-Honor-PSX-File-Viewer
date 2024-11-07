@@ -29,7 +29,7 @@ void ApplicationCheckEvents(Application_t *Application)
             ConfigSetNumber("VideoWidth",Event.window.data1);
             ConfigSetNumber("VideoHeight",Event.window.data2);
         }
-        if( Event.type == SDL_EVENT_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
+        if( Event.type == SDL_EVENT_QUIT || (Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_ESCAPE ) ) {
             Quit(Application);
         }
         GUIProcessEvent(Application->GUI,&Event);

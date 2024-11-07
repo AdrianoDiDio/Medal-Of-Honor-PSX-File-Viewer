@@ -23,18 +23,21 @@
 #include "VAB.h"
 #include "../Common/TIM.h"
 
-void SoundManagerAudioUpdate(void *UserData,Byte *Stream,int Length)
+void SoundManagerAudioUpdate(void *UserData,SDL_AudioStream *Stream,int AdditionalAmount, int TotalAmount)
 {
     SoundManager_t *SoundManager;
     VBMusic_t *SelectedSound;
     int ChunkLength;
+    float NormalizedVolume;
+    Byte *Data;
+    
+    if( AdditionalAmount <= 0 ) {
+        return;
+    }
     
     SoundManager = (SoundManager_t *) UserData;
     SelectedSound = SoundManager->SelectedSound;
     
-    for (int i = 0; i < Length; i++) {
-        Stream[i] = 0;
-    }
     if( !SelectedSound ) {
         return;
     }
@@ -45,14 +48,18 @@ void SoundManagerAudioUpdate(void *UserData,Byte *Stream,int Length)
         }
     }
     ChunkLength = (SelectedSound->Size - SelectedSound->DataPointer);
-    if( ChunkLength > Length ) {
-        ChunkLength = Length;
+    if( ChunkLength > AdditionalAmount ) {
+        ChunkLength = AdditionalAmount;
     }
     if( SoundVolume->IValue < 0 || SoundVolume->IValue > 128 ) {
         ConfigSetNumber("SoundVolume",128);
     }
-    SDL_MixAudio(Stream, &SelectedSound->Data[SelectedSound->DataPointer], SDL_AUDIO_F32LE, ChunkLength, SoundVolume->IValue);
+    NormalizedVolume = SoundVolume->IValue / 128.f;
+    Data = SDL_calloc(1, AdditionalAmount);
+    SDL_MixAudio(Data, &SelectedSound->Data[SelectedSound->DataPointer], SDL_AUDIO_F32LE,ChunkLength, NormalizedVolume);
+    SDL_PutAudioStreamData(Stream, Data, AdditionalAmount);
     SelectedSound->DataPointer += ChunkLength;
+    SDL_free(Data);
 }
 
 void SoundManagerResample(SoundManager_t *SoundManager,GUI_t *GUI,VideoSystem_t *VideoSystem,VBMusic_t *Sound,int UpSample)

@@ -48,7 +48,7 @@ typedef struct SoundManagerDialogData_s {
 
 
 SoundManager_t          *SoundManagerInit(GUI_t *GUI);
-void                    SoundManagerAudioUpdate(void *UserData,Byte *Stream,int Length);
+void                    SoundManagerAudioUpdate(void *UserData,SDL_AudioStream *Stream,int AdditionalAmount, int TotalAmount);
 void                    SoundManagerLoadAudioFile(SoundManager_t *SoundManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *File);
 void                    SoundManagerResample(SoundManager_t *SoundManager,GUI_t *GUI,VideoSystem_t *VideoSystem,VBMusic_t *Sound,int UpSample);
 void                    SoundManagerExportAll(SoundManager_t *SoundManager,GUI_t *GUI,VideoSystem_t  *VideoSystem);
