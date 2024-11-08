@@ -30,19 +30,19 @@ void ApplicationCheckEvents(Application_t *Application)
             ConfigSetNumber("VideoWidth",Event.window.data1);
             ConfigSetNumber("VideoHeight",Event.window.data2);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F1 ) {
-            GUIToggleDebugWindow(Application->GUI,Application->VideoSystem);
+        if( Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_F1 ) {
+            GUIToggleDebugWindow(Application->GUI,Application->Engine->VideoSystem);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F2 ) {
-            GUIToggleVideoSettingsWindow(Application->GUI,Application->VideoSystem);
+        if( Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_F2 ) {
+            GUIToggleVideoSettingsWindow(Application->GUI,Application->Engine->VideoSystem);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F3 ) {
-            GUIToggleScriptSelectWindow(Application->GUI,Application->VideoSystem);
+        if( Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_F3 ) {
+            GUIToggleScriptSelectWindow(Application->GUI,Application->Engine->VideoSystem);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_F4 ) {
+        if( Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_F4 ) {
             SSTManagerToggleFileDialog(Application->SSTManager,Application->GUI,Application->Engine->VideoSystem);
         }
-        if( Event.type == SDL_EVENT_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
+        if( Event.type == SDL_EVENT_QUIT || (Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_ESCAPE ) ) {
             Quit(Application);
         }
         if( !GUIProcessEvent(Application->GUI,&Event) ) {
@@ -247,7 +247,7 @@ Application_t *ApplicationInit(int argc,char **argv)
         goto Failure;
     }
     
-    VideoSystemGrabMouse(Application->VideoSystem,1);
+    VideoSystemGrabMouse(Application->Engine->VideoSystem,1);
 
     //NOTE(Adriano):Allow the game path to be set using command line argument.
     //              If the path is not valid the game will discard it.

@@ -29,25 +29,25 @@ void ApplicationCheckEvents(Application_t *Application)
     int NextPose;
     
     while( SDL_PollEvent(&Event) ) {
-        if( Event.type == SDL_WINDOW_EVENT && Event.window.event == SDL_WINDOW_EVENT_SIZE_CHANGED) {
+        if( Event.type == SDL_EVENT_WINDOW_RESIZED) {
             ConfigSetNumber("VideoWidth",Event.window.data1);
             ConfigSetNumber("VideoHeight",Event.window.data2);
         }
-        if( Event.type == SDL_QUIT || (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_ESCAPE ) ) {
+        if( Event.type == SDL_EVENT_QUIT || (Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_ESCAPE ) ) {
             Quit(Application);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_m ) {
+        if( Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_M ) {
             GFXObjectManagerAdvanceCurrentGFXAnimationFrame(Application->GFXObjectManager);
         }
-        if( Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_n ) {
+        if( Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_N ) {
             GFXObjectManagerAdvanceCurrentGFXAnimationPose(Application->GFXObjectManager);
         }
         GUIProcessEvent(Application->GUI,&Event);
         if( GUIIsMouseFree() ) {
-            if( Event.type == SDL_MOUSEWHEEL) {
+            if( Event.type == SDL_EVENT_MOUSE_WHEEL) {
                 CameraZoom(Application->Camera,-Event.wheel.y);
             }
-            if( Event.type == SDL_MOUSEMOTION && Event.motion.state & SDL_BUTTON_LMASK ) {
+            if( Event.type == SDL_EVENT_MOUSE_MOTION && Event.motion.state & SDL_BUTTON_LMASK ) {
                 CameraOnMouseEvent(Application->Camera,Event.motion.xrel,Event.motion.yrel);
             }
         }
