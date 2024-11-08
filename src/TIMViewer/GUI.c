@@ -125,7 +125,7 @@ void GUIDrawTextureWindow(ImageManager_t *ImageManager,float ColumnWidth)
     igEndGroup();
     igSameLine(CursorPosition.x,ColumnWidth - Size.x - 20.f);
     igBeginGroup();
-    igImage((void*)(intptr_t)ImageManager->VRAM->Page.TextureId, Size,UV0,UV1,TintColor,BorderColor);
+    igImage((ImTextureID)(intptr_t)ImageManager->VRAM->Page.TextureId, Size,UV0,UV1,TintColor,BorderColor);
     igEndGroup();
     igEndGroup();
 }
@@ -209,7 +209,7 @@ void GUIDrawVRAMWindow(GUI_t *GUI,ImageManager_t *ImageManager)
     UV1.y = 1;
 
     DrawList = igGetWindowDrawList();
-    igImage((void*)(intptr_t)ImageManager->VRAM->Page.TextureId, Size,UV0,UV1,TintColor,BorderColor);
+    igImage((ImTextureID)(intptr_t)ImageManager->VRAM->Page.TextureId, Size,UV0,UV1,TintColor,BorderColor);
     ImDrawList_AddRect(DrawList,Min,Max,0xFF0000FF,0.f,0,1.f);
     TextPosition.x = CursorPosition.x;
     TextPosition.y = CursorPosition.y;

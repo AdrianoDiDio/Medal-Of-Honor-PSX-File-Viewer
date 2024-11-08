@@ -89,14 +89,21 @@ void SSTManagerCleanUp(SSTManager_t *SSTManager)
     free(SSTManager);
 }
 
-void SSTManagerOnAudioUpdate(void *UserData,Byte *Stream,int Length)
+void SSTManagerOnAudioUpdate(void *UserData,SDL_AudioStream *Stream,int AdditionalAmount, int TotalAmount)
 {
     SSTManager_t *SSTManager;
     VBMusic_t *CurrentMusic;
     VBMusic_t **CurrentMusicAddress;
     int ChunkLength;
+    float NormalizedVolume;
+    Byte *Data;
+
     
-    SSTManager = (SSTManager_t *) UserData;
+    if( AdditionalAmount <= 0 ) {
+        return;
+    }
+    
+//     SSTManager = (SSTManager_t *) UserData;
 //     CurrentMusic = SSTManager->CurrentLevel->CurrentMusic;
 //     CurrentMusicAddress = &SSTManager->CurrentLevel->CurrentMusic;
 
@@ -112,18 +119,19 @@ void SSTManagerOnAudioUpdate(void *UserData,Byte *Stream,int Length)
 //             }
 //         }
 //     }
-    for (int i = 0; i < Length; i++) {
-        Stream[i] = 0;
-    }
-    ChunkLength = (CurrentMusic->Size - CurrentMusic->DataPointer);
-    if( ChunkLength > Length ) {
-        ChunkLength = Length;
-    }
-    if( SoundVolume->IValue < 0 || SoundVolume->IValue > 128 ) {
-        ConfigSetNumber("SoundVolume",128);
-    }
-    SDL_MixAudio(Stream, /*&CurrentMusic->Data[CurrentMusic->DataPointer]*/Stream, SDL_AUDIO_F32LE, ChunkLength, SoundVolume->IValue);
+//     ChunkLength = (CurrentMusic->Size - CurrentMusic->DataPointer);
+//     if( ChunkLength > AdditionalAmount ) {
+//         ChunkLength = AdditionalAmount;
+//     }
+//     if( SoundVolume->IValue < 0 || SoundVolume->IValue > 128 ) {
+//         ConfigSetNumber("SoundVolume",128);
+//     }
+//     NormalizedVolume = SoundVolume->IValue / 128.f;
+//     Data = SDL_calloc(1, AdditionalAmount);
+// //     SDL_MixAudio(Data, &Data, SDL_AUDIO_F32LE,ChunkLength, NormalizedVolume);
+//     SDL_PutAudioStreamData(Stream, Data, AdditionalAmount);
 //     CurrentMusic->DataPointer += ChunkLength;
+//     SDL_free(Data);
 }
 
 void SSTManagerDrawString(const SSTManager_t *SSTManager,const char *String,float x,float y,Color4f_t Color)
