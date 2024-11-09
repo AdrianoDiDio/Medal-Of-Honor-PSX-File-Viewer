@@ -550,7 +550,7 @@ Note that unlike V2, that it is not encoded, V0 and V1 can be extracted
 using bit shifting: (V0V1 & 0x1FFF) and (V0V1 >> 16 ) & 0X1FFF  
 There are three possible cases that we can find when reading this int:
 
-* If it is equal to 0x1fff1fff than this is the last data that we need to
+* If it is equal to 0x1fff1fff then this is the last data that we need to
   read for that node.  
 
 * If, instead, is equal to 0x1FFF then we need to read a new face struct and
@@ -756,10 +756,10 @@ one is contained in a structure of 20 bytes:
 
 | Type | Size    | Description         |
 | ---- | ------- | ------------------- |
-| int  | 4 bytes | NumColors           |
-| int  | 4 bytes | StartingColorOffset |
-| int  | 4 bytes | ColorIndex          |
-| int  | 4 bytes | CurrentColor        |
+| int  | 4 bytes | Number of Colors      |
+| int  | 4 bytes | Starting Color Offset |
+| int  | 4 bytes | Color Index          |
+| int  | 4 bytes | Current Color        |
 | int  | 4 bytes | Delay               |
 
 Every animated light has a number of colors that are loaded at the

@@ -52,7 +52,7 @@ int RSCFree(RSC_t *RSC)
     }
     return RSC_OK;
 }
-int RSCSearch(RSC_t *RSC,const char *FileName)
+int RSCSearch(const RSC_t *RSC,const char *FileName)
 {
     int i;
     for( i = 0; i < (int) RSC->Header.NumEntry; i++ ) {
@@ -65,7 +65,7 @@ int RSCSearch(RSC_t *RSC,const char *FileName)
 }
 int RSCOpen(const RSC_t *RSC,const char *FileName,RSCEntry_t *OutEntry) 
 {
-    RSC_t *Iterator;
+    const RSC_t *Iterator;
     int EntryIndex;
     
     if( !RSC ) {
