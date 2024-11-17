@@ -295,4 +295,5 @@ VideoSystem_t *VideoSystemInit(const char *WindowTitle)
     return VideoSystem;
 Error:
     VideoSystemShutdown(VideoSystem);
+    return NULL;
 }
