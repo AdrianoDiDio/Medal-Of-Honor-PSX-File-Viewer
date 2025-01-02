@@ -288,6 +288,38 @@ char *ReadTextFile(const char *File,int Length)
     return Result;
 }
 
+Byte *ReadBinaryFile(const char *File,int Length)
+{
+    FILE *Fp;
+    int FileSize;
+    Byte *Result;
+    int Ret;
+    
+    Fp = fopen(File,"rb");
+    
+    if( !Fp ) {
+        DPrintf("ReadTextFile:File %s was not found.\n",File);
+        return NULL;
+    }
+    FileSize = Length != 0 ? Length : GetFileLength(Fp);
+    Result = malloc(FileSize + 1);
+    
+    if( !Result ) {
+        DPrintf("ReadTextFile:Failed to allocate buffer\n");
+        fclose(Fp);
+        return NULL;
+    }
+    Ret = fread(Result,1, FileSize,Fp);
+    fclose(Fp);
+    
+    if( Ret != FileSize ) {
+        DPrintf("Failed to read file %s\n",File);
+        free(Result);
+        return NULL;
+    }
+    return Result;
+}
+
 int GetCurrentFilePosition(FILE *Fp)
 {
     return ftell(Fp);

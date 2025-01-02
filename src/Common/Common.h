@@ -103,6 +103,7 @@ int         StringToInt(const char *String);
 int         GetFileLength(FILE *Fp);
 char        *GetFileExtension(const char *FileName);
 char        *ReadTextFile(const char *File,int Length);
+Byte        *ReadBinaryFile(const char *File,int Length);
 int         GetCurrentFilePosition(FILE *Fp);
 void        SkipFileSection(int SectionSize,FILE *InFile);
 void        CreateDirIfNotExists(const char *DirName);
