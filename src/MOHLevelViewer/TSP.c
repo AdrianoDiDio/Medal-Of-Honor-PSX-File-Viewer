@@ -2766,23 +2766,23 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
     TSP->Header = *(TSPHeader_t *) Iterator;
     Iterator += sizeof(TSPHeader_t);
     
-    LittleShort(TSP->Header.Id);
-    LittleShort(TSP->Header.Version);
-    LittleLong(TSP->Header.NumNodes);
-    LittleLong(TSP->Header.NodeOffset);
-    LittleLong(TSP->Header.NumFaces);
-    LittleLong(TSP->Header.FaceOffset);
-    LittleLong(TSP->Header.NumVertices);
-    LittleLong(TSP->Header.VertexOffset);
-    LittleLong(TSP->Header.NumB);
-    LittleLong(TSP->Header.BOffset);
-    LittleLong(TSP->Header.NumColors);
-    LittleLong(TSP->Header.ColorOffset);
-    LittleLong(TSP->Header.NumC);
-    LittleLong(TSP->Header.COffset);
-    LittleLong(TSP->Header.NumDynamicDataBlock);
-    LittleLong(TSP->Header.DynamicDataOffset);
-    LittleLong(TSP->Header.CollisionOffset);
+    TSP->Header.Id = LittleShort(TSP->Header.Id);
+    TSP->Header.Version = LittleShort(TSP->Header.Version);
+    TSP->Header.NodeOffset = LittleLong(TSP->Header.NodeOffset);
+    TSP->Header.NumNodes = LittleLong(TSP->Header.NumNodes);
+    TSP->Header.NumFaces = LittleLong(TSP->Header.NumFaces);
+    TSP->Header.FaceOffset = LittleLong(TSP->Header.FaceOffset);
+    TSP->Header.NumVertices = LittleLong(TSP->Header.NumVertices);
+    TSP->Header.VertexOffset = LittleLong(TSP->Header.VertexOffset);
+    TSP->Header.NumB = LittleLong(TSP->Header.NumB);
+    TSP->Header.BOffset = LittleLong(TSP->Header.BOffset);
+    TSP->Header.NumColors = LittleLong(TSP->Header.NumColors);
+    TSP->Header.ColorOffset = LittleLong(TSP->Header.ColorOffset);
+    TSP->Header.NumC = LittleLong(TSP->Header.NumC);
+    TSP->Header.COffset = LittleLong(TSP->Header.COffset);
+    TSP->Header.NumDynamicDataBlock = LittleLong(TSP->Header.NumDynamicDataBlock);
+    TSP->Header.DynamicDataOffset = LittleLong(TSP->Header.DynamicDataOffset);
+    TSP->Header.CollisionOffset = LittleLong(TSP->Header.CollisionOffset);
     
     if( !TSPIsVersion3(TSP) ) {
         TSP->Header.NumTextureInfo = -1;
