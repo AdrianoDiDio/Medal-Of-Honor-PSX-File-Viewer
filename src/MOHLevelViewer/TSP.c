@@ -1741,15 +1741,15 @@ int TSPReadNodeChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
     return 1;
 }
 
-int TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadFaceChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
 {
     int Ret;
     int i;
     int NumFaces;
     
-    if( !TSP || !InFile ) {
-        bool InvalidFile = (InFile == NULL ? true : false);
-        printf("TSPReadFaceChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+    if( !TSP || !TSPBuffer ) {
+        bool InvalidBuffer = (TSPBuffer == NULL ? true : false);
+        printf("TSPReadFaceChunk: Invalid %s\n",InvalidBuffer ? "buffer" : "tsp struct");
         return 0;
     }
     if( TSP->Header.NumFaces == 0 ) {
@@ -1770,12 +1770,14 @@ int TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
         return 0;
     }
     for( i = 0; i < TSP->Header.NumFaces; i++ ) {
-        DPrintf("Reading Face %i at %li\n",i,ftell(InFile));
-        Ret = fread(&TSP->Face[i],sizeof(TSPFace_t),1,InFile);
-        if( Ret != 1 ) {
-            DPrintf("TSPReadFaceChunk:Early failure when reading face %i\n",i);
-            return 0;
-        }
+        DPrintf("Reading Face %i at %i\n",i,TSPGetBufferOffset(*TSPBuffer,OriginalBuffer));
+        TSP->Face[i] = **(TSPFace_t **) TSPBuffer;
+        *TSPBuffer += sizeof(TSPFace_t);
+        TSP->Face[i].V0 = LittleShort(TSP->Face[i].V0);
+        TSP->Face[i].V1 = LittleShort(TSP->Face[i].V1);
+        TSP->Face[i].V2 = LittleShort(TSP->Face[i].V2);
+        TSP->Face[i].CBA = LittleShort(TSP->Face[i].CBA);
+        TSP->Face[i].TSB = LittleShort(TSP->Face[i].TSB);
 #if 1
 //     if( i <= 4 ) {
         DPrintf(" -- Face %i --\n",i);
@@ -1790,14 +1792,14 @@ int TSPReadFaceChunk(TSP_t *TSP,FILE *InFile)
     return 1;
 }
 
-int TSPReadVertexChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadVertexChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
 {
     int Ret;
     int i;
     
-    if( !TSP || !InFile ) {
-        bool InvalidFile = (InFile == NULL ? true : false);
-        printf("TSPReadVertexChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+    if( !TSP || !TSPBuffer ) {
+        bool InvalidBuffer = (TSPBuffer == NULL ? true : false);
+        printf("TSPReadVertexChunk: Invalid %s\n",InvalidBuffer ? "buffer" : "tsp struct");
         return 0;
     }
     
@@ -1814,11 +1816,12 @@ int TSPReadVertexChunk(TSP_t *TSP,FILE *InFile)
     }
     
     for( i = 0; i < TSP->Header.NumVertices; i++ ) {
-        Ret = fread(&TSP->Vertex[i],sizeof(TSPVert_t),1,InFile);
-        if( Ret != 1 ) {
-            DPrintf("TSPReadVertexChunk:Early failure when reading vertex %i\n",i);
-            return 0;
-        }
+        TSP->Vertex[i] = **(TSPVert_t **) TSPBuffer;
+        *TSPBuffer += sizeof(TSPVert_t);
+        TSP->Vertex[i].Position.x = LittleShort(TSP->Vertex[i].Position.x);
+        TSP->Vertex[i].Position.y = LittleShort(TSP->Vertex[i].Position.y);
+        TSP->Vertex[i].Position.z = LittleShort(TSP->Vertex[i].Position.z);
+        TSP->Vertex[i].Pad = LittleShort(TSP->Vertex[i].Pad);
 //         DPrintf(" -- Vertex %i --\n",i);
 //         PrintTSPVec3(TSP->Vertex[i].Position);
         assert(TSP->Vertex[i].Pad == 104 || TSP->Vertex[i].Pad == 105);
@@ -1826,14 +1829,14 @@ int TSPReadVertexChunk(TSP_t *TSP,FILE *InFile)
     return 1;
 }
 
-int TSPReadColorChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadColorChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
 {
     int Ret;
     int i;
     
-    if( !TSP || !InFile ) {
-        bool InvalidFile = (InFile == NULL ? true : false);
-        printf("TSPReadColorChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+    if( !TSP || !TSPBuffer ) {
+        bool InvalidBuffer = (TSPBuffer == NULL ? true : false);
+        printf("TSPReadColorChunk: Invalid %s\n",InvalidBuffer ? "buffer" : "tsp struct");
         return 0;
     }
     if( TSP->Header.NumVertices == 0 ) {
@@ -1849,11 +1852,9 @@ int TSPReadColorChunk(TSP_t *TSP,FILE *InFile)
     }
     
     for( i = 0; i < TSP->Header.NumColors; i++ ) {
-        Ret = fread(&TSP->Color[i],sizeof(Color1i_t),1,InFile);
-        if( Ret != 1 ) {
-            DPrintf("TSPReadColorChunk:Early failure when reading color %i\n",i);
-            return 0;
-        }
+        TSP->Color[i] = **(Color1i_t **) TSPBuffer;
+        *TSPBuffer += sizeof(Color1i_t);
+        TSP->Color[i].c = LittleLong(TSP->Color[i].c);
     }
     return 1;
 }
@@ -2788,6 +2789,8 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
         TSP->Header.NumTextureInfo = -1;
         TSP->Header.TextureInfoOffset = -1;
         TSP->TextureData = NULL;
+        // NOTE(Adriano): Unwind the buffer, since on version 2 we don't have the additional Texture info offsets
+        Iterator = Buffer + TSP->Header.NodeOffset;
     }
     
     DPrintf("Sizeof TSPHeader is %li\n",sizeof(TSPHeader_t));
@@ -2806,7 +2809,8 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
     DPrintf("CollisionOffset:%i\n",TSP->Header.CollisionOffset);
     DPrintf("NumTextureInfo:%i TextureInfoOffset:%i\n",TSP->Header.NumTextureInfo,TSP->Header.TextureInfoOffset);
 
-//     assert(ftell(TSPFile) == TSP->Header.NodeOffset);
+    DPrintf("Current Offset is %i\n", TSPGetBufferOffset(Iterator,Buffer));
+    assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.NodeOffset);
     if( !TSPReadNodeChunk(TSP,&Iterator,Buffer) ) {
         goto Failure;
     }
@@ -2816,24 +2820,27 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
 
     } else {
         assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.FaceOffset);
-//         if( !TSPReadFaceChunk(TSP,TSPFile) ) {
-//             goto Failure;
-//         }
+        if( !TSPReadFaceChunk(TSP,&Iterator,Buffer) ) {
+            goto Failure;
+        }
     }
+    
+
     assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.VertexOffset);
     
+    if( !TSPReadVertexChunk(TSP,&Iterator,Buffer) ) {
+        goto Failure;
+    }
+    
+    assert(TSP->Header.NumB == 0);
+    assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.ColorOffset);
+
+    if( !TSPReadColorChunk(TSP,&Iterator,Buffer) ) {
+        goto Failure;
+    }
+    assert(TSP->Header.NumC == 0);
     assert(1!=1);
 
-//     assert(ftell(TSPFile) == TSP->Header.VertexOffset);
-//     if( !TSPReadVertexChunk(TSP,TSPFile) ) {
-//         goto Failure;
-//     }
-//     assert(TSP->Header.NumB == 0);
-//     assert(ftell(TSPFile) == TSP->Header.ColorOffset);
-//     if( !TSPReadColorChunk(TSP,TSPFile) ) {
-//         goto Failure;
-//     }
-//     assert(TSP->Header.NumC == 0);
 //     if( !TSPReadDynamicDataChunk(TSP,TSPFile) ) {
 //         goto Failure;
 //     }
