@@ -120,6 +120,14 @@ void TSPFreeList(TSP_t *List)
     }
 }
 
+int TSPGetBufferOffset(const Byte *Iterator, const Byte *Buffer)
+{
+    if( !Iterator || !Buffer ) {
+        return 0;
+    }
+    return Iterator - Buffer;
+}
+
 bool TSPIsVersion3(TSP_t *TSP)
 {
     return TSP->Header.Version == 3;
@@ -1582,7 +1590,7 @@ void TSPLookUpChildNode(TSP_t *TSP)
 
 */
 
-int TSPReadNodeChunk(TSP_t *TSP,Byte **TSPBuffer,const Byte *OriginalBuffer)
+int TSPReadNodeChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
 {
     TSPFaceV3_t TempFace;
     int CurrentFaceIndex;
@@ -1729,7 +1737,7 @@ int TSPReadNodeChunk(TSP_t *TSP,Byte **TSPBuffer,const Byte *OriginalBuffer)
         }
     }
     TSPLookUpChildNode(TSP);
-    DPrintf("Current file offset is %li\n",*TSPBuffer - OriginalBuffer);
+    DPrintf("Current file offset is %li\n",TSPGetBufferOffset(*TSPBuffer, OriginalBuffer));
     return 1;
 }
 
@@ -2718,13 +2726,7 @@ int TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList,vec3 PenetrationNor
     }
     return 0;
 }
-int TSPGetBufferOffset(const Byte *Iterator, const Byte *Buffer)
-{
-    if( !Iterator || !Buffer ) {
-        return 0;
-    }
-    return Iterator - Buffer;
-}
+
 TSP_t *TSPLoad(const char *FName,int TSPNumber)
 {
     TSP_t *TSP;
