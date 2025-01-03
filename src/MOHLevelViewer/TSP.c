@@ -1600,8 +1600,8 @@ int TSPReadNodeChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
     int i;
     
     if( !TSP || !TSPBuffer ) {
-        bool InvalidFile = (TSPBuffer == NULL ? true : false);
-        printf("TSPReadNodeChunk: Invalid %s\n",InvalidFile ? "buffer" : "tsp struct");
+        bool InvalidBuffer = ((TSPBuffer == NULL || OriginalBuffer == NULL ) ? true : false);
+        printf("TSPReadNodeChunk: Invalid %s\n",InvalidBuffer ? "buffer" : "tsp struct");
         return 0;
     }
     if( TSP->Header.NumNodes == 0 ) {
@@ -1748,7 +1748,7 @@ int TSPReadFaceChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
     int NumFaces;
     
     if( !TSP || !TSPBuffer ) {
-        bool InvalidBuffer = (TSPBuffer == NULL ? true : false);
+        bool InvalidBuffer = ((TSPBuffer == NULL || OriginalBuffer == NULL ) ? true : false);
         printf("TSPReadFaceChunk: Invalid %s\n",InvalidBuffer ? "buffer" : "tsp struct");
         return 0;
     }
@@ -1798,7 +1798,7 @@ int TSPReadVertexChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
     int i;
     
     if( !TSP || !TSPBuffer ) {
-        bool InvalidBuffer = (TSPBuffer == NULL ? true : false);
+        bool InvalidBuffer = ((TSPBuffer == NULL || OriginalBuffer == NULL ) ? true : false);
         printf("TSPReadVertexChunk: Invalid %s\n",InvalidBuffer ? "buffer" : "tsp struct");
         return 0;
     }
@@ -1835,7 +1835,7 @@ int TSPReadColorChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
     int i;
     
     if( !TSP || !TSPBuffer ) {
-        bool InvalidBuffer = (TSPBuffer == NULL ? true : false);
+        bool InvalidBuffer = ((TSPBuffer == NULL || OriginalBuffer == NULL ) ? true : false);
         printf("TSPReadColorChunk: Invalid %s\n",InvalidBuffer ? "buffer" : "tsp struct");
         return 0;
     }
@@ -1859,7 +1859,7 @@ int TSPReadColorChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
     return 1;
 }
 
-int TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadDynamicDataChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
 {
     int i;
     int j;
@@ -1867,9 +1867,9 @@ int TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
     int DynamicBlockEnd;
     int Delta;
     
-    if( !TSP || !InFile ) {
-        bool InvalidFile = (InFile == NULL ? true : false);
-        printf("TSPReadDynamicDataChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+    if( !TSP || !TSPBuffer ) {
+        bool InvalidBuffer = ((TSPBuffer == NULL || OriginalBuffer == NULL ) ? true : false);
+        printf("TSPReadDynamicDataChunk: Invalid %s\n",InvalidBuffer ? "buffer" : "tsp struct");
         return 0;
     }
     //NOTE(Adriano):This is not an error condition since TSP files are allowed
@@ -1877,9 +1877,9 @@ int TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
     if( TSP->Header.NumDynamicDataBlock == 0 ) {
         DPrintf("TSPReadDynamicDataChunk:TSP has no Dynamic Data set.\n");
         if( TSPIsVersion3(TSP) ) {
-            fseek(InFile,TSP->Header.TextureInfoOffset,SEEK_SET);
+            *TSPBuffer = OriginalBuffer + TSP->Header.TextureInfoOffset;
         } else {
-            fseek(InFile,TSP->Header.CollisionOffset,SEEK_SET);
+            *TSPBuffer = OriginalBuffer + TSP->Header.CollisionOffset;
         }
         return 1;
     }
@@ -1893,16 +1893,18 @@ int TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
     
     for( i = 0; i < TSP->Header.NumDynamicDataBlock; i++ ) {
         DPrintf("-- Dynamic Data Block %i --\n",i);
-        DPrintf("File offset is %li\n",ftell(InFile));
-        DynamicBlockStart = ftell(InFile);
-        fread(&TSP->DynamicData[i].Header.Size,sizeof(TSP->DynamicData[i].Header.Size),1,InFile);
-        fread(&TSP->DynamicData[i].Header.Unk0,sizeof(TSP->DynamicData[i].Header.Unk0),1,InFile);
-        fread(&TSP->DynamicData[i].Header.EffectType,sizeof(TSP->DynamicData[i].Header.EffectType),1,InFile);
-        fread(&TSP->DynamicData[i].Header.DynamicDataIndex,sizeof(TSP->DynamicData[i].Header.DynamicDataIndex),1,InFile);
-        fread(&TSP->DynamicData[i].Header.FaceDataSizeMultiplier,sizeof(TSP->DynamicData[i].Header.FaceDataSizeMultiplier),1,InFile);
-        fread(&TSP->DynamicData[i].Header.NumFacesIndex,sizeof(TSP->DynamicData[i].Header.NumFacesIndex),1,InFile);
-        fread(&TSP->DynamicData[i].Header.FaceIndexOffset,sizeof(TSP->DynamicData[i].Header.FaceIndexOffset),1,InFile);
-        fread(&TSP->DynamicData[i].Header.FaceDataOffset,sizeof(TSP->DynamicData[i].Header.FaceDataOffset),1,InFile);
+        DPrintf("File offset is %i\n",TSPGetBufferOffset(*TSPBuffer,OriginalBuffer));
+        DynamicBlockStart = TSPGetBufferOffset(*TSPBuffer,OriginalBuffer);
+        TSP->DynamicData[i].Header = **(TSPDynamicDataHeader_t **) TSPBuffer;
+        *TSPBuffer += sizeof(TSPDynamicDataHeader_t);
+        TSP->DynamicData[i].Header.Size = LittleLong(TSP->DynamicData[i].Header.Size);
+        TSP->DynamicData[i].Header.Unk0 = LittleLong(TSP->DynamicData[i].Header.Unk0);
+        TSP->DynamicData[i].Header.EffectType = LittleLong(TSP->DynamicData[i].Header.EffectType);
+        TSP->DynamicData[i].Header.DynamicDataIndex = LittleLong(TSP->DynamicData[i].Header.DynamicDataIndex);
+        TSP->DynamicData[i].Header.FaceDataSizeMultiplier = LittleShort(TSP->DynamicData[i].Header.FaceDataSizeMultiplier);
+        TSP->DynamicData[i].Header.NumFacesIndex = LittleShort(TSP->DynamicData[i].Header.NumFacesIndex);
+        TSP->DynamicData[i].Header.FaceIndexOffset = LittleShort(TSP->DynamicData[i].Header.FaceIndexOffset);
+        TSP->DynamicData[i].Header.FaceDataOffset = LittleShort(TSP->DynamicData[i].Header.FaceDataOffset);
         TSP->DynamicData[i].CurrentStride = 0;
         TSP->DynamicData[i].IncrementOffset = 1;
         TSP->DynamicData[i].LastUpdateTime = 0;
@@ -1920,9 +1922,10 @@ int TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
             return 0;
         }
         for( j = 0; j < TSP->DynamicData[i].Header.NumFacesIndex; j++ ) {
-            fread(&TSP->DynamicData[i].FaceIndexList[j],sizeof(TSP->DynamicData[i].FaceIndexList[j]),1,InFile);
+            TSP->DynamicData[i].FaceIndexList[j] = LittleShort(**(short **) TSPBuffer);
+            *TSPBuffer += sizeof(short);
         }
-        DPrintf("Position after face index list is %li\n",ftell(InFile));
+        DPrintf("Position after face index list is %li\n",TSPGetBufferOffset(*TSPBuffer,OriginalBuffer));
         TSP->DynamicData[i].FaceDataList = NULL;
         TSP->DynamicData[i].FaceDataListV3 = NULL;
         if( TSPIsVersion3(TSP) ) {
@@ -1933,7 +1936,8 @@ int TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
                 return 0;
             }
             for( j = 0; j < TSP->DynamicData[i].Header.NumFacesIndex * TSP->DynamicData[i].Header.FaceDataSizeMultiplier; j++ ) {
-                fread(&TSP->DynamicData[i].FaceDataListV3[j],sizeof(TSP->DynamicData[i].FaceDataListV3[j]),1,InFile);
+                TSP->DynamicData[i].FaceDataListV3[j] = LittleShort(**(short **) TSPBuffer);
+                *TSPBuffer += sizeof(short);
             }
         } else {
             TSP->DynamicData[i].FaceDataList = malloc(TSP->DynamicData[i].Header.NumFacesIndex * sizeof(TSPDynamicFaceData_t)  * 
@@ -1943,16 +1947,20 @@ int TSPReadDynamicDataChunk(TSP_t *TSP,FILE *InFile)
                 return 0;
             }
             for( j = 0; j < TSP->DynamicData[i].Header.NumFacesIndex * TSP->DynamicData[i].Header.FaceDataSizeMultiplier; j++ ) {
-                fread(&TSP->DynamicData[i].FaceDataList[j],sizeof(TSP->DynamicData[i].FaceDataList[j]),1,InFile);
+                TSP->DynamicData[i].FaceDataList[j] = **(TSPDynamicFaceData_t **) TSPBuffer;
+                *TSPBuffer += sizeof(TSPDynamicFaceData_t);
+                TSP->DynamicData[i].FaceDataList[j].CBA = LittleShort(TSP->DynamicData[i].FaceDataList[j].CBA);
+                TSP->DynamicData[i].FaceDataList[j].TSB = LittleShort(TSP->DynamicData[i].FaceDataList[j].TSB);
+                //TODO(Adriano): Probably we will need to swap UV0/UV1 otherwise it may be in the wrong order for big endian systems
             }
         }
-        DynamicBlockEnd = ftell(InFile);
+        DynamicBlockEnd = TSPGetBufferOffset(*TSPBuffer, OriginalBuffer);
         Delta = DynamicBlockEnd - DynamicBlockStart;
         DPrintf("Position after face data list is %i\n",DynamicBlockEnd);
         //Some blocks may not be aligned to the size 10 boundaries...
         if( Delta != TSP->DynamicData[i].Header.Size ) {
             DPrintf("Fixing unaligned block (Missing %i bytes)...\n",TSP->DynamicData[i].Header.Size - Delta);
-            fseek(InFile,TSP->DynamicData[i].Header.Size - Delta,SEEK_CUR);
+            *TSPBuffer += TSP->DynamicData[i].Header.Size - Delta;
         }
     }
     return 1;
@@ -2809,7 +2817,6 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
     DPrintf("CollisionOffset:%i\n",TSP->Header.CollisionOffset);
     DPrintf("NumTextureInfo:%i TextureInfoOffset:%i\n",TSP->Header.NumTextureInfo,TSP->Header.TextureInfoOffset);
 
-    DPrintf("Current Offset is %i\n", TSPGetBufferOffset(Iterator,Buffer));
     assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.NodeOffset);
     if( !TSPReadNodeChunk(TSP,&Iterator,Buffer) ) {
         goto Failure;
@@ -2824,7 +2831,6 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
             goto Failure;
         }
     }
-    
 
     assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.VertexOffset);
     
@@ -2839,18 +2845,19 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
         goto Failure;
     }
     assert(TSP->Header.NumC == 0);
-    assert(1!=1);
 
-//     if( !TSPReadDynamicDataChunk(TSP,TSPFile) ) {
-//         goto Failure;
-//     }
+    if( !TSPReadDynamicDataChunk(TSP,&Iterator,Buffer) ) {
+        goto Failure;
+    }
 //     if( TSPIsVersion3(TSP) ) {
 //         assert(ftell(TSPFile) == TSP->Header.TextureInfoOffset);
 //         if( !TSPReadTextureInfoChunk(TSP,TSPFile) ) {
 //             goto Failure;
 //         }
 //     }
-//     assert(ftell(TSPFile) == TSP->Header.CollisionOffset);
+    assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.CollisionOffset);
+    assert(1!=1);
+
 //     if( !TSPReadCollisionChunk(TSP,TSPFile) ) {
 //         goto Failure;
 //     }
