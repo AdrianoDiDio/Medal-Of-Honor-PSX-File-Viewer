@@ -119,4 +119,12 @@ int         SysMilliseconds();
 char        *AppGetConfigPath();
 void        SysShowCursor();
 void        SysHideCursor();
+
+void        SetupEndianness();
+
+extern short (*BigShort) ( short s );
+extern short (*LittleShort) ( short s );
+extern int   (*BigLong) ( int i );
+extern int  (*LittleLong) ( int i );
+
 #endif//__COMMON_H_

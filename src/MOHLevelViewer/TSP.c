@@ -1582,7 +1582,7 @@ void TSPLookUpChildNode(TSP_t *TSP)
 
 */
 
-int TSPReadNodeChunk(TSP_t *TSP,Byte **TSPBuffer,Byte *OriginalBuffer)
+int TSPReadNodeChunk(TSP_t *TSP,Byte **TSPBuffer,const Byte *OriginalBuffer)
 {
     TSPFaceV3_t TempFace;
     int CurrentFaceIndex;
@@ -1611,20 +1611,21 @@ int TSPReadNodeChunk(TSP_t *TSP,Byte **TSPBuffer,Byte *OriginalBuffer)
         TSP->Node[i].FileOffset.Offset = *TSPBuffer - OriginalBuffer;
         DPrintf("TSPReadNodeChunk:Reading node %i at %i\n",i,TSP->Node[i].FileOffset.Offset);
         TSP->Node[i].BBox = **(TSPBBox_t **) TSPBuffer;
+        TSP->Node[i].BBox.Min.x = LittleShort(TSP->Node[i].BBox.Min.x);
+        TSP->Node[i].BBox.Min.y = LittleShort(TSP->Node[i].BBox.Min.y);
+        TSP->Node[i].BBox.Min.z = LittleShort(TSP->Node[i].BBox.Min.z);
+        TSP->Node[i].BBox.Max.x = LittleShort(TSP->Node[i].BBox.Max.x);
+        TSP->Node[i].BBox.Max.y = LittleShort(TSP->Node[i].BBox.Max.y);
+        TSP->Node[i].BBox.Max.z = LittleShort(TSP->Node[i].BBox.Max.z);
         *TSPBuffer += sizeof(TSPBBox_t);
-        TSP->Node[i].NumFaces = **(int **) TSPBuffer;
+        TSP->Node[i].NumFaces = LittleLong(**(int **) TSPBuffer);
         *TSPBuffer += sizeof(int);
-                TSP->Node[i].U2 = **(int **) TSPBuffer;
+        TSP->Node[i].U2 = LittleLong(**(int **) TSPBuffer);
         *TSPBuffer += sizeof(int);
-                TSP->Node[i].U3 = **(int **) TSPBuffer;
+        TSP->Node[i].U3 = LittleLong(**(int **) TSPBuffer);
         *TSPBuffer += sizeof(int);
-        TSP->Node[i].BaseData = **(int **) TSPBuffer;
+        TSP->Node[i].BaseData = LittleLong(**(int **) TSPBuffer);
         *TSPBuffer += sizeof(int);
-//         fread(&TSP->Node[i].BBox,sizeof(TSPBBox_t),1,InFile);
-//         fread(&TSP->Node[i].NumFaces,sizeof(TSP->Node[i].NumFaces),1,InFile);
-//         fread(&TSP->Node[i].U2,sizeof(TSP->Node[i].U2),1,InFile);
-//         fread(&TSP->Node[i].U3,sizeof(TSP->Node[i].U3),1,InFile);
-//         fread(&TSP->Node[i].BaseData,sizeof(TSP->Node[i].BaseData),1,InFile);
         TSP->Node[i].FaceList = NULL;
         DPrintf("TSPReadNodeChunk:Node has %i faces\n",TSP->Node[i].NumFaces);
         DPrintf("TSPReadNodeChunk:Node BaseData %i (References offset %i)\n",TSP->Node[i].BaseData,
@@ -1636,90 +1637,95 @@ int TSPReadNodeChunk(TSP_t *TSP,Byte **TSPBuffer,Byte *OriginalBuffer)
         DPrintf("We need to render %i faces starting from offset %i\n",TSP->Node[i].NumFaces,TSP->Header.FaceOffset + TSP->Node[i].BaseData);
         DPrintf("Face Index goes then from %i to %i\n",Base,Target);
         if( TSP->Node[i].NumFaces == 0 ) {
-            TSP->Node[i].FileOffset.Child1Offset = **(int **) TSPBuffer;
+            TSP->Node[i].FileOffset.Child1Offset = LittleLong(**(int **) TSPBuffer);
             *TSPBuffer += sizeof(int);
-            TSP->Node[i].FileOffset.Child2Offset = **(int **) TSPBuffer;
+            TSP->Node[i].FileOffset.Child2Offset = LittleLong(**(int **) TSPBuffer);
             *TSPBuffer += sizeof(int);
             DPrintf("TSPReadNodeChunk:Child1:%i\n",TSP->Node[i].FileOffset.Child1Offset + TSP->Header.NodeOffset);
             DPrintf("TSPReadNodeChunk:Child2:%i\n",TSP->Node[i].FileOffset.Child2Offset + TSP->Header.NodeOffset);
         } else {
             TSP->Node[i].OpaqueFaceList = NULL;
-//             if( TSPIsVersion3(TSP) ) {
-//                 TSP->Node[i].FaceList = malloc(TSP->Node[i].NumFaces * sizeof(TSPFaceV3_t));
-//                 if( !TSP->Node[i].FaceList ) {
-//                     DPrintf("TSPReadNodeChunk:Failed to allocate memory for face list\n");
-//                     return 0;
-//                 }
-//                 PrevFilePosition = ftell(InFile);
-//                 fseek(InFile,TSP->Node[i].BaseData + TSP->Header.FaceOffset,SEEK_SET);
-//                 CurrentFaceIndex = 0;
-//                 while( CurrentFaceIndex < TSP->Node[i].NumFaces ) {
-//                     FaceOffset = ftell(InFile) - TSP->Header.FaceOffset;
-//                     DPrintf("TSPReadNodeChunk:Reading face %i for node %i at %li\n",CurrentFaceIndex,i,ftell(InFile) - TSP->Header.FaceOffset);
-//                     fread(&TempFace.V0V1,sizeof(TempFace.V0V1),1,InFile);
-//                     fread(&TempFace.V2,sizeof(TempFace.V2),1,InFile);
-//                     fread(&TempFace.TextureDataIndex,sizeof(TempFace.TextureDataIndex),1,InFile);
-//                     
-//                     TSP->Node[i].FaceList[CurrentFaceIndex].V0V1 = TempFace.V0V1;
-//                     TSP->Node[i].FaceList[CurrentFaceIndex].V2 = TempFace.V2;
-//                     TSP->Node[i].FaceList[CurrentFaceIndex].TextureDataIndex = TempFace.TextureDataIndex;
-//                     TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 = TempFace.Vert0 = TSP->Node[i].FaceList[CurrentFaceIndex].V0V1 & 0x1FFF;
-//                     TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 = TempFace.Vert1 = ( TSP->Node[i].FaceList[CurrentFaceIndex].V0V1 >> 16 ) & 0X1FFF;
-//                     TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 = TempFace.Vert2 = TSP->Node[i].FaceList[CurrentFaceIndex].V2 & 0X1FFF;
-//                     TSP->Node[i].FaceList[CurrentFaceIndex].SwapV1V2 = 0;
-//                     //NOTE(Adriano):Store the offset at which the face is read in order to be able to retrieve it when using dynamic block data.
-//                     TSP->Node[i].FaceList[CurrentFaceIndex].FileOffset = FaceOffset;
-//                     DPrintf("TSPReadNodeChunk:Got Vert0:%i %i %i\n",TSP->Node[i].FaceList[CurrentFaceIndex].Vert0,
-//                             TSP->Node[i].FaceList[CurrentFaceIndex].Vert1,
-//                             TSP->Node[i].FaceList[CurrentFaceIndex].Vert2
-//                     );
-//                     assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 < TSP->Header.NumVertices);
-//                     assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 < TSP->Header.NumVertices);
-//                     assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 < TSP->Header.NumVertices);
-//                     CurrentFaceIndex++;
-//                     while( 1 ) {
-//                         DPrintf("TSPReadNodeChunk:Reading additional face %i for node %i\n",CurrentFaceIndex,i);
-//                         fread(&Marker,sizeof(Marker),1,InFile);
-//                         DPrintf("TSPReadNodeChunk:Found Marker %i (Vertex %i) Texture:%i Mask %i\n",Marker,Marker & 0x1FFF,Marker >> 16,0x1FFF);
-// 
-//                         if( ( Marker & 0x1FFF ) == 0x1FFF || Marker == 0x1fff1fff ) {
-//                             DPrintf("TSPReadNodeChunk:Aborting since a marker was found\n");
-//                             break;
-//                         }
-//                         TSP->Node[i].FaceList[CurrentFaceIndex].TextureDataIndex = Marker >> 16;
-//                         if( (Marker & 0x8000) != 0 ) {
-//                             TempFace.Vert0 = TempFace.Vert2;
-//                         } else {
-//                             TempFace.Vert0 = TempFace.Vert1;
-//                             TempFace.Vert1 = TempFace.Vert2;
-//                         }
-//                         TempFace.Vert2 = Marker & 0x1FFF;
-//                         //NOTE(Adriano):If this bit is set, we need to swap vert1 and vert2 in order
-//                         //to keep the face winding clockwise and make culling works properly.
-//                         if( Marker & 0x4000 ) {
-//                             TSP->Node[i].FaceList[CurrentFaceIndex].SwapV1V2 = 1;
-//                         } else {
-//                             TSP->Node[i].FaceList[CurrentFaceIndex].SwapV1V2 = 0;
-//                         }
-//                         TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 = TempFace.Vert0;
-//                         TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 = TempFace.Vert1;
-//                         TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 = TempFace.Vert2;
-//                         //NOTE(Adriano):Subsequent faces have no file offset and are not referenced by the dynamic block.
-//                         TSP->Node[i].FaceList[CurrentFaceIndex].FileOffset = -1;
-//                         assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 < TSP->Header.NumVertices);
-//                         assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 < TSP->Header.NumVertices);
-//                         assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 < TSP->Header.NumVertices);
-//                         CurrentFaceIndex++;
-//                     }
-//                     if( Marker == 0x1fff1fff ) {
-//                         DPrintf("TSPReadNodeChunk:Sentinel Face found Done reading faces for node %i\n",i);
-//                         DPrintf("TSPReadNodeChunk:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,TSP->Node[i].NumFaces);
-//                         assert(CurrentFaceIndex == TSP->Node[i].NumFaces);
-//                         break;
-//                     }
-//                 }
-//                 fseek(InFile,PrevFilePosition,SEEK_SET);
-//             }
+            if( TSPIsVersion3(TSP) ) {
+                TSP->Node[i].FaceList = malloc(TSP->Node[i].NumFaces * sizeof(TSPFaceV3_t));
+                if( !TSP->Node[i].FaceList ) {
+                    DPrintf("TSPReadNodeChunk:Failed to allocate memory for face list\n");
+                    return 0;
+                }
+                PrevFilePosition = TSPGetBufferOffset(*TSPBuffer,OriginalBuffer);
+                *TSPBuffer = OriginalBuffer + TSP->Node[i].BaseData + TSP->Header.FaceOffset;
+                CurrentFaceIndex = 0;
+                while( CurrentFaceIndex < TSP->Node[i].NumFaces ) {
+                    FaceOffset = TSPGetBufferOffset(*TSPBuffer,OriginalBuffer) - TSP->Header.FaceOffset;
+                    DPrintf("TSPReadNodeChunk:Reading face %i for node %i at %li\n",CurrentFaceIndex,i,
+                            TSPGetBufferOffset(*TSPBuffer,OriginalBuffer) - TSP->Header.FaceOffset);
+                    TempFace.V0V1 = LittleLong(**(int **) TSPBuffer);
+                    *TSPBuffer += sizeof(int);
+                    TempFace.V2 = LittleShort(**(short **) TSPBuffer);
+                    *TSPBuffer += sizeof(short);
+                    TempFace.TextureDataIndex = LittleShort(**(short **) TSPBuffer);
+                    *TSPBuffer += sizeof(short);
+                    
+                    TSP->Node[i].FaceList[CurrentFaceIndex].V0V1 = TempFace.V0V1;
+                    TSP->Node[i].FaceList[CurrentFaceIndex].V2 = TempFace.V2;
+                    TSP->Node[i].FaceList[CurrentFaceIndex].TextureDataIndex = TempFace.TextureDataIndex;
+                    TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 = TempFace.Vert0 = TSP->Node[i].FaceList[CurrentFaceIndex].V0V1 & 0x1FFF;
+                    TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 = TempFace.Vert1 = ( TSP->Node[i].FaceList[CurrentFaceIndex].V0V1 >> 16 ) & 0X1FFF;
+                    TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 = TempFace.Vert2 = TSP->Node[i].FaceList[CurrentFaceIndex].V2 & 0X1FFF;
+                    TSP->Node[i].FaceList[CurrentFaceIndex].SwapV1V2 = 0;
+                    //NOTE(Adriano):Store the offset at which the face is read in order to be able to retrieve it when using dynamic block data.
+                    TSP->Node[i].FaceList[CurrentFaceIndex].FileOffset = FaceOffset;
+                    DPrintf("TSPReadNodeChunk:Got Vert0:%i %i %i\n",TSP->Node[i].FaceList[CurrentFaceIndex].Vert0,
+                            TSP->Node[i].FaceList[CurrentFaceIndex].Vert1,
+                            TSP->Node[i].FaceList[CurrentFaceIndex].Vert2
+                    );
+                    assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 < TSP->Header.NumVertices);
+                    assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 < TSP->Header.NumVertices);
+                    assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 < TSP->Header.NumVertices);
+                    CurrentFaceIndex++;
+                    while( 1 ) {
+                        DPrintf("TSPReadNodeChunk:Reading additional face %i for node %i\n",CurrentFaceIndex,i);
+                        Marker = LittleLong(**(int **) TSPBuffer);
+                        *TSPBuffer += sizeof(int);
+                        DPrintf("TSPReadNodeChunk:Found Marker %i (Vertex %i) Texture:%i Mask %i\n",Marker,Marker & 0x1FFF,Marker >> 16,0x1FFF);
+
+                        if( ( Marker & 0x1FFF ) == 0x1FFF || Marker == 0x1fff1fff ) {
+                            DPrintf("TSPReadNodeChunk:Aborting since a marker was found\n");
+                            break;
+                        }
+                        TSP->Node[i].FaceList[CurrentFaceIndex].TextureDataIndex = Marker >> 16;
+                        if( (Marker & 0x8000) != 0 ) {
+                            TempFace.Vert0 = TempFace.Vert2;
+                        } else {
+                            TempFace.Vert0 = TempFace.Vert1;
+                            TempFace.Vert1 = TempFace.Vert2;
+                        }
+                        TempFace.Vert2 = Marker & 0x1FFF;
+                        //NOTE(Adriano):If this bit is set, we need to swap vert1 and vert2 in order
+                        //to keep the face winding clockwise and make culling works properly.
+                        if( Marker & 0x4000 ) {
+                            TSP->Node[i].FaceList[CurrentFaceIndex].SwapV1V2 = 1;
+                        } else {
+                            TSP->Node[i].FaceList[CurrentFaceIndex].SwapV1V2 = 0;
+                        }
+                        TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 = TempFace.Vert0;
+                        TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 = TempFace.Vert1;
+                        TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 = TempFace.Vert2;
+                        //NOTE(Adriano):Subsequent faces have no file offset and are not referenced by the dynamic block.
+                        TSP->Node[i].FaceList[CurrentFaceIndex].FileOffset = -1;
+                        assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert0 < TSP->Header.NumVertices);
+                        assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert1 < TSP->Header.NumVertices);
+                        assert(TSP->Node[i].FaceList[CurrentFaceIndex].Vert2 < TSP->Header.NumVertices);
+                        CurrentFaceIndex++;
+                    }
+                    if( Marker == 0x1fff1fff ) {
+                        DPrintf("TSPReadNodeChunk:Sentinel Face found Done reading faces for node %i\n",i);
+                        DPrintf("TSPReadNodeChunk:Loaded %i faces (Expected %i)\n",CurrentFaceIndex,TSP->Node[i].NumFaces);
+                        assert(CurrentFaceIndex == TSP->Node[i].NumFaces);
+                        break;
+                    }
+                }
+                *TSPBuffer = PrevFilePosition + OriginalBuffer;
+            }
         }
     }
     TSPLookUpChildNode(TSP);
@@ -2712,15 +2718,20 @@ int TSPSphereVsKDtree(vec3 Point,float Radius,TSP_t *TSPList,vec3 PenetrationNor
     }
     return 0;
 }
+int TSPGetBufferOffset(const Byte *Iterator, const Byte *Buffer)
+{
+    if( !Iterator || !Buffer ) {
+        return 0;
+    }
+    return Iterator - Buffer;
+}
 TSP_t *TSPLoad(const char *FName,int TSPNumber)
 {
-//     FILE *TSPFile;
     TSP_t *TSP;
     Byte *Buffer;
     Byte *Iterator;
     int BaseAddress;
     
-//     TSPFile = fopen(FName,"rb");
     Buffer = ReadBinaryFile(FName, 0);
     TSP = NULL;
     
@@ -2753,34 +2764,28 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
     TSP->Header = *(TSPHeader_t *) Iterator;
     Iterator += sizeof(TSPHeader_t);
     
-//     fread(&TSP->Header.Id,sizeof(TSP->Header.Id),1,TSPFile);
-//     fread(&TSP->Header.Version,sizeof(TSP->Header.Version),1,TSPFile);
-//     fread(&TSP->Header.NumNodes,sizeof(TSP->Header.NumNodes),1,TSPFile);
-//     fread(&TSP->Header.NodeOffset,sizeof(TSP->Header.NodeOffset),1,TSPFile);
-//     fread(&TSP->Header.NumFaces,sizeof(TSP->Header.NumFaces),1,TSPFile);
-//     fread(&TSP->Header.FaceOffset,sizeof(TSP->Header.FaceOffset),1,TSPFile);
-//     fread(&TSP->Header.NumVertices,sizeof(TSP->Header.NumVertices),1,TSPFile);
-//     fread(&TSP->Header.VertexOffset,sizeof(TSP->Header.VertexOffset),1,TSPFile);
-//     fread(&TSP->Header.NumB,sizeof(TSP->Header.NumB),1,TSPFile);
-//     fread(&TSP->Header.BOffset,sizeof(TSP->Header.BOffset),1,TSPFile);
-//     fread(&TSP->Header.NumColors,sizeof(TSP->Header.NumColors),1,TSPFile);
-//     fread(&TSP->Header.ColorOffset,sizeof(TSP->Header.ColorOffset),1,TSPFile);
-//     fread(&TSP->Header.NumC,sizeof(TSP->Header.NumC),1,TSPFile);
-//     fread(&TSP->Header.COffset,sizeof(TSP->Header.COffset),1,TSPFile);
-//     fread(&TSP->Header.NumDynamicDataBlock,sizeof(TSP->Header.NumDynamicDataBlock),1,TSPFile);
-//     fread(&TSP->Header.DynamicDataOffset,sizeof(TSP->Header.DynamicDataOffset),1,TSPFile);
-//     fread(&TSP->Header.CollisionOffset,sizeof(TSP->Header.CollisionOffset),1,TSPFile);
+    LittleShort(TSP->Header.Id);
+    LittleShort(TSP->Header.Version);
+    LittleLong(TSP->Header.NumNodes);
+    LittleLong(TSP->Header.NodeOffset);
+    LittleLong(TSP->Header.NumFaces);
+    LittleLong(TSP->Header.FaceOffset);
+    LittleLong(TSP->Header.NumVertices);
+    LittleLong(TSP->Header.VertexOffset);
+    LittleLong(TSP->Header.NumB);
+    LittleLong(TSP->Header.BOffset);
+    LittleLong(TSP->Header.NumColors);
+    LittleLong(TSP->Header.ColorOffset);
+    LittleLong(TSP->Header.NumC);
+    LittleLong(TSP->Header.COffset);
+    LittleLong(TSP->Header.NumDynamicDataBlock);
+    LittleLong(TSP->Header.DynamicDataOffset);
+    LittleLong(TSP->Header.CollisionOffset);
     
     if( !TSPIsVersion3(TSP) ) {
         TSP->Header.NumTextureInfo = -1;
         TSP->Header.TextureInfoOffset = -1;
         TSP->TextureData = NULL;
-//         fread(&TSP->Header.NumTextureInfo,sizeof(TSP->Header.NumTextureInfo),1,TSPFile);
-//         fread(&TSP->Header.TextureInfoOffset,sizeof(TSP->Header.TextureInfoOffset),1,TSPFile);
-    } else {
-//         TSP->Header.NumTextureInfo = -1;
-//         TSP->Header.TextureInfoOffset = -1;
-//         TSP->TextureData = NULL;
     }
     
     DPrintf("Sizeof TSPHeader is %li\n",sizeof(TSPHeader_t));
@@ -2804,14 +2809,19 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
         goto Failure;
     }
 
-//     if( TSPIsVersion3(TSP) ) {
-//         fseek(TSPFile,TSP->Header.VertexOffset,SEEK_SET);
-//     } else {
-//         assert(ftell(TSPFile) == TSP->Header.FaceOffset);
+    if( TSPIsVersion3(TSP) ) {
+        Iterator = Buffer + TSP->Header.VertexOffset;
+
+    } else {
+        assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.FaceOffset);
 //         if( !TSPReadFaceChunk(TSP,TSPFile) ) {
 //             goto Failure;
 //         }
-//     }
+    }
+    assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.VertexOffset);
+    
+    assert(1!=1);
+
 //     assert(ftell(TSPFile) == TSP->Header.VertexOffset);
 //     if( !TSPReadVertexChunk(TSP,TSPFile) ) {
 //         goto Failure;

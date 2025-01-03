@@ -23,6 +23,11 @@
 
 char *AppName = NULL;
 
+short (*BigShort) ( short s );
+short (*LittleShort) ( short s );
+int (*BigLong) ( int i );
+int (*LittleLong) ( int i );
+
 Byte HighNibble(Byte In)
 {
     return (In >> 0x4) & 0xF;
@@ -388,6 +393,60 @@ void CommonRegisterSettings()
     ConfigRegister("SoundVolume","128","Sets the sound volume, the value must be in range 0-128, values outside that range will be clamped.");
 
 }
+
+short ShortSwap(short Value)
+{
+    Byte B1;
+    Byte B2;
+
+    B1 =  Value & 255;
+    B2 = (Value << 8) & 255;
+
+    return (B1 << 8) + B2;
+}
+
+short ShortNoSwap(short Value)
+{
+	return Value;
+}
+int LongSwap(int Value)
+{
+    Byte B1;
+    Byte B2;
+    Byte B3;
+    Byte B4;
+
+	B1 =  Value & 255;
+	B2 = (Value >> 8) & 255;
+	B3 = (Value >> 16) & 255;
+	B4 = (Value >> 24) & 255;
+
+	return ((int)B1 << 24) + ((int)B2 << 16) + ((int)B3 << 8) + B4;
+}
+
+int LongNoSwap(int Value)
+{
+	return Value;
+}
+
+void CommonInitEndianness()
+{
+    int i = 1;
+
+    if( (*(char*)&i) == 0 ){
+        DPrintf("CommonInitEndianness:Running on a big-endian system.\n");
+        BigShort = ShortNoSwap;
+        LittleShort = ShortSwap;
+        BigLong = LongNoSwap;
+        LittleLong = LongSwap;
+    } else {
+        DPrintf("CommonInitEndianness:Running on a little-endian system.\n");
+        BigShort = ShortSwap;
+        LittleShort = ShortNoSwap;
+        BigLong = LongSwap;
+        LittleLong = LongNoSwap;
+    }
+}
 void CommonShutdown()
 {
     if( AppName ) {
@@ -401,5 +460,6 @@ void CommonInit(const char *ApplicationName)
         return;
     }
     CommonRegisterSettings();
+    CommonInitEndianness();
     AppName = StringCopy(ApplicationName != NULL ? ApplicationName : "UnknownApp");
 }
