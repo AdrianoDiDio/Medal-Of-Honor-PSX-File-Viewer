@@ -1966,14 +1966,14 @@ int TSPReadDynamicDataChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
     return 1;
 }
 
-int TSPReadTextureInfoChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadTextureInfoChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
 {
     int i;
     int Ret;
     
-    if( !TSP || !InFile ) {
-        bool InvalidFile = (InFile == NULL ? true : false);
-        printf("TSPReadTextureInfoChunk: Invalid %s\n",InvalidFile ? "file" : "tsp struct");
+    if( !TSP || !TSPBuffer ) {
+        bool InvalidBuffer = ((TSPBuffer == NULL || OriginalBuffer == NULL ) ? true : false);
+        printf("TSPReadTextureInfoChunk: Invalid %s\n",InvalidBuffer ? "buffer" : "tsp struct");
         return 0;
     }
     if( TSP->Header.NumTextureInfo == 0 || TSP->Header.NumTextureInfo == -1 ) {
@@ -1987,32 +1987,32 @@ int TSPReadTextureInfoChunk(TSP_t *TSP,FILE *InFile)
         return 0;
     }
     for( i = 0; i < TSP->Header.NumTextureInfo; i++ ) {
-        DPrintf("Reading texture info at %li\n",ftell(InFile));
-        Ret = fread(&TSP->TextureData[i],sizeof(TSPTextureInfo_t),1,InFile);
-            if( Ret != 1 ) {
-                DPrintf("TSPReadTextureInfoChunk:Early failure when reading face texture data %i\n",i);
-                return 0;
-            }
-            DPrintf(" -- Texture for Face V3 %i --\n",i);
-            DPrintf("TSB:%u\n",TSP->TextureData[i].TSB);
-            DPrintf("TSB:%u\n",TSP->TextureData[i].CBA);
-            DPrintf("U0:V0:%i %i\n",TSP->TextureData[i].UV0.u,TSP->TextureData[i].UV0.v);
-            DPrintf("U1:V1:%i %i\n",TSP->TextureData[i].UV1.u,TSP->TextureData[i].UV1.v);
-            DPrintf("U2:V2:%i %i\n",TSP->TextureData[i].UV2.u,TSP->TextureData[i].UV2.v);
-            DPrintf("Padding:%i\n",TSP->TextureData[i].Padding);
+        DPrintf("Reading texture info at %i\n",TSPGetBufferOffset(*TSPBuffer,OriginalBuffer));
+        TSP->TextureData[i] = **(TSPTextureInfo_t **) TSPBuffer;
+        *TSPBuffer += sizeof(TSPTextureInfo_t);
+        TSP->TextureData[i].CBA = LittleShort(TSP->TextureData[i].CBA);
+        TSP->TextureData[i].TSB = LittleShort(TSP->TextureData[i].TSB);
+        TSP->TextureData[i].Padding = LittleShort(TSP->TextureData[i].Padding);
+        //TODO(Adriano): Probably we will need to swap UV0/UV1 otherwise it may be in the wrong order for big endian systems
+        DPrintf(" -- Texture for Face V3 %i --\n",i);
+        DPrintf("TSB:%u\n",TSP->TextureData[i].TSB);
+        DPrintf("TSB:%u\n",TSP->TextureData[i].CBA);
+        DPrintf("U0:V0:%i %i\n",TSP->TextureData[i].UV0.u,TSP->TextureData[i].UV0.v);
+        DPrintf("U1:V1:%i %i\n",TSP->TextureData[i].UV1.u,TSP->TextureData[i].UV1.v);
+        DPrintf("U2:V2:%i %i\n",TSP->TextureData[i].UV2.u,TSP->TextureData[i].UV2.v);
+        DPrintf("Padding:%i\n",TSP->TextureData[i].Padding);
     }
     return 1;
 }
 
-int TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
+int TSPReadCollisionChunk(TSP_t *TSP,Byte **TSPBuffer, Byte *OriginalBuffer)
 {
     short Pad;
-    int Ret;
     int i;
     
-    if( !TSP || !InFile ) {
-        bool InvalidFile = (InFile == NULL ? true : false);
-        printf("TSPReadCollisionChunk: Invalid %s.\n",InvalidFile ? "file" : "tsp struct");
+    if( !TSP || !TSPBuffer ) {
+        bool InvalidBuffer = ((TSPBuffer == NULL || OriginalBuffer == NULL ) ? true : false);
+        printf("TSPReadCollisionChunk: Invalid %s\n",InvalidBuffer ? "buffer" : "tsp struct");
         return 0;
     }
     
@@ -2028,15 +2028,20 @@ int TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
     TSP->CollisionData->Normal = NULL;
     TSP->CollisionData->Face = NULL;
     
-    Ret = fread(&TSP->CollisionData->Header,sizeof(TSPCollisionHeader_t),1,InFile);
-    if( Ret != 1 ) {
-        DPrintf("TSPReadCollisionChunk:Early failure when reading collision header.\n");
-        return 0;
-    }
+    TSP->CollisionData->Header = **(TSPCollisionHeader_t **) TSPBuffer;
+    *TSPBuffer += sizeof(TSPCollisionHeader_t);
+        
+    TSP->CollisionData->Header.CollisionBoundMinX = LittleShort(TSP->CollisionData->Header.CollisionBoundMinX);
+    TSP->CollisionData->Header.CollisionBoundMinZ = LittleShort(TSP->CollisionData->Header.CollisionBoundMinZ);
+    TSP->CollisionData->Header.CollisionBoundMaxX = LittleShort(TSP->CollisionData->Header.CollisionBoundMaxX);
+    TSP->CollisionData->Header.CollisionBoundMaxZ = LittleShort(TSP->CollisionData->Header.CollisionBoundMaxZ);
+    TSP->CollisionData->Header.NumCollisionKDTreeNodes = LittleShort(TSP->CollisionData->Header.NumCollisionKDTreeNodes);
+    TSP->CollisionData->Header.NumCollisionFaceIndex = LittleShort(TSP->CollisionData->Header.NumCollisionFaceIndex);
+    TSP->CollisionData->Header.NumVertices = LittleShort(TSP->CollisionData->Header.NumVertices);
+    TSP->CollisionData->Header.NumNormals = LittleShort(TSP->CollisionData->Header.NumNormals);
+    TSP->CollisionData->Header.NumFaces = LittleShort(TSP->CollisionData->Header.NumFaces);
+
     DPrintf("TSPReadCollisionChunk:Header\n");
-//     DPrintf("U0|U1|U2|U3:%u %u %u %u\n",TSP->CollisionData->Header.U0,TSP->CollisionData->Header.U1,TSP->CollisionData->Header.U2,
-//         TSP->CollisionData->Header.U3
-//     );
     DPrintf("CollisionBoundMinX:%i\n",TSP->CollisionData->Header.CollisionBoundMinX);
     DPrintf("CollisionBoundMinZ:%i\n",TSP->CollisionData->Header.CollisionBoundMinZ);
     DPrintf("CollisionBoundMaxX:%i\n",TSP->CollisionData->Header.CollisionBoundMaxX);
@@ -2053,11 +2058,12 @@ int TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
         return 0;
     }
     for( i = 0; i < TSP->CollisionData->Header.NumCollisionKDTreeNodes; i++ ) {
-        Ret = fread(&TSP->CollisionData->KDTree[i],sizeof(TSP->CollisionData->KDTree[i]),1,InFile);
-        if( Ret != 1 ) {
-            DPrintf("TSPReadCollisionChunk:Early failure when reading KDTree nodes.\n");
-            return 0;
-        }
+        TSP->CollisionData->KDTree[i] = **(TSPCollisionKDTreeNode_t **) TSPBuffer;
+        *TSPBuffer += sizeof(TSPCollisionKDTreeNode_t);
+        TSP->CollisionData->KDTree[i].Child0 = LittleShort(TSP->CollisionData->KDTree[i].Child0);
+        TSP->CollisionData->KDTree[i].Child1 = LittleShort(TSP->CollisionData->KDTree[i].Child1);
+        TSP->CollisionData->KDTree[i].SplitValue = LittleShort(TSP->CollisionData->KDTree[i].SplitValue);
+        TSP->CollisionData->KDTree[i].PropertySetFileIndex = LittleShort(TSP->CollisionData->KDTree[i].PropertySetFileIndex);
     }
     TSP->CollisionData->FaceIndexList = malloc(TSP->CollisionData->Header.NumCollisionFaceIndex * sizeof(short));
     if( !TSP->CollisionData->FaceIndexList ) {
@@ -2065,67 +2071,68 @@ int TSPReadCollisionChunk(TSP_t *TSP,FILE *InFile)
         return 0;
     }
     for( i = 0; i < TSP->CollisionData->Header.NumCollisionFaceIndex; i++ ) {
-        Ret = fread(&TSP->CollisionData->FaceIndexList[i],sizeof(TSP->CollisionData->FaceIndexList[i]),1,InFile);
-        if( Ret != 1 ) {
-            DPrintf("TSPReadCollisionChunk:Early failure when reading Collison Face Index data.\n");
-            return 0;
-        }
+        TSP->CollisionData->FaceIndexList[i] = LittleShort(**(short **) TSPBuffer);
+        *TSPBuffer += sizeof(short);
 //         DPrintf("-- H %i at %i --\n",i,GetCurrentFilePosition(InFile));
 //         DPrintf("%i\n",TSP->CollisionData->H[i]);
     }
-    fread(&Pad,sizeof(Pad),1,InFile);
-    if( Pad != 0 ) {
-        //Undo the last read.
-        fseek(InFile,-sizeof(Pad),SEEK_CUR);
-        
+    Pad = LittleShort(**(short **) TSPBuffer);
+    if( Pad == 0 ) {
+        //Commit the last read.
+        *TSPBuffer += sizeof(short);
     }
-    DPrintf("TSPReadCollisionChunk:Vertex at %li\n",ftell(InFile));
+    DPrintf("TSPReadCollisionChunk:Vertex at %i\n",TSPGetBufferOffset(*TSPBuffer,OriginalBuffer));
     TSP->CollisionData->Vertex = malloc(TSP->CollisionData->Header.NumVertices * sizeof(TSPVert_t));
     if( !TSP->CollisionData->Vertex ) {
         DPrintf("TSPReadCollisionChunk:Failed to allocate memory for Vertex Array\n");
         return 0;
     }
     for( i = 0; i < TSP->CollisionData->Header.NumVertices; i++ ) {
-        Ret = fread(&TSP->CollisionData->Vertex[i],sizeof(TSP->CollisionData->Vertex[i]),1,InFile);
-        if( Ret != 1 ) {
-            DPrintf("TSPReadCollisionChunk:Early failure when reading vertex data.\n");
-            return 0;
-        }
+        TSP->CollisionData->Vertex[i] = **(TSPVert_t **) TSPBuffer;
+        *TSPBuffer += sizeof(TSPVert_t);
+        TSP->CollisionData->Vertex[i].Position.x = LittleShort(TSP->CollisionData->Vertex[i].Position.x);
+        TSP->CollisionData->Vertex[i].Position.y = LittleShort(TSP->CollisionData->Vertex[i].Position.y);
+        TSP->CollisionData->Vertex[i].Position.z = LittleShort(TSP->CollisionData->Vertex[i].Position.z);
+        TSP->CollisionData->Vertex[i].Pad = LittleShort(TSP->CollisionData->Vertex[i].Pad);
+
 //         DPrintf("-- Vertex %i --\n",i);
 //         PrintTSPVec3(TSP->CollisionData->Vertex[i].Position);
 //         DPrintf("Pad is %i\n",TSP->CollisionData->Vertex[i].Pad);
         assert(TSP->CollisionData->Vertex[i].Pad == 104 || TSP->CollisionData->Vertex[i].Pad == 105);
     }
-    DPrintf("TSPReadCollisionChunk:Normals at %li\n",ftell(InFile));
+    DPrintf("TSPReadCollisionChunk:Normals at %i\n",TSPGetBufferOffset(*TSPBuffer,OriginalBuffer));
     TSP->CollisionData->Normal = malloc(TSP->CollisionData->Header.NumNormals * sizeof(TSPVert_t));
     if( !TSP->CollisionData->Normal ) {
         DPrintf("TSPReadCollisionChunk:Failed to allocate memory for Normal Array\n");
         return 0;
     }
     for( i = 0; i < TSP->CollisionData->Header.NumNormals; i++ ) {
-        Ret = fread(&TSP->CollisionData->Normal[i],sizeof(TSP->CollisionData->Normal[i]),1,InFile);
-        if( Ret != 1 ) {
-            DPrintf("TSPReadCollisionChunk:Early failure when reading normal data.\n");
-            return 0;
-        }
+        TSP->CollisionData->Normal[i] = **(TSPVert_t **) TSPBuffer;
+        *TSPBuffer += sizeof(TSPVert_t);
+        TSP->CollisionData->Normal[i].Position.x = LittleShort(TSP->CollisionData->Normal[i].Position.x);
+        TSP->CollisionData->Normal[i].Position.y = LittleShort(TSP->CollisionData->Normal[i].Position.y);
+        TSP->CollisionData->Normal[i].Position.z = LittleShort(TSP->CollisionData->Normal[i].Position.z);
+        TSP->CollisionData->Normal[i].Pad = LittleShort(TSP->CollisionData->Normal[i].Pad);
         DPrintf("-- Normal %i --\n",i);
         DPrintf("%i;%i;%i\n",TSP->CollisionData->Normal[i].Position.x,TSP->CollisionData->Normal[i].Position.y,
                 TSP->CollisionData->Normal[i].Position.z);
 //         DPrintf("Pad is %i\n",TSP->CollisionData->Normal[i].Pad);
         assert(TSP->CollisionData->Normal[i].Pad == 0);
     }
-    DPrintf("TSPReadCollisionChunk:Faces at %li\n",ftell(InFile));
+    DPrintf("TSPReadCollisionChunk:Faces at %i\n",TSPGetBufferOffset(*TSPBuffer,OriginalBuffer));
     TSP->CollisionData->Face = malloc(TSP->CollisionData->Header.NumFaces * sizeof(TSPCollisionFace_t));
     if( !TSP->CollisionData->Face ) {
         DPrintf("TSPReadCollisionChunk:Failed to allocate memory for Face Array\n");
         return 0;
     }
     for( i = 0; i < TSP->CollisionData->Header.NumFaces; i++ ) {
-        Ret = fread(&TSP->CollisionData->Face[i],sizeof(TSP->CollisionData->Face[i]),1,InFile);
-        if( Ret != 1 ) {
-            DPrintf("TSPReadCollisionChunk:Early failure when reading face data.\n");
-            return 0;
-        }
+        TSP->CollisionData->Face[i] = **(TSPCollisionFace_t **) TSPBuffer;
+        *TSPBuffer += sizeof(TSPCollisionFace_t);
+        TSP->CollisionData->Face[i].V0 = LittleShort(TSP->CollisionData->Face[i].V0);
+        TSP->CollisionData->Face[i].V1 = LittleShort(TSP->CollisionData->Face[i].V1);
+        TSP->CollisionData->Face[i].V2 = LittleShort(TSP->CollisionData->Face[i].V2);
+        TSP->CollisionData->Face[i].NormalIndex = LittleShort(TSP->CollisionData->Face[i].NormalIndex);
+        TSP->CollisionData->Face[i].PlaneDistance = LittleShort(TSP->CollisionData->Face[i].PlaneDistance);
         DPrintf("-- Face %i --\n",i);
 //         DPrintf("V0|V1|V2:%u %u %u\n",TSP->CollisionData->Face[i].V0,TSP->CollisionData->Face[i].V1,TSP->CollisionData->Face[i].V2);
         if( TSPIsVersion3(TSP) ) {
@@ -2824,7 +2831,6 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
 
     if( TSPIsVersion3(TSP) ) {
         Iterator = Buffer + TSP->Header.VertexOffset;
-
     } else {
         assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.FaceOffset);
         if( !TSPReadFaceChunk(TSP,&Iterator,Buffer) ) {
@@ -2849,26 +2855,23 @@ TSP_t *TSPLoad(const char *FName,int TSPNumber)
     if( !TSPReadDynamicDataChunk(TSP,&Iterator,Buffer) ) {
         goto Failure;
     }
-//     if( TSPIsVersion3(TSP) ) {
-//         assert(ftell(TSPFile) == TSP->Header.TextureInfoOffset);
-//         if( !TSPReadTextureInfoChunk(TSP,TSPFile) ) {
-//             goto Failure;
-//         }
-//     }
-    assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.CollisionOffset);
-    assert(1!=1);
 
-//     if( !TSPReadCollisionChunk(TSP,TSPFile) ) {
-//         goto Failure;
-//     }
-//     fclose(TSPFile);
+    if( TSPIsVersion3(TSP) ) {
+        assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.TextureInfoOffset);
+        if( !TSPReadTextureInfoChunk(TSP,&Iterator,Buffer) ) {
+            goto Failure;
+        }
+    }
+    assert(TSPGetBufferOffset(Iterator,Buffer) == TSP->Header.CollisionOffset);
+
+    if( !TSPReadCollisionChunk(TSP,&Iterator,Buffer) ) {
+        goto Failure;
+    }
+
     free(Buffer);
     return TSP;
 Failure:
     TSPFree(TSP);
-//     if( TSPFile ) {
-//         fclose(TSPFile);
-//     }
     if( Buffer ) {
         free(Buffer);
     }
