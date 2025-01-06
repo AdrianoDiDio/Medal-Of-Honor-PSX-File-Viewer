@@ -2,7 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 /*
 ===========================================================================
-    Copyright (C) 2018-2024 Adriano Di Dio.
+    Copyright (C) 2018-2025 Adriano Di Dio.
     
     Medal-Of-Honor-PSX-File-Viewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -125,7 +125,7 @@ int VRAMGetTexturePageY(int VRAMPage,int ColorMode)
 {
     float ModeOffset;
     float PageY;
-    if( ColorMode == TIM_IMAGE_BPP_4 || ColorMode == 0) {
+    if( ColorMode == TIM_IMAGE_BPP_4 || ColorMode == TIM_IMAGE_BPP_4_NO_CLUT) {
         ModeOffset = 0;
     } else {
         ModeOffset = 512;
@@ -148,7 +148,7 @@ int VRAMGetCLUTPage(int CLUTPosX,int CLUTPosY)
 }
 int VRAMGetCLUTOffsetY(int ColorMode)
 {
-    if( ColorMode == TIM_IMAGE_BPP_8 || ColorMode == 1 ) {
+    if( ColorMode == TIM_IMAGE_BPP_8 || ColorMode == TIM_IMAGE_BPP_8_NO_CLUT ) {
         return 512;
     }
     
