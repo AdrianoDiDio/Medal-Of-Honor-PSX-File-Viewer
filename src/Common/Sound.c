@@ -422,6 +422,9 @@ SoundSystem_t *SoundSystemInit(SDL_AudioStreamCallback Callback,void *UserData)
     DesiredAudioSpec.format = SOUND_SYSTEM_BUFFER_FORMAT;
     DesiredAudioSpec.channels = SOUND_SYSTEM_NUM_CHANNELS;
     
+    //NOTE(Adriano): Sets an higher number of frames to sample in order to reduce any crackling sound when running the callback
+    SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, "8192");
+
     SoundSystem->Stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &DesiredAudioSpec, Callback, UserData);
     
     if( !SoundSystem->Stream ) {
