@@ -2,7 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 /*
 ===========================================================================
-    Copyright (C) 2018-2024 Adriano Di Dio.
+    Copyright (C) 2018-2025 Adriano Di Dio.
     
     Medal-Of-Honor-PSX-File-Viewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ int RSCFree(RSC_t *RSC)
     }
     return RSC_OK;
 }
-int RSCSearch(RSC_t *RSC,const char *FileName)
+int RSCSearch(const RSC_t *RSC,const char *FileName)
 {
     int i;
     for( i = 0; i < (int) RSC->Header.NumEntry; i++ ) {
@@ -65,7 +65,7 @@ int RSCSearch(RSC_t *RSC,const char *FileName)
 }
 int RSCOpen(const RSC_t *RSC,const char *FileName,RSCEntry_t *OutEntry) 
 {
-    RSC_t *Iterator;
+    const RSC_t *Iterator;
     int EntryIndex;
     
     if( !RSC ) {
