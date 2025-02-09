@@ -63,7 +63,6 @@ typedef struct SSTManager_s {
     char                    MissionPath[256];
     char                    EngineName[256];
     FileDialog_t            *FileDialog;
-    int                     HasToSpawnCamera;
     int                     IsPathSet;
     int                     GameEngine;
     SoundSystem_t           *SoundSystem;

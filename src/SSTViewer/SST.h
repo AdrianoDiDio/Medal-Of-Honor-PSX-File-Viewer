@@ -21,6 +21,7 @@
 #ifndef __SST_H_
 #define __SST_H_
 
+#include "../Common/Config.h"
 #include "../Common/RSC.h"
 #include "../Common/VRAM.h"
 #include "../Common/GFX.h"
@@ -137,7 +138,10 @@ typedef struct GFXVector_s {
     int Pad;
 } GFXVector_t;
 
+extern Config_t *SSTDrawGFXModels;
+
 SST_t   *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const RSC_t *GlobalRSCList,int GameEngine);
+void    SSTLoadDefaultSettings();
 void    SSTGenerateVAOs(SST_t *SST);
 void    SSTUnload(SST_t *SST);
 void    SSTRender(SST_t *SST,mat4 ProjectionMatrix);

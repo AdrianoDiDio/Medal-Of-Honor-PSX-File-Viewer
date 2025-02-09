@@ -135,6 +135,9 @@ void GUIDrawDebugWindow(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,Vid
                 if( igSliderFloat("Camera Mouse Sensitivity",&CameraMouseSensitivity->FValue,1.f,20.f,"%.2f",0) ) {
                         ConfigSetNumber("CameraMouseSensitivity",CameraMouseSensitivity->FValue);
                 }
+                if( GUICheckBoxWithTooltip("Draw GFX Models",(bool *) &SSTDrawGFXModels->IValue,SSTDrawGFXModels->Description) ) {
+                    ConfigSetNumber("SSTDrawGFXModels",SSTDrawGFXModels->IValue);
+                }
             }
         }
         if( igCollapsingHeader_TreeNodeFlags("Debug Statistics",0) ) {

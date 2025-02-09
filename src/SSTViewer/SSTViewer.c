@@ -217,6 +217,9 @@ void RegisterDefaultSettings()
 
     ConfigRegister("GameBasePath","","Sets the path from which the game will be loaded,any invalid path will result in this variable to "
                                     "being set to empty.");
+    
+    ConfigRegister("SSTDrawGFXModels","1","If enabled then any SST script that contains one or more GFX models will be rendered");
+
 }
 
 Application_t *ApplicationInit(int argc,char **argv)

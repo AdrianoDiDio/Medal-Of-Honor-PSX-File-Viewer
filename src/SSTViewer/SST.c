@@ -22,6 +22,8 @@
 #include "../Common/TIM.h"
 #include "SSTViewer.h" 
 
+Config_t *SSTDrawGFXModels;
+
 const SSTRSCMap_t MOHSSTRSCMap[] = {
     {
         "m_brief",
@@ -919,13 +921,7 @@ void SSTFillLabelsVAO(SSTLabel_t *Label,VRAM_t* VRAM,VAO_t *LabelsVAO)
     VAOUpdate(LabelsVAO,VertexData,DataSize,6);
     free(VertexData);
 }
-void SSTModelRender(VRAM_t *VRAM)
-{
-//     int i;
-//     for( i = 0; i < NumModels; i++ ) {
-//         GFXRender(Models[i].Model,VRAM);
-//     }
-}
+
 void SSTRenderClass(SSTClass_t *Class)
 {
     if( !Class->VRAM ) {
@@ -997,14 +993,17 @@ void SSTRender(SST_t *SST,mat4 ProjectionMatrix)
         glEnable(GL_DEPTH_TEST);
         glUseProgram(0);
     }
-    glm_mat4_identity(ProjectionMatrix);
-    glm_mat4_identity(ViewMatrix);
-    glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);    
-    for( ClassIterator = SST->ClassList; ClassIterator; ClassIterator = ClassIterator->Next ) {
-        for( Model = ClassIterator->GFXModelList; Model; Model = Model->Next ) {
-            GFXRender(Model,ClassIterator->VRAM,ViewMatrix,ProjectionMatrix,false,false);
-        }
-    }    
+    if( SSTDrawGFXModels->IValue ) {
+        glm_mat4_identity(ProjectionMatrix);
+        glm_mat4_identity(ViewMatrix);
+        glm_perspective(glm_rad(110.f),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);    
+        for( ClassIterator = SST->ClassList; ClassIterator; ClassIterator = ClassIterator->Next ) {
+            for( Model = ClassIterator->GFXModelList; Model; Model = Model->Next ) {
+                GFXRender(Model,ClassIterator->VRAM,ViewMatrix,ProjectionMatrix,false,false);
+            }
+        }    
+    }
+
 }
 int SSTCreateLabelsVAO(SSTClass_t *Class)
 {
@@ -1449,7 +1448,7 @@ void SSTLoadGFXAdditionalInfo(SST_t *SST,SSTClass_t *Class,GFX_t *GFX,Byte **SST
 {
     GFXVector_t VectorList[17];
     int FirstNumber;
-    int SecondNumber;
+    int AnimationIndex;
     int ThirdNumber;
     int i;
     
@@ -1476,7 +1475,8 @@ void SSTLoadGFXAdditionalInfo(SST_t *SST,SSTClass_t *Class,GFX_t *GFX,Byte **SST
     //NOTE(Adriano): First 12 bytes contains some metadata info...
     FirstNumber = **(int **) SSTBuffer;
     *SSTBuffer += 4;
-    SecondNumber = **(int **) SSTBuffer;
+    //NOTE(Adriano): This seems to be the animation index that will be affected by the vector list
+    AnimationIndex = **(int **) SSTBuffer;
     *SSTBuffer += 4;
     ThirdNumber = **(int **) SSTBuffer;
     *SSTBuffer += 4;
@@ -1486,8 +1486,10 @@ void SSTLoadGFXAdditionalInfo(SST_t *SST,SSTClass_t *Class,GFX_t *GFX,Byte **SST
     memcpy(&VectorList[16],*SSTBuffer,sizeof(GFXVector_t));
     *SSTBuffer += sizeof(VectorList) + 4;
     
-    DPrintf("SSTLoadGFXAdditionalInfo:Metadata info are %i;%i;%i\n",FirstNumber,SecondNumber,ThirdNumber);
+    DPrintf("SSTLoadGFXAdditionalInfo:Metadata info are Unknown1:%i AnimationIndex:%i Unknown3:%i\n",FirstNumber,AnimationIndex,ThirdNumber);
     DPrintf("SSTLoadGFXAdditionalInfo:Dumping vector list...\n");
+    
+    assert(AnimationIndex < GFX->Header.NumAnimationIndex);
     for( i = 0; i < 17; i++ ) {
         if( i == 16 ) {
             DPrintf("SSTLoadGFXAdditionalInfo:Next vector is the 'special' one\n");
@@ -1569,6 +1571,11 @@ SSTClass_t *SSTLoadClass(SST_t *SST,Byte **SSTBuffer,const char *BasePath,int Ga
     Class->Next = SST->ClassList;
     SST->ClassList = Class;
     return Class;
+}
+
+void SSTLoadDefaultSettings()
+{
+    SSTDrawGFXModels = ConfigGet("SSTDrawGFXModels");
 }
 
 SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const RSC_t *GlobalRSCList,int GameEngine)

@@ -374,6 +374,9 @@ SSTManager_t *SSTManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem)
         printf("SSTManagerInit:Failed to allocate memory for struct\n");
         return NULL;
     }
+    
+    SSTLoadDefaultSettings();
+
     SSTManager->SoundSystem = NULL;
     SSTManager->SoundSystem = SoundSystemInit(SSTManagerOnAudioUpdate,SSTManager);
     if( !SSTManager->SoundSystem ) {
@@ -383,13 +386,6 @@ SSTManager_t *SSTManagerInit(GUI_t *GUI,VideoSystem_t *VideoSystem)
     }
     SSTManager->RenderObjectShader = NULL;
     SSTManager->ScriptList = NULL;
-//     if( !SSTManagerInitRenderObjectShader(SSTManager) ) {
-//         DPrintf("SSTManagerInit:Couldn't load RenderObjectShader\n");
-//         SoundSystemCleanUp(SSTManager->SoundSystem);
-//         free(SSTManager);
-//         return NULL;
-//     }
-    SSTManager->HasToSpawnCamera = 0;
     SSTManager->FileDialog = FileDialogRegister("Select Directory",NULL,
                                                      SSTManagerOnDirSelected,SSTManagerOnDirSelectionCancelled);
     SSTManager->GlobalRSCList = NULL;
