@@ -59,3 +59,6 @@ else()
     target_link_libraries(cimgui dl)
     target_compile_definitions(cimgui PRIVATE "-DIMGUI_IMPL_API=extern \"C\" ")
 endif()
+
+add_library(gltf INTERFACE)
+target_include_directories(gltf INTERFACE glTF/)

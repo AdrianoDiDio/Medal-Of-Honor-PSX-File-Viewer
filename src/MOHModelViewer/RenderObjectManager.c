@@ -189,6 +189,63 @@ void RenderObjectManagerExportSelectedModelToPly(RenderObjectManager_t *RenderOb
     return;
 }
 
+void RenderObjectManagerExportSelectedModelToGlTF(RenderObjectManager_t *RenderObjectManager,ProgressBar_t *ProgressBar,VideoSystem_t *VideoSystem,
+                                               const char *Directory,bool ExportCurrentAnimation)
+{
+    char *EngineName;
+    char *PlyFile;
+    char *FileName;
+    char *TextureFile;
+    char *BSDName;
+    FILE *OutFile;
+    BSDRenderObjectPack_t *CurrentBSDPack;
+    RenderObject_t *CurrentRenderObject;
+    
+    if( !RenderObjectManager ) {
+        DPrintf("RenderObjectManagerExportSelectedModelToGlTF:Invalid RenderObjectManager\n");
+        return;
+    }
+    CurrentBSDPack = RenderObjectManagerGetSelectedBSDPack(RenderObjectManager);
+    if( !CurrentBSDPack ) {
+        DPrintf("RenderObjectManagerExportSelectedModelToGlTF:Invalid BSD Pack\n");
+        return;
+    }
+    CurrentRenderObject = RenderObjectManagerGetSelectedRenderObject(RenderObjectManager);
+    if( !CurrentRenderObject ) {
+        DPrintf("RenderObjectManagerExportSelectedModelToGlTF:Invalid RenderObject\n");
+        return;
+    }
+        
+    asprintf(&EngineName,"%s",(CurrentBSDPack->GameVersion == MOH_GAME_STANDARD) ? "MOH" : "MOHUndergound");
+    asprintf(&FileName,"RenderObject-%u-%i-%s.ply",CurrentRenderObject->Id,CurrentRenderObject->CurrentAnimationIndex,EngineName);
+    asprintf(&PlyFile,"%s%c%s",Directory,PATH_SEPARATOR,FileName);
+    BSDName = SwitchExt(CurrentBSDPack->Name,"");
+    asprintf(&TextureFile,"%s%cvram-%s.png",Directory,PATH_SEPARATOR,BSDName);
+    ProgressBarSetDialogTitle(ProgressBar,"Exporting Current Pose to Ply...");
+    ProgressBarIncrement(ProgressBar,VideoSystem,10,"Writing BSD data.");
+    if( ExportCurrentAnimation ) {
+        RenderObjectExportCurrentAnimationToGlTF(CurrentRenderObject,CurrentBSDPack->VRAM,Directory,EngineName);
+    } /*else {
+        DPrintf("RenderObjectManagerExportCurrentPoseToPly:Dumping it...%s\n",PlyFile);
+        OutFile = fopen(PlyFile,"w");
+        if( !OutFile ) {
+            DPrintf("RenderObjectManagerExportCurrentPoseToPly:Failed to open %s for writing\n",PlyFile);
+            return;
+        }
+        RenderObjectExportCurrentPoseToPly(CurrentRenderObject,CurrentBSDPack->VRAM,OutFile);
+        fclose(OutFile);
+    }*/
+    ProgressBarIncrement(ProgressBar,VideoSystem,95,"Exporting VRAM.");
+    VRAMSave(CurrentBSDPack->VRAM,TextureFile);
+    ProgressBarIncrement(ProgressBar,VideoSystem,100,"Done.");
+    free(EngineName);
+    free(FileName);
+    free(PlyFile);
+    free(TextureFile);
+    free(BSDName);
+    return;
+}
+
 void RenderObjectManagerExportSelectedModel(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem,int OutputFormat,
                                             bool ExportCurrentAnimation)
 {
@@ -386,18 +443,24 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
     TAFFile = NULL;
     
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,0,"Loading all images");
-    TAFFile = SwitchExt(File,"0.TAF");
+    TAFFile = SwitchExt(File,".TAF");
     BSDPack->ImageList = TIMLoadAllImages(TAFFile,NULL);
     if( !BSDPack->ImageList ) {
         free(TAFFile);
-        TAFFile = SwitchExt(File,"1.TAF");
+        TAFFile = SwitchExt(File,"0.TAF");
         BSDPack->ImageList = TIMLoadAllImages(TAFFile,NULL);
         if( !BSDPack->ImageList ) {
-            DPrintf("RenderObjectManagerLoadBSD:Failed to load images from TAF file %s\n",TAFFile);
-            ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_INVALID_TAF_FILE;
-            goto Failure;
+            free(TAFFile);
+            TAFFile = SwitchExt(File,"1.TAF");
+            BSDPack->ImageList = TIMLoadAllImages(TAFFile,NULL);
+            if( !BSDPack->ImageList ) {
+                DPrintf("RenderObjectManagerLoadBSD:Failed to load images from TAF file %s\n",TAFFile);
+                ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_INVALID_TAF_FILE;
+                goto Failure;
+            }
         }
     }
+
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20,"Loading all RenderObjects");
     BSDPack->RenderObjectList = BSDLoadRenderObjects(File,&BSDPack->GameVersion);
     if( !BSDPack->RenderObjectList ) {
@@ -469,6 +532,9 @@ void RenderObjectManagerOnExportDirSelect(FileDialog_t *FileDialog,const char *D
             RenderObjectManagerExportSelectedModelToPly(RenderObjectManager,Exporter->GUI->ProgressBar,Exporter->VideoSystem,Directory,
                                                         Exporter->ExportCurrentAnimation);
             break;
+        case RENDER_OBJECT_MANAGER_EXPORT_FORMAT_GLTF:
+            RenderObjectManagerExportSelectedModelToGlTF(RenderObjectManager,Exporter->GUI->ProgressBar,Exporter->VideoSystem,Directory,
+                                                        Exporter->ExportCurrentAnimation);
         default:
             DPrintf("RenderObjectManagerOnExportDirSelect:Invalid output format\n");
             break;

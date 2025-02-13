@@ -363,6 +363,10 @@ void GUIDrawMainWindow(GUI_t *GUI,RenderObjectManager_t *RenderObjectManager,Vid
                 if( igButton("Export current animation to Ply",ZeroSize) ) {
                     RenderObjectManagerExportSelectedModel(RenderObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_PLY,true);
                 }
+                igSameLine(0.f,10.f);
+                if( igButton("Export current animation to glTF",ZeroSize) ) {
+                    RenderObjectManagerExportSelectedModel(RenderObjectManager,GUI,VideoSystem,RENDER_OBJECT_MANAGER_EXPORT_FORMAT_GLTF,true);
+                }
             } else {
                 igText("Export selected model");
                 if( igButton("Export to Ply",ZeroSize) ) {

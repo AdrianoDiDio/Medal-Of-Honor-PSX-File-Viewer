@@ -133,6 +133,10 @@ void                        RenderObjectExportCurrentPoseToPly(RenderObject_t *R
 void                        RenderObjectExportCurrentAnimationToPly(RenderObject_t *RenderObject,VRAM_t *VRAM,const char *Directory,
                                                                     const char *EngineName);
 
+void                        RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM_t *VRAM,
+                                                                     const char *Directory, const char *EngineName);
+
+
 
 void                        RenderObjectFreeList(RenderObject_t *RenderObjectList);
 void                        RenderObjectFree(RenderObject_t *RenderObject);

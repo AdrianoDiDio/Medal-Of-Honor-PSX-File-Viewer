@@ -20,6 +20,9 @@
 */
 
 #include "RenderObject.h"
+#define CGLTF_IMPLEMENTATION
+#define CGLTF_WRITE_IMPLEMENTATION
+#include <cgltf_write.h>
 
 void RenderObjectFreeShader(RenderObjectShader_t *RenderObjectShader)
 {
@@ -873,6 +876,42 @@ void RenderObjectExportCurrentAnimationToPly(RenderObject_t *RenderObject, VRAM_
         }
     }
     free(TempVertexTable);
+}
+
+void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM_t *VRAM, const char *Directory, const char *EngineName)
+{
+    cgltf_options Options;
+    cgltf_data *Data;
+    cgltf_result Result;
+    
+    if( RenderObject->IsStatic ) {
+        DPrintf("RenderObjectExportCurrentAnimationToGlTF:Renderobject is not animated\n");
+        return;
+    }
+    if (RenderObject->CurrentAnimationIndex == -1) {
+        DPrintf("RenderObjectExportCurrentAnimationToGlTF:Invalid animation index\n");
+        return;
+    }
+    
+    Data = malloc(sizeof(cgltf_data));
+    
+    if( !Data ) {
+        DPrintf("RenderObjectExportCurrentAnimationToGlTF:Failed to allocate data\n");
+        return;
+    }
+    
+    Data->file_type = cgltf_file_type_gltf;
+    Data->animations_count = 1;
+    Data->animations = malloc(sizeof(cgltf_animation));
+    Data->animations[0].name = StringCopy("TestAnim");
+    
+    Result = cgltf_write_file(&Options, "out.gltf", Data);
+    cgltf_free(Data);
+    if (Result != cgltf_result_success)
+    {
+        DPrintf("RenderObjectExportCurrentAnimationToGlTF:Invalid animation index\n");
+        return;
+    }
 }
 
 void RenderObjectResetVertexTable(RenderObject_t *RenderObject)
