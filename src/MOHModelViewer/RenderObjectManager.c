@@ -355,7 +355,10 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
     RenderObject_t *Iterator;
     char *TAFFile;
     int ErrorCode;
-    
+    int i;
+    const char *ExtensionsToCheck[] = {".TAF", "0.TAF", "1.TAF"};
+    int NumExtensionsToCheck;
+
     ErrorCode = RENDER_OBJECT_MANAGER_BSD_NO_ERRORS;
     
     if( !RenderObjectManager ) {
@@ -386,18 +389,23 @@ int RenderObjectManagerLoadBSD(RenderObjectManager_t *RenderObjectManager,GUI_t 
     TAFFile = NULL;
     
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,0,"Loading all images");
-    TAFFile = SwitchExt(File,"0.TAF");
-    BSDPack->ImageList = TIMLoadAllImages(TAFFile,NULL);
-    if( !BSDPack->ImageList ) {
-        free(TAFFile);
-        TAFFile = SwitchExt(File,"1.TAF");
+    NumExtensionsToCheck = sizeof(ExtensionsToCheck) / sizeof(ExtensionsToCheck[0]);
+    for( i = 0; i < NumExtensionsToCheck; i++ ) {
+        if( TAFFile ) {
+            free(TAFFile);
+        }
+        TAFFile = SwitchExt(File,ExtensionsToCheck[i]);
         BSDPack->ImageList = TIMLoadAllImages(TAFFile,NULL);
-        if( !BSDPack->ImageList ) {
-            DPrintf("RenderObjectManagerLoadBSD:Failed to load images from TAF file %s\n",TAFFile);
-            ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_INVALID_TAF_FILE;
-            goto Failure;
+        if( BSDPack->ImageList ) {
+            break;
         }
     }
+    if( !BSDPack->ImageList ) {
+        DPrintf("RenderObjectManagerLoadBSD:Failed to load images from TAF file %s\n",TAFFile);
+        ErrorCode = RENDER_OBJECT_MANAGER_BSD_ERROR_INVALID_TAF_FILE;
+        goto Failure;
+    }
+    
     ProgressBarIncrement(GUI->ProgressBar,VideoSystem,20,"Loading all RenderObjects");
     BSDPack->RenderObjectList = BSDLoadRenderObjects(File,&BSDPack->GameVersion);
     if( !BSDPack->RenderObjectList ) {
