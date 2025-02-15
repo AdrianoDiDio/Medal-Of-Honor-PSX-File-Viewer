@@ -23,6 +23,6 @@
 [submodule "libs/cimgui"]
 	path = libs/cimgui
 	url = https://github.com/cimgui/cimgui
-[submodule "libs/glTF"]
-	path = libs/glTF
+[submodule "libs/cglTF"]
+	path = libs/cglTF
 	url = https://github.com/jkuhlmann/cgltf.git
