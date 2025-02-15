@@ -881,7 +881,7 @@ void RenderObjectExportCurrentAnimationToPly(RenderObject_t *RenderObject, VRAM_
 void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM_t *VRAM, const char *Directory, const char *EngineName)
 {
     cgltf_options Options;
-    cgltf_data *Data;
+    cgltf_data Data;
     cgltf_result Result;
     
     if( RenderObject->IsStatic ) {
@@ -893,20 +893,81 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
         return;
     }
     
-    Data = malloc(sizeof(cgltf_data));
+    memset(&Data, sizeof(cgltf_data), 0);
+    Data.file_type = cgltf_file_type_gltf;
     
-    if( !Data ) {
-        DPrintf("RenderObjectExportCurrentAnimationToGlTF:Failed to allocate data\n");
-        return;
-    }
+    Data.asset.generator = StringCopy("MOHModelViewer");
+    Data.asset.copyright = StringCopy("MOHModelViewer");
+    Data.asset.version = StringCopy("1.0");
+    Data.asset.min_version = StringCopy("1.0");
+    Data.asset.extensions_count = 0;
+    Data.asset.extras.data = NULL;
+    Data.asset.extras.start_offset = Data.asset.extras.end_offset = 0;
     
-    Data->file_type = cgltf_file_type_gltf;
-    Data->animations_count = 1;
-    Data->animations = malloc(sizeof(cgltf_animation));
-    Data->animations[0].name = StringCopy("TestAnim");
     
-    Result = cgltf_write_file(&Options, "out.gltf", Data);
-    cgltf_free(Data);
+    Data.nodes = (cgltf_node *)malloc(sizeof(cgltf_node));
+    Data.nodes_count = 1;
+    Data.extras.data = NULL;
+    Data.extras.start_offset = Data.extras.end_offset = 0;
+
+
+    Data.meshes = (cgltf_mesh *)malloc(sizeof(cgltf_mesh));
+    Data.meshes_count = 1;
+    
+    Data.nodes[0].mesh = &Data.meshes[0];
+    Data.nodes[0].name = StringCopy("MainNode");
+    Data.nodes[0].children_count = 0;
+    Data.nodes[0].weights_count = 0;
+    Data.nodes[0].has_mesh_gpu_instancing = false;
+    Data.nodes[0].extensions_count = 0;
+    Data.nodes[0].extras.data = NULL;
+    Data.nodes[0].extras.start_offset = Data.nodes[0].extras.end_offset = 0;
+
+    Data.meshes[0].name = StringCopy("MainMesh");
+    Data.meshes[0].primitives = (cgltf_primitive *)malloc(sizeof(cgltf_primitive));
+    Data.meshes[0].primitives_count = 1;
+
+    Data.meshes[0].target_names_count = 0;
+    Data.meshes[0].weights_count = 0;
+    Data.meshes[0].extensions_count = 0;
+    Data.meshes[0].extras.data = NULL;
+    Data.meshes[0].extras.start_offset = Data.meshes[0].extras.end_offset = 0;
+
+    
+    Data.meshes[0].primitives[0].targets_count = 0;
+    Data.meshes[0].primitives[0].mappings_count = 0;
+    Data.meshes[0].primitives[0].extensions_count = 0;
+    Data.meshes[0].primitives[0].has_draco_mesh_compression = false;
+    Data.meshes[0].primitives[0].extras.data = NULL;
+    Data.meshes[0].primitives[0].extras.start_offset = Data.meshes[0].primitives[0].extras.end_offset = 0;
+
+
+    Data.meshes[0].primitives[0].attributes = (cgltf_attribute *)malloc(2 * sizeof(cgltf_attribute));
+    //TODO(Adriano): Enable attributes
+    Data.meshes[0].primitives[0].attributes_count = 0;
+
+    Data.meshes[0].primitives[0].attributes[0].type = cgltf_attribute_type_position;
+    Data.meshes[0].primitives[0].attributes[0].index = 0;
+    
+    Data.meshes[0].primitives[0].attributes[1].type = cgltf_attribute_type_texcoord;
+    Data.meshes[0].primitives[0].attributes[1].index = 1;
+
+    Data.materials_count = 0;
+    Data.accessors_count = 0;
+    Data.buffer_views_count = 0;
+    Data.buffers_count = 0;
+    Data.images_count = 0;
+    Data.textures_count = 0;
+    Data.samplers_count = 0;
+    Data.skins_count = 0;
+    Data.cameras_count = 0;
+    Data.lights_count = 0;
+    Data.scenes_count = 0;
+    Data.animations_count = 0;
+    Data.variants_count = 0;
+    Data.data_extensions_count = 0;
+    
+    Result = cgltf_write_file(&Options, "out.gltf", &Data);
     if (Result != cgltf_result_success)
     {
         DPrintf("RenderObjectExportCurrentAnimationToGlTF:Invalid animation index\n");
