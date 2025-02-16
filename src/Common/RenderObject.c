@@ -878,26 +878,173 @@ void RenderObjectExportCurrentAnimationToPly(RenderObject_t *RenderObject, VRAM_
     free(TempVertexTable);
 }
 
-cgltf_buffer *RenderObjectAllocGlTFBuffer(RenderObject_t *RenderObject)
+void RenderObjectWriteBuffer(RenderObject_t *RenderObject)
 {
-    cgltf_buffer *Result;
+    FILE *OutBuffer;
     int NumVertices;
+    float TextureWidth;
+    float TextureHeight;
+    int VRAMPage;
+    int ColorMode;
+    float U0;
+    float V0;
+    float U1;
+    float V1;
+    float U2;
+    float V2;
+    vec3 VertPos;
+    vec3 OutVector;
+    vec3 RotationAxis;
+    mat4 RotationMatrix;
+    mat4 ScaleMatrix;
+    mat4 ModelMatrix;
+    BSDAnimatedModelFace_t *CurrentFace;
+    int i;
+    BSDVertexTable_t *VertexTable;
     
-    Result = malloc(sizeof(cgltf_buffer));
-    
-    if( !Result ) {
-        DPrintf("RenderObjectAllocGlTFBuffer:Failed to allocate memory for buffer\n");
-        return NULL;
-    }
-    memset(Result, 0, sizeof(cgltf_buffer));
     //NOTE(Adriano):Each face has 3 vertices, 3 UV coordinates and 3 RGB coordinates
-    Result->data = malloc((RenderObject->NumFaces * (3 + 2 + 3) * sizeof(float)) + (RenderObject->NumFaces * 3 * sizeof(unsigned short)));
-    Result->size = (RenderObject->NumFaces * (3 + 2 + 3) * sizeof(float)) + (RenderObject->NumFaces * 3 * sizeof(unsigned short));
+//     Result->size = (RenderObject->NumFaces * (3 + 2 + 3) * sizeof(float)) + (RenderObject->NumFaces * 3 * sizeof(unsigned short));
     //TODO(Adriano):Prepare the data to be sent for each keyframe animation, ideally the data should be self contained
     //meaning that the each part of the binary file should contain a single frame made by V0,V1,V2,UV0,UV1,RGB0,RGB1,RGB2 and then
     //the list of all the indices that make up this frame
+    //TODO(Adriano): Buffer name should be connected with the currently exported RenderObject (e.g RenderObjectIDBuffer.bin)
+    OutBuffer = fopen("OutBuffer.bin", "wb");
+    if( !OutBuffer ) {
+        DPrintf("RenderObjectWriteBuffer:Failed to allocate memory for buffer\n");
+        return;
+    }
+    VertexTable = RenderObject->VertexTable;
+    for (i = 0; i < RenderObject->NumFaces; i++) {
+        CurrentFace = &RenderObject->FaceList[i];
+        VRAMPage = CurrentFace->TexInfo;
+        ColorMode = (CurrentFace->TexInfo & 0xC0) >> 7;
+        U0 = (((float)CurrentFace->UV0.u +
+               VRAMGetTexturePageX(VRAMPage)) /
+              TextureWidth);
+        V0 = /*255 -*/ 1.f - (((float)CurrentFace->UV0.v +
+                               VRAMGetTexturePageY(VRAMPage, ColorMode)) /
+                              TextureHeight);
+        U1 = (((float)CurrentFace->UV1.u +
+               VRAMGetTexturePageX(VRAMPage)) /
+              TextureWidth);
+        V1 = /*255 -*/ 1.f - (((float)CurrentFace->UV1.v +
+                               VRAMGetTexturePageY(VRAMPage, ColorMode)) /
+                              TextureHeight);
+        U2 = (((float)CurrentFace->UV2.u +
+               VRAMGetTexturePageX(VRAMPage)) /
+              TextureWidth);
+        V2 = /*255 -*/ 1.f - (((float)CurrentFace->UV2.v +
+                               VRAMGetTexturePageY(VRAMPage, ColorMode)) /
+                              TextureHeight);
+
+        VertPos[0] = VertexTable[CurrentFace->VertexTableIndex0 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex0].x;
+        VertPos[1] = VertexTable[CurrentFace->VertexTableIndex0 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex0].y;
+        VertPos[2] = VertexTable[CurrentFace->VertexTableIndex0 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex0].z;
+        
+        fwrite(&OutVector[0], 1, sizeof(OutVector[0]), OutBuffer);
+        fwrite(&OutVector[1], 1, sizeof(OutVector[1]), OutBuffer);
+        fwrite(&OutVector[2], 1, sizeof(OutVector[2]), OutBuffer);
+        fwrite(&U0, 1, sizeof(U0), OutBuffer);
+        fwrite(&V0, 1, sizeof(V0), OutBuffer);
+        float R = CurrentFace->RGB0.r / 255.f;
+        float G = CurrentFace->RGB0.g / 255.f;
+        float B = CurrentFace->RGB0.b / 255.f;
+        fwrite(&R, 1, sizeof(R), OutBuffer);
+        fwrite(&G, 1, sizeof(G), OutBuffer);
+        fwrite(&B, 1, sizeof(B), OutBuffer);
+
+        glm_mat4_mulv3(ModelMatrix, VertPos, 1.f, OutVector);
+//         sprintf(Buffer, "%f %f %f %f %f %f %f %f\n", OutVector[0] / 4096.f,
+//                 OutVector[1] / 4096.f, OutVector[2] / 4096.f,
+//                 CurrentFace->RGB0.r / 255.f, CurrentFace->RGB0.g / 255.f, CurrentFace->RGB0.b / 255.f, U0, V0);
+//         fwrite(Buffer, strlen(Buffer), 1, OutFile);
+
+        VertPos[0] = VertexTable[CurrentFace->VertexTableIndex1 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex1].x;
+        VertPos[1] = VertexTable[CurrentFace->VertexTableIndex1 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex1].y;
+        VertPos[2] = VertexTable[CurrentFace->VertexTableIndex1 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex1].z;
+        glm_mat4_mulv3(ModelMatrix, VertPos, 1.f, OutVector);
+        fwrite(&OutVector[0], 1, sizeof(OutVector[0]), OutBuffer);
+        fwrite(&OutVector[1], 1, sizeof(OutVector[1]), OutBuffer);
+        fwrite(&OutVector[2], 1, sizeof(OutVector[2]), OutBuffer);
+        fwrite(&U1, 1, sizeof(U0), OutBuffer);
+        fwrite(&V1, 1, sizeof(V0), OutBuffer);
+        R = CurrentFace->RGB1.r / 255.f;
+        G = CurrentFace->RGB1.g / 255.f;
+        B = CurrentFace->RGB1.b / 255.f;
+        fwrite(&R, 1, sizeof(R), OutBuffer);
+        fwrite(&G, 1, sizeof(G), OutBuffer);
+        fwrite(&B, 1, sizeof(B), OutBuffer);
+        
+        VertPos[0] = VertexTable[CurrentFace->VertexTableIndex2 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex2].x;
+        VertPos[1] = VertexTable[CurrentFace->VertexTableIndex2 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex2].y;
+        VertPos[2] = VertexTable[CurrentFace->VertexTableIndex2 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex2].z;
+        glm_mat4_mulv3(ModelMatrix, VertPos, 1.f, OutVector);
+        fwrite(&OutVector[0], 1, sizeof(OutVector[0]), OutBuffer);
+        fwrite(&OutVector[1], 1, sizeof(OutVector[1]), OutBuffer);
+        fwrite(&OutVector[2], 1, sizeof(OutVector[2]), OutBuffer);
+        fwrite(&U0, 1, sizeof(U2), OutBuffer);
+        fwrite(&V0, 1, sizeof(V2), OutBuffer);
+        R = CurrentFace->RGB2.r / 255.f;
+        G = CurrentFace->RGB2.g / 255.f;
+        B = CurrentFace->RGB2.b / 255.f;
+        fwrite(&R, 1, sizeof(R), OutBuffer);
+        fwrite(&G, 1, sizeof(G), OutBuffer);
+        fwrite(&B, 1, sizeof(B), OutBuffer);
+//         sprintf(Buffer, "%f %f %f %f %f %f %f %f\n", OutVector[0] / 4096.f,
+//                 OutVector[1] / 4096.f, OutVector[2] / 4096.f,
+//                 CurrentFace->RGB1.r / 255.f, CurrentFace->RGB1.g / 255.f, CurrentFace->RGB1.b / 255.f, U2, V2);
+//         fwrite(Buffer, strlen(Buffer), 1, OutFile);
+    }
+    for (i = 0; i < RenderObject->NumFaces; i++) {
+        int Vert0 = (i * 3) + 0;
+        int Vert1 = (i * 3) + 1;
+        int Vert2 = (i * 3) + 2;
+//         sprintf(Buffer, "3 %i %i %i\n", Vert0, Vert1, Vert2);
+//         fwrite(Buffer, strlen(Buffer), 1, OutFile);
+    }
+    
+    fclose(OutBuffer);
 //     memcpy(Result->data, vertices, RenderObject->NumFaces * (3 + 2 + 3) * sizeof(float));
 //     memcpy((unsigned short *)Result->data + (RenderObject->NumFaces * 3), indices, RenderObject->NumFaces * 3  * sizeof(unsigned short));
+
+}
+cgltf_buffer_view *RenderObjectAllocGlTFBufferViewXYZUVIndices(RenderObject_t *RenderObject,cgltf_buffer *Buffer)
+{
+    cgltf_buffer_view *Result;
+    int NumVertices;
+    int Stride;
+    
+    Result = malloc(sizeof(cgltf_buffer_view) * 4);
+    
+    if( !Result ) {
+        DPrintf("RenderObjectAllocGlTFBufferView:Failed to allocate memory for buffer\n");
+        return NULL;
+    }
+    //        XYZ UV  RGB
+    Stride = (3 + 2 + 3) * sizeof(float);
+    // First buffer contains vertex data (1 vec3)
+    memset(&Result[0], 0, sizeof(cgltf_buffer_view));
+    Result[0].buffer = Buffer;
+    Result[0].offset = 0;
+    Result[0].type = cgltf_type_vec3;
+    Result[0].stride = Stride;
+        
+    memset(&Result[1], 0, sizeof(cgltf_buffer_view));
+    Result[1].buffer = Buffer;
+    Result[1].offset = 3 * sizeof(float);
+    Result[1].type = cgltf_type_vec2;
+    Result[1].stride = Stride;
+    
+    memset(&Result[2], 0, sizeof(cgltf_buffer_view));
+    Result[2].buffer = Buffer;
+    Result[2].offset = (3 + 2) * sizeof(float);
+    Result[2].type = cgltf_type_vec3;
+    Result[2].stride = Stride;
+    
+    memset(&Result[3], 0, sizeof(cgltf_buffer_view));
+    Result[3].buffer = Buffer;
+    Result[3].offset = Stride * RenderObject->NumFaces;
+    Result[3].type = cgltf_type_scalar;
 
     return Result;
 }
@@ -925,8 +1072,15 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     Data->asset.version = StringCopy("2.0");
     Data->asset.min_version = StringCopy("2.0");
     
-    Data->buffers = RenderObjectAllocGlTFBuffer(RenderObject);
-    Data->buffers_count = 1;
+    
+    RenderObjectWriteBuffer(RenderObject);
+//     Data->buffers = RenderObjectAllocGlTFBuffer(RenderObject);
+//     Data->buffers_count = 1;
+    
+    
+    Data->buffer_views = RenderObjectAllocGlTFBufferViewXYZUVIndices(RenderObject,Data->buffers);
+    Data->buffer_views_count = 4;
+
 //     Data->asset.extensions_count = 0;
 //     Data->asset.extras.data = NULL;
 //     Data->asset.extras.start_offset = Data->asset.extras.end_offset = 0;
@@ -940,6 +1094,7 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     memset(&Data->meshes[0], 0, sizeof(cgltf_mesh));
     Data->meshes_count = 1;
     
+    //NOTE(Adriano): We need at least 3 accessors: Vertices,Textures and Indices
     Data->accessors = malloc(sizeof(cgltf_accessor));
     Data->accessors_count = 1;
     
