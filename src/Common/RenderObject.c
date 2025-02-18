@@ -878,7 +878,7 @@ void RenderObjectExportCurrentAnimationToPly(RenderObject_t *RenderObject, VRAM_
     free(TempVertexTable);
 }
 
-void RenderObjectWriteBuffer(RenderObject_t *RenderObject)
+int RenderObjectWriteBuffer(RenderObject_t *RenderObject)
 {
     FILE *OutBuffer;
     int NumVertices;
@@ -903,7 +903,7 @@ void RenderObjectWriteBuffer(RenderObject_t *RenderObject)
     BSDVertexTable_t *VertexTable;
     
     //NOTE(Adriano):Each face has 3 vertices, 3 UV coordinates and 3 RGB coordinates
-//     Result->size = (RenderObject->NumFaces * (3 + 2 + 3) * sizeof(float)) + (RenderObject->NumFaces * 3 * sizeof(unsigned short));
+//     Result->size = 
     //TODO(Adriano):Prepare the data to be sent for each keyframe animation, ideally the data should be self contained
     //meaning that the each part of the binary file should contain a single frame made by V0,V1,V2,UV0,UV1,RGB0,RGB1,RGB2 and then
     //the list of all the indices that make up this frame
@@ -911,7 +911,7 @@ void RenderObjectWriteBuffer(RenderObject_t *RenderObject)
     OutBuffer = fopen("OutBuffer.bin", "wb");
     if( !OutBuffer ) {
         DPrintf("RenderObjectWriteBuffer:Failed to allocate memory for buffer\n");
-        return;
+        return 0;
     }
     VertexTable = RenderObject->VertexTable;
     for (i = 0; i < RenderObject->NumFaces; i++) {
@@ -996,14 +996,19 @@ void RenderObjectWriteBuffer(RenderObject_t *RenderObject)
 //         fwrite(Buffer, strlen(Buffer), 1, OutFile);
     }
     for (i = 0; i < RenderObject->NumFaces; i++) {
-        int Vert0 = (i * 3) + 0;
-        int Vert1 = (i * 3) + 1;
-        int Vert2 = (i * 3) + 2;
+        short Vert0 = (i * 3) + 0;
+        short Vert1 = (i * 3) + 1;
+        short Vert2 = (i * 3) + 2;
+        fwrite(&Vert0, 1, sizeof(Vert0), OutBuffer);
+        fwrite(&Vert1, 1, sizeof(Vert1), OutBuffer);
+        fwrite(&Vert2, 1, sizeof(Vert2), OutBuffer);
 //         sprintf(Buffer, "3 %i %i %i\n", Vert0, Vert1, Vert2);
 //         fwrite(Buffer, strlen(Buffer), 1, OutFile);
     }
     
     fclose(OutBuffer);
+    
+    return (RenderObject->NumFaces * (3 + 2 + 3) * sizeof(float)) + (RenderObject->NumFaces * 3 * sizeof(unsigned short));
 //     memcpy(Result->data, vertices, RenderObject->NumFaces * (3 + 2 + 3) * sizeof(float));
 //     memcpy((unsigned short *)Result->data + (RenderObject->NumFaces * 3), indices, RenderObject->NumFaces * 3  * sizeof(unsigned short));
 
@@ -1053,6 +1058,7 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     cgltf_options Options;
     cgltf_data *Data;
     cgltf_result Result;
+    int BufferSize;
     
     if( RenderObject->IsStatic ) {
         DPrintf("RenderObjectExportCurrentAnimationToGlTF:Renderobject is not animated\n");
@@ -1073,7 +1079,7 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     Data->asset.min_version = StringCopy("2.0");
     
     
-    RenderObjectWriteBuffer(RenderObject);
+    BufferSize = RenderObjectWriteBuffer(RenderObject);
 //     Data->buffers = RenderObjectAllocGlTFBuffer(RenderObject);
 //     Data->buffers_count = 1;
     
@@ -1094,9 +1100,34 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     memset(&Data->meshes[0], 0, sizeof(cgltf_mesh));
     Data->meshes_count = 1;
     
-    //NOTE(Adriano): We need at least 3 accessors: Vertices,Textures and Indices
-    Data->accessors = malloc(sizeof(cgltf_accessor));
-    Data->accessors_count = 1;
+    //NOTE(Adriano): We need at least 4 accessors: Vertices,Textures,Colors and Indices
+    Data->accessors = malloc(sizeof(cgltf_accessor) * 4);
+    Data->accessors_count = 4;
+    
+    memset(&Data->accessors[0], 0, sizeof(cgltf_accessor));
+    Data->accessors[0].buffer_view = &Data->buffer_views[0];
+    Data->accessors[0].count = RenderObject->NumFaces * 3;
+    Data->accessors[0].component_type = cgltf_component_type_r_32f;
+    Data->accessors[0].type = cgltf_type_vec3;
+    
+    memset(&Data->accessors[1], 0, sizeof(cgltf_accessor));
+    Data->accessors[1].buffer_view = &Data->buffer_views[1];
+    Data->accessors[1].count = RenderObject->NumFaces * 3;
+    Data->accessors[1].component_type = cgltf_component_type_r_32f;
+    Data->accessors[1].type = cgltf_type_vec2;
+    
+    memset(&Data->accessors[2], 0, sizeof(cgltf_accessor));
+    Data->accessors[2].buffer_view = &Data->buffer_views[2];
+    Data->accessors[2].count = RenderObject->NumFaces * 3;
+    Data->accessors[2].component_type = cgltf_component_type_r_32f;
+    Data->accessors[2].type = cgltf_type_vec3;
+    
+    memset(&Data->accessors[3], 0, sizeof(cgltf_accessor));
+    Data->accessors[3].buffer_view = &Data->buffer_views[3];
+    Data->accessors[3].count = RenderObject->NumFaces * 3;
+    Data->accessors[3].component_type = cgltf_component_type_r_16u;
+    Data->accessors[3].type = cgltf_type_scalar;
+
     
     Data->nodes[0].mesh = &Data->meshes[0];
 //     Data->nodes[0].name = StringCopy("MainNode");
@@ -1108,26 +1139,54 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
 
 
     Data->meshes[0].primitives[0].attributes = (cgltf_attribute *)malloc(3 * sizeof(cgltf_attribute));
+    Data->meshes[0].primitives[0].type = cgltf_primitive_type_triangles;
     memset(&Data->meshes[0].primitives[0].attributes[0], 0, sizeof(cgltf_attribute));
     memset(&Data->meshes[0].primitives[0].attributes[1], 0, sizeof(cgltf_attribute));
     memset(&Data->meshes[0].primitives[0].attributes[2], 0, sizeof(cgltf_attribute));
 
     //TODO(Adriano): Enable attributes
-    Data->meshes[0].primitives[0].attributes_count = 0;
+    Data->meshes[0].primitives[0].attributes_count = 3;
 
+    Data->meshes[0].primitives[0].attributes[0].name = StringCopy("POSITION");
     Data->meshes[0].primitives[0].attributes[0].type = cgltf_attribute_type_position;
+    Data->meshes[0].primitives[0].attributes[0].data = &Data->accessors[0];
     Data->meshes[0].primitives[0].attributes[0].index = 0;
     
-    Data->meshes[0].primitives[0].attributes[1].type = cgltf_attribute_type_color;
+    Data->meshes[0].primitives[0].attributes[1].name = StringCopy("TEXCOORD_0");
+    Data->meshes[0].primitives[0].attributes[1].type = cgltf_attribute_type_texcoord;
+    Data->meshes[0].primitives[0].attributes[1].data = &Data->accessors[1];
     Data->meshes[0].primitives[0].attributes[1].index = 1;
     
-    Data->meshes[0].primitives[0].attributes[2].type = cgltf_attribute_type_texcoord;
+    Data->meshes[0].primitives[0].attributes[2].name = StringCopy("COLOR");
+    Data->meshes[0].primitives[0].attributes[2].type = cgltf_attribute_type_color;
+    Data->meshes[0].primitives[0].attributes[2].data = &Data->accessors[2];
     Data->meshes[0].primitives[0].attributes[2].index = 2;
     
-    Data->meshes[0].primitives[0].indices = &Data->accessors[0];
-    memset(&Data->meshes[0].primitives[0].indices[0], 0, sizeof(cgltf_accessor));
-//     Data->meshes[0].primitives[0].indices[0].name = StringCopy("ModelIndices");
+    Data->meshes[0].primitives[0].indices = &Data->accessors[3];
 
+    Data->images = (cgltf_image *)malloc(sizeof(cgltf_image));
+    memset(&Data->images[0], 0, sizeof(cgltf_image));
+    Data->images_count = 1;
+    
+    Data->images[0].mime_type = StringCopy("image/png");
+    Data->images[0].name = StringCopy("vram");
+    Data->images[0].uri = StringCopy("vram.png");
+
+    Data->buffers = (cgltf_buffer *)malloc(sizeof(cgltf_buffer));
+    memset(&Data->buffers[0], 0, sizeof(cgltf_buffer));
+    Data->buffers_count = 1;
+    
+    Data->buffers[0].uri = StringCopy("OutBuffer.bin");
+    Data->buffers[0].size = BufferSize;
+//     Data->materials = (cgltf_material *)malloc(sizeof(cgltf_material));
+//     memset(&Data->materials[0], 0, sizeof(cgltf_material));
+//     Data->materials_count = 1;
+//     
+//     Data->materials[0].name = StringCopy("vram");
+//     Data->materials[0].name = StringCopy("vram");
+//     Data->materials[0].uri = StringCopy("vram.png");
+
+    
     Result = cgltf_write_file(&Options, "out.gltf", Data);
     
     Data->memory.free_func = &cgltf_default_free;
