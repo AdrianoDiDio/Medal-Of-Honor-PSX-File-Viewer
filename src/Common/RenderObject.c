@@ -1031,6 +1031,7 @@ cgltf_buffer_view *RenderObjectAllocGlTFBufferViewXYZUVIndices(RenderObject_t *R
     memset(&Result[0], 0, sizeof(cgltf_buffer_view));
     Result[0].buffer = Buffer;
     Result[0].offset = 0;
+    Result[0].size = Stride * RenderObject->NumFaces;
     Result[0].type = cgltf_type_vec3;
     Result[0].stride = Stride;
         
@@ -1039,17 +1040,22 @@ cgltf_buffer_view *RenderObjectAllocGlTFBufferViewXYZUVIndices(RenderObject_t *R
     Result[1].offset = 3 * sizeof(float);
     Result[1].type = cgltf_type_vec2;
     Result[1].stride = Stride;
+    Result[1].size = Stride * RenderObject->NumFaces;
+
     
     memset(&Result[2], 0, sizeof(cgltf_buffer_view));
     Result[2].buffer = Buffer;
     Result[2].offset = (3 + 2) * sizeof(float);
     Result[2].type = cgltf_type_vec3;
     Result[2].stride = Stride;
+    Result[2].size = Stride * RenderObject->NumFaces;
+
     
     memset(&Result[3], 0, sizeof(cgltf_buffer_view));
     Result[3].buffer = Buffer;
     Result[3].offset = Stride * RenderObject->NumFaces;
     Result[3].type = cgltf_type_scalar;
+    Result[3].size = sizeof(short) * RenderObject->NumFaces;
 
     return Result;
 }
@@ -1083,6 +1089,12 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
 //     Data->buffers = RenderObjectAllocGlTFBuffer(RenderObject);
 //     Data->buffers_count = 1;
     
+    Data->buffers = (cgltf_buffer *)malloc(sizeof(cgltf_buffer));
+    memset(&Data->buffers[0], 0, sizeof(cgltf_buffer));
+    Data->buffers_count = 1;
+    
+    Data->buffers[0].uri = StringCopy("OutBuffer.bin");
+    Data->buffers[0].size = BufferSize;
     
     Data->buffer_views = RenderObjectAllocGlTFBufferViewXYZUVIndices(RenderObject,Data->buffers);
     Data->buffer_views_count = 4;
@@ -1172,12 +1184,7 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     Data->images[0].name = StringCopy("vram");
     Data->images[0].uri = StringCopy("vram.png");
 
-    Data->buffers = (cgltf_buffer *)malloc(sizeof(cgltf_buffer));
-    memset(&Data->buffers[0], 0, sizeof(cgltf_buffer));
-    Data->buffers_count = 1;
-    
-    Data->buffers[0].uri = StringCopy("OutBuffer.bin");
-    Data->buffers[0].size = BufferSize;
+
 //     Data->materials = (cgltf_material *)malloc(sizeof(cgltf_material));
 //     memset(&Data->materials[0], 0, sizeof(cgltf_material));
 //     Data->materials_count = 1;
