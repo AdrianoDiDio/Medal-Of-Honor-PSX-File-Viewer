@@ -878,7 +878,7 @@ void RenderObjectExportCurrentAnimationToPly(RenderObject_t *RenderObject, VRAM_
     free(TempVertexTable);
 }
 
-int RenderObjectWriteBuffer(RenderObject_t *RenderObject,vec3 OutMin,vec3 OutMax)
+int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMin,vec3 OutMax)
 {
     FILE *OutBuffer;
     int NumVertices;
@@ -919,6 +919,9 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,vec3 OutMin,vec3 OutMax
     VertexTable = RenderObject->VertexTable;
     LocalMin[0] = LocalMin[1] = LocalMin[2] = 9999.f;
     LocalMax[0] = LocalMax[1] = LocalMax[2] = -9999.f;
+    
+    TextureWidth = VRAM->Page.Width;
+    TextureHeight = VRAM->Page.Height;
 
     for (i = 0; i < RenderObject->NumFaces; i++) {
         CurrentFace = &RenderObject->FaceList[i];
@@ -984,7 +987,7 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,vec3 OutMin,vec3 OutMax
             if( OutVector[j] < LocalMin[j] ) {
                 LocalMin[j] = OutVector[j];
             }
-            if( VertPos[j] > LocalMax[j] ) {
+            if( OutVector[j] > LocalMax[j] ) {
                 LocalMax[j] = OutVector[j];
             }
         }
@@ -1008,7 +1011,7 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,vec3 OutMin,vec3 OutMax
             if( OutVector[j] < LocalMin[j] ) {
                 LocalMin[j] = OutVector[j];
             }
-            if( VertPos[j] > LocalMax[j] ) {
+            if( OutVector[j] > LocalMax[j] ) {
                 LocalMax[j] = OutVector[j];
             }
         }
@@ -1050,42 +1053,13 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,vec3 OutMin,vec3 OutMax
         V2 = /*255 -*/ 1.f - (((float)CurrentFace->UV2.v +
                                VRAMGetTexturePageY(VRAMPage, ColorMode)) /
                               TextureHeight);
+        DPrintf("%f;%f|%f;%f|%f;%f\n",U0,V0,U1,V1,U2,V2);
         fwrite(&U0, 1, sizeof(U0), OutBuffer);
         fwrite(&V0, 1, sizeof(V0), OutBuffer);
-//         float R = CurrentFace->RGB0.r / 255.f;
-//         float G = CurrentFace->RGB0.g / 255.f;
-//         float B = CurrentFace->RGB0.b / 255.f;
-//         fwrite(&R, 1, sizeof(R), OutBuffer);
-//         fwrite(&G, 1, sizeof(G), OutBuffer);
-//         fwrite(&B, 1, sizeof(B), OutBuffer);
-
-        glm_mat4_mulv3(ModelMatrix, VertPos, 1.f, OutVector);
-//         sprintf(Buffer, "%f %f %f %f %f %f %f %f\n", OutVector[0] / 4096.f,
-//                 OutVector[1] / 4096.f, OutVector[2] / 4096.f,
-//                 CurrentFace->RGB0.r / 255.f, CurrentFace->RGB0.g / 255.f, CurrentFace->RGB0.b / 255.f, U0, V0);
-//         fwrite(Buffer, strlen(Buffer), 1, OutFile);
-
-        fwrite(&U1, 1, sizeof(U0), OutBuffer);
-        fwrite(&V1, 1, sizeof(V0), OutBuffer);
-//         R = CurrentFace->RGB1.r / 255.f;
-//         G = CurrentFace->RGB1.g / 255.f;
-//         B = CurrentFace->RGB1.b / 255.f;
-//         fwrite(&R, 1, sizeof(R), OutBuffer);
-//         fwrite(&G, 1, sizeof(G), OutBuffer);
-//         fwrite(&B, 1, sizeof(B), OutBuffer);
-        
+        fwrite(&U1, 1, sizeof(U1), OutBuffer);
+        fwrite(&V1, 1, sizeof(V1), OutBuffer);        
         fwrite(&U2, 1, sizeof(U2), OutBuffer);
         fwrite(&V2, 1, sizeof(V2), OutBuffer);
-//         R = CurrentFace->RGB2.r / 255.f;
-//         G = CurrentFace->RGB2.g / 255.f;
-//         B = CurrentFace->RGB2.b / 255.f;
-//         fwrite(&R, 1, sizeof(R), OutBuffer);
-//         fwrite(&G, 1, sizeof(G), OutBuffer);
-//         fwrite(&B, 1, sizeof(B), OutBuffer);
-//         sprintf(Buffer, "%f %f %f %f %f %f %f %f\n", OutVector[0] / 4096.f,
-//                 OutVector[1] / 4096.f, OutVector[2] / 4096.f,
-//                 CurrentFace->RGB1.r / 255.f, CurrentFace->RGB1.g / 255.f, CurrentFace->RGB1.b / 255.f, U2, V2);
-//         fwrite(Buffer, strlen(Buffer), 1, OutFile);
     }
     for (i = 0; i < RenderObject->NumFaces; i++) {
         short Vert0 = (i * 3) + 0;
@@ -1105,7 +1079,8 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,vec3 OutMin,vec3 OutMax
     if( OutMax ) {
         OutMax = LocalMax;
     }
-    return (RenderObject->NumFaces * (3 + 2 /*+ 3*/) * sizeof(float)) + (RenderObject->NumFaces * 3 * sizeof(unsigned short));
+    return (RenderObject->NumFaces * 3 * 3 * sizeof(float)) + (RenderObject->NumFaces * 6 * sizeof(float)) +
+        (RenderObject->NumFaces * 3 * sizeof(unsigned short));
 //     memcpy(Result->data, vertices, RenderObject->NumFaces * (3 + 2 + 3) * sizeof(float));
 //     memcpy((unsigned short *)Result->data + (RenderObject->NumFaces * 3), indices, RenderObject->NumFaces * 3  * sizeof(unsigned short));
 
@@ -1128,21 +1103,21 @@ cgltf_buffer_view *RenderObjectAllocGlTFBufferViewXYZUVIndices(RenderObject_t *R
     memset(&Result[0], 0, sizeof(cgltf_buffer_view));
     Result[0].buffer = Buffer;
     Result[0].offset = 0;
-    Result[0].size = /*Stride **/ RenderObject->NumFaces * 3 * sizeof(float);
+    Result[0].size = /*Stride **/ RenderObject->NumFaces * 9 * sizeof(float);
     Result[0].type = cgltf_type_vec3;
 //     Result[0].stride = Stride;
         
     memset(&Result[1], 0, sizeof(cgltf_buffer_view));
     Result[1].buffer = Buffer;
-    Result[1].offset = 3 * RenderObject->NumFaces * sizeof(float);
+    Result[1].offset = 9 * RenderObject->NumFaces * sizeof(float);
     Result[1].type = cgltf_type_vec2;
 //     Result[1].stride = Stride;
-    Result[1].size = /*Stride **/  RenderObject->NumFaces * 3 * sizeof(float);
+    Result[1].size = /*Stride **/  RenderObject->NumFaces * 6 * sizeof(float);
 
     
     memset(&Result[2], 0, sizeof(cgltf_buffer_view));
     Result[2].buffer = Buffer;
-    Result[2].offset = (3 + 2) * RenderObject->NumFaces * sizeof(float);
+    Result[2].offset = (9 + 6) * RenderObject->NumFaces * sizeof(float);
     Result[2].type = cgltf_type_scalar;
 //     Result[2].stride = Stride;
     Result[2].size = /*Stride **/ RenderObject->NumFaces * 3 * sizeof(unsigned short);
@@ -1184,7 +1159,7 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     Data->asset.min_version = StringCopy("2.0");
     
     
-    BufferSize = RenderObjectWriteBuffer(RenderObject,Min,Max);
+    BufferSize = RenderObjectWriteBuffer(RenderObject,VRAM,Min,Max);
 //     Data->buffers = RenderObjectAllocGlTFBuffer(RenderObject);
 //     Data->buffers_count = 1;
     
@@ -1217,7 +1192,7 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     
     memset(&Data->accessors[0], 0, sizeof(cgltf_accessor));
     Data->accessors[0].buffer_view = &Data->buffer_views[0];
-    Data->accessors[0].count = RenderObject->NumFaces * 3;
+    Data->accessors[0].count = RenderObject->NumFaces;
 //     Data->accessors[0].offset = 0;
     Data->accessors[0].component_type = cgltf_component_type_r_32f;
     Data->accessors[0].type = cgltf_type_vec3;
@@ -1235,7 +1210,7 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     
     memset(&Data->accessors[1], 0, sizeof(cgltf_accessor));
     Data->accessors[1].buffer_view = &Data->buffer_views[1];
-    Data->accessors[1].count = RenderObject->NumFaces * 3;
+    Data->accessors[1].count = RenderObject->NumFaces;
 //     Data->accessors[1].offset = 3 * sizeof(float);
     Data->accessors[1].component_type = cgltf_component_type_r_32f;
     Data->accessors[1].type = cgltf_type_vec2;
