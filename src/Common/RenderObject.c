@@ -916,12 +916,23 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
         DPrintf("RenderObjectWriteBuffer:Failed to allocate memory for buffer\n");
         return 0;
     }
-    VertexTable = RenderObject->VertexTable;
+    VertexTable = RenderObject->CurrentVertexTable;
     LocalMin[0] = LocalMin[1] = LocalMin[2] = 9999.f;
     LocalMax[0] = LocalMax[1] = LocalMax[2] = -9999.f;
     
     TextureWidth = VRAM->Page.Width;
     TextureHeight = VRAM->Page.Height;
+    
+    glm_mat4_identity(ModelMatrix);
+    glm_mat4_identity(RotationMatrix);
+
+    RotationAxis[0] = -1;
+    RotationAxis[1] = 0;
+    RotationAxis[2] = 0;
+    glm_rotate(RotationMatrix, glm_rad(180.f), RotationAxis);
+    glm_scale_make(ScaleMatrix, RenderObject->Scale);
+
+    glm_mat4_mul(RotationMatrix, ScaleMatrix, ModelMatrix);
 
     for (i = 0; i < RenderObject->NumFaces; i++) {
         CurrentFace = &RenderObject->FaceList[i];
@@ -954,6 +965,7 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
 
         glm_mat4_mulv3(ModelMatrix, VertPos, 1.f, OutVector);
         for( j = 0; j < 3; j++ ) {
+            OutVector[j] /= 4096.f;
             if( OutVector[j] < LocalMin[j] ) {
                 LocalMin[j] = OutVector[j];
             }
@@ -964,6 +976,7 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
         fwrite(&OutVector[0], 1, sizeof(OutVector[0]), OutBuffer);
         fwrite(&OutVector[1], 1, sizeof(OutVector[1]), OutBuffer);
         fwrite(&OutVector[2], 1, sizeof(OutVector[2]), OutBuffer);
+        DPrintf("%f;%f;%f\n",OutVector[0],OutVector[1],OutVector[2]);
 //         fwrite(&U0, 1, sizeof(U0), OutBuffer);
 //         fwrite(&V0, 1, sizeof(V0), OutBuffer);
 //         float R = CurrentFace->RGB0.r / 255.f;
@@ -983,7 +996,8 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
         VertPos[1] = VertexTable[CurrentFace->VertexTableIndex1 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex1].y;
         VertPos[2] = VertexTable[CurrentFace->VertexTableIndex1 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex1].z;
         glm_mat4_mulv3(ModelMatrix, VertPos, 1.f, OutVector);
-                for( j = 0; j < 3; j++ ) {
+        for( j = 0; j < 3; j++ ) {
+            OutVector[j] /= 4096.f;
             if( OutVector[j] < LocalMin[j] ) {
                 LocalMin[j] = OutVector[j];
             }
@@ -1007,7 +1021,8 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
         VertPos[1] = VertexTable[CurrentFace->VertexTableIndex2 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex2].y;
         VertPos[2] = VertexTable[CurrentFace->VertexTableIndex2 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex2].z;
         glm_mat4_mulv3(ModelMatrix, VertPos, 1.f, OutVector);
-                for( j = 0; j < 3; j++ ) {
+        for( j = 0; j < 3; j++ ) {
+            OutVector[j] /= 4096.f;
             if( OutVector[j] < LocalMin[j] ) {
                 LocalMin[j] = OutVector[j];
             }
@@ -1073,11 +1088,12 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
     }
     
     fclose(OutBuffer);
+
     if( OutMin ) {
-        OutMin = LocalMin;
+        glm_vec3_copy(LocalMin, OutMin);
     }
     if( OutMax ) {
-        OutMax = LocalMax;
+        glm_vec3_copy(LocalMax, OutMax);
     }
     return (RenderObject->NumFaces * 3 * 3 * sizeof(float)) + (RenderObject->NumFaces * 6 * sizeof(float)) +
         (RenderObject->NumFaces * 3 * sizeof(unsigned short));
@@ -1192,7 +1208,7 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     
     memset(&Data->accessors[0], 0, sizeof(cgltf_accessor));
     Data->accessors[0].buffer_view = &Data->buffer_views[0];
-    Data->accessors[0].count = RenderObject->NumFaces;
+    Data->accessors[0].count = RenderObject->NumFaces * 3;
 //     Data->accessors[0].offset = 0;
     Data->accessors[0].component_type = cgltf_component_type_r_32f;
     Data->accessors[0].type = cgltf_type_vec3;
@@ -1210,7 +1226,7 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     
     memset(&Data->accessors[1], 0, sizeof(cgltf_accessor));
     Data->accessors[1].buffer_view = &Data->buffer_views[1];
-    Data->accessors[1].count = RenderObject->NumFaces;
+    Data->accessors[1].count = RenderObject->NumFaces * 3;
 //     Data->accessors[1].offset = 3 * sizeof(float);
     Data->accessors[1].component_type = cgltf_component_type_r_32f;
     Data->accessors[1].type = cgltf_type_vec2;
@@ -1272,6 +1288,21 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     Data->images[0].mime_type = StringCopy("image/png");
     Data->images[0].name = StringCopy("vram");
     Data->images[0].uri = StringCopy("vram.png");
+    
+    
+    Data->scene = (cgltf_scene *)malloc(sizeof(cgltf_scene));
+    memset(Data->scene, 0, sizeof(cgltf_scene));
+    Data->scene->name = StringCopy("RenderObject");
+    
+    Data->scene->nodes = (cgltf_node **)malloc(sizeof(cgltf_node));
+    memset(&Data->scene->nodes[0], 0, sizeof(cgltf_node));
+    Data->scene->nodes[0] = &Data->nodes[0];
+//     memcpy(&, &Data->nodes[0], sizeof(cgltf_node));
+    Data->scene->nodes_count = 1;
+    Data->scenes = &Data->scene[0];
+    Data->scenes_count = 1;
+    
+
 
 
 //     Data->materials = (cgltf_material *)malloc(sizeof(cgltf_material));
