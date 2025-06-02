@@ -36,13 +36,13 @@ void GUIFree(GUI_t *GUI)
 bool GUIIsMouseFree()
 {
     ImGuiIO *IO;
-    IO = igGetIO();
+    IO = igGetIO_Nil();
     return !IO->WantCaptureMouse;
 }
 bool GUIIsKeyboardFree()
 {
     ImGuiIO *IO;
-    IO = igGetIO();
+    IO = igGetIO_Nil();
     return !IO->WantCaptureKeyboard;
 }
 void GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)

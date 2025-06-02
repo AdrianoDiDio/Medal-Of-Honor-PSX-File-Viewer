@@ -148,7 +148,7 @@ void GUIPrepareModalWindow()
     ImVec2 Pivot; 
     ImVec2 ModalPosition;
     
-    IO = igGetIO();
+    IO = igGetIO_Nil();
     Pivot.x = 0.5f;
     Pivot.y = 0.5f;
     ModalPosition.x = IO->DisplaySize.x * 0.5;
@@ -205,7 +205,7 @@ void GUIContextInit(ImGuiContext *Context,VideoSystem_t *VideoSystem,const char 
     ImFont *Font;
     ImFontConfig *FontConfig;
     
-    IO = igGetIO();
+    IO = igGetIO_Nil();
     igSetCurrentContext(Context);
     ImGui_ImplSDL3_InitForOpenGL(VideoSystem->Window, &VideoSystem->GLContext);
     ImGui_ImplOpenGL3_Init("#version 330 core");
