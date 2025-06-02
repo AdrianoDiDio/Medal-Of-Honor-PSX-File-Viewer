@@ -904,9 +904,11 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
     vec3 LocalMin;
     vec3 LocalMax;
     int j;
+    float R;
+    float G;
+    float B;
     
     //NOTE(Adriano):Each face has 3 vertices, 3 UV coordinates and 3 RGB coordinates
-//     Result->size = 
     //TODO(Adriano):Prepare the data to be sent for each keyframe animation, ideally the data should be self contained
     //meaning that the each part of the binary file should contain a single frame made by V0,V1,V2,UV0,UV1,RGB0,RGB1,RGB2 and then
     //the list of all the indices that make up this frame
@@ -943,8 +945,6 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
         VertPos[1] = VertexTable[CurrentFace->VertexTableIndex0 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex0].y;
         VertPos[2] = VertexTable[CurrentFace->VertexTableIndex0 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex0].z;
         
-
-
         glm_mat4_mulv3(ModelMatrix, VertPos, 1.f, OutVector);
         for( j = 0; j < 3; j++ ) {
             OutVector[j] /= 4096.f;
@@ -959,28 +959,20 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
         fwrite(&OutVector[1], 1, sizeof(OutVector[1]), OutBuffer);
         fwrite(&OutVector[2], 1, sizeof(OutVector[2]), OutBuffer);
 
-        U0 = (((float)CurrentFace->UV0.u +
-               VRAMGetTexturePageX(VRAMPage)) /
-              TextureWidth);
-        V0 = /*255 -*/ /*1.f -*/ (((float)CurrentFace->UV0.v +
-                               VRAMGetTexturePageY(VRAMPage, ColorMode)) /
-                              TextureHeight);
+        U0 = (((float)CurrentFace->UV0.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        V0 = (((float)CurrentFace->UV0.v + VRAMGetTexturePageY(VRAMPage, ColorMode)) / TextureHeight);
+        
         fwrite(&U0, 1, sizeof(U0), OutBuffer);
-        fwrite(&V0, 1, sizeof(V0), OutBuffer); 
-        //         fwrite(&U0, 1, sizeof(U0), OutBuffer);
-//         fwrite(&V0, 1, sizeof(V0), OutBuffer);
-        float R = CurrentFace->RGB0.r / 255.f;
-        float G = CurrentFace->RGB0.g / 255.f;
-        float B = CurrentFace->RGB0.b / 255.f;
+        fwrite(&V0, 1, sizeof(V0), OutBuffer);
+        
+        R = CurrentFace->RGB0.r / 255.f;
+        G = CurrentFace->RGB0.g / 255.f;
+        B = CurrentFace->RGB0.b / 255.f;
         fwrite(&R, 1, sizeof(R), OutBuffer);
         fwrite(&G, 1, sizeof(G), OutBuffer);
         fwrite(&B, 1, sizeof(B), OutBuffer);
 
         glm_mat4_mulv3(ModelMatrix, VertPos, 1.f, OutVector);
-//         sprintf(Buffer, "%f %f %f %f %f %f %f %f\n", OutVector[0] / 4096.f,
-//                 OutVector[1] / 4096.f, OutVector[2] / 4096.f,
-//                 CurrentFace->RGB0.r / 255.f, CurrentFace->RGB0.g / 255.f, CurrentFace->RGB0.b / 255.f, U0, V0);
-//         fwrite(Buffer, strlen(Buffer), 1, OutFile);
 
         VertPos[0] = VertexTable[CurrentFace->VertexTableIndex1 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex1].x;
         VertPos[1] = VertexTable[CurrentFace->VertexTableIndex1 & 0x1F].VertexList[CurrentFace->VertexTableDataIndex1].y;
@@ -995,23 +987,21 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
                 LocalMax[j] = OutVector[j];
             }
         }
+        
         fwrite(&OutVector[0], 1, sizeof(OutVector[0]), OutBuffer);
         fwrite(&OutVector[1], 1, sizeof(OutVector[1]), OutBuffer);
         fwrite(&OutVector[2], 1, sizeof(OutVector[2]), OutBuffer);
         
-                U1 = (((float)CurrentFace->UV1.u +
-               VRAMGetTexturePageX(VRAMPage)) /
-              TextureWidth);
-        V1 = /*255 -*/ /*1.f -*/ (((float)CurrentFace->UV1.v +
-                               VRAMGetTexturePageY(VRAMPage, ColorMode)) /
-                              TextureHeight);
+        U1 = (((float)CurrentFace->UV1.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        V1 = (((float)CurrentFace->UV1.v + VRAMGetTexturePageY(VRAMPage, ColorMode)) / TextureHeight);
+        
         fwrite(&U1, 1, sizeof(U1), OutBuffer);
         fwrite(&V1, 1, sizeof(V1), OutBuffer);
-//         fwrite(&U1, 1, sizeof(U0), OutBuffer);
-//         fwrite(&V1, 1, sizeof(V0), OutBuffer);
+        
         R = CurrentFace->RGB1.r / 255.f;
         G = CurrentFace->RGB1.g / 255.f;
         B = CurrentFace->RGB1.b / 255.f;
+        
         fwrite(&R, 1, sizeof(R), OutBuffer);
         fwrite(&G, 1, sizeof(G), OutBuffer);
         fwrite(&B, 1, sizeof(B), OutBuffer);
@@ -1032,13 +1022,9 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
         fwrite(&OutVector[0], 1, sizeof(OutVector[0]), OutBuffer);
         fwrite(&OutVector[1], 1, sizeof(OutVector[1]), OutBuffer);
         fwrite(&OutVector[2], 1, sizeof(OutVector[2]), OutBuffer);
-
-                U2 = (((float)CurrentFace->UV2.u +
-               VRAMGetTexturePageX(VRAMPage)) /
-              TextureWidth);
-        V2 = /*255 -*/ /*1.f -*/ (((float)CurrentFace->UV2.v +
-                               VRAMGetTexturePageY(VRAMPage, ColorMode)) /
-                              TextureHeight);
+        U2 = (((float)CurrentFace->UV2.u + VRAMGetTexturePageX(VRAMPage)) / TextureWidth);
+        V2 = (((float)CurrentFace->UV2.v + VRAMGetTexturePageY(VRAMPage, ColorMode)) / TextureHeight);
+        
         fwrite(&U2, 1, sizeof(U2), OutBuffer);
         fwrite(&V2, 1, sizeof(V2), OutBuffer);
         
@@ -1057,8 +1043,6 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
         fwrite(&Vert0, 1, sizeof(Vert0), OutBuffer);
         fwrite(&Vert1, 1, sizeof(Vert1), OutBuffer);
         fwrite(&Vert2, 1, sizeof(Vert2), OutBuffer);
-//         sprintf(Buffer, "3 %i %i %i\n", Vert0, Vert1, Vert2);
-//         fwrite(Buffer, strlen(Buffer), 1, OutFile);
     }
     
     fclose(OutBuffer);
@@ -1069,10 +1053,7 @@ int RenderObjectWriteBuffer(RenderObject_t *RenderObject,VRAM_t *VRAM,vec3 OutMi
     if( OutMax ) {
         glm_vec3_copy(LocalMax, OutMax);
     }
-    return (RenderObject->NumFaces * 3 * 8 * sizeof(float)) +
-        (RenderObject->NumFaces * 3 * sizeof(unsigned short));
-//     memcpy(Result->data, vertices, RenderObject->NumFaces * (3 + 2 + 3) * sizeof(float));
-//     memcpy((unsigned short *)Result->data + (RenderObject->NumFaces * 3), indices, RenderObject->NumFaces * 3  * sizeof(unsigned short));
+    return (RenderObject->NumFaces * 3 * 8 * sizeof(float)) + (RenderObject->NumFaces * 3 * sizeof(unsigned short));
 
 }
 cgltf_buffer_view *RenderObjectAllocGlTFBufferViewXYZUVIndices(RenderObject_t *RenderObject,cgltf_buffer *Buffer)
@@ -1089,7 +1070,8 @@ cgltf_buffer_view *RenderObjectAllocGlTFBufferViewXYZUVIndices(RenderObject_t *R
     }
     //        XYZ UV Indices
     Stride = (3 + 2 + 3) * sizeof(float);
-    // First buffer contains vertex data (1 vec3)
+    
+    // First buffer contains vertex data
     memset(&Result[0], 0, sizeof(cgltf_buffer_view));
     Result[0].buffer = Buffer;
     Result[0].offset = 0;
@@ -1097,27 +1079,12 @@ cgltf_buffer_view *RenderObjectAllocGlTFBufferViewXYZUVIndices(RenderObject_t *R
     Result[0].type = cgltf_buffer_view_type_vertices;
     Result[0].stride = Stride;
         
-//     memset(&Result[1], 0, sizeof(cgltf_buffer_view));
-//     Result[1].buffer = Buffer;
-//     Result[1].offset = 3 * 3 * sizeof(float);
-//     Result[1].type = cgltf_buffer_view_type_vertices;
-//     Result[1].stride = Stride;
-//     Result[1].size = Stride * RenderObject->NumFaces * 6 * sizeof(float);
 
-    
     memset(&Result[1], 0, sizeof(cgltf_buffer_view));
     Result[1].buffer = Buffer;
     Result[1].offset = Stride * RenderObject->NumFaces * 3;
     Result[1].type = cgltf_buffer_view_type_indices;
-//     Result[2].stride = Stride;
-    Result[1].size = /*Stride **/ RenderObject->NumFaces * 3 * sizeof(unsigned short);
-
-    
-//     memset(&Result[3], 0, sizeof(cgltf_buffer_view));
-//     Result[3].buffer = Buffer;
-//     Result[3].offset = Stride * RenderObject->NumFaces;
-//     Result[3].type = cgltf_type_scalar;
-//     Result[3].size = sizeof(short) * RenderObject->NumFaces;
+    Result[1].size = RenderObject->NumFaces * 3 * sizeof(unsigned short);
 
     return Result;
 }
@@ -1149,8 +1116,6 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     
     
     BufferSize = RenderObjectWriteBuffer(RenderObject,VRAM,Min,Max);
-//     Data->buffers = RenderObjectAllocGlTFBuffer(RenderObject);
-//     Data->buffers_count = 1;
     
     Data->buffers = (cgltf_buffer *)malloc(sizeof(cgltf_buffer));
     memset(&Data->buffers[0], 0, sizeof(cgltf_buffer));
@@ -1161,11 +1126,6 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     
     Data->buffer_views = RenderObjectAllocGlTFBufferViewXYZUVIndices(RenderObject,Data->buffers);
     Data->buffer_views_count = 2;
-
-//     Data->asset.extensions_count = 0;
-//     Data->asset.extras.data = NULL;
-//     Data->asset.extras.start_offset = Data->asset.extras.end_offset = 0;
-    
     
     Data->nodes = (cgltf_node *)malloc(sizeof(cgltf_node));
     memset(&Data->nodes[0], 0, sizeof(cgltf_node));
@@ -1210,6 +1170,7 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     Data->materials[0].pbr_metallic_roughness.base_color_factor[0] = Data->materials[0].pbr_metallic_roughness.base_color_factor[1] = 
         Data->materials[0].pbr_metallic_roughness.base_color_factor[2] = Data->materials[0].pbr_metallic_roughness.base_color_factor[3] = 1.f;
     Data->materials[0].pbr_metallic_roughness.metallic_factor = 1.f;
+    
     //NOTE(Adriano): We need at least 4 accessors: Vertices,Textures,Colors and Indices
     Data->accessors = malloc(sizeof(cgltf_accessor) * 4);
     Data->accessors_count = 4;
@@ -1250,18 +1211,9 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     Data->accessors[3].component_type = cgltf_component_type_r_16u;
     Data->accessors[3].type = cgltf_type_scalar;
     
-//     memset(&Data->accessors[3], 0, sizeof(cgltf_accessor));
-//     Data->accessors[3].buffer_view = &Data->buffer_views[3];
-//     Data->accessors[3].count = RenderObject->NumFaces * 3;
-//     Data->accessors[3].offset = ((3 + 2 + 3) * sizeof(float)) * RenderObject->NumFaces;
-//     Data->accessors[3].component_type = cgltf_component_type_r_16u;
-//     Data->accessors[3].type = cgltf_type_scalar;
 
-    
     Data->nodes[0].mesh = &Data->meshes[0];
-//     Data->nodes[0].name = StringCopy("MainNode");
 
-//     Data->meshes[0].name = StringCopy("MainMesh");
     Data->meshes[0].primitives = (cgltf_primitive *)malloc(sizeof(cgltf_primitive));
     memset(&Data->meshes[0].primitives[0], 0, sizeof(cgltf_primitive));
     Data->meshes[0].primitives_count = 1;
@@ -1271,9 +1223,7 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     Data->meshes[0].primitives[0].type = cgltf_primitive_type_triangles;
     memset(&Data->meshes[0].primitives[0].attributes[0], 0, sizeof(cgltf_attribute));
     memset(&Data->meshes[0].primitives[0].attributes[1], 0, sizeof(cgltf_attribute));
-//     memset(&Data->meshes[0].primitives[0].attributes[2], 0, sizeof(cgltf_attribute));
 
-    //TODO(Adriano): Enable attributes
     Data->meshes[0].primitives[0].attributes_count = 3;
 
     Data->meshes[0].primitives[0].attributes[0].name = StringCopy("POSITION");
@@ -1302,23 +1252,10 @@ void RenderObjectExportCurrentAnimationToGlTF(RenderObject_t *RenderObject, VRAM
     Data->scene->nodes = (cgltf_node **)malloc(sizeof(cgltf_node));
     memset(&Data->scene->nodes[0], 0, sizeof(cgltf_node));
     Data->scene->nodes[0] = &Data->nodes[0];
-//     memcpy(&, &Data->nodes[0], sizeof(cgltf_node));
     Data->scene->nodes_count = 1;
     Data->scenes = &Data->scene[0];
     Data->scenes_count = 1;
-    
-
-
-
-//     Data->materials = (cgltf_material *)malloc(sizeof(cgltf_material));
-//     memset(&Data->materials[0], 0, sizeof(cgltf_material));
-//     Data->materials_count = 1;
-//     
-//     Data->materials[0].name = StringCopy("vram");
-//     Data->materials[0].name = StringCopy("vram");
-//     Data->materials[0].uri = StringCopy("vram.png");
-
-    
+        
     Result = cgltf_write_file(&Options, "out.gltf", Data);
     
     Data->memory.free_func = &cgltf_default_free;
