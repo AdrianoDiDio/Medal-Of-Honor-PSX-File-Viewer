@@ -47,11 +47,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt install libegl1-mesa-dev libglu1-mesa-dev libasound2-dev libpulse-dev libxext-dev ninja-build cmake build-essential -y
-      - name: Fix line endings for Windows
-        if: startsWith(matrix.config.os, 'Windows')
-        run: |-
-          git config --global core.autocrlf false
-          git config --global core.eol lf
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Checkout submodules
@@ -61,6 +56,7 @@ jobs:
           mkdir Build
           cmake \
             -B Build \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DCMAKE_BUILD_TYPE=Release \
             -DENABLE_PVS_STUDIO_ANALYZER=OFF \
             -G Ninja \
