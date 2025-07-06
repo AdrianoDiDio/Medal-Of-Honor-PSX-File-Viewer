@@ -47,10 +47,15 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt install libegl1-mesa-dev libglu1-mesa-dev libasound2-dev libpulse-dev libxext-dev ninja-build cmake build-essential -y
+      - name: Fix line endings for Windows
+        if: startsWith(matrix.config.os, 'Windows')
+        run: |-
+          git config --global core.autocrlf false
+          git config --global core.eol lf
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Checkout submodules
-        run: git config core.autocrlf false && git submodule update --init --recursive
+        run: git submodule update --init --recursive
       - name: Configure
         run: |
           mkdir Build
