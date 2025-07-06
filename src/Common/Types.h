@@ -21,12 +21,6 @@
 
 typedef unsigned char Byte;
 
-// typedef enum 
-// {
-//     false,
-//     true
-// } bool;
-
 typedef struct Color4f_s
 {
     float r;
