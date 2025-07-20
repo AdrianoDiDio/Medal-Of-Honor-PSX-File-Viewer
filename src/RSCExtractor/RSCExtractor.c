@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <sys/stat.h>
 
 #ifdef __linux__
@@ -42,10 +43,6 @@ typedef struct RSCEntry_s {
     int     Offset;
     int     Pad;
 } RSCEntry_t;
-
-typedef enum {
-    false,true
-} bool;
 
 void CreateDirIfNotExists(char *DirName) {
     struct stat FileStat;

@@ -22,11 +22,9 @@ add_subdirectory(glew-cmake/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/glew-cmake E
 add_subdirectory(zlib ${CMAKE_CURRENT_BINARY_DIR}/zlib EXCLUDE_FROM_ALL)
 
 set(ZLIB_ROOT zlib)
-
 set(ZLIB_LIBRARY zlib)
 set(ZLIB_INCLUDE_DIR zlib)
 
-set(PNG_BUILD_ZLIB OFF CACHE BOOL "" FORCE)
 set(PNG_SHARED ON CACHE BOOL "" FORCE)
 set(PNG_STATIC OFF CACHE BOOL "" FORCE)
 set(PNG_EXECUTABLES OFF CACHE BOOL "" FORCE)
