@@ -46,7 +46,10 @@ jobs:
         if: startsWith(matrix.config.name, 'Ubuntu')
         run: |
           sudo apt-get update
-          sudo apt install libegl1-mesa-dev libglu1-mesa-dev libasound2-dev libpulse-dev libxext-dev ninja-build cmake build-essential -y
+          sudo apt install libegl1-mesa-dev libglu1-mesa-dev libasound2-dev libpulse-dev libxext-dev ninja-build build-essential -y
+      - name: Setup CMake
+        if: startsWith(matrix.config.name, 'Ubuntu')
+        uses: jwlawson/actions-setup-cmake@v2
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Checkout submodules
