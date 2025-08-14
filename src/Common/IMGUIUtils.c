@@ -628,7 +628,7 @@ void GUIDrawVideoSettingsWindow(bool *WindowHandle,VideoSystem_t *VideoSystem)
                 if (igSelectable_Bool(VSyncOptions[i].DisplayValue, IsSelected,0,ZeroSize)) {
                     if( CurrentVSyncOption != i ) {
                         OldValue = VidConfigVSync->IValue;
-                        if( VideoSystemSetSwapInterval(VSyncOptions[i].Value) < 0 ) {
+                        if( !VideoSystemSetSwapInterval(VSyncOptions[i].Value) ) {
                             VideoSystemSetSwapInterval(OldValue);
                         }
                     }

@@ -157,7 +157,7 @@ void VideoSystemSetVideoSettings(VideoSystem_t *VideoSystem, int PreferredModeIn
     if (VidConfigFullScreen->IValue) {
         VideoSystemSetFullScreenVideoMode(VideoSystem, PreferredModeIndex);
         SelectedMode = SDLGetCurrentDisplayMode(VideoSystem);
-        if (SDL_SetWindowFullscreenMode(VideoSystem->Window, SelectedMode) < 0)
+        if (!SDL_SetWindowFullscreenMode(VideoSystem->Window, SelectedMode))
         {
             ConfigSetNumber("VideoFullScreen", 0);
             return;
@@ -212,7 +212,7 @@ void VideoSystemSwapBuffers(VideoSystem_t *VideoSystem)
     SDL_GL_SwapWindow(VideoSystem->Window);
 }
 
-int VideoSystemSetSwapInterval(int Value)
+bool VideoSystemSetSwapInterval(int Value)
 {
     if (Value < -1 || Value > 1) {
         Value = 1;
@@ -264,10 +264,10 @@ int VideoSystemOpenWindow(VideoSystem_t *VideoSystem)
         ConfigSetNumber("VideoVSync", 1);
     }
     Result = VideoSystemSetSwapInterval(VidConfigVSync->IValue);
-    if (Result == -1) {
+    if (!Result) {
         DPrintf("VideoSystemOpenWindow:Failed to set VSync using value %i...trying default one.\n", VidConfigVSync->IValue);
         Result = VideoSystemSetSwapInterval(1);
-        if (Result == -1) {
+        if (!Result) {
             printf("VideoSystemOpenWindow:Cannot set vsync...\n");
             return 0;
         }

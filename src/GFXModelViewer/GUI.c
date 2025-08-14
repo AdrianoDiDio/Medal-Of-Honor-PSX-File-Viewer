@@ -114,15 +114,8 @@ void GUIDrawMainWindow(GUI_t *GUI,GFXObjectManager_t *GFXObjectManager,VideoSyst
     GFX_t *GFX;
     ImVec2 ZeroSize;
     int IsSelected;
-    int DisableNode;
     char SmallBuffer[64];
-    char DeleteButtonId[32];
     int i;
-    int Changed;
-    ImGuiTableFlags TableFlags;
-    ImGuiInputTextFlags InputTextFlags;
-    ImGuiTreeNodeFlags TreeNodeFlags;
-
     
     if( !igBegin("Main Window", NULL, ImGuiWindowFlags_AlwaysAutoResize) ) {
         return;
@@ -164,7 +157,6 @@ void GUIDrawMainWindow(GUI_t *GUI,GFXObjectManager_t *GFXObjectManager,VideoSyst
             ConfigSetNumber("GUIShowFPS",GUIShowFPS->IValue);
         }
     }
-    TreeNodeFlags = GFXObjectManager->GFXPack != NULL ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_None;
     if( igCollapsingHeader_TreeNodeFlags("GFX Informations",ImGuiTreeNodeFlags_DefaultOpen) ) {
         GFX = GFXObjectManagerGetCurrentGFX(GFXObjectManager);
         if( !GFX ) {

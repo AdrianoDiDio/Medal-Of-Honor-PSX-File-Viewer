@@ -73,7 +73,6 @@ bool BSDAreStarsEnabled(BSDSky_t SkyData)
 void BSDGetObjectDefaultExportMatrix(RenderObject_t *RenderObject,mat4 Result)
 {
     vec3 RotationAxis;
-    vec3 Temp;
     mat4 RotationMatrix;
     mat4 ScaleMatrix;
     mat4 TranslationMatrix;

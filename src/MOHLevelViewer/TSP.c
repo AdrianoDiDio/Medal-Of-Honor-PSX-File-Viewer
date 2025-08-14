@@ -836,16 +836,15 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
         Stride = (3 + 2 + 3 + 2 + 1) * sizeof(int);
         TransparentVertexSize = Stride * 3 * NumTransparentFaces;
         Iterator->TransparentVAO = VAOInitXYZUVRGBCLUTColorModeInteger(NULL,TransparentVertexSize,Stride,0,3,5,8,10,NumTransparentFaces * 3);
-        
+        //       XYZ RGB
+        Stride = (3 + 3) * sizeof(float);
+        VertexSize = Stride;
+        VertexData = malloc(VertexSize * 8/** sizeof(float)*/);
+
         for( i = 0; i < Iterator->Header.NumNodes; i++ ) {
             if( Iterator->Node[i].NumFaces != 0 ) {
                 TSPCreateFaceVAO(Iterator,&Iterator->Node[i]);
             }
-            
-          //       XYZ RGB
-            Stride = (3 + 3) * sizeof(float);
-            VertexSize = Stride;
-            VertexData = malloc(VertexSize * 8/** sizeof(float)*/);
             VertexPointer = 0;
                     
             if( Iterator->Node[i].NumFaces != 0 ) {
@@ -880,7 +879,7 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
             VertexPointer += 6;
             
             VertexData[VertexPointer] =   Iterator->Node[i].BBox.Max.x;
-            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y;
+            VertexData[VertexPointer+1] = Iterator->Node[i].BBox.Min.y; //-V778
             VertexData[VertexPointer+2] = Iterator->Node[i].BBox.Max.z;
             VertexData[VertexPointer+3] = BoxColor[0];
             VertexData[VertexPointer+4] = BoxColor[1];
@@ -934,8 +933,8 @@ void TSPCreateNodeBBoxVAO(TSP_t *TSPList)
             VertexPointer += 6;
             
             Iterator->Node[i].BBoxVAO = VAOInitXYZRGBIBO(VertexData,VertexSize * 8,Stride,BBoxIndices,sizeof(BBoxIndices),0,3);            
-            free(VertexData);
         }
+        free(VertexData);
     }
 }
 

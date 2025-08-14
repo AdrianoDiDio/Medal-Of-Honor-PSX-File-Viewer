@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 4.0.2)
 project(Common)
 
 set(COMMON_SOURCE_FILES Common.c Config.c Video.c RSC.c Sound.c Engine.c

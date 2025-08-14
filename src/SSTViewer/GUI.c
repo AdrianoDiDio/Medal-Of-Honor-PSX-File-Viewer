@@ -204,7 +204,6 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,SSTManager_t *
     ImVec2 WorkSize;
     ImVec2 WindowPosition;
     ImVec2 WindowPivot;
-    vec3 CameraPosition;
     ImGuiWindowFlags WindowFlags;
     
     WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | 

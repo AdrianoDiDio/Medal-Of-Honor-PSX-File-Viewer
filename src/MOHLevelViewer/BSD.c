@@ -58,7 +58,7 @@ void BSDGetObjectExportMatrix(BSDRenderObjectDrawable_t *RenderObjectDrawable,ma
     glm_mat4_identity(Result);
     glm_mat4_identity(TranslationMatrix);
     glm_vec3_copy(RenderObjectDrawable->Position,Temp);
-    glm_vec3_rotate(Temp, DEGTORAD(180.f), GLM_XUP);    
+    glm_vec3_rotate(Temp, DEGTORAD(180.f), GLM_XUP);
     glm_translate(TranslationMatrix,Temp);
     
     glm_mat4_identity(RotationMatrix);
@@ -923,7 +923,7 @@ void BSDDrawCollisionVolumes(BSD_t *BSD,Camera_t *Camera,mat4 ProjectionMatrix)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
-        if( BSD->NodeData.Node[i].CollisionVolumeType < 0 || BSD->NodeData.Node[i].CollisionVolumeType > BSD_COLLISION_VOLUME_MAX_VALUE ) {
+        if( BSD->NodeData.Node[i].CollisionVolumeType < 0 || BSD->NodeData.Node[i].CollisionVolumeType >= BSD_COLLISION_VOLUME_MAX_VALUE ) {
             continue;
         }
         glBindVertexArray(BSD->CollisionVolumeVAO[BSD->NodeData.Node[i].CollisionVolumeType]->VAOId[0]);

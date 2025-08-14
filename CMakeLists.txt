@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 4.0.2)
 include(FetchContent)
 
 project(Medal-Of-Honor-PSX-File-Viewer)
@@ -20,6 +20,7 @@ set(OpenGL_GL_PREFERENCE LEGACY)
 find_package(OpenGL REQUIRED) 
 
 if( ENABLE_PVS_STUDIO_ANALYZER )
+    #set(CMAKE_POLICY_DEFAULT_CMP0116 NEW)
     # Make sure that PVS studio is available for every subdirectory...
     FetchContent_Declare(
         PVS_CMakeModule

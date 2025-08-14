@@ -50,7 +50,7 @@ VideoSystem_t   *VideoSystemInit(const char *WindowTitle);
 void            VideoSystemSetVideoSettings(VideoSystem_t *VideoSystem,int PreferredModeIndex);
 void            VideoSystemSetWindowResizable(VideoSystem_t *VideoSystem,int Resizable);
 void            VideoSystemGetCurrentWindowSize(VideoSystem_t *VideoSystem,int *Width,int *Height);
-int             VideoSystemSetSwapInterval(int Value);
+bool            VideoSystemSetSwapInterval(int Value);
 void            VideoSystemCenterMouse(VideoSystem_t *VideoSystem);
 void            VideoSystemSwapBuffers(VideoSystem_t *VideoSystem);
 void            VideoSystemGrabMouse(VideoSystem_t *VideoSystem, bool Grab);
