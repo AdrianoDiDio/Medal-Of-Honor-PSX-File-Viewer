@@ -34,6 +34,6 @@ target_compile_definitions(${PROJECT_NAME}
     PUBLIC
     $<$<CONFIG:Debug>:_DEBUG>
 )
-target_link_libraries(${PROJECT_NAME} SDL3::SDL3 glew_s z PNG::PNG m cimgui cglm_headers samplerate)
+target_link_libraries(${PROJECT_NAME} SDL3::SDL3 glew_s ZLIB::ZLIB PNG::PNG m cimgui cglm_headers samplerate)
 
 

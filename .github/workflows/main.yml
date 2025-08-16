@@ -55,18 +55,14 @@ jobs:
         uses: actions/checkout@v4
       - name: Checkout submodules
         run: git submodule update --init --recursive
-      - name: Setup upterm session
-        if: startsWith(matrix.config.name, 'Ubuntu')
-        uses: lhotari/action-upterm@v1
       - name: Configure
         run: |
           mkdir Build
           cmake \
             -B Build \
-            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DCMAKE_BUILD_TYPE=Release \
             -DENABLE_PVS_STUDIO_ANALYZER=OFF \
-            -G Ninja \
+            -G Ninja
       - name: Build
         run: cmake --build Build --parallel
       - name: Upload artifact

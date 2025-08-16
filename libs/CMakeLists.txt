@@ -21,27 +21,22 @@ add_subdirectory(glew-cmake/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/glew-cmake E
 
 add_subdirectory(zlib ${CMAKE_CURRENT_BINARY_DIR}/zlib EXCLUDE_FROM_ALL)
 
-set(ZLIB_ROOT zlib)
+set(ZLIB_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/zlib)
 set(ZLIB_LIBRARY zlib)
-set(ZLIB_INCLUDE_DIR zlib)
-add_library(ZLIB::ZLIB INTERFACE IMPORTED)
+set(ZLIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/zlib)
+add_library(ZLIB::ZLIB ALIAS ${ZLIB_LIBRARY})
 
 set(PNG_SHARED ON CACHE BOOL "" FORCE)
 set(PNG_STATIC OFF CACHE BOOL "" FORCE)
 set(PNG_TOOLS OFF CACHE BOOL "" FORCE)
 set(PNG_TESTS OFF CACHE BOOL "" FORCE)
 set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
-
+set(ZLIB_INCLUDE_DIRS "${ZLIB_INCLUDE_DIR}")
 
 
 add_subdirectory(libpng ${CMAKE_CURRENT_BINARY_DIR}/libpng )
 set(PNG_LIBRARY png_shared)
 add_library(PNG::PNG ALIAS ${PNG_LIBRARY})
-
-#include_directories(libpng)
-#include_directories(${CMAKE_CURRENT_BINARY_DIR}/libpng)
-#add_subdirectory(libpng)
-#add_library(PNG::PNG SHARED IMPORTED)
 
 set(IMGUI_SOURCE_FILES cimgui/cimgui.cpp
                        cimgui/imgui/imgui.cpp 
