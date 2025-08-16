@@ -25,10 +25,7 @@
 void ApplicationCheckEvents(Application_t *Application)
 {
     SDL_Event Event;
-    RenderObject_t *CurrentRenderObject;
-    int NextFrame;
-    int NextPose;
-    
+
     while( SDL_PollEvent(&Event) ) {
         if( Event.type == SDL_EVENT_WINDOW_RESIZED ) {
             ConfigSetNumber("VideoWidth",Event.window.data1);

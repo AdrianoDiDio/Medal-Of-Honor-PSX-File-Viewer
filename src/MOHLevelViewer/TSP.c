@@ -2334,7 +2334,6 @@ bool TSPSphereIntersectsTriangle (TSPCollision_t *CollisionData,TSPVec3_t Point,
     float q3qb;
     float d1;
     float d2;
-    float d3;
     float e1;
     float e2;
     float e3;
@@ -2390,7 +2389,6 @@ bool TSPSphereIntersectsTriangle (TSPCollision_t *CollisionData,TSPVec3_t Point,
 
     d1 = ab - aa;
     d2 = bc - bb;
-    d3 = ac - cc;
     e1 = glm_vec3_dot(BA, BA);
     e2 = glm_vec3_dot(CB, CB);
     e3 = glm_vec3_dot(AC, AC);
@@ -2602,10 +2600,7 @@ int TSPCheckCollisionFaceSphereIntersection(TSPCollision_t *CollisionData,TSPVec
     TSPCollisionFace_t *CurrentFace;
     int FaceListIndex;
     int FaceIndex;
-    int Y;
-    int MinY;
-    
-    MinY = 99999;
+
     FaceListIndex = StartingFaceListIndex;
     i = 0;
 

@@ -50,7 +50,7 @@ typedef struct RSC_s {
 } RSC_t;
 
 RSC_t           *RSCLoad(const char *FileName);
-void            RSCAppend(RSC_t **List,RSC_t *RSC);
+void            RSCAppend(RSC_t **RSCList,RSC_t *RSC);
 int             RSCOpen(const RSC_t *RSC,const char *FileName,RSCEntry_t *OutEntry);
 char            *RSCGetBaseName(const char *RSCPath);
 int             RSCGetDirectoryFileCount(const RSC_t *RSC,const char *Directory);

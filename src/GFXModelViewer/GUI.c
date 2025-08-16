@@ -45,7 +45,7 @@ bool GUIIsKeyboardFree()
     IO = igGetIO_Nil();
     return !IO->WantCaptureKeyboard;
 }
-void GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
+void GUIProcessEvent(GUI_t *GUI, const SDL_Event *Event)
 {
     ImGui_ImplSDL3_ProcessEvent(Event);
 }
@@ -79,7 +79,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,Camera_t *Camera,VideoSystem_t *VideoSystem)
     igEnd();
 }
 
-void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
+void GUIDrawDebugOverlay(const ComTimeInfo_t *TimeInfo)
 {
     ImGuiViewport *Viewport;
     ImVec2 WorkPosition;

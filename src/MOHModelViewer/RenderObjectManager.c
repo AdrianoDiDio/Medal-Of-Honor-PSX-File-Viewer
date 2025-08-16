@@ -186,7 +186,6 @@ void RenderObjectManagerExportSelectedModelToPly(RenderObjectManager_t *RenderOb
     free(PlyFile);
     free(TextureFile);
     free(BSDName);
-    return;
 }
 
 void RenderObjectManagerExportSelectedModel(RenderObjectManager_t *RenderObjectManager,GUI_t *GUI,VideoSystem_t *VideoSystem,int OutputFormat,
@@ -338,7 +337,7 @@ int RenderObjectManagerDeleteBSDPack(RenderObjectManager_t *RenderObjectManager,
     }
     return 0;
 }
-BSDRenderObjectPack_t *RenderObjectManagerGetBSDPack(RenderObjectManager_t *RenderObjectManager,const char *Name,int GameVersion)
+BSDRenderObjectPack_t *RenderObjectManagerGetBSDPack(const RenderObjectManager_t *RenderObjectManager,const char *Name,int GameVersion)
 {
     BSDRenderObjectPack_t *Iterator;
     for( Iterator = RenderObjectManager->BSDList; Iterator; Iterator = Iterator->Next ) {

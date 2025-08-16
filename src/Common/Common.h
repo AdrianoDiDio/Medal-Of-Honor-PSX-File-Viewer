@@ -65,8 +65,8 @@
 #define PI_OVER_360 0.0087266462599716478846184538424431
 #endif
 
-#define DEGTORAD( x ) ( (x * M_PI) / 180.0)
-#define RADTODEG( x ) ( (x * 180.0) / M_PI)
+#define DEGTORAD( x ) ( ( (x) * M_PI) / 180.0)
+#define RADTODEG( x ) ( ( (x) * 180.0) / M_PI)
 
 #define Square( x ) ( ( x ) * ( x ) )
 

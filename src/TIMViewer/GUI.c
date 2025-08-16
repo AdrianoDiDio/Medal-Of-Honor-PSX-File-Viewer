@@ -33,7 +33,7 @@ void GUIFree(GUI_t *GUI)
     free(GUI);
 }
 
-void GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
+void GUIProcessEvent(GUI_t *GUI, const SDL_Event *Event)
 {
     ImGui_ImplSDL3_ProcessEvent(Event);
 }

@@ -73,11 +73,11 @@ int             LevelManagerLoadLevel(LevelManager_t *LevelManager,GUI_t *GUI,Vi
 void            LevelManagerDrawString(const LevelManager_t *LevelManager,const char *String,float x,float y,Color4f_t Color);
 void            LevelManagerUpdateSoundSettings(LevelManager_t *LevelManager,int SoundValue);
 int             LevelManagerIsLevelLoaded(const LevelManager_t *LevelManager);
-int             LevelManagerGetGameEngine(LevelManager_t *LevelManager);
+int             LevelManagerGetGameEngine(const LevelManager_t *LevelManager);
 int             LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,
                                          const char *Path);
 void            LevelManagerUpdateRenderObjectShaderFog(LevelManager_t *LevelManager);
-TSP_t           *LevelManagerGetTSPCompartmentByPoint(LevelManager_t *LevelManager,vec3 Point);
+TSP_t           *LevelManagerGetTSPCompartmentByPoint(const LevelManager_t *LevelManager,vec3 Point);
 void            LevelManagerUpdate(LevelManager_t *LevelManager,Camera_t *Camera);
 void            LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera);
 void            LevelManagerToggleFileDialog(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem);
