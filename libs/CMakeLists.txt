@@ -32,7 +32,16 @@ set(PNG_TOOLS OFF CACHE BOOL "" FORCE)
 set(PNG_TESTS OFF CACHE BOOL "" FORCE)
 set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
 
-add_subdirectory(libpng ${CMAKE_CURRENT_BINARY_DIR}/libpng EXCLUDE_FROM_ALL)
+
+
+add_subdirectory(libpng ${CMAKE_CURRENT_BINARY_DIR}/libpng )
+set(PNG_LIBRARY png_shared)
+add_library(PNG::PNG ALIAS ${PNG_LIBRARY})
+
+#include_directories(libpng)
+#include_directories(${CMAKE_CURRENT_BINARY_DIR}/libpng)
+#add_subdirectory(libpng)
+#add_library(PNG::PNG SHARED IMPORTED)
 
 set(IMGUI_SOURCE_FILES cimgui/cimgui.cpp
                        cimgui/imgui/imgui.cpp 
