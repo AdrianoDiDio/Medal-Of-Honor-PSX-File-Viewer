@@ -45,7 +45,7 @@ bool GUIIsKeyboardFree()
     IO = igGetIO_Nil();
     return !IO->WantCaptureKeyboard;
 }
-void GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
+void GUIProcessEvent(GUI_t *GUI, const SDL_Event *Event)
 {
     ImGui_ImplSDL3_ProcessEvent(Event);
 }
@@ -79,7 +79,7 @@ void GUIDrawDebugWindow(GUI_t *GUI,Camera_t *Camera,VideoSystem_t *VideoSystem)
     igEnd();
 }
 
-void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo)
+void GUIDrawDebugOverlay(const ComTimeInfo_t *TimeInfo)
 {
     ImGuiViewport *Viewport;
     ImVec2 WorkPosition;
@@ -114,15 +114,8 @@ void GUIDrawMainWindow(GUI_t *GUI,GFXObjectManager_t *GFXObjectManager,VideoSyst
     GFX_t *GFX;
     ImVec2 ZeroSize;
     int IsSelected;
-    int DisableNode;
     char SmallBuffer[64];
-    char DeleteButtonId[32];
     int i;
-    int Changed;
-    ImGuiTableFlags TableFlags;
-    ImGuiInputTextFlags InputTextFlags;
-    ImGuiTreeNodeFlags TreeNodeFlags;
-
     
     if( !igBegin("Main Window", NULL, ImGuiWindowFlags_AlwaysAutoResize) ) {
         return;
@@ -164,7 +157,6 @@ void GUIDrawMainWindow(GUI_t *GUI,GFXObjectManager_t *GFXObjectManager,VideoSyst
             ConfigSetNumber("GUIShowFPS",GUIShowFPS->IValue);
         }
     }
-    TreeNodeFlags = GFXObjectManager->GFXPack != NULL ? ImGuiTreeNodeFlags_DefaultOpen : ImGuiTreeNodeFlags_None;
     if( igCollapsingHeader_TreeNodeFlags("GFX Informations",ImGuiTreeNodeFlags_DefaultOpen) ) {
         GFX = GFXObjectManagerGetCurrentGFX(GFXObjectManager);
         if( !GFX ) {

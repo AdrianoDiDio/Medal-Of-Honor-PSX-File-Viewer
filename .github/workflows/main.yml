@@ -42,11 +42,15 @@ jobs:
                 mingw-w64-x86_64-ninja
                 mingw-w64-x86_64-gcc
                 mingw-w64-x86_64-mesa
+                gawk
+      - name: Setup CMake
+        if: startsWith(matrix.config.name, 'Ubuntu')
+        uses: jwlawson/actions-setup-cmake@v2
       - name: Setup Ubuntu dependencies
         if: startsWith(matrix.config.name, 'Ubuntu')
         run: |
           sudo apt-get update
-          sudo apt install libegl1-mesa-dev libglu1-mesa-dev libasound2-dev libpulse-dev libxext-dev ninja-build cmake build-essential -y
+          sudo apt install libegl1-mesa-dev libglu1-mesa-dev libasound2-dev libpulse-dev libxext-dev ninja-build build-essential mawk -y
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Checkout submodules
@@ -56,10 +60,9 @@ jobs:
           mkdir Build
           cmake \
             -B Build \
-            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DCMAKE_BUILD_TYPE=Release \
             -DENABLE_PVS_STUDIO_ANALYZER=OFF \
-            -G Ninja \
+            -G Ninja
       - name: Build
         run: cmake --build Build --parallel
       - name: Upload artifact

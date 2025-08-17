@@ -35,7 +35,7 @@ typedef struct GUI_s {
 typedef struct Application_s Application_t;
 
 GUI_t               *GUIInit(VideoSystem_t *VideoSystem);
-void                GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
+void                GUIProcessEvent(GUI_t *GUI, const SDL_Event *Event);
 void                GUISetErrorMessage(GUI_t *GUI,const char *Message);
 void                GUIDraw(Application_t *Application);
 void                GUIFree(GUI_t *GUI);

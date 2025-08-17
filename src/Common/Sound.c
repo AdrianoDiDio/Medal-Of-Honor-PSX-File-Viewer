@@ -152,8 +152,7 @@ float *SoundSystemConvertADPCMToPCM(FILE *VBFile,int Length,int *NumFrames)
     LocalNumFrames = NumTotalSample * NumFramePerBlock;
     //Size depends from the number of channels (in this case is 2).
     Size = LocalNumFrames * 2 * sizeof(float);
-    float samples = NumTotalSample / 2 / ( 16 / 8 );
-    
+
     if( NumFrames ) {
         *NumFrames = LocalNumFrames;
     }

@@ -404,7 +404,7 @@ void                        BSDGetNodeColorById(int NodeId,vec3 OutColor);
 int                         BSDGetCurrentAnimatedLightColorByIndex(BSDAnimatedLightTable_t AnimatedLightTable,int Index);
 void                        BSDPositionToGLMVec3(BSDPosition_t In,vec3 Out);
 void                        BSDGetProperty(BSDPropertySetFile_t PropertySetFile,int PropertyIndex);
-int                         BSDGetNodeDynamicDataFromPosition(BSDNodeInfo_t *NodeData,vec3 Position);
+int                         BSDGetNodeDynamicDataFromPosition(const BSDNodeInfo_t *NodeData,vec3 Position);
 bool                        BSDPointInNode(vec3 Position,const BSDNode_t *Node);
 bool                        BSDPointInBox(vec3 Point,BSDPosition_t Center,BSDPosition_t NodeRotation,float Width,float Height,float Depth);
 bool                        BSDPointInCylinder(vec3 Point,BSDPosition_t Center,float Radius,float MinY,float MaxY);

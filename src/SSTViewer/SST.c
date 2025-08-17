@@ -1604,6 +1604,7 @@ SST_t *SSTLoad(Byte *SSTBuffer,const char *ScriptName,const char *BasePath,const
     SST->Next = NULL;
     CurrentClass = NULL;
     CurrentGFXModel = NULL;
+    LastCallback = NULL;
 
     DPrintf("SSTLoad:Loading script %s\n",SST->Name);
     

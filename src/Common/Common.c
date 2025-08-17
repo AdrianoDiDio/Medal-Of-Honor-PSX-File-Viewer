@@ -81,7 +81,7 @@ int vasprintf(char **Strp, const char *Fmt, va_list Ap)
 }
 /*
  sprintf version that takes an empty buffer and allocate the required space based on the format argument.
- It should be included in some linux version but it is not standard.
+ It should be included in some linux version, but it is not standard.
  */
 int asprintf(char **Strp, const char *Fmt, ...)
 {

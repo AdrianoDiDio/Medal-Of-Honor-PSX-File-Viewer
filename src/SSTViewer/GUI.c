@@ -39,7 +39,7 @@ void GUIFree(GUI_t *GUI)
  * it is active.
  * Returns 0 if GUI has ignored the event 1 otherwise.
  */
-int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
+int GUIProcessEvent(GUI_t *GUI, const SDL_Event *Event)
 {
     if( !GUIIsActive(GUI) ) {
         return 0;
@@ -48,7 +48,7 @@ int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
     return 1;
 }
 
-int GUIIsActive(GUI_t *GUI)
+int GUIIsActive(const GUI_t *GUI)
 {
     return GUI->NumActiveWindows > 0;
 }
@@ -103,7 +103,7 @@ void GUIToggleScriptSelectWindow(GUI_t *GUI,VideoSystem_t *VideoSystem)
     GUIUpdateWindowStack(GUI,VideoSystem,GUI->ScriptSelectWindowHandle);
 }
 
-void GUIDrawDebugWindow(GUI_t *GUI,SSTManager_t *SSTManager,Camera_t *Camera,VideoSystem_t *VideoSystem)
+void GUIDrawDebugWindow(GUI_t *GUI,SSTManager_t *SSTManager, const Camera_t *Camera,VideoSystem_t *VideoSystem)
 {
     ImVec2 ZeroSize;
     int LinkedVersion;
@@ -197,14 +197,13 @@ void GUIDrawHelpOverlay()
     igEnd();
 }
 
-void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,SSTManager_t *SSTManager)
+void GUIDrawDebugOverlay(const ComTimeInfo_t *TimeInfo,Camera_t *Camera,SSTManager_t *SSTManager)
 {
     ImGuiViewport *Viewport;
     ImVec2 WorkPosition;
     ImVec2 WorkSize;
     ImVec2 WindowPosition;
     ImVec2 WindowPivot;
-    vec3 CameraPosition;
     ImGuiWindowFlags WindowFlags;
     
     WindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize | 

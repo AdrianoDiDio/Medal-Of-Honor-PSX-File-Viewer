@@ -415,12 +415,12 @@ int LevelManagerIsLevelLoaded(const LevelManager_t *LevelManager)
     return LevelIsLoaded(LevelManager->CurrentLevel);
 }
 
-int LevelManagerGetGameEngine(LevelManager_t *LevelManager)
+int LevelManagerGetGameEngine(const LevelManager_t *LevelManager)
 {
     return LevelManager->GameEngine;
 }
 
-TSP_t *LevelManagerGetTSPCompartmentByPoint(LevelManager_t *LevelManager,vec3 Point)
+TSP_t *LevelManagerGetTSPCompartmentByPoint(const LevelManager_t *LevelManager,vec3 Point)
 {
     if( !LevelManagerIsLevelLoaded(LevelManager) ) {
         return NULL;
@@ -771,7 +771,7 @@ void LevelManagerExport(LevelManager_t* LevelManager,GUI_t *GUI,VideoSystem_t *V
     }
     Exporter->LevelManager = LevelManager;
     Exporter->GUI = GUI;
-    Exporter->VideoSystem = VideoSystem;;
+    Exporter->VideoSystem = VideoSystem;
     Exporter->OutputFormat = OutputFormat;
 
     FileDialogSetTitle(LevelManager->ExportFileDialog,"Export");

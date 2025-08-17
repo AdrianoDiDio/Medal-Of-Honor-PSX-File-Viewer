@@ -825,15 +825,15 @@ TIMImage_t *TIMLoadAllImages(const char *File,int *NumImages)
     int LocalNumImages;
     
     List = NULL;
-    
+    LocalNumImages = 0;
+
     TIMFile = fopen(File,"rb");
     
     if( !TIMFile ) {
         printf("TIMLoadAllImages:Error opening file %s!\n",File);
         return NULL;
     }
-    List = NULL;
-    LocalNumImages = 0;
+
     while( 1 ) {
         TIMImage_t *Image = TIMLoadImage(TIMFile,File,LocalNumImages);
         if( Image == NULL ) {

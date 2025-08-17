@@ -397,8 +397,6 @@ void GFXExportCurrentAnimationToPly(GFX_t *GFX,VRAM_t *VRAM,const char *Director
 {
     GFXVertex_t *TempVertexList;
     FILE *OutFile;
-    mat4 TransformMatrix;
-    vec3 Translation;
     int i;
     int j;
     char *PlyFile;

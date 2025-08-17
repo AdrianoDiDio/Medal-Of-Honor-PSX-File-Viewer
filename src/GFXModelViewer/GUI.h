@@ -45,7 +45,7 @@ bool                GUIIsKeyboardFree();
 void                GUIToggleDebugWindow(GUI_t *GUI);
 void                GUIToggleVideoSettingsWindow(GUI_t *GUI);
 void                GUIToggleLevelSelectWindow(GUI_t *GUI);
-void                GUIProcessEvent(GUI_t *GUI,SDL_Event *Event);
+void                GUIProcessEvent(GUI_t *GUI, const SDL_Event *Event);
 void                GUIDraw(Application_t *Application);
 void                GUIFree(GUI_t *GUI);
 #endif//__GUI_H_

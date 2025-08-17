@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 4.0.2)
 project(Common)
 
 set(COMMON_SOURCE_FILES Common.c Config.c Video.c RSC.c Sound.c Engine.c
@@ -34,6 +34,6 @@ target_compile_definitions(${PROJECT_NAME}
     PUBLIC
     $<$<CONFIG:Debug>:_DEBUG>
 )
-target_link_libraries(${PROJECT_NAME} SDL3::SDL3 glew_s png m cimgui cglm_headers samplerate cgltf)
+target_link_libraries(${PROJECT_NAME} SDL3::SDL3 glew_s ZLIB::ZLIB PNG::PNG m cimgui cglm_headers samplerate)
 
 

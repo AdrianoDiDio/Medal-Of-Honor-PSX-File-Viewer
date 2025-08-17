@@ -73,7 +73,6 @@ bool BSDAreStarsEnabled(BSDSky_t SkyData)
 void BSDGetObjectDefaultExportMatrix(RenderObject_t *RenderObject,mat4 Result)
 {
     vec3 RotationAxis;
-    vec3 Temp;
     mat4 RotationMatrix;
     mat4 ScaleMatrix;
     mat4 TranslationMatrix;
@@ -671,7 +670,7 @@ void BSDClearNodesFlag(BSDNodeInfo_t *NodeData)
     }
 }
 
-int BSDGetNodeDynamicDataFromPosition(BSDNodeInfo_t *NodeData,vec3 Position)
+int BSDGetNodeDynamicDataFromPosition(const BSDNodeInfo_t *NodeData,vec3 Position)
 {
     int i;
     for( i = 0; i < NodeData->Header.NumNodes; i++ ) {
@@ -727,12 +726,12 @@ int BSDGetRenderObjectIndexById(const BSDRenderObjectTable_t *RenderObjectTable,
 /*
  * NOTE(Adriano):
  * Some RenderObjects uses the 'ReferencedRenderObjectId' field to reference a RenderObject that contains common
- * informations shared by multiple RenderObjects.
+ * information shared by multiple RenderObjects.
  * In order to correctly parse these entry we need to copy the field from the 'ReferencedRenderObjectId' to the RenderObject that
  * requested it.
  * NOTE(Adriano):Make sure to update the data when new fields are added.
  */
-void BSDPatchRenderObjects(FILE *BSDFile,BSDRenderObjectTable_t *RenderObjectTable)
+void BSDPatchRenderObjects(BSDRenderObjectTable_t *RenderObjectTable)
 {
     BSDRenderObjectElement_t *CurrentRenderObject;
     BSDRenderObjectElement_t *ReferencedRenderObject;
@@ -1024,7 +1023,7 @@ bool BSDReadRenderObjectTable(FILE *BSDFile,int GameEngine, BSDRenderObjectTable
         }
     }
     // Patch up the data using the referenced renderobjects ids...
-    BSDPatchRenderObjects(BSDFile,RenderObjectTable);
+    BSDPatchRenderObjects(RenderObjectTable);
     return 1;
 }
 bool BSDReadSkyBlock(FILE *BSDFile,BSDSky_t *Sky)

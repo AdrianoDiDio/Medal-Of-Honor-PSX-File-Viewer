@@ -52,7 +52,7 @@ void GUIFree(GUI_t *GUI)
  * it is active.
  * Returns 0 if GUI has ignored the event 1 otherwise.
  */
-int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
+int GUIProcessEvent(GUI_t *GUI, const SDL_Event *Event)
 {
     if( !GUIIsActive(GUI) ) {
         return 0;
@@ -61,7 +61,7 @@ int GUIProcessEvent(GUI_t *GUI,SDL_Event *Event)
     return 1;
 }
 
-int GUIIsActive(GUI_t *GUI)
+int GUIIsActive(const GUI_t *GUI)
 {
     return GUI->NumActiveWindows > 0;
 }

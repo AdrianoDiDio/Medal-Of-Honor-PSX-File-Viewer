@@ -65,7 +65,7 @@ int FontGetStride()
     return (2 + 2) * sizeof(float);
 }
 
-void FontDrawChar(Font_t *Font,const VRAM_t *VRAM,char c,float x,float y,int ColorId,Color4f_t Color)
+void FontDrawChar(const Font_t *Font,const VRAM_t *VRAM,char c,float x,float y,int ColorId,Color4f_t Color)
 {
     Shader_t *Shader;
     vec4 CharColor;
