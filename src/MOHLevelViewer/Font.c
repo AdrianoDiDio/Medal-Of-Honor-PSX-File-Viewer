@@ -103,7 +103,7 @@ void FontDrawChar(const Font_t *Font,const VRAM_t *VRAM,char c,float x,float y,i
     Height = MOH_FONT_CHAR_HEIGHT;
     CharIndex = ASCII_To_MOH_Table[(int) c];
     CharTexelX = MOH_FONT_CHAR_STARTING_TEXTURE_X + ( (CharIndex / 24) * MOH_FONT_CHAR_WIDTH);
-    CharTexelY = MOH_FONT_CHAR_STARTING_TEXTURE_Y + ( (CharIndex % 24) * MOH_FONT_CHAR_HEIGHT);
+    CharTexelY = MOH_FONT_CHAR_STARTING_TEXTURE_Y + ( (CharIndex % 25) * MOH_FONT_CHAR_HEIGHT);
     u0 = ((float)CharTexelX + VRAMGetTexturePageX(MOH_FONT_TEXTURE_VRAM_PAGE)) / VRAM->Page.Width;
     //Color Mode 0 => 4 BPP texture
     v0 = ((float)CharTexelY + VRAMGetTexturePageY(MOH_FONT_TEXTURE_VRAM_PAGE,0)) / VRAM->Page.Height;
