@@ -20,8 +20,8 @@
 */ 
  
 #include "Font.h"
-#include "../Common/ShaderManager.h"
-#include "MOHLevelViewer.h"
+#include "ShaderManager.h"
+#include "Video.h"
 
 /*
     FONT DESCRIPTION
@@ -186,6 +186,7 @@ void FontDrawString(Font_t *Font,const VRAM_t *VRAM,const char *String,float x,f
     }
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
+    glUseProgram(0);
 }
 
 void FontLoad(Font_t *Font,const VRAM_t *VRAM)

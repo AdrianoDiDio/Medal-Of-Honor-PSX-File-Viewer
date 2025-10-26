@@ -27,7 +27,7 @@
 #include "BSD.h"
 #include "../Common/VRAM.h"
 #include "../Common/TIM.h"
-#include "Font.h"
+#include "../Common/Font.h"
 
 typedef struct Level_s {
     char        BasePath[256];

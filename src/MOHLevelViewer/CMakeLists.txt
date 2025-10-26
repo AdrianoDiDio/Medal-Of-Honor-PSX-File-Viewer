@@ -2,9 +2,8 @@ cmake_minimum_required(VERSION 4.0.2)
 
 project(MOHLevelViewer)
 
-set(SOURCE_FILES    Camera.c GUI.c TSP.c Font.c 
-                    BSD.c Level.c LevelManager.c 
-                    MOHLevelViewer.c
+set(SOURCE_FILES    Camera.c GUI.c TSP.c BSD.c
+                    Level.c LevelManager.c MOHLevelViewer.c
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} )

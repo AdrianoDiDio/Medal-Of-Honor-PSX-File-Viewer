@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 4.0.2)
 
 project(SSTViewer)
 
-set(SOURCE_FILES    Camera.c SST.c GUI.c Font.c SSTManager.c 
+set(SOURCE_FILES    Camera.c SST.c GUI.c SSTManager.c
                     SSTViewer.c
 )
 
