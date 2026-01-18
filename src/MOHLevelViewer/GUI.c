@@ -2,7 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 /*
 ===========================================================================
-    Copyright (C) 2018-2025 Adriano Di Dio.
+    Copyright (C) 2018-2026 Adriano Di Dio.
     
     MOHLevelViewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -407,6 +407,8 @@ void GUIDrawDebugOverlay(ComTimeInfo_t *TimeInfo,Camera_t *Camera,LevelManager_t
                 for( i = 0; i < BSD->NodeData.Header.NumNodes; i++ ) {
                     if( BSDPointInNode(Camera->Position,&BSD->NodeData.Node[i]) ) {
                         igText("Camera is inside node %i => %s\n",i,BSDNodeGetEnumStringFromNodeId(BSD->NodeData.Node[i].Id));
+                        igText("Mapping for node %i (Id %i) returned %i\n",i,BSD->NodeData.Node[i].Id,
+                               BSDNodeIdToRenderObjectId(BSD->NodeData.Node[i].Id));
                         igText("Node CollisionVolumeType:%s\n",BSDGetCollisionVolumeStringFromType(BSD->NodeData.Node[i].CollisionVolumeType));
                         if( BSD->NodeData.Node[i].Type == 5 ) {
                             igText("Node has dynamic face index set to %i\n",BSD->NodeData.Node[i].DynamicBlockIndex);

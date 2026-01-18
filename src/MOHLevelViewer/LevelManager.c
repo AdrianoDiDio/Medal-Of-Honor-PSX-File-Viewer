@@ -2,7 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 /*
 ===========================================================================
-    Copyright (C) 2018-2025 Adriano Di Dio.
+    Copyright (C) 2018-2026 Adriano Di Dio.
     
     MOHLevelViewer is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -827,6 +827,14 @@ void LevelManagerDraw(LevelManager_t *LevelManager,Camera_t *Camera)
     glm_perspective(glm_rad(CameraFOV->FValue),(float) VidConfigWidth->IValue / (float) VidConfigHeight->IValue,1.f, 4096.f,ProjectionMatrix);     
     
     LevelDraw(LevelManager->CurrentLevel,Camera,LevelManager->RenderObjectShader,ProjectionMatrix);
+
+    Color4f_t Colour;
+    Colour.r = 1.f;
+    Colour.g = 1.f;
+    Colour.b = 1.f;
+    Colour.a = 1.f;
+    LevelManagerDrawString(LevelManager, "Testing MOH Font using built-in VRAM", VidConfigWidth->FValue / 2.f,
+        VidConfigHeight->FValue / 2.f, Colour);
 }
 
 int LevelManagerInitWithPath(LevelManager_t *LevelManager,GUI_t *GUI,VideoSystem_t *VideoSystem,const char *Path)
