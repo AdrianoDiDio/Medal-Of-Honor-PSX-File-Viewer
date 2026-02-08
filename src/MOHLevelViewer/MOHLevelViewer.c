@@ -290,7 +290,7 @@ Application_t *ApplicationInit(int argc,char **argv)
         goto Failure;
     }
     
-    VideoSystemGrabMouse(Application->Engine->VideoSystem,1);
+    // VideoSystemGrabMouse(Application->Engine->VideoSystem,1);
 
     //NOTE(Adriano):Allow the game path to be set using command line argument.
     //              If the path is not valid the game will discard it.

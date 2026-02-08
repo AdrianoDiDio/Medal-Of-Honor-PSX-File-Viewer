@@ -373,6 +373,31 @@ typedef struct BSDSceneInfo_s {
     char        Unknown2[7];
 } BSDSceneInfo_t;
 
+
+typedef struct BSDHandlerProgramHeader_s {
+    short ProgramIndex;
+    short Offset;
+} BSDHandlerProgramHeader_t;
+
+typedef struct BSDHandlerProgramTable_s {
+    int NumPrograms;
+    BSDHandlerProgramHeader_t *Programs;
+} BSDHandlerProgramTable_t;
+
+typedef struct BSDHandlerRegTableHeader_s {
+    int NumHandlers;
+    int Unknown;
+    int Unknown1;
+    int Unknown2;
+    int Unknown3;
+} BSDHandlerRegTableHeader_t;
+
+
+typedef struct BSDHandlerRegTable_s {
+    BSDHandlerRegTableHeader_t Header;
+    int                        *Handlers;
+} BSDHandlerRegTable_t;
+
 typedef struct RenderObject_s RenderObject_t;
 
 bool                        BSDReadTSPInfoBlock(FILE *BSDFile, BSDTSPInfo_t *TSPInfo);
@@ -383,7 +408,7 @@ bool                        BSDReadSkyBlock(FILE *BSDFile,BSDSky_t *Sky);
 bool                        BSDReadRenderObjectTable(FILE *BSDFile,int GameEngine, BSDRenderObjectTable_t *RenderObjectTable);
 bool                        BSDReadNodeInfoBlock(FILE *BSDFile,int NodeInfoOffset,BSDNodeInfo_t *NodeInfo);
 bool                        BSDReadPropertySetFileBlock(FILE *BSDFile, BSDPropertySetFile_t *PropertySetFile);
-
+bool                        BSDReadScriptProgramBlock(FILE *BSDFile);
 BSDRenderObjectElement_t    *BSDGetRenderObjectById(const BSDRenderObjectTable_t *RenderObjectTable,int RenderObjectId);
 int                         BSDGetRenderObjectIndexById(const BSDRenderObjectTable_t *RenderObjectTable,int RenderObjectId);
 bool                        BSDIsRenderObjectPresent(BSDRenderObjectTable_t RenderObjectTable,int RenderObjectId);

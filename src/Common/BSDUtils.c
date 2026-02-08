@@ -867,6 +867,104 @@ bool BSDReadPropertySetFileBlock(FILE *BSDFile, BSDPropertySetFile_t *PropertySe
     return true;
 }
 
+bool BSDReadScriptProgramBlock(FILE *BSDFile)
+{
+    int HandlerRegTableOffset;
+    BSDHandlerRegTable_t Table;
+    int NumPrograms;
+    int NumZeroHandlers;
+    int NumNonZeroHandlers;
+    int i;
+    int j;
+    BSDHandlerProgramTable_t ProgramTable;
+    if( !BSDFile ) {
+        DPrintf("BSDReadScriptProgramBlock: Invalid file\n");
+        return false;
+    }
+    //
+    // if( !PropertySetFile ) {
+    //     DPrintf("BSDReadPropertySetFileBlock: Invalid data\n");
+    //     return false;
+    // }
+    //
+    if(GetCurrentFilePosition(BSDFile) != BSDGetRealOffset(BSD_HANDLER_REG_TABLE_POSITION)) {
+        fseek(BSDFile, BSDGetRealOffset(BSD_HANDLER_REG_TABLE_POSITION), SEEK_SET);
+    }
+    fread(&HandlerRegTableOffset,sizeof(HandlerRegTableOffset),1,BSDFile);
+
+    if( HandlerRegTableOffset == 0 ) {
+        DPrintf("BSDReadScriptProgramBlock:BSD File has no script data.\n");
+        return false;
+    }
+    fseek(BSDFile, BSDGetRealOffset(HandlerRegTableOffset), SEEK_SET);
+    fread(&Table.Header,sizeof(BSDHandlerRegTableHeader_t),1,BSDFile);
+    Table.Handlers = malloc(Table.Header.NumHandlers * sizeof(int));
+    DPrintf("BSDReadScriptProgramBlock:Reading %i handlers at %i (%i).\n",Table.Header.NumHandlers,
+            GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - BSD_HEADER_SIZE);
+    NumZeroHandlers = 0;
+    NumNonZeroHandlers = 0;
+    for (i = 0; i < Table.Header.NumHandlers; i++) {
+        fread(&Table.Handlers[i],sizeof(Table.Handlers[i]),1,BSDFile);
+        if ( Table.Handlers[i] != 0 ) {
+            DPrintf("BSDReadScriptProgramBlock: Handler at offset %i for index %i\n", Table.Handlers[i], i);
+            NumNonZeroHandlers++;
+        } else {
+            NumZeroHandlers++;
+
+        }
+    }
+    DPrintf("BSDReadScriptProgramBlock: Read %i handlers of which %i were 0 and %i valid\n",
+        Table.Header.NumHandlers, NumZeroHandlers, NumNonZeroHandlers);
+
+    for (i = 0; i < Table.Header.NumHandlers; i++) {
+        if ( Table.Handlers[i] == 0 ) {
+            continue;
+        }
+        DPrintf("**PROGRAM %i**\n",i);
+        fseek(BSDFile, BSDGetRealOffset(HandlerRegTableOffset + Table.Handlers[i]), SEEK_SET);
+        fread(&ProgramTable.NumPrograms,sizeof(ProgramTable.NumPrograms),1,BSDFile);
+        if ( !ProgramTable.NumPrograms) {
+            continue;
+        }
+        ProgramTable.Programs = malloc(ProgramTable.NumPrograms * sizeof(BSDHandlerProgramHeader_t));
+        for ( j = 0; j < ProgramTable.NumPrograms; j++) {
+            fread(&ProgramTable.Programs[j],sizeof(BSDHandlerProgramHeader_t),1,BSDFile);
+            DPrintf("BSDReadScriptProgramBlock: Program index %i offset %i\n",
+                ProgramTable.Programs[j].ProgramIndex, ProgramTable.Programs[j].Offset );
+        }
+        free(ProgramTable.Programs);
+    }
+    free(Table.Handlers);
+    // PropertySetFile->NumProperties++;
+    // PropertySetFile->Property = malloc(sizeof(BSDProperty_t) * PropertySetFile->NumProperties);
+    // if( !PropertySetFile->Property ) {
+    //     DPrintf("BSDReadPropertySetFileBlock:Couldn't allocate memory for Property array\n");
+    //     return false;
+    // }
+    // for( i = 0; i < PropertySetFile->NumProperties; i++ ) {
+    //     DPrintf("BSDReadPropertySetFileBlock:Reading property %i at %i (%i)\n",i,GetCurrentFilePosition(BSDFile),
+    //         GetCurrentFilePosition(BSDFile) - BSD_HEADER_SIZE
+    //     );
+    //     fread(&PropertySetFile->Property[i].NumNodes,sizeof(PropertySetFile->Property[i].NumNodes),1,BSDFile);
+    //     PropertySetFile->Property[i].NumNodes = (255 - PropertySetFile->Property[i].NumNodes) /*<< 1*/;
+    //     DPrintf("Property contains %i nodes\n",PropertySetFile->Property[i].NumNodes);
+    //
+    //     SkipFileSection(1,BSDFile);
+    //     PropertySetFile->Property[i].NodeList = malloc(PropertySetFile->Property[i].NumNodes * sizeof(unsigned short));
+    //     if( !PropertySetFile->Property[i].NodeList ) {
+    //         DPrintf("BSDReadPropertySetFileBlock:Couldn't allocate memory for Property node array\n");
+    //         return false;
+    //     }
+    //     DPrintf("BSDReadPropertySetFileBlock:Reading %li bytes.\n",PropertySetFile->Property[i].NumNodes * sizeof(unsigned short));
+    //     for( j = 0; j <  PropertySetFile->Property[i].NumNodes; j++ ) {
+    //         fread(&PropertySetFile->Property[i].NodeList[j],sizeof(PropertySetFile->Property[i].NodeList[j]),1,BSDFile);
+    //         DPrintf("Short %u\n", PropertySetFile->Property[i].NodeList[j]);
+    //     }
+    // }
+    // DPrintf("BSDReadPropertySetFileBlock:Property end at %i (%i)\n",GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - BSD_HEADER_SIZE);
+    return true;
+}
+
 bool BSDReadNodeInfoBlock(FILE *BSDFile,int NodeInfoOffset, BSDNodeInfo_t *NodeInfo)
 {
     int NodeFilePosition;

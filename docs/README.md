@@ -77,6 +77,7 @@ Table of contents
             * [Node Data](#node-data)
             * [Node Type](#node-type)
          - [Property Set File](#property-set-file)
+         - [Handler Reg Table](#handler-reg-table)
    * [RSC Files](#rsc-files)
       + [File Format](#file-format-1)
           * [RSC Header](#rsc-header)
@@ -1361,6 +1362,49 @@ Each Property contains the following data:
 
 **IMPORTANT: The actual number of nodes is found by subtracting the value
 255 to the one that was loaded.**  
+
+##### Handler Reg Table
+
+This data contains a list of handlers that holds the data for the scripting data.
+
+The offset to this region is obtained by using a fixed offset that can be found at position
+0x59C (excluding the header), 0xD9C (including it).  
+Once the correct offset has been used the data starts with an header of twenty bytes:
+
+
+| Type  | Size    | Description        |
+|-------|---------|--------------------|
+| int   | 4 bytes  | Number of Handlers |
+| int   | 4 bytes  | Unknown            |
+| int   | 4 bytes  | Unknown |
+| int   | 4 bytes  | Unknown |
+| int   | 4 bytes  | Unknown |
+
+After which, the list of offsets to the actual programs can be found.  
+**IMPORTANT: Some handlers may have 0 offsets and needs to be skipped.**
+
+After loading up all offsets, starting from the first we add the offset found at
+0x59c (or 0xD9C if we consider the header) and starts to read the program data.  
+
+The program data starts with an integer that tells the number of programs and the list of program headers.  
+
+Each program header has the following data:  
+
+| Type  | Size    | Description           |
+|-------|---------|-----------------------|
+| short | 2 bytes | Index of the program  |
+| short | 2 bytes | Offset of the program |
+
+so the overall data is:  
+
+| Type          | Size                  | Description                     |
+|---------------|-----------------------|---------------------------------|
+| int           | 4 bytes               | Number of programs              |
+| ProgramHeader | 4 bytes * NumPrograms | Offset and index of the program |  
+
+The offset is based on the starting position of this table and  
+contains the pointer to the start of the scripting data bytecode.
+
 
 ### RSC Files
 

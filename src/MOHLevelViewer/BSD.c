@@ -1299,6 +1299,10 @@ int BSDLoad(BSD_t *BSD,int GameEngine,int IsMultiplayer,FILE *BSDFile)
     if( !BSDReadPropertySetFileBlock(BSDFile,&BSD->PropertySetFile) ) {
         return 0;
     }
+
+    if ( !BSDReadScriptProgramBlock(BSDFile) ) {
+        return 0;
+    }
     fclose(BSDFile);
     return 1;
 }
