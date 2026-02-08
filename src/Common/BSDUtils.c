@@ -876,7 +876,9 @@ bool BSDReadScriptProgramBlock(FILE *BSDFile)
     int NumNonZeroHandlers;
     int i;
     int j;
-    BSDHandlerProgramTable_t ProgramTable;
+    BSDHandlerProgramTable_t *ProgramTable;
+    Byte OpCode;
+
     if( !BSDFile ) {
         DPrintf("BSDReadScriptProgramBlock: Invalid file\n");
         return false;
@@ -916,24 +918,44 @@ bool BSDReadScriptProgramBlock(FILE *BSDFile)
     DPrintf("BSDReadScriptProgramBlock: Read %i handlers of which %i were 0 and %i valid\n",
         Table.Header.NumHandlers, NumZeroHandlers, NumNonZeroHandlers);
 
+    ProgramTable = malloc(Table.Header.NumHandlers * sizeof(BSDHandlerProgramTable_t));
     for (i = 0; i < Table.Header.NumHandlers; i++) {
         if ( Table.Handlers[i] == 0 ) {
             continue;
         }
         DPrintf("**PROGRAM %i**\n",i);
         fseek(BSDFile, BSDGetRealOffset(HandlerRegTableOffset + Table.Handlers[i]), SEEK_SET);
-        fread(&ProgramTable.NumPrograms,sizeof(ProgramTable.NumPrograms),1,BSDFile);
-        if ( !ProgramTable.NumPrograms) {
+        fread(&ProgramTable[i].NumPrograms,sizeof(ProgramTable[i].NumPrograms),1,BSDFile);
+        if ( !ProgramTable[i].NumPrograms) {
             continue;
         }
-        ProgramTable.Programs = malloc(ProgramTable.NumPrograms * sizeof(BSDHandlerProgramHeader_t));
-        for ( j = 0; j < ProgramTable.NumPrograms; j++) {
-            fread(&ProgramTable.Programs[j],sizeof(BSDHandlerProgramHeader_t),1,BSDFile);
+        ProgramTable[i].Programs = malloc(ProgramTable[i].NumPrograms * sizeof(BSDHandlerProgramHeader_t));
+        for ( j = 0; j < ProgramTable[i].NumPrograms; j++) {
+            fread(&ProgramTable[i].Programs[j],sizeof(BSDHandlerProgramHeader_t),1,BSDFile);
             DPrintf("BSDReadScriptProgramBlock: Program index %i offset %i\n",
-                ProgramTable.Programs[j].ProgramIndex, ProgramTable.Programs[j].Offset );
+                ProgramTable[i].Programs[j].ProgramIndex, ProgramTable[i].Programs[j].Offset );
         }
-        free(ProgramTable.Programs);
     }
+    for (i = 0; i < Table.Header.NumHandlers; i++) {
+        if ( Table.Handlers[i] == 0 ) {
+            continue;
+        }
+        DPrintf("**PROGRAM %i**\n",i);
+        if ( !ProgramTable[i].NumPrograms) {
+            continue;
+        }
+        for ( j = 0; j < ProgramTable[i].NumPrograms; j++) {
+            fseek(BSDFile, BSDGetRealOffset(HandlerRegTableOffset +
+                Table.Handlers[i] + ProgramTable[i].Programs[j].Offset), SEEK_SET);
+            fread(&OpCode,sizeof(OpCode),1,BSDFile);
+            // NOTE: From this point-onward we have the raw bytecode that needs to be decoded
+            // The next byte is an OP-Code already
+            DPrintf("BSDReadScriptProgramBlock: OpCode %i at %i (%i)\n", OpCode,
+                GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - BSD_HEADER_SIZE);
+        }
+        free(ProgramTable[i].Programs);
+    }
+    free(ProgramTable);
     free(Table.Handlers);
     // PropertySetFile->NumProperties++;
     // PropertySetFile->Property = malloc(sizeof(BSDProperty_t) * PropertySetFile->NumProperties);
