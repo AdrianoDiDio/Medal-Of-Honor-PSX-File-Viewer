@@ -20,6 +20,8 @@
 */
 
 #include "BSDUtils.h"
+
+#include "BSDScript.h"
 #include "RenderObject.h"
 
 Color3b_t BSDStarsColors[BSD_SKY_MAX_STAR_COLORS_NUMBER] = {
@@ -945,9 +947,12 @@ bool BSDReadScriptProgramBlock(FILE *BSDFile)
             continue;
         }
         for ( j = 0; j < ProgramTable[i].NumPrograms; j++) {
-            fseek(BSDFile, BSDGetRealOffset(HandlerRegTableOffset +
-                Table.Handlers[i] + ProgramTable[i].Programs[j].Offset), SEEK_SET);
-            fread(&OpCode,sizeof(OpCode),1,BSDFile);
+            BSDScriptDump(BSDFile, BSDGetRealOffset(HandlerRegTableOffset +
+                Table.Handlers[i] + ProgramTable[i].Programs[j].Offset));
+            // fseek(BSDFile, BSDGetRealOffset(HandlerRegTableOffset +
+            //     Table.Handlers[i] + ProgramTable[i].Programs[j].Offset), SEEK_SET);
+            //
+            // fread(&OpCode,sizeof(OpCode),1,BSDFile);
             // NOTE: From this point-onward we have the raw bytecode that needs to be decoded
             // The next byte is an OP-Code already
             DPrintf("BSDReadScriptProgramBlock: OpCode %i at %i (%i)\n", OpCode,
