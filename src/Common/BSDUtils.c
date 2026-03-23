@@ -955,8 +955,6 @@ bool BSDReadScriptProgramBlock(FILE *BSDFile)
             // fread(&OpCode,sizeof(OpCode),1,BSDFile);
             // NOTE: From this point-onward we have the raw bytecode that needs to be decoded
             // The next byte is an OP-Code already
-            DPrintf("BSDReadScriptProgramBlock: OpCode %i at %i (%i)\n", OpCode,
-                GetCurrentFilePosition(BSDFile),GetCurrentFilePosition(BSDFile) - BSD_HEADER_SIZE);
         }
         free(ProgramTable[i].Programs);
     }

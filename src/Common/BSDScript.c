@@ -22,6 +22,19 @@
 #include "BSDScript.h"
 
 BSDScriptStackData_t BSDStack[BSD_SCRIPT_STACK_SIZE];
+
+Byte BSDScriptReadByte(FILE *BSDFile, int *BSDScriptProgramCounter)
+{
+    Byte Result;
+    if ( !BSDFile ) {
+        DPrintf("BSDReadScriptByte: Invalid file");
+        return 0;
+    }
+    fread(&Result, sizeof(Result), 1, BSDFile);
+    (*BSDScriptProgramCounter)++;
+    return Result;
+}
+
 BSDScriptStackData_t BSDPopStack(int *BSDStackPointer)
 {
     int CurrentValue;
@@ -44,6 +57,8 @@ void BSDScriptDump(FILE *BSDFile, int EntryPointOffset) {
     Byte OpCode;
     int Pc;
     int Sp;
+    Byte Operand;
+    Byte Value;
     BSDScriptStackData_t a;
     BSDScriptStackData_t b;
 
@@ -61,6 +76,10 @@ void BSDScriptDump(FILE *BSDFile, int EntryPointOffset) {
             case OP_NOP:
                 break;
             case OP_LOAD:
+                Operand = BSDScriptReadByte(BSDFile,&Pc);
+                Value = BSDScriptReadByte(BSDFile, &Pc);
+                DPrintf("BSDScriptDump: Loading with operand %i Value %i", Operand, Value);
+                BSDPushStack(BSD_STACK_DATA_TYPE_INT, (void *) Value, &Sp);
                 break;
             case OP_STORE:
                 break;

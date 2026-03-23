@@ -289,7 +289,7 @@ Application_t *ApplicationInit(int argc,char **argv)
         printf("ApplicationInit:Failed to initialize the Engine\n");
         goto Failure;
     }
-    
+    //TODO(Adriano): Uncomment once done testing
     // VideoSystemGrabMouse(Application->Engine->VideoSystem,1);
 
     //NOTE(Adriano):Allow the game path to be set using command line argument.
