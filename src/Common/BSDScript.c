@@ -27,7 +27,7 @@ Byte BSDScriptReadByte(FILE *BSDFile, int *BSDScriptProgramCounter)
 {
     Byte Result;
     if ( !BSDFile ) {
-        DPrintf("BSDReadScriptByte: Invalid file");
+        DPrintf("BSDScriptReadByte: Invalid file");
         return 0;
     }
     fread(&Result, sizeof(Result), 1, BSDFile);
