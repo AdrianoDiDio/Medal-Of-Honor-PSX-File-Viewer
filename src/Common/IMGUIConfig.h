@@ -19,5 +19,4 @@
 #ifndef __IMGUICONFIG_H_ 
 #define __IMGUICONFIG_H_
 #define IMGUI_DEFINE_MATH_OPERATORS
-#define IM_ASSERT_USER_ERROR(_EXP,_MSG) ((void)(_EXP))
 #endif//__IMGUICONFIG_H_

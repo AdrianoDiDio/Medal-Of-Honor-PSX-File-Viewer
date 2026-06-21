@@ -74,7 +74,7 @@ void GUIDrawTextureWindow(ImageManager_t *ImageManager,float ColumnWidth)
     float BeginY;
     float EndX;
     float EndY;
-    ImTextureRef TextureRef;
+    ImTextureRef_c TextureRef;
     
     UV0.x = 0;
     UV0.y = 0;
@@ -92,7 +92,7 @@ void GUIDrawTextureWindow(ImageManager_t *ImageManager,float ColumnWidth)
     BorderColor.w = 0;
     ImVec2 CursorPosition;
 //     igBeginChild_Str("Current Texture",ZeroSize,false,0);
-    igGetCursorScreenPos(&CursorPosition);
+    CursorPosition = igGetCursorScreenPos();
     if( !ImageManager->SelectedImage ) {
         return;
     }
@@ -197,7 +197,7 @@ void GUIDrawVRAMWindow(GUI_t *GUI,ImageManager_t *ImageManager)
     igSeparator();
     VRAMPage = ImageManager->SelectedImage->TexturePage;
     VRAMGetTIMImageCoordinates(ImageManager->SelectedImage,&DestX,&DestY);
-    igGetCursorScreenPos(&CursorPosition);
+    CursorPosition = igGetCursorScreenPos();
     Size.x = 512 * Zoom;
     Size.y = 512 * Zoom;
     ScaleFactor.x = ImageManager->VRAM->Page.Width / Size.x;
@@ -224,7 +224,7 @@ void GUIDrawVRAMWindow(GUI_t *GUI,ImageManager_t *ImageManager)
     TextPosition.y = CursorPosition.y + (Size.y / 2);
     ImDrawList_AddText_Vec2(DrawList,TextPosition,0xFFFFFFFF,"8-BPP And No CLUT textures",NULL);
     if( igIsItemHovered(0) && igIsMouseClicked_Bool(ImGuiMouseButton_Left,false) ) {
-        igGetMousePos(&MousePosition);
+        MousePosition = igGetMousePos();
         for( Image = ImageManager->ImageList; Image; Image = Image->Next ) {
             VRAMPage = Image->TexturePage;
             VRAMGetTIMImageCoordinates(Image,&DestX,&DestY);

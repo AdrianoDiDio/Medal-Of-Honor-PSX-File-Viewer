@@ -133,7 +133,7 @@ int GUIDrawTitleBar(const char *Title,float ContentWidth)
     igBeginDisabled(1);
     asprintf(&Buffer,"##%s\n",Title);
     Result = igCollapsingHeader_TreeNodeFlags(Buffer, ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Leaf );
-    igCalcTextSize(&TextSize,Title,NULL,false,-1);
+    TextSize = igCalcTextSize(Title,NULL,false,-1);
     igSameLine( (ContentWidth - TextSize.x ) / 2,-1);
     igText(Title);
     igEndDisabled();
@@ -330,7 +330,7 @@ void ProgressBarIncrement(ProgressBar_t *ProgressBar,VideoSystem_t *VideoSystem,
     //NOTE(Adriano):Since we are checking for events these function have now an updated view of the current window size.
     Viewport = igGetMainViewport();
     
-    ImGuiViewport_GetCenter(&ScreenCenter,Viewport);
+    ScreenCenter = ImGuiViewport_GetCenter(Viewport);
 
     Pivot.x = 0.5f;
     Pivot.y = 0.5f;
@@ -350,7 +350,7 @@ void ProgressBarIncrement(ProgressBar_t *ProgressBar,VideoSystem_t *VideoSystem,
     ProgressBar->CurrentPercentage += Increment;
     if (igBeginPopupModal(ProgressBar->DialogTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         igProgressBar((ProgressBar->CurrentPercentage / 100.f),Size,Message);
-        igEnd();
+        igEndPopup();
     }
     GUIEndFrame();
     VideoSystemSwapBuffers(VideoSystem);

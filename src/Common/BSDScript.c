@@ -61,7 +61,7 @@ void BSDScriptDump(FILE *BSDFile, int EntryPointOffset) {
     Byte Value;
     BSDScriptStackData_t a;
     BSDScriptStackData_t b;
-
+return;
     if (!BSDFile) {
         DPrintf("BSDScriptDump: Invalid file\n");
         return;
