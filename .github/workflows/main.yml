@@ -50,7 +50,12 @@ jobs:
         if: startsWith(matrix.config.name, 'Ubuntu')
         run: |
           sudo apt-get update
-          sudo apt install libegl1-mesa-dev libglu1-mesa-dev libasound2-dev libxcursor-dev libpulse-dev libxext-dev ninja-build build-essential mawk -y
+          sudo apt install libegl1-mesa-dev libglu1-mesa-dev libasound2-dev libxcursor-dev libpulse-dev \
+          libaudio-dev libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+          libxrandr-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+          libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+          libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev libusb-1.0-0-dev \
+          ninja-build build-essential mawk -y
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Checkout submodules
